@@ -36,7 +36,7 @@ def get_highly_rated_history_books(meta_path, review_path, rating_threshold=4.0,
     df_meta["categories"] = df_meta["categories"].apply(safe_parse)
 
     # Filter metadata for books containing "History" in categories
-    df_meta_history = df_meta[df_meta["categories"].apply(lambda cats: "History" in cats)].copy()
+    df_meta_history = df_meta[df_meta["categories"].apply(lambda cats: "Children's Books" in cats)].copy()
 
     # Merge review and metadata
     df_merged = pd.merge(
@@ -61,13 +61,13 @@ if __name__ == "__main__":
     meta_file = "../ground_truth_dataset/meta_gt.json"
     review_file = "../ground_truth_dataset/review_gt.json"
 
-    result_df = get_highly_rated_history_books(meta_file, review_file, rating_threshold=4.0)
+    result_df = get_highly_rated_history_books(meta_file, review_file, rating_threshold=4.5)
 
     if not result_df.empty:
-        print("📚 Highly-rated 'History' books (avg rating ≥ 4.0 since 2020):")
+        print("📚 Highly-rated 'Children's Books' books (avg rating ≥ 4.5 since 2020):")
         print(result_df.to_string(index=False))
     else:
-        print("⚠️ No 'History' books found with avg rating ≥ 4.0 since 2020.")
+        print("⚠️ No 'Children's Books' books found with avg rating ≥ 4.5 since 2020.")
 
     # Optional: Save results
     # result_df.to_csv("hist_books_avgrating4_2020.csv", index=False)
