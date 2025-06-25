@@ -1,6 +1,9 @@
 import pandas as pd
 import ast
 
+import pandas as pd
+import ast
+
 def get_parking_business_count(business_path, review_path, target_year=2018):
     """
     Count how many businesses that received reviews in a given year
@@ -39,13 +42,28 @@ def get_parking_business_count(business_path, review_path, target_year=2018):
 
     df_active["attributes_parsed"] = df_active["attributes"].apply(parse_attributes)
 
-    # Check for either BusinessParking or BikeParking
+    # Refined logic: only count if at least one parking option is actually available
     def has_parking(attrs):
-        return "BusinessParking" in attrs or "BikeParking" in attrs
+        # Check BikeParking directly
+        if attrs.get("BikeParking") in [True, "True"]:
+            return True
+
+        # Check BusinessParking options
+        bp = attrs.get("BusinessParking")
+        if bp:
+            try:
+                if isinstance(bp, str):
+                    bp = ast.literal_eval(bp)
+                if isinstance(bp, dict):
+                    return any(v in [True, "True"] for v in bp.values())
+            except:
+                pass
+        return False
 
     df_active["has_parking_attr"] = df_active["attributes_parsed"].apply(has_parking)
 
     return df_active["has_parking_attr"].sum()
+
 
 
 if __name__ == "__main__":
