@@ -10,6 +10,7 @@ client_mongo = MongoClient("mongodb://localhost:27017/")
 biz_collection = client_mongo["yelp_business"]["business"]
 
 deployment_name = "gpt-4o-mini"
+deployment_name_large = "gpt-4o"
 client = AzureOpenAI(
     api_key="609ced4d971240b8a08f7fb0e6d846ea",
     api_version="2024-08-01-preview",
@@ -20,15 +21,86 @@ client = AzureOpenAI(
 # === Step 1: Load user and review data ===
 df_user = con_duck.execute("SELECT * FROM user").fetchdf()
 df_review = con_duck.execute("SELECT * FROM review").fetchdf()
-df_review["date"] = pd.to_datetime(df_review["date"], unit="ms", errors="coerce")
 
-# === Step 2: Filter users who registered in 2016 ===
-df_user["yelping_since"] = pd.to_datetime(df_user["yelping_since"], errors="coerce")
-df_user_2016 = df_user[df_user["yelping_since"].dt.year == 2016].copy()
-user_ids_2016 = df_user_2016["user_id"].unique().tolist()
+# === Step 2: Use GPT to find users registered in 2016 ===
+def is_registered_in_2016(yelping_since):
+    prompt = (
+        "Determine whether the following date indicates the user registered in the year 2016.\n"
+        "Only respond with 'yes' or 'no'.\n\n"
+        f"Registration time: {yelping_since}"
+    )
+    try:
+        response = client.chat.completions.create(
+            model=deployment_name,
+            messages=[
+                {"role": "system", "content": "You check if the user registered in 2016."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.0,
+            max_tokens=5
+        )
+        return response.choices[0].message.content.strip().lower().startswith("yes")
+    except:
+        return False
 
-# === Step 3: Filter reviews by those users since their registration ===
-df_reviews_from_2016_users = df_review[df_review["user_id"].isin(user_ids_2016)].copy()
+user_mask = []
+for i, row in df_user.iterrows():
+    time_str = row["yelping_since"]
+    if pd.isna(time_str):
+        user_mask.append(False)
+        continue
+    result = is_registered_in_2016(time_str)
+    print({i}, {time_str}, {result})
+    user_mask.append(result)
+
+df_user_2016 = df_user[user_mask].copy()
+user_ids_2016 = df_user_2016["user_id"].tolist()
+user_since_map = df_user_2016.set_index("user_id")["yelping_since"].to_dict()
+
+# === Step 3: Filter reviews by those users, then GPT judge review is after registration ===
+df_review_2016_users = df_review[df_review["user_id"].isin(user_ids_2016)].copy()
+
+def is_after_registration_gpt(reg_time, review_time):
+    prompt = (
+        "Determine whether the review occurred strictly *after* the user's registration.\n"
+        "Only respond with 'yes' or 'no'.\n\n"
+        f"User registered on: {reg_time}\n"
+        f"Review timestamp: {review_time}"
+    )
+    try:
+        response = client.chat.completions.create(
+            model=deployment_name_large,
+            messages=[
+                {"role": "system", "content": "You compare two timestamps to see if the review came after registration."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.0,
+            max_tokens=5
+        )
+        return response.choices[0].message.content.strip().lower().startswith("yes")
+    except:
+        return False
+
+valid_reviews = []
+for i, row in df_review_2016_users.iterrows():
+    user_id = row["user_id"]
+    review_time = row["date"]
+    reg_time = user_since_map.get(user_id)
+
+    if not reg_time or pd.isna(review_time):
+        print(f"[{i}] ⚠️ Missing timestamp(s): reg_time = {reg_time}, review_time = {review_time} → ❌ filtered")
+        continue
+
+    result = is_after_registration_gpt(reg_time, review_time)
+
+    if result:
+        valid_reviews.append(row)
+        print(f"[{i}] ✅ kept | reg_time = {reg_time}, review_time = {review_time}")
+    else:
+        print(f"[{i}] ❌ filtered | reg_time = {reg_time}, review_time = {review_time} → review is not after registration")
+      
+
+df_reviews_from_2016_users = pd.DataFrame(valid_reviews)
 
 # === Step 4: Map business_ref to business_id ===
 business_refs = df_reviews_from_2016_users["business_ref"].dropna().unique().tolist()
@@ -106,13 +178,15 @@ df_reviews_from_2016_users["business_id"] = predicted_business_ids
 # === Step 7: Extract name + category from description ===
 def extract_categories(description):
     prompt = (
-        "Based on the following business description, identify one or more likely business categories.\n"
-        "Respond with a comma-separated list (e.g., 'Nail Salon, Spa').\n\n"
+        "Given the following business description, extract **all category terms that are explicitly mentioned in the text**.\n"
+        "Only include categories that appear **verbatim** (word-for-word) in the description.\n"
+        "If multiple categories are present, return a **comma-separated list** (e.g., \"Nail Salon, Spa\").\n"
+        "Do **not** guess or generalize; do **not** include any explanation.\n\n"
         f"Description: {description}"
     )
     try:
         res = client.chat.completions.create(
-            model=deployment_name,
+            model=deployment_name_large,
             messages=[
                 {"role": "system", "content": "You extract business categories."},
                 {"role": "user", "content": prompt}
@@ -126,6 +200,8 @@ def extract_categories(description):
 
 biz_id_to_desc = {b["business_id"]: b.get("description", "") for b in business_docs}
 category_records = []
+
+
 for biz_id in df_reviews_from_2016_users["business_id"].dropna().unique():
     desc = biz_id_to_desc.get(biz_id, "")
     if not desc:
@@ -133,7 +209,7 @@ for biz_id in df_reviews_from_2016_users["business_id"].dropna().unique():
     cats = extract_categories(desc)
     for cat in [c.strip() for c in cats.split(",") if c.strip()]:
         category_records.append({"business_id": biz_id, "category": cat})
-    print({biz_id}, {desc}, (cats))
+    print(f"[{biz_id}] {cats} \n↳ Desc: {desc}\n")
 df_category_map = pd.DataFrame(category_records)
 
 # === Step 8: Merge category info with review counts ===

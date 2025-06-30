@@ -41,7 +41,7 @@ print(f"✅ Total {len(books)} books loaded from database.")
 def is_children_book(categories, client, deployment_name):
     prompt = (
         "You are given the category field of a book.\n"
-        "Determine if this book belongs to the (Children's Books) category.\n"
+        "Determine if this book belongs to the (Children's Books) category.\n" 
         f"Categories:\n{categories}\n\n"
         "If yes, reply only with 'yes'. Otherwise, reply 'no'."
     )

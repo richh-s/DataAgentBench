@@ -129,8 +129,43 @@ for i, biz in enumerate(business_docs):
         print(f"❌ [{i}] {attrs} → no Parking")
 
 # ========== Step 7: Filter reviews from 2018 ==========
-df_review["date"] = pd.to_datetime(df_review["date"], unit="ms")
-df_2018 = df_review[df_review["date"].dt.year == 2018].copy()
+def is_in_2018_by_gpt(time_str, client, deployment_name):
+    prompt = (
+        "Given the following timestamp, determine whether it falls within the year 2018 — "
+        "specifically, between January 1, 2018 (inclusive) and January 1, 2019 (exclusive).\n"
+        "Only answer with 'yes' or 'no'.\n\n"
+        f"Timestamp: {time_str}"
+    )
+
+    try:
+        response = client.chat.completions.create(
+            model=deployment_name,
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that classifies timestamps by date ranges."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.0,
+            max_tokens=5
+        )
+        raw_reply = response.choices[0].message.content.strip()
+        return raw_reply.lower().startswith("yes")
+
+    except Exception as e:
+        print(f"❌ GPT error on '{time_str}': {e}")
+        return False
+
+# ========== Step 7: Use GPT to filter reviews in 2018 ==========
+in_2018_mask = []
+for i, row in df_review.iterrows():
+    time_str = row["date"]
+    if pd.isna(time_str):
+        in_2018_mask.append(False)
+        continue
+    result = is_in_2018_by_gpt(time_str, client, deployment_name)
+    in_2018_mask.append(result)
+    print(f"[{i}] {time_str} → {'✅ in 2018' if result else '❌ not in 2018'}")
+
+df_2018 = df_review[in_2018_mask].copy()
 
 
 # ========== Step 8: Answer query ==========

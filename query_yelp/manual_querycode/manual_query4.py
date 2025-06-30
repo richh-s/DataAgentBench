@@ -153,7 +153,7 @@ for biz in business_docs:
 
 df_credit_card = pd.DataFrame(credit_card_flags)
 
-# === Step 6: 合并 category + credit card + rating 数据 ===
+# === Step 6: category + credit card + rating ===
 # Merge category info
 df_merged = pd.merge(df_category_map, df_credit_card, on="business_id", how="inner")
 df_merged = pd.merge(df_merged, df_review[["business_id", "rating"]], on="business_id", how="inner")
@@ -161,7 +161,7 @@ df_merged = pd.merge(df_merged, df_review[["business_id", "rating"]], on="busine
 # Filter only those that accept credit cards
 df_merged = df_merged[df_merged["accepts_credit_card"] == True]
 
-# === Step 7: 按 category 统计数量和平均评分 ===
+# === Step 7:  category count avg_rating ===
 df_category_stats = df_merged.groupby("category").agg(
     num_businesses=("business_id", "nunique"),
     avg_rating=("rating", "mean")

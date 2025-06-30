@@ -1,43 +1,52 @@
 import pandas as pd
-import ast
 from collections import defaultdict
 
 def get_2016_user_category_stats(user_path, review_path, business_path):
     """
-    For users who registered in 2016:
+    For users who registered in 2016 (down to timestamp):
       - Count number of such users
-      - Count total reviews they wrote since then
+      - Count total reviews they wrote after registration
       - Identify top 5 business categories reviewed by them
 
-    Args:
-        user_path (str): Path to user JSONL
-        review_path (str): Path to review JSONL
-        business_path (str): Path to business JSONL
-
     Returns:
-        tuple: (user_count, total_review_count, pd.DataFrame with top 5 categories)
+        (user_count, total_review_count, pd.DataFrame of top categories)
     """
     df_user = pd.read_json(user_path, lines=True)
     df_review = pd.read_json(review_path, lines=True)
     df_business = pd.read_json(business_path, lines=True)
 
-    # Parse registration year
-    df_user["yelping_since"] = pd.to_datetime(df_user["yelping_since"])
-    df_user["registration_year"] = df_user["yelping_since"].dt.year
-    df_2016_users = df_user[df_user["registration_year"] == 2016]
-    user_ids = set(df_2016_users["user_id"])
+    # Convert time columns to datetime
+    df_user["yelping_since"] = pd.to_datetime(df_user["yelping_since"], errors="coerce")
+    df_review["date"] = pd.to_datetime(df_review["date"], errors="coerce")
 
-    # Filter reviews by those users
-    df_review_2016 = df_review[df_review["user_id"].isin(user_ids)]
+    #  Keep users whose exact registration timestamp is in 2016
+    df_users_2016 = df_user[
+        (df_user["yelping_since"] >= "2016-01-01") &
+        (df_user["yelping_since"] < "2017-01-01")
+    ].copy()
 
-    # Count
-    user_count = len(user_ids)
-    total_review_count = len(df_review_2016)
+    # Merge registration time into reviews
+    df_review_merged = df_review.merge(
+        df_users_2016[["user_id", "yelping_since"]],
+        on="user_id",
+        how="inner"
+    )
 
-    # Merge with business info to get categories
-    df_merged = df_review_2016.merge(df_business[["business_id", "categories"]], on="business_id", how="left")
+    #  Only keep reviews written strictly after registration timestamp
+    df_review_after_reg = df_review_merged[
+        df_review_merged["date"] >= df_review_merged["yelping_since"]
+    ].copy()
 
-    # Parse categories (comma-separated string to list)
+    user_count = df_users_2016["user_id"].nunique()
+    total_review_count = len(df_review_after_reg)
+
+    # Join with business to get categories
+    df_merged = df_review_after_reg.merge(
+        df_business[["business_id", "categories"]],
+        on="business_id",
+        how="left"
+    )
+
     def parse_categories(cat_str):
         if isinstance(cat_str, str):
             return [c.strip() for c in cat_str.split(",") if c.strip()]
@@ -45,7 +54,6 @@ def get_2016_user_category_stats(user_path, review_path, business_path):
 
     df_merged["category_list"] = df_merged["categories"].apply(parse_categories)
 
-    # Count all categories
     category_counter = defaultdict(int)
     for cats in df_merged["category_list"]:
         for cat in cats:
@@ -68,12 +76,11 @@ if __name__ == "__main__":
         business_path=business_file
     )
 
-    # ✅ Output
     print(f"Number of users who registered in 2016: {user_count}")
-    print(f"Total reviews written by them since then: {review_count}")
+    print(f"Total reviews written *after registration*: {review_count}")
     print("Top 5 most-reviewed business categories by these users:")
-
     print(top_categories.to_string(index=False))
+
 
     # Optional: save to CSV
     # top_categories.to_csv("top5_categories_by_2016_users.csv", index=False)
