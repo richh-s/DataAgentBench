@@ -54,4 +54,3 @@ print("\n Top 5 non-ETF NYSE stocks (2017) with more up days than down days:")
 for symbol, name, up, down, diff in top5:
     print(f"- {name} ({symbol}): Up={up}, Down={down}, Diff={diff}")
 
-print(f"\n✅ Done. Top 5 extracted.")
