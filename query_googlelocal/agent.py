@@ -28,7 +28,7 @@ else:
     raise ValueError("query.json wrong format")
 
 
-with open(query_dir / "db_description.txt") as f:
+with open("db_description.txt") as f:
     db_description = f.read()
 
 db_name_mysql = "googlelocal_db"
@@ -140,7 +140,8 @@ while True:
         raise ValueError(f"❌ LLM returned incomplete arguments for tool {tool_name}: {tool_call}")
 
 
-    result = TOOLS[tool_name](db_clients=db_clients, **tool_args)
+    result = TOOLS[tool_name](**tool_args)
+
     print(f"📄 Tool result:\n{result}\n")
 
 
