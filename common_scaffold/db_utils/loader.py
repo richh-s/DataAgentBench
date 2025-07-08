@@ -1,9 +1,32 @@
-from .mongo_utils import mongo_query
+"""
+Unified database loader and query interface.
+Provides unified methods to:
+  - Ensure database exists (if needed)
+  - List tables/collections
+  - Query data and return pandas DataFrame
+"""
+
+from .mongo_utils import (
+    mongo_query,
+    ensure_mongo_data,
+    list_collections
+)
 from .sqlite_utils import sqlite_query
-from .duckdb_utils import duckdb_query
-from .mysql_utils import mysql_query
+from .duckdb_utils import duckdb_query, list_tables
+from .mysql_utils import mysql_query, ensure_mysql_data
+
 
 def query_db(db_type, **kwargs):
+    """
+    Query a database and return result as pandas DataFrame.
+
+    Args:
+        db_type (str): Database type ('mongo', 'sqlite', 'duckdb', 'mysql')
+        kwargs: Database-specific arguments
+
+    Returns:
+        pandas.DataFrame
+    """
     if db_type == "mongo":
         return mongo_query(**kwargs)
     elif db_type == "sqlite":
@@ -12,5 +35,49 @@ def query_db(db_type, **kwargs):
         return duckdb_query(**kwargs)
     elif db_type == "mysql":
         return mysql_query(**kwargs)
+    else:
+        raise ValueError(f"Unsupported db_type: {db_type}")
+
+
+def ensure_db(db_type, **kwargs):
+    """
+    Ensure the specified database exists and is initialized.
+    Currently implemented for 'mongo' and 'mysql'.
+
+    Args:
+        db_type (str): Database type ('mongo', 'mysql')
+        kwargs: Database-specific arguments
+            For MySQL: db_name + sql_file
+            For Mongo: db_name + dump_folder
+    """
+    if db_type == "mongo":
+        return ensure_mongo_data(**kwargs)
+    elif db_type == "mysql":
+        return ensure_mysql_data(**kwargs)
+    else:
+        print(f"✅ No ensure step needed for db_type: {db_type}")
+
+
+def list_entities(db_type, **kwargs):
+    """
+    List tables or collections in the specified database.
+
+    Args:
+        db_type (str): Database type ('mongo', 'sqlite', 'duckdb', 'mysql')
+        kwargs: Database-specific arguments
+
+    Returns:
+        pandas.DataFrame or list: Names of tables/collections
+    """
+    if db_type == "mongo":
+        return list_collections(**kwargs)   # returns list
+    elif db_type == "duckdb":
+        return list_tables(**kwargs)        # returns DataFrame
+    elif db_type == "sqlite":
+        sql = "SELECT name FROM sqlite_master WHERE type='table';"
+        return sqlite_query(sql=sql, **kwargs)   # returns DataFrame
+    elif db_type == "mysql":
+        sql = "SHOW TABLES;"
+        return mysql_query(sql=sql, **kwargs)    # returns DataFrame
     else:
         raise ValueError(f"Unsupported db_type: {db_type}")
