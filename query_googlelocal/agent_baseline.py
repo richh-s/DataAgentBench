@@ -1,10 +1,8 @@
 import json
-import argparse
 import os
 import sys
+import yaml
 from pathlib import Path
-import pandas as pd
-
 from dotenv import load_dotenv
 from openai import AzureOpenAI
 
@@ -19,9 +17,9 @@ from common_scaffold.agent_tools import (
     build_messages,
     get_tools_spec,
     VariableStore,
-    format_preview
+    format_preview,
+    auto_ensure_databases
 )
-
 
 query_dir = Path(__file__).parent / "query1"
 deployment_name = "o3"
@@ -38,32 +36,15 @@ elif isinstance(query_content, dict) and "query" in query_content:
 else:
     raise ValueError("query.json wrong format")
 
-
 with open("db_description.txt") as f:
     db_description = f.read()
 
-current_project = os.getenv("CURRENT_PROJECT", "GOOGLELOCAL").upper()
-mysql_db_name = os.getenv(f"{current_project}_MYSQL_DB_NAME")
-mysql_sql_file = os.getenv(f"{current_project}_MYSQL_SQL_FILE", "query_dataset/business_description.sql")
+project_dir = Path(__file__).parent
+with open(project_dir / "db_config.yaml") as f:
+    db_config = yaml.safe_load(f)
+db_clients = db_config["db_clients"]
 
-print(f"\n=== 🔗 MySQL: Ensuring database `{mysql_db_name}` is initialized ===")
-ensure_db(
-    db_type="mysql",
-    db_name=mysql_db_name,
-    sql_file=mysql_sql_file
-)
-
-db_clients = {
-    "business_dataset": {
-        "db_type": "mysql",
-        "db_name": mysql_db_name
-    },
-    "review_dataset": {
-        "db_type": "sqlite",
-        "db_path": os.getenv(f"{current_project}_SQLITE_DB_PATH")
-    }
-}
-
+auto_ensure_databases(db_clients)
 print(f"\n✅ DB connections ready: {db_clients.keys()}")
 
 def list_dbs_tool(**tool_args):
@@ -100,7 +81,6 @@ TOOLS = {
 tools_spec = get_tools_spec()
 
 
-
 def call_llm(messages):
     resp = client.chat.completions.create(
         model=deployment_name,
@@ -110,7 +90,6 @@ def call_llm(messages):
     assistant_msg = resp.choices[0].message
     print(f"\n💬 LLM response:\n{assistant_msg}\n")
 
-    # ✅ 优先走 tool_calls
     if assistant_msg.tool_calls:
         tool_call = assistant_msg.tool_calls[0]
         tool_call_id = tool_call.id
@@ -118,16 +97,14 @@ def call_llm(messages):
         tool_args = json.loads(tool_call.function.arguments)
         return assistant_msg, tool_call_id, tool_name, tool_args
 
-    # ✅ fallback: 直接 JSON 内容
     if assistant_msg.content:
         try:
             obj = json.loads(assistant_msg.content)
             if isinstance(obj, dict) and obj.get("tool") == "return_answer" and "args" in obj:
                 return assistant_msg, None, "return_answer", obj["args"]
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"⚠️ Failed to parse fallback content: {e}")
 
-    # ❌ 都没有满足格式
     raise ValueError("❌ LLM did not return any tool_calls or valid return_answer.")
 
 

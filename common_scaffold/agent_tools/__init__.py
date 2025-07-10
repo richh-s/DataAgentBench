@@ -6,6 +6,7 @@ from .prompt_builder import build_messages
 from .tool_spec import get_tools_spec
 from .variable_store import VariableStore
 from .preview_formatter import format_preview
+from .auto_db_check import auto_ensure_databases
 
 __all__ = [
     "list_dbs",
@@ -15,5 +16,6 @@ __all__ = [
     "build_messages",
     "get_tools_spec",
     "VariableStore",
-    "format_preview"
+    "format_preview",
+    "auto_ensure_databases"
 ]
