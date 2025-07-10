@@ -12,7 +12,7 @@ import re
 from common_scaffold import config
 
 
-def mysql_query(sql: str, db: str = None) -> pd.DataFrame:
+def mysql_query(sql: str, db_name: str = None) -> pd.DataFrame:
     """
     Execute a MySQL query and return result as a pandas DataFrame.
     Uses SQLAlchemy for better compatibility.
@@ -24,11 +24,11 @@ def mysql_query(sql: str, db: str = None) -> pd.DataFrame:
     Returns:
         pd.DataFrame: Query result.
     """
-    db = db or config.MYSQL_DB
+    db_name = db_name or config.MYSQL_DB
 
     uri = (
         f"mysql+mysqlconnector://{config.MYSQL_USER}:{config.MYSQL_PASSWORD}"
-        f"@{config.MYSQL_HOST}:{config.MYSQL_PORT}/{db}"
+        f"@{config.MYSQL_HOST}:{config.MYSQL_PORT}/{db_name}"
     )
     engine = create_engine(uri)
 

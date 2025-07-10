@@ -4,7 +4,6 @@ import os
 import sys
 from pathlib import Path
 import pandas as pd
-from typing import Any
 
 from dotenv import load_dotenv
 from openai import AzureOpenAI
@@ -14,7 +13,7 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))
 from common_scaffold.db_utils.loader import ensure_db, query_db, list_entities
 #from execute_python import execute_python
 
-query_dir = Path(__file__).parent / "query2"
+query_dir = Path(__file__).parent / "query1"
 deployment_name = "o3"
 
 load_dotenv()
@@ -45,7 +44,7 @@ ensure_db(
 )
 
 db_clients = {
-    "business_dataset": {
+    "googlelocal_db": {
         "db_type": "mysql",
         "db_name": mysql_db_name
     },
@@ -57,31 +56,25 @@ db_clients = {
 
 print(f"\n✅ DB connections ready: {db_clients.keys()}")
 
-def list_dbs(db_name):
-    info = db_clients.get(db_name)
-    if not info:
-        raise ValueError(f"Unknown db_name: {db_name}")
-    db_type = info["db_type"]
-
-    if db_type == "mysql":
-        tables_df = list_entities(db_type, db_name=info["db_name"])
-    elif db_type == "sqlite":
-        tables_df = list_entities(db_type, db_path=info["db_path"])
-    elif db_type == "duckdb":
-        tables_df = list_entities(db_type, db_path=info["db_path"])
-    elif db_type == "mongo":
-        tables_df = list_entities(db_type, db_name=info["db_name"])
-    else:
-        raise ValueError(f"Unsupported db_type: {db_type}")
-
-    tables = tables_df.iloc[:, 0].tolist() if isinstance(tables_df, pd.DataFrame) else tables_df
-
-    return {
-        "db_name": db_name,
-        "db_type": db_type,
-        "tables": tables
-    }
-
+def list_dbs():
+    result = []
+    for db_name, info in db_clients.items():
+        db_type = info["db_type"]
+        if db_type == "mysql":
+            tables_df = list_entities(db_type, db_name=info["db_name"])
+        elif db_type == "sqlite":
+            tables_df = list_entities(db_type, db_path=info["db_path"])
+        # …other type, write later
+        else:
+            continue
+        
+        tables = tables_df.iloc[:, 0].tolist() if isinstance(tables_df, pd.DataFrame) else tables_df
+        result.append({
+            "db_name": db_name,
+            "db_type": db_type,
+            "tables": tables
+        })
+    return result
 
 def transform_tool_args(tool_args, db_clients):
     db_name = tool_args["db_name"]
@@ -165,12 +158,7 @@ def generate_var_name(tool_name, tool_args, step=None):
             return f"df_result_{uuid4().hex[:6]}"
 
     elif tool_name == "list_dbs":
-        db_name = tool_args.get("db_name", "").lower()
-        if step is not None:
-            return f"tables_{db_name}_step{step}"
-        else:
-            return f"tables_{db_name}_{uuid4().hex[:6]}"
-
+        return "db_summary"
 
     elif tool_name == "execute_python":
         if step is not None:
@@ -180,40 +168,6 @@ def generate_var_name(tool_name, tool_args, step=None):
 
     else:
         return f"result_{uuid4().hex[:6]}"
-
-
-def execute_python(code: str) -> pd.DataFrame | Any:
-    """
-    Execute LLM-provided Python code in the context of _vars.
-    LLM 必须把结果赋值给 result.
-    """
-    safe_globals = {"pd": pd}
-    local_vars = _vars.copy()  # 提供当前变量上下文
-
-    try:
-        exec(code, safe_globals, local_vars)
-    except Exception as e:
-        raise RuntimeError(f"Error executing code: {e}")
-    
-    _vars.update(local_vars)
-    # 如果 LLM 按约定写在 result 里，就取出来
-    if "result" in local_vars:
-        _vars["result"] = local_vars["result"]
-        return local_vars["result"]
-
-    # 如果没写 result，也返回整个上下文
-    return _vars
-
-
-def return_answer(answer: str):
-    print(f"\n✅ Final Answer: {answer}")
-    # 这里可以调用 validate_answer(answer) 或其他逻辑
-    # validate_answer(answer)
-    sys.exit(0)
-
-def validate_answer(answer: str):
-    # TODO: implement validation logic here
-    pass
 
 
 client = AzureOpenAI(
@@ -231,23 +185,21 @@ You are a data analysis agent.
 You have access to the following tools, which I (the system) will execute for you:
 - query_db: execute a SQL or Mongo query on the specified database and return a dataframe.
 - list_dbs: list all available databases and their tables/collections.
-- execute_python: execute a snippet of Python code to process or combine the dataframes already loaded in memory.
+- execute_python: execute a snippet of Python code.
 - return_answer: return the final answer to the user and stop.
 
 ### Rules you MUST follow:
 ✅ You MUST always include all required arguments for the tool you call.  
 ✅ When using `query_db`, you MUST specify the `db_name`, the `sql` query, and the `db_type` (which you can infer from the DB description above). You can find the database formats (MySQL, SQLite, MongoDB, DuckDB) from the DB Description. 
-✅ When using `list_dbs`, you MUST specify the `db_name` of the database you want to inspect. The `db_name` is a logical name which you can infer from the DB Description above. 
+✅ When using `list_dbs`, you do NOT need to provide any arguments — just send an empty args `{}`.  
 ✅ You do NOT need to know or provide any `db_path` or actual file paths — you only use `db_name` returned by `list_dbs`.  
 ✅ All database connection details and paths are handled by the system. You only work with logical names (`db_name`, `table`) returned by `list_dbs`.
 ✅ If data has already been queried and stored in a variable, you MUST use that variable directly for further computations. If you really need to re-query to get complete or updated data, you MAY re-query.
-✅ If you want to join, merge, filter, or process previously queried dataframes, you MUST use the `execute_python` tool and write Python code that explicitly uses those variable names (e.g., `result = pd.merge(df_foo, df_bar, on='id')`).
-✅ You MUST use the exact variable names listed in the previous step(s) when writing execute_python code. Do NOT invent new variable names unless you explicitly assign them.
 
 ---
 
 ### Example of `list_dbs` call:
-{"tool": "list_dbs", "args": {"db_name": "google_dataset"}}
+{"tool": "list_dbs", "args": {}}
 
 ---
 
@@ -266,7 +218,6 @@ If you cannot proceed, also use `return_answer` with an appropriate message.
 
 ⚠️ You MUST NOT output any explanation, reasoning, comments, or natural language outside of the JSON.
 ⚠️ Never wrap the JSON in code fences (e.g., ```json … ```), never output multiple lines, and never include any text before or after the JSON.
-⚠️ Never output just {"answer": "..."} — always wrap your final answer in the required {"tool": "return_answer", "args": {...}} format.
 Only output a single valid JSON object that I can parse and execute.
 
 """
@@ -280,10 +231,8 @@ Only output a single valid JSON object that I can parse and execute.
 TOOLS = {
     "query_db": query_db,
     "list_dbs": list_dbs,
-    "execute_python": lambda code: execute_python(code),
-    "return_answer": lambda **kwargs: return_answer(**kwargs)
+    #"execute_python": execute_python
 }
-
 
 tools_spec = [
     {
@@ -312,21 +261,15 @@ tools_spec = [
             }
         }
     },
-    
     {
         "type": "function",
         "function": {
             "name": "list_dbs",
-            "description": "List tables or collections in a specific database.",
+            "description": "List all available databases and their tables or collections.",
             "parameters": {
                 "type": "object",
-                "properties": {
-                    "db_name": {
-                        "type": "string",
-                        "description": "Logical name of the database you want to inspect."
-                    }
-                },
-                "required": ["db_name"]
+                "properties": {},
+                "required": []
             }
         }
     },
@@ -334,20 +277,13 @@ tools_spec = [
         "type": "function",
         "function": {
             "name": "execute_python",
-            "description": (
-                "Execute a Python snippet to process or combine the dataframes already loaded in memory. "
-                "The code MUST use existing variable names and assign the result to a variable named `result`, e.g., "
-                "`result = pd.merge(df_foo, df_bar, on='id')`."
-            ),
+            "description": "Execute a Python snippet to perform computations on the dataframes already loaded in memory.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "code": {
                         "type": "string",
-                        "description": (
-                            "Python code to execute in the context of already loaded dataframes. "
-                            "You MUST assign the final output to a variable named `result`."
-                        )
+                        "description": "The Python code to execute."
                     }
                 },
                 "required": ["code"]
@@ -384,30 +320,18 @@ def call_llm(messages):
     assistant_msg = resp.choices[0].message
     print(f"\n💬 LLM response:\n{assistant_msg}\n")
 
-    # ✅ 优先走 tool_calls
-    if assistant_msg.tool_calls:
-        tool_call = assistant_msg.tool_calls[0]
-        tool_call_id = tool_call.id
-        tool_name = tool_call.function.name
-        tool_args = json.loads(tool_call.function.arguments)
-        return assistant_msg, tool_call_id, tool_name, tool_args
+    if not assistant_msg.tool_calls:
+        raise ValueError("❌ LLM did not return any tool_calls.")
 
-    # ✅ fallback: 直接 JSON 内容
-    if assistant_msg.content:
-        try:
-            obj = json.loads(assistant_msg.content)
-            if isinstance(obj, dict) and obj.get("tool") == "return_answer" and "args" in obj:
-                return assistant_msg, None, "return_answer", obj["args"]
-        except Exception:
-            pass
+    tool_call = assistant_msg.tool_calls[0]
+    tool_call_id = tool_call.id
+    tool_name = tool_call.function.name
+    tool_args = json.loads(tool_call.function.arguments)
 
-    # ❌ 都没有满足格式
-    raise ValueError("❌ LLM did not return any tool_calls or valid return_answer.")
-
+    return assistant_msg, tool_call_id, tool_name, tool_args
 
 
 step = 1
-_vars = {}
 while True:
     print(f"=== 🔄 Step {step} ===")
     assistant_msg, tool_call_id, tool_name, tool_args = call_llm(messages)
@@ -429,8 +353,7 @@ while True:
     result = TOOLS[tool_name](**tool_args)
 
     # 生成变量名
-    var_name = generate_var_name(tool_name, tool_args, step)
-    _vars[var_name] = result
+    var_name = generate_var_name(tool_name, tool_args)
 
     print(f"📄 Tool result stored in `{var_name}`")
 
@@ -458,7 +381,6 @@ while True:
         "name": tool_name,
         "content": (
             f"✅ Result of `{tool_name}` is stored in variable `{var_name}`.\n"
-            f"Available variables: {list(_vars.keys())}\n\n"
             f"Here is a preview (up to 10,000 chars):\n\n{preview}"
         )
     })
