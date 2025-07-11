@@ -49,4 +49,4 @@ if __name__ == "__main__":
     print(top_businesses.to_string(index=False))
 
     # Optional: save to CSV
-    # top_businesses.to_csv("top_highscore_businesses_2018.csv", index=False)
+    top_businesses.to_csv("ground_truth.csv", index=False, header=False)
