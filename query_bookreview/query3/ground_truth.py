@@ -70,5 +70,5 @@ if __name__ == "__main__":
         print("⚠️ No 'Children's Books' books found with avg rating ≥ 4.5 since 2020.")
 
     # Optional: Save results
-    # result_df.to_csv("hist_books_avgrating4_2020.csv", index=False)
+    result_df.to_csv("ground_truth.csv", index=False, header=False)
 

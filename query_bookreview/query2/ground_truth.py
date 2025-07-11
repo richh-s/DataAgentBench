@@ -80,5 +80,5 @@ if __name__ == "__main__":
     print(top_books.to_string(index=False))
 
     # Optional: Save results
-    # top_books.to_csv("english_litfic_rating5_books.csv", index=False)
+    top_books.to_csv("ground_truth.csv", index=False, header=False)
 
