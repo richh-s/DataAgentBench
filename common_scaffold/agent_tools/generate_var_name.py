@@ -1,4 +1,24 @@
+import re
 from uuid import uuid4
+
+def sanitize_name(name: str) -> str:
+    """
+    Sanitize a string to be a valid Python identifier component.
+    Replaces invalid characters with underscores.
+    """
+    name = name.strip("`;,")
+    name = re.sub(r'[^0-9a-zA-Z_]', '_', name)
+    return name
+
+def extract_table_name(sql: str) -> str:
+    """
+    Extract table name from SQL string.
+    Falls back to 'result' if not found.
+    """
+    match = re.search(r'from\s+([a-zA-Z0-9_`]+)', sql, re.IGNORECASE)
+    if match:
+        return sanitize_name(match.group(1))
+    return "result"
 
 def generate_var_name(tool_name: str, tool_args: dict, step: int | None = None) -> str:
     """
@@ -7,54 +27,36 @@ def generate_var_name(tool_name: str, tool_args: dict, step: int | None = None) 
     Args:
         tool_name (str): Name of the tool (query_db, list_dbs, execute_python, etc.)
         tool_args (dict): Arguments passed to the tool.
-        step (int, optional): Current step in the agent loop, for traceability.
+        step (int, optional): Current step in the agent loop.
 
     Returns:
-        str: Generated variable name.
+        str: Valid Python variable name.
     """
+    suffix = f"_step{step}" if step is not None else f"_{uuid4().hex[:6]}"
+
     if tool_name == "query_db":
-        db_name = tool_args.get("db_name", "").lower()
+        db_type = tool_args.get("db_type", "")
         sql_or_query = tool_args.get("sql", "") or tool_args.get("query", "")
 
-        # SQL
-        if tool_args.get("db_type") in {"mysql", "sqlite", "duckdb"} or \
-           (isinstance(sql_or_query, str) and sql_or_query.strip().lower().startswith(("select", "with"))):
+        if db_type in {"mysql", "sqlite", "duckdb"}:
             sql = sql_or_query.lower()
-            if "from" in sql:
-                table = sql.split("from")[1].split()[0].strip("`").strip()
-                if step is not None:
-                    return f"df_{table}_step{step}"
-                else:
-                    return f"df_{table}_{uuid4().hex[:6]}"
-            else:
-                return f"df_result_{uuid4().hex[:6]}"
+            table = extract_table_name(sql)
+            return f"df_{table}{suffix}"
 
-        # MongoDB
-        elif tool_args.get("db_type") == "mongo":
-            collection = tool_args.get("collection")
-            if collection:
-                if step is not None:
-                    return f"df_{collection}_step{step}"
-                else:
-                    return f"df_{collection}_{uuid4().hex[:6]}"
-            else:
-                return f"df_mongo_result_{uuid4().hex[:6]}"
+        elif db_type == "mongo":
+            collection = tool_args.get("collection", "mongo")
+            collection = sanitize_name(collection)
+            return f"df_{collection}{suffix}"
 
         else:
-            return f"df_result_{uuid4().hex[:6]}"
+            return f"df_result{suffix}"
 
     elif tool_name == "list_dbs":
-        db_name = tool_args.get("db_name", "").lower()
-        if step is not None:
-            return f"tables_{db_name}_step{step}"
-        else:
-            return f"tables_{db_name}_{uuid4().hex[:6]}"
+        db_name = sanitize_name(tool_args.get("db_name", "db"))
+        return f"tables_{db_name}{suffix}"
 
     elif tool_name == "execute_python":
-        if step is not None:
-            return f"exec_result_step{step}"
-        else:
-            return f"exec_result_{uuid4().hex[:6]}"
+        return f"exec_result{suffix}"
 
     else:
-        return f"result_{uuid4().hex[:6]}"
+        return f"result{suffix}"
