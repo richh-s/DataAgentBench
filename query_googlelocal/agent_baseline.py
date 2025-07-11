@@ -21,7 +21,7 @@ from common_scaffold.agent_tools import (
     auto_ensure_databases
 )
 
-query_dir = Path(__file__).parent / "query1"
+query_dir = Path(__file__).parent / "query3"
 deployment_name = "o3"
 
 load_dotenv()
@@ -54,12 +54,84 @@ def list_dbs_tool(**tool_args):
 def return_answer(answer: str):
     print(f"\n✅ Final Answer: {answer}")
     # 这里可以调用 validate_answer(answer) 或其他逻辑
-    # validate_answer(answer)
+    #validate_answer(answer)
     sys.exit(0)
 
 def validate_answer(answer: str):
-    # TODO: implement validation logic here
-    pass
+    """
+    Call query1/validate.py:validate() to validate answer and log the result.
+    """
+    import importlib.util
+    gt_path = query_dir / "validate.py"
+    spec = importlib.util.spec_from_file_location("validate", str(gt_path))
+    validate_mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(validate_mod)
+
+    is_valid, reason = validate_mod.validate(answer)
+
+    if is_valid:
+        print("✅ Validation passed!")
+    else:
+        print("❌ Validation failed!")
+
+    write_validation_log(
+        query_name=query_dir.name,
+        llm_answer=answer,
+        match_result=is_valid,
+        reason=reason
+    )
+
+from pathlib import Path
+from datetime import datetime
+import pandas as pd
+
+from pathlib import Path
+from datetime import datetime
+import pandas as pd
+
+def write_validation_log(query_name: str, llm_answer: str, match_result: bool, reason: str):
+    """
+    Write validation log:
+    - query name
+    - LLM answer
+    - ground truth (from ground_truth.csv)
+    - result ✅ or ❌
+    - reason if any
+    """
+    log_path = Path.cwd() / "validation_log.txt"
+
+    gt_path = Path.cwd() / query_name / "ground_truth.csv"
+    df_gt = pd.read_csv(gt_path, header=None)
+    gt_str = df_gt.to_csv(index=False, header=False).strip()
+
+    timestamp = datetime.now().isoformat(timespec="seconds")
+    result_str = "✅ MATCH" if match_result else f"❌ MISMATCH: {reason}"
+
+    log_lines = [
+        f"=== Validation Log ({timestamp}) ===",
+        f"Query: {query_name}",
+        "",
+        "LLM Answer:",
+        llm_answer.strip(),
+        "",
+        "Ground Truth:",
+        gt_str,
+        "",
+        f"Result: {result_str}",
+        "="*80,
+        ""
+    ]
+    log_entry = "\n".join(log_lines)
+
+    if log_path.exists():
+        old_content = log_path.read_text(encoding="utf-8")
+    else:
+        old_content = ""
+
+    with open(log_path, "w", encoding="utf-8") as f:
+        f.write(log_entry + "\n" + old_content)
+
+    print(f"\n📄 Validation log updated at: {log_path}")
 
 
 client = AzureOpenAI(
@@ -118,7 +190,9 @@ def run_agent_loop(messages, db_clients, _vars):
         print(f"🔷 Args: {tool_args}")
 
         if tool_name == "return_answer":
-            print(f"\n✅ Final Answer: {tool_args['answer']}")
+            #print(f"\n✅ Final Answer: {tool_args['answer']}")
+            #break
+            TOOLS[tool_name](**tool_args)
             break
 
         if tool_name not in TOOLS:
@@ -141,12 +215,13 @@ def run_agent_loop(messages, db_clients, _vars):
             "role": "tool",
             "tool_call_id": tool_call_id,
             "name": tool_name,
-            "content": (
-                f"✅ Result of `{tool_name}` is stored in variable `{var_name}`.\n"
-                f"Available variables: {list(_vars.keys())}\n\n"
-                f"Here is a preview (up to 10,000 chars):\n\n{preview}"
-            )
+            "content": json.dumps({
+                "available_variables": list(_vars.keys()),
+                "result_variable": var_name,
+                "result_preview": preview[:10000]
+            })
         })
+
 
         print(f"📄 Preview sent to LLM:\n{preview[:10000]}...\n")
 

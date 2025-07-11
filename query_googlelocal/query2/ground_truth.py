@@ -64,4 +64,4 @@ if __name__ == "__main__":
     print(result.to_string(index=False))
 
     # Optional: Save to CSV
-    # result.to_csv("high_rated_massage_therapists.csv", index=False)
+    result.to_csv("ground_truth.csv", index=False, header=False)
