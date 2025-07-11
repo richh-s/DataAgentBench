@@ -99,4 +99,4 @@ if __name__ == "__main__":
 
 
     # Optional: save to CSV
-    # top_businesses.to_csv("top_late_open_businesses.csv", index=False)
+    top_businesses.to_csv("ground_truth.csv", index=False, header=False)
