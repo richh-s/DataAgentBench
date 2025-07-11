@@ -5,6 +5,8 @@ import yaml
 from pathlib import Path
 from dotenv import load_dotenv
 from openai import AzureOpenAI
+from datetime import datetime
+import pandas as pd
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
@@ -54,7 +56,7 @@ def list_dbs_tool(**tool_args):
 def return_answer(answer: str):
     print(f"\n✅ Final Answer: {answer}")
     # 这里可以调用 validate_answer(answer) 或其他逻辑
-    #validate_answer(answer)
+    validate_answer(answer)
     sys.exit(0)
 
 def validate_answer(answer: str):
@@ -81,13 +83,6 @@ def validate_answer(answer: str):
         reason=reason
     )
 
-from pathlib import Path
-from datetime import datetime
-import pandas as pd
-
-from pathlib import Path
-from datetime import datetime
-import pandas as pd
 
 def write_validation_log(query_name: str, llm_answer: str, match_result: bool, reason: str):
     """
@@ -102,7 +97,12 @@ def write_validation_log(query_name: str, llm_answer: str, match_result: bool, r
 
     gt_path = Path.cwd() / query_name / "ground_truth.csv"
     df_gt = pd.read_csv(gt_path, header=None)
-    gt_str = df_gt.to_csv(index=False, header=False).strip()
+
+    # build ground truth string cleanly
+    gt_lines = [
+        ",".join(map(str, row)) for row in df_gt.values.tolist()
+    ]
+    gt_str = "\n".join(gt_lines)
 
     timestamp = datetime.now().isoformat(timespec="seconds")
     result_str = "✅ MATCH" if match_result else f"❌ MISMATCH: {reason}"
@@ -167,6 +167,8 @@ def call_llm(messages):
         tool_call_id = tool_call.id
         tool_name = tool_call.function.name
         tool_args = json.loads(tool_call.function.arguments)
+        if isinstance(tool_args, dict) and "args" in tool_args:
+            tool_args = tool_args["args"]
         return assistant_msg, tool_call_id, tool_name, tool_args
 
     if assistant_msg.content:
