@@ -10,8 +10,15 @@ import pandas as pd
 from pathlib import Path
 import re
 from common_scaffold import config
+from dotenv import load_dotenv
+import os
+MYSQL_CLIENT = os.getenv("MYSQL_CLIENT", "mysql")  
+MYSQL_USER = os.getenv("MYSQL_USER")
+MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD")
+MYSQL_HOST = os.getenv("MYSQL_HOST", "localhost")
+MYSQL_PORT = os.getenv("MYSQL_PORT", "3306")
 
-
+load_dotenv()
 def mysql_query(sql: str, db_name: str = None) -> pd.DataFrame:
     """
     Execute a MySQL query and return result as a pandas DataFrame.
@@ -87,9 +94,13 @@ def database_has_tables(db_name: str) -> bool:
     return len(tables) > 0
 
 
+import subprocess
+from pathlib import Path
+
 def import_sql_to_mysql(sql_file: str, db_name: str):
     """
-    Import a .sql file into MySQL, creating the database if necessary.
+    Import a .sql file into MySQL using the mysql CLI.
+    Creates the database if it does not exist.
 
     Args:
         sql_file (str): Path to the .sql file.
@@ -102,32 +113,28 @@ def import_sql_to_mysql(sql_file: str, db_name: str):
         port=config.MYSQL_PORT
     )
     cursor = conn.cursor()
-
-    # Create database if not exists and use it
-    cursor.execute(f"CREATE DATABASE IF NOT EXISTS {db_name}")
-    cursor.execute(f"USE {db_name}")
-
-    # Read SQL file
-    sql_text = Path(sql_file).read_text(encoding="utf-8")
-
-    # Replace any existing USE statements in the SQL file
-    sql_text = re.sub(r"USE\s+\w+;", f"USE {db_name};", sql_text, flags=re.IGNORECASE)
-
-    # Execute statements
-    statements = sql_text.split(';')
-    for statement in statements:
-        stmt = statement.strip()
-        if stmt:
-            print(f"▶️ Executing: {stmt[:60]}...")
-            try:
-                cursor.execute(stmt)
-            except mysql.connector.Error as err:
-                print(f"⚠️ Error: {err}")
-
-    conn.commit()
+    cursor.execute(f"CREATE DATABASE IF NOT EXISTS `{db_name}`")
     cursor.close()
     conn.close()
-    print(f"🎉 SQL file '{sql_file}' imported into database '{db_name}'.")
+
+    cmd = [
+        MYSQL_CLIENT,
+        f"-h{config.MYSQL_HOST}",
+        f"-u{config.MYSQL_USER}",
+        f"-p{config.MYSQL_PASSWORD}",
+        "--default-character-set=utf8mb4",
+        db_name
+    ]
+
+    print(f"▶️ Importing `{sql_file}` into `{db_name}`...")
+    try:
+        subprocess.run(cmd, stdin=open(sql_file, 'rb'), check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"⚠️ Import failed: {e}")
+        raise
+    else:
+        print(f"🎉 Successfully imported `{sql_file}` into `{db_name}`.")
+
 
 
 def ensure_mysql_data(db_name: str, sql_file: str):
