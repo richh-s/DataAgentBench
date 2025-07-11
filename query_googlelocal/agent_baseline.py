@@ -8,7 +8,7 @@ from openai import AzureOpenAI
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
-from common_scaffold.db_utils.loader import ensure_db, query_db
+from common_scaffold.db_utils.loader import query_db
 from common_scaffold.agent_tools import (
     list_dbs,
     transform_tool_args,

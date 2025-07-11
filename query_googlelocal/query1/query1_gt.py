@@ -48,4 +48,4 @@ if __name__ == "__main__":
     print(top_businesses.to_string(index=False))
 
     # Optionally save to CSV (uncomment if needed)
-    # top_businesses.to_csv("top_los_angeles_businesses.csv", index=False)
+    top_businesses.to_csv("ground_truth.csv", index=False)
