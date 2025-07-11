@@ -1,18 +1,23 @@
 # 📄 Project Dependencies
 
 This project depends on **MySQL**, **SQLite**, **DuckDB**, and **MongoDB** as data sources.  
-Please note the following requirements:
+The agent automatically reads database connection parameters from the `.env` file, detects and loads the database files, and establishes the connections as needed.  
+
+You only need to make sure that the required database services are running (where applicable), and the `.env` file is properly configured.  
+
+## 🔷 Database Requirements
 
 - ✅ **MySQL** — requires a **local MySQL server** to be installed and running.  
-  You must provide the host, port, username, and password in the `.env` file.  
-  The application connects to the running MySQL service on your machine or specified host.
+  The agent will automatically read the host, port, username, and password from the `.env` file and connect to the MySQL service on your machine or specified host.
+
 - ✅ **MongoDB** — requires a **local MongoDB server** to be installed and running.  
-  Similarly, configure the host, port, and (if applicable) username and password in the `.env` file.  
-  The application connects to the running MongoDB service on your machine or specified host.
+  Similarly, the agent will read the host, port, and username and password from the `.env` file and connect to the MongoDB service.
+
 - 📄 **SQLite** — does **not** require a separate service.  
-  SQLite is a file-based database. The application directly reads and writes `.db` files from your filesystem.
+  SQLite is a file-based database. The agent automatically detects and loads the `.db` files directly from the filesystem.
+
 - 📄 **DuckDB** — does **not** require a separate service.  
-  DuckDB is also a file-based, embedded database. The application directly accesses `.db` files as needed.
+  DuckDB is also a file-based, embedded database. The agent automatically detects and loads the `.db` files directly from the filesystem.
 
 Only **MySQL** and **MongoDB** require you to have their respective servers running locally (or accessible on a specified host). Please make sure both database services are properly installed and configured **before running the project**. 
 **SQLite** and **DuckDB** work as standalone files — no separate server installation is needed for them.
