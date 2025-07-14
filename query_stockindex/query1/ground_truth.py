@@ -42,3 +42,8 @@ if __name__ == "__main__":
     print(result.to_string(index=False))
     print("The highest average intraday volatility index:")
     print(result.head(1))
+
+    top_index = result.iloc[0]['Index']
+
+    with open("ground_truth.csv", "w") as f:
+        f.write(f"{top_index}\n")

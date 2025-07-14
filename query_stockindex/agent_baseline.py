@@ -56,7 +56,7 @@ def list_dbs_tool(**tool_args):
 def return_answer(answer: str):
     print(f"\n✅ Final Answer: {answer}")
     # 这里可以调用 validate_answer(answer) 或其他逻辑
-    #validate_answer(answer)
+    validate_answer(answer)
     sys.exit(0)
 
 def validate_answer(answer: str):
