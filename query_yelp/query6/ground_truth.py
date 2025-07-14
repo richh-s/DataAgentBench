@@ -62,4 +62,10 @@ if __name__ == "__main__":
     print(result.to_string(index=False))
 
     # Optional export
-    # result.to_csv("top_business_2016_H1.csv", index=False)
+    top_row = result.iloc[0]
+    name = top_row['name']
+    avg_rating = top_row['avg_rating']
+    categories = top_row['categories']
+
+    with open("ground_truth.csv", "w") as f:
+        f.write(f"{name},{categories}\n")
