@@ -48,5 +48,10 @@ if __name__ == "__main__":
     # Print result
     print(state, count, avg_rating)
 
-    # Optional: export full stats to CSV
-    # df_stats.to_csv("state_review_stats.csv", index=False)
+    top_row = df_stats.loc[df_stats['review_count'].idxmax()]
+
+    top_state = top_row['state']
+    top_avg_rating = top_row['avg_rating']
+
+    with open("ground_truth.csv", "w") as f:
+        f.write(f"{top_state},{top_avg_rating}\n")

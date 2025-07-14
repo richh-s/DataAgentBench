@@ -42,7 +42,8 @@ if __name__ == "__main__":
 
     # Print result
     print(avg_rating)
+
     
 
     # Optional: save reviews to CSV
-    # df_reviews.to_csv("indianapolis_reviews.csv", index=False)
+    pd.DataFrame([[avg_rating]]).to_csv("ground_truth.csv", index=False, header=False)

@@ -18,13 +18,18 @@ def execute_python(code: str, var_store: "VariableStore") -> pd.DataFrame | Any:
 
     try:
         exec(code, context)  # globals == locals == context
+    except IndexError as e:
+        print(f"⚠️ IndexError during code execution: {e}")
+        print(f"💡 Hint: Maybe tried to access `.iloc[0]` on an empty DataFrame. Returning None.")
+        context["result"] = None
     except Exception as e:
-        raise RuntimeError(f"Error executing code: {e}")
+        print(f"⚠️ Error executing code: {e}")
+        context["result"] = None
 
-    # 更新 VariableStore
+
     var_store.update(context)
 
-    # 返回 result
+
     if "result" in context:
         var_store["result"] = context["result"]
         return context["result"]
