@@ -45,3 +45,8 @@ for name in qualified_names:
     print(f"- {name}")
 
 print(f"\n Total: {len(qualified_names)} ETFs found.")
+
+with open("ground_truth.csv", "w") as f:
+    for name in qualified_names:
+        f.write(f"{name}\n")
+    f.write(f"Total: {len(qualified_names)}\n")
