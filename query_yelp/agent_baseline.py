@@ -23,7 +23,7 @@ from common_scaffold.agent_tools import (
     auto_ensure_databases
 )
 
-query_dir = Path(__file__).parent / "query1"
+query_dir = Path(__file__).parent / "query2"
 deployment_name = "o3"
 
 load_dotenv()
@@ -56,7 +56,7 @@ def list_dbs_tool(**tool_args):
 def return_answer(answer: str):
     print(f"\n✅ Final Answer: {answer}")
     # 这里可以调用 validate_answer(answer) 或其他逻辑
-    #validate_answer(answer)
+    validate_answer(answer)
     sys.exit(0)
 
 def validate_answer(answer: str):
