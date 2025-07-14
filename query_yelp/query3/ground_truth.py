@@ -73,3 +73,6 @@ if __name__ == "__main__":
     count = get_parking_business_count(business_file, review_file, target_year=2018)
 
     print(count)
+
+    with open("ground_truth.csv", "w") as f:
+        f.write(f"{count}\n")
