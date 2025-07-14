@@ -51,3 +51,8 @@ if __name__ == "__main__":
         print("→ None of the indices had more up days than down days.")
     else:
         print(result.to_string(index=False))
+
+
+        with open("ground_truth.csv", "w") as f:
+            for idx in result['Index']:
+                f.write(f"{idx}\n")
