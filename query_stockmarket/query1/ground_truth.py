@@ -27,3 +27,5 @@ if result[0] is None:
     print(" No data found for 2020.")
 else:
     print(f" Maximum Adjusted Close price for The RealReal, Inc. ({symbol}) in 2020: {result[0]}")
+    with open("ground_truth.csv", "w") as f:
+        f.write(f"{result[0]}\n")
