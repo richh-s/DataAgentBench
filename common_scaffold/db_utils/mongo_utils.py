@@ -9,6 +9,7 @@ import pandas as pd
 from pathlib import Path
 import subprocess
 from common_scaffold import config
+import json
 
 
 def database_exists(db_name: str) -> bool:
@@ -63,7 +64,13 @@ def ensure_mongo_data(db_name: str, dump_folder: str):
         import_bson_to_mongo(dump_folder, db_name)
 
 
-def mongo_query(db_name: str, collection: str, query: dict = None, limit: int = 5) -> pd.DataFrame:
+def mongo_query(
+    db_name: str,
+    collection: str,
+    query: dict = None,
+    projection: dict = None,
+    limit: int = 5
+) -> pd.DataFrame:
     """
     Execute a query on a MongoDB collection and return the result as a pandas DataFrame.
 
@@ -71,20 +78,26 @@ def mongo_query(db_name: str, collection: str, query: dict = None, limit: int = 
         db_name (str): Target database name.
         collection (str): Collection name to query.
         query (dict): MongoDB query filter. Default is empty (all documents).
+        projection (dict): MongoDB projection fields. Default is None (all fields).
         limit (int): Maximum number of documents to return. Default is 5.
 
     Returns:
         pd.DataFrame: Query result.
     """
     query = query or {}
+
     client = MongoClient(config.MONGO_URI)
     db = client[db_name]
-    cursor = db[collection].find(query).limit(limit)
+
+    cursor = db[collection].find(query, projection).limit(limit)
     data = list(cursor)
+
     client.close()
+
     if not data:
         print(f"⚠️ No data found in collection '{collection}'.")
         return pd.DataFrame()
+
     return pd.DataFrame(data)
 
 

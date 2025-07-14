@@ -26,7 +26,10 @@ def get_tools_spec() -> list[dict]:
                         },
                         "sql": {
                             "type": "string",
-                            "description": "The SQL query string to execute (or Mongo query if db_type is mongo)."
+                            "description": (
+                                "For SQL databases: the SQL query string to execute. "
+                                "For MongoDB: a JSON string describing the query, including `collection`, `filter`, `projection`, and optional `limit`."
+                            )
                         }
                     },
                     "required": ["db_name", "db_type", "sql"]

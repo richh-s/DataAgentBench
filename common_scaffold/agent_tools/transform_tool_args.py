@@ -1,3 +1,5 @@
+import json
+
 def transform_tool_args(tool_args: dict, db_clients: dict) -> dict:
     """
     Transform LLM-provided tool_args into concrete arguments
@@ -45,12 +47,14 @@ def transform_tool_args(tool_args: dict, db_clients: dict) -> dict:
         }
 
     elif db_type == "mongo":
+        query_json = json.loads(tool_args["sql"])
         return {
             "db_type": "mongo",
             "db_name": client["db_name"],
-            "collection": tool_args["collection"],
-            "query": tool_args.get("query", {}),
-            "limit": tool_args.get("limit", 5)
+            "collection": query_json["collection"],
+            "query": query_json.get("filter", {}),
+            "projection": query_json.get("projection"),
+            "limit": query_json.get("limit", 5)
         }
 
     else:
