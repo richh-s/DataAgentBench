@@ -64,4 +64,9 @@ if __name__ == "__main__":
 
     print(result.to_string(index=False))
 
-    # result.to_csv("top_wifi_state.csv", index=False)
+    top_row = result.iloc[0]
+    state = top_row['state']
+    avg_rating = top_row['avg_rating']
+
+    with open("ground_truth.csv", "w") as f:
+        f.write(f"{state},{avg_rating}\n")
