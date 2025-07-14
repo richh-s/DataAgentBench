@@ -23,7 +23,7 @@ from common_scaffold.agent_tools import (
     auto_ensure_databases
 )
 
-query_dir = Path(__file__).parent / "query7"
+query_dir = Path(__file__).parent / "query2"
 deployment_name = "o3"
 
 load_dotenv()
