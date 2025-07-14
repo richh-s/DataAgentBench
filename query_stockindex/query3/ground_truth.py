@@ -46,3 +46,6 @@ if __name__ == "__main__":
 
     print("Top 5 indices with highest return since 2000:")
     print(top_returns.to_string(index=False))
+    with open("ground_truth.csv", "w") as f:
+        for _, row in top_returns.iterrows():
+            f.write(f"{row['Index']},{row['Region']}\n")
