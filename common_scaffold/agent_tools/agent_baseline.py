@@ -71,7 +71,7 @@ def run_baseline_agent(
             print("✅ Validation passed!")
         else:
             print(f"❌ Validation failed: {reason}")
-        sys.exit(0)
+        return is_valid
 
     tools_spec = get_tools_spec()
 
@@ -127,8 +127,8 @@ def run_baseline_agent(
             print(f"🔷 Args: {tool_args}")
 
             if tool_name == "return_answer":
-                TOOLS[tool_name](**tool_args)
-                break
+                success = TOOLS[tool_name](**tool_args)
+                return success
 
             if tool_name not in TOOLS:
                 raise ValueError(f"❌ Unknown tool: {tool_name}")
@@ -164,8 +164,7 @@ def run_baseline_agent(
     _vars = VariableStore()
 
     try:
-        run_agent_loop(messages, db_clients, _vars)
-        return True
+        return run_agent_loop(messages, db_clients, _vars)
     except Exception as e:
         print(f"❌ Agent failed with error: {e}")
         fail_reason = f"❌ Agent crashed: {type(e).__name__}: {e}"
