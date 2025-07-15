@@ -45,7 +45,7 @@ def main():
     load_dotenv()
 
     # Load database description text
-    with open(project_dir / "db_description.txt") as f:
+    with open(project_dir / "db_description_withhint.txt") as f:
         db_description = f.read()
 
     # Load database connection configuration
@@ -110,10 +110,10 @@ def main():
     df = pd.concat([df, pd.DataFrame([overall_row])], ignore_index=True)
 
     # Optionally save as CSV too
-    df.to_csv(project_dir / "pass_at_k_results.csv", index=False)
+    df.to_csv(project_dir / "pass_at_k_results_withhint.csv", index=False)
 
     # Save results to Excel file
-    out_path = project_dir / "pass_at_k_results.xlsx"
+    out_path = project_dir / "pass_at_k_results_withhint.xlsx"
     df.to_excel(out_path, index=False)
     print(f"\n📄 Results saved to: {out_path}")
 
