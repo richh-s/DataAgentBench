@@ -5,8 +5,6 @@ import yaml
 from pathlib import Path
 from dotenv import load_dotenv
 from openai import AzureOpenAI
-from datetime import datetime
-import pandas as pd
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
@@ -20,7 +18,8 @@ from common_scaffold.agent_tools import (
     get_tools_spec,
     VariableStore,
     format_preview,
-    auto_ensure_databases
+    auto_ensure_databases,
+    validate_and_log
 )
 
 query_dir = Path(__file__).parent / "query3"
@@ -55,83 +54,16 @@ def list_dbs_tool(**tool_args):
 
 def return_answer(answer: str):
     print(f"\n✅ Final Answer: {answer}")
-    # 这里可以调用 validate_answer(answer) 或其他逻辑
-    validate_answer(answer)
-    sys.exit(0)
-
-def validate_answer(answer: str):
-    """
-    Call query1/validate.py:validate() to validate answer and log the result.
-    """
-    import importlib.util
-    gt_path = query_dir / "validate.py"
-    spec = importlib.util.spec_from_file_location("validate", str(gt_path))
-    validate_mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(validate_mod)
-
-    is_valid, reason = validate_mod.validate(answer)
+    # 调用封装后的 validate_and_log
+    is_valid, reason = validate_and_log(query_dir, answer)
 
     if is_valid:
         print("✅ Validation passed!")
     else:
-        print("❌ Validation failed!")
+        print(f"❌ Validation failed: {reason}")
 
-    write_validation_log(
-        query_name=query_dir.name,
-        llm_answer=answer,
-        match_result=is_valid,
-        reason=reason
-    )
+    sys.exit(0)
 
-
-def write_validation_log(query_name: str, llm_answer: str, match_result: bool, reason: str):
-    """
-    Write validation log:
-    - query name
-    - LLM answer
-    - ground truth (from ground_truth.csv)
-    - result ✅ or ❌
-    - reason if any
-    """
-    log_path = Path.cwd() / "validation_log.txt"
-
-    gt_path = Path.cwd() / query_name / "ground_truth.csv"
-    df_gt = pd.read_csv(gt_path, header=None)
-
-    # build ground truth string cleanly
-    gt_lines = [
-        ",".join(map(str, row)) for row in df_gt.values.tolist()
-    ]
-    gt_str = "\n".join(gt_lines)
-
-    timestamp = datetime.now().isoformat(timespec="seconds")
-    result_str = "✅ MATCH" if match_result else f"❌ MISMATCH: {reason}"
-
-    log_lines = [
-        f"=== Validation Log ({timestamp}) ===",
-        f"Query: {query_name}",
-        "",
-        "LLM Answer:",
-        llm_answer.strip(),
-        "",
-        "Ground Truth:",
-        gt_str,
-        "",
-        f"Result: {result_str}",
-        "="*80,
-        ""
-    ]
-    log_entry = "\n".join(log_lines)
-
-    if log_path.exists():
-        old_content = log_path.read_text(encoding="utf-8")
-    else:
-        old_content = ""
-
-    with open(log_path, "w", encoding="utf-8") as f:
-        f.write(log_entry + "\n" + old_content)
-
-    print(f"\n📄 Validation log updated at: {log_path}")
 
 
 client = AzureOpenAI(
