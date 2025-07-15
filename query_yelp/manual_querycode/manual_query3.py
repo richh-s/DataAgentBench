@@ -10,12 +10,14 @@ biz_collection = client_mongo["yelp_business"]["business"]
 
 con_duck = duckdb.connect("../query_dataset/yelp_user.db")
 
-# ========== Step 2: Setup Azure OpenAI ==========
+import os
+
+# ==== Step 0: Setup ====
 client = AzureOpenAI(
-    api_key="609ced4d971240b8a08f7fb0e6d846ea",
-    api_version="2024-08-01-preview",
-    azure_endpoint="https://promptdelta-nc.openai.azure.com",
-)
+        api_key=os.getenv("AZURE_API_KEY"),
+        api_version=os.getenv("AZURE_API_VERSION", "2023-05-15"),
+        azure_endpoint=os.getenv("AZURE_API_BASE")
+    )
 deployment_name = "gpt-4o-mini"
 
 # ========== Step 3: Load business_ref and review table ==========

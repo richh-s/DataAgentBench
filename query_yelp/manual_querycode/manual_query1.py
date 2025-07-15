@@ -1,16 +1,17 @@
 import json
 import duckdb
 import pandas as pd
+import os
 from pymongo import MongoClient
 from openai import AzureOpenAI  # or: from openai import OpenAI
 
 # ==== Step 0: Setup ====
-deployment_name = "gpt-4o-mini"
 client = AzureOpenAI(
-    api_key="609ced4d971240b8a08f7fb0e6d846ea",
-    api_version="2024-08-01-preview",
-    azure_endpoint="https://promptdelta-nc.openai.azure.com"
-)
+        api_key=os.getenv("AZURE_API_KEY"),
+        api_version=os.getenv("AZURE_API_VERSION", "2023-05-15"),
+        azure_endpoint=os.getenv("AZURE_API_BASE")
+    )
+deployment_name = "gpt-4o-mini"
 
 # ==== Step 1: Load business_ref from DuckDB ====
 con_duck = duckdb.connect("../query_dataset/yelp_user.db")
