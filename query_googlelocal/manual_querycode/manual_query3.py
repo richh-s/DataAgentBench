@@ -1,21 +1,26 @@
+import pandas as pd
 import mysql.connector
 import sqlite3
-import pandas as pd
-import openai
+import json
+import os
+from sqlalchemy import create_engine
 from openai import AzureOpenAI
+from dotenv import load_dotenv
 
 # ========== Configuration ========== #
-client = AzureOpenAI(
-    api_key="609ced4d971240b8a08f7fb0e6d846ea",
-    api_version="2024-08-01-preview",
-    azure_endpoint="https://promptdelta-nc.openai.azure.com",  # 不要加 /v1
-)
-deployment_name = "gpt-4o-mini" 
-
-#mysql_password = "your_mysql_password"  # Replace with your MySQL root password
+user = os.getenv("MYSQL_USER", "root")
+mysql_password = os.getenv("MYSQL_PASSWORD", "")
+host = os.getenv("MYSQL_HOST", "localhost")
+port = os.getenv("MYSQL_PORT", "3306")
 mysql_db = "ucb_db"
 mysql_table = "business_description"
-mysql_password = "20041025"
+
+client = AzureOpenAI(
+        api_key=os.getenv("AZURE_API_KEY"),
+        api_version=os.getenv("AZURE_API_VERSION", "2023-05-15"),
+        azure_endpoint=os.getenv("AZURE_API_BASE")
+    )
+deployment_name = "gpt-4o-mini"
 
 # ========== Step 1: Load business descriptions from MySQL ========== #
 def fetch_business_data():
