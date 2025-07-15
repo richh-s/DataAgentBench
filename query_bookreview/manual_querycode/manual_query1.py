@@ -16,9 +16,9 @@ database = "ucb_db"
 mysql_table = "books_info"
 
 client = AzureOpenAI(
-        api_key=os.getenv("AZURE_API_KEY_o3"),
-        api_version=os.getenv("AZURE_API_VERSION_o3", "2023-05-15"),
-        azure_endpoint=os.getenv("AZURE_API_BASE_o3")
+        api_key=os.getenv("AZURE_API_KEY"),
+        api_version=os.getenv("AZURE_API_VERSION", "2023-05-15"),
+        azure_endpoint=os.getenv("AZURE_API_BASE")
     )
 deployment_name = "gpt-4o-mini"
 
