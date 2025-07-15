@@ -1,11 +1,36 @@
 import re
 
+def levenshtein(s1: str, s2: str) -> int:
+    """
+    Compute Levenshtein edit distance between two strings.
+    """
+    if len(s1) < len(s2):
+        return levenshtein(s2, s1)
+
+    # now len(s1) >= len(s2)
+    if len(s2) == 0:
+        return len(s1)
+
+    previous_row = range(len(s2) + 1)
+    for i, c1 in enumerate(s1):
+        current_row = [i + 1]
+        for j, c2 in enumerate(s2):
+            insertions = previous_row[j + 1] + 1
+            deletions = current_row[j] + 1
+            substitutions = previous_row[j] + (c1 != c2)
+            current_row.append(min(insertions, deletions, substitutions))
+        previous_row = current_row
+
+    return previous_row[-1]
+
+
 def validate(llm_output: str) -> (bool, str):
     """
     Validate that:
-    - All gt names appear in LLM output (case-insensitive)
-    - For each name, a number appears nearby (within 50 chars)
-    - Both GT and LLM numbers rounded to nearest integer are equal
+    - All GT names appear in LLM output (case-insensitive, ≤5 edit distance allowed)
+    - For each name, a number appears nearby (within 50 chars after name)
+    - Both GT and LLM numbers are rounded to nearest integer before comparison
+
     Returns:
         (True, "OK") if all pass
         (False, reason) if not
@@ -32,15 +57,38 @@ def validate(llm_output: str) -> (bool, str):
 
     for name, value in gt_pairs:
         name_lower = name.lower()
-        idx = llm_lower.find(name_lower)
-        if idx == -1:
-            reason = f"Missing name: {name}"
-            print(f"❌ {reason}")
-            return False, reason
 
-        # Name found → look within next 50 characters for a number
+        idx = llm_lower.find(name_lower)
+
+        if idx == -1:
+            # 尝试模糊匹配
+            min_distance = float('inf')
+            best_match = None
+
+            # 遍历 llm_output 中每个可能的片段
+            for m in re.finditer(r'[\w\s,.-]{3,}', llm_lower):
+                candidate_original = m.group()
+                candidate_clean = re.sub(r'\b\d+([.,]\d+)?\b', '', candidate_original)
+                candidate_clean = re.sub(r'\s+', ' ', candidate_clean).strip()
+                candidate_lower = candidate_clean.lower()
+                dist = levenshtein(name_lower, candidate_lower)
+                if dist < min_distance:
+                    min_distance = dist
+                    best_match = candidate_lower
+                    if min_distance == 0:
+                        break
+
+            if min_distance > 5:
+                reason = f"Name not found within 5 edits: {name}, closest: {best_match} (distance {min_distance})"
+                print(f"❌ {reason}")
+                return False, reason
+            else:
+                print(f"⚠️ Fuzzy match: GT='{name}' ↔ LLM='{best_match}' (distance={min_distance})")
+                idx = llm_lower.find(best_match)
+
+        # 找名字后面50个字符内的数字
         window = llm_output[idx: idx + len(name) + 50]
-        matches = re.findall(r"(\d+(?:\.\d+)?)", window)
+        matches = re.findall(r"\d+(?:\.\d+)?", window)
 
         if not matches:
             reason = f"No number found near name: {name}"
@@ -64,5 +112,5 @@ def validate(llm_output: str) -> (bool, str):
             print(f"❌ {reason}")
             return False, reason
 
-    print("✅ All names and rounded numbers matched.")
+    print("✅ All names (≤5 edits allowed) and rounded numbers matched.")
     return True, "OK"

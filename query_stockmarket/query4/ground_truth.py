@@ -54,3 +54,6 @@ print("\n Top 5 non-ETF NYSE stocks (2017) with more up days than down days:")
 for symbol, name, up, down, diff in top5:
     print(f"- {name} ({symbol}): Up={up}, Down={down}, Diff={diff}")
 
+with open("ground_truth.csv", "w") as f:
+    for _, name, _, _, _ in top5:
+        f.write(f"{name}\n")

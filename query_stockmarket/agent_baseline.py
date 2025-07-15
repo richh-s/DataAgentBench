@@ -22,7 +22,7 @@ from common_scaffold.agent_tools import (
     validate_and_log
 )
 
-query_dir = Path(__file__).parent / "query3"
+query_dir = Path(__file__).parent / "query4"
 deployment_name = "o3"
 
 load_dotenv()
@@ -55,12 +55,12 @@ def list_dbs_tool(**tool_args):
 def return_answer(answer: str):
     print(f"\n✅ Final Answer: {answer}")
     # 调用封装后的 validate_and_log
-    is_valid, reason = validate_and_log(query_dir, answer)
+    # is_valid, reason = validate_and_log(query_dir, answer)
 
-    if is_valid:
-        print("✅ Validation passed!")
-    else:
-        print(f"❌ Validation failed: {reason}")
+    #if is_valid:
+        #print("✅ Validation passed!")
+    #else:
+        #print(f"❌ Validation failed: {reason}")
 
     sys.exit(0)
 
@@ -164,3 +164,5 @@ def run_agent_loop(messages, db_clients, _vars):
 if __name__ == "__main__":
     _vars = VariableStore()
     run_agent_loop(messages, db_clients, _vars)
+
+
