@@ -1,19 +1,26 @@
-import mysql.connector
 import pandas as pd
+import mysql.connector
 import sqlite3
 import json
+import os
+from sqlalchemy import create_engine
 from openai import AzureOpenAI
+from dotenv import load_dotenv
 
 # ========== Configuration ========== #
-mysql_password = "20041025"
+user = os.getenv("MYSQL_USER", "root")
+mysql_password = os.getenv("MYSQL_PASSWORD", "")
+host = os.getenv("MYSQL_HOST", "localhost")
+port = os.getenv("MYSQL_PORT", "3306")
 mysql_db = "ucb_db"
 mysql_table = "books_info"
-deployment_name = "gpt-4o-mini"
+
 client = AzureOpenAI(
-    api_key="609ced4d971240b8a08f7fb0e6d846ea",
-    api_version="2024-08-01-preview",
-    azure_endpoint="https://promptdelta-nc.openai.azure.com"
-)
+        api_key=os.getenv("AZURE_API_KEY_o3"),
+        api_version=os.getenv("AZURE_API_VERSION_o3", "2023-05-15"),
+        azure_endpoint=os.getenv("AZURE_API_BASE_o3")
+    )
+deployment_name = "gpt-4o-mini"
 
 # ========== Step 1: Load book metadata from MySQL ========== #
 def fetch_business_data():
