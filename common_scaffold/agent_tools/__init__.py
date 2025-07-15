@@ -7,6 +7,8 @@ from .tool_spec import get_tools_spec
 from .variable_store import VariableStore
 from .preview_formatter import format_preview
 from .auto_db_check import auto_ensure_databases
+from .validation_utils import validate_and_log
+from .validation_utils import write_validation_log
 
 __all__ = [
     "list_dbs",
@@ -17,5 +19,7 @@ __all__ = [
     "get_tools_spec",
     "VariableStore",
     "format_preview",
-    "auto_ensure_databases"
+    "auto_ensure_databases",
+    "validate_and_log",
+    "write_validation_log"
 ]

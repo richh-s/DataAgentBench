@@ -47,3 +47,6 @@ for symbol, name, avg_vol in results:
     print(f"- {symbol} ({name}): {avg_vol:.2f}")
 
 print(f"\n✅ Total: {len(results)} companies found.")
+with open("ground_truth.csv", "w") as f:
+    for _, name, avg_vol in results:
+        f.write(f"{name},{avg_vol:.2f}\n")
