@@ -162,16 +162,19 @@ def run_agent_loop(messages, db_clients, _vars):
 
         step += 1
 
-if __name__ == "__main__":
-    _vars = VariableStore()
 
+def main():
+    _vars = VariableStore()
     try:
         run_agent_loop(messages, db_clients, _vars)
+        return True
     except Exception as e:
         print(f"❌ Agent failed with error: {e}")
-
-        # 写日志，记录这次失败
-        fail_reason = f"Exception: {e}"
+        fail_reason = f"❌ Agent crashed: {type(e).__name__}: {e}"
         log_failed(query_dir, fail_reason)
+        return False
 
-        sys.exit(1)
+
+if __name__ == "__main__":
+    success = main()
+

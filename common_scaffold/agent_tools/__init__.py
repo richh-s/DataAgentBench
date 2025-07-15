@@ -10,6 +10,7 @@ from .auto_db_check import auto_ensure_databases
 from .validation_utils import validate_and_log
 from .validation_utils import write_validation_log
 from .validation_utils import log_failed
+from .agent_baseline import run_baseline_agent
 
 
 __all__ = [
@@ -24,5 +25,6 @@ __all__ = [
     "auto_ensure_databases",
     "validate_and_log",
     "write_validation_log",
-    "log_failed"
+    "log_failed",
+    "run_baseline_agent"
 ]

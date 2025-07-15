@@ -87,7 +87,7 @@ def log_failed(query_dir: Path, reason: str):
     """
     write_validation_log(
         query_name=query_dir.name,
-        llm_answer="FAILED",
+        llm_answer="FAILED due to agent crash",
         match_result=False,
         reason=reason
     )
