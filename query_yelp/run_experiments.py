@@ -35,8 +35,8 @@ def main():
     args = parser.parse_args()
 
     # Configurable parameters
-    n = 20
-    k_list = [1, 5, 10, 20]
+    n = 50
+    k_list = [1, 5, 10, 15, 20, 30, 40, 50]
 
     project_dir = Path(__file__).parent
     load_dotenv()
