@@ -62,10 +62,14 @@ def validate(llm_output: str) -> (bool, str):
 
         if idx != -1:
             print(f"✅ Exact match: {name}")
+            best_match = name_clean
+            match_len = name_len
+            min_distance = 0
         else:
             # fuzzy match
             min_distance = float('inf')
             best_match = ""
+            best_idx = -1
             window_range = 10
 
             for i in range(len(llm_output_clean) - name_len + 1):
@@ -84,6 +88,7 @@ def validate(llm_output: str) -> (bool, str):
                     if dist < min_distance:
                         min_distance = dist
                         best_match = candidate
+                        best_idx = start
                         if min_distance == 0:
                             break
                 if min_distance == 0:
@@ -91,14 +96,15 @@ def validate(llm_output: str) -> (bool, str):
 
             if min_distance <= 5:
                 print(f"⚠️ Fuzzy match: GT='{name}' ↔ LLM='{best_match}' (distance={min_distance})")
-                idx = llm_output_clean.find(best_match)
+                idx = best_idx
+                match_len = len(best_match)
             else:
                 reason = f"❌ Name not found within 5 edits: '{name}', closest: '{best_match}' (distance={min_distance})"
                 print(reason)
                 return False, reason
 
-        # check number after name
-        window = llm_output_clean[idx: idx + name_len + 50]
+        # unified window based on match_len
+        window = llm_output_clean[idx: idx + match_len + 50]
         matches = re.findall(r"\d+(?:\.\d+)?", window)
 
         if not matches:
@@ -125,3 +131,4 @@ def validate(llm_output: str) -> (bool, str):
 
     print("✅ All names (exact or ≤5 edits) and rounded numbers matched.")
     return True, "OK"
+
