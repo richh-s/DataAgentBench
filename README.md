@@ -31,35 +31,32 @@ pip install -r requirements.txt
 This project interacts with distributed databases, combining both server-based and file-based databases.
 You need to ensure the required services are running and files are available.
 
-- ✅ **MySQL** — requires a **local MySQL server** to be installed and running.  
-  The agent will automatically read the host, port, username, and password from the `.env` file and connect to the MySQL service on your machine or specified host.
-
-- ✅ **MongoDB** — requires a **local MongoDB server** to be installed and running.  
-  Similarly, the agent will read the host, port, and username and password from the `.env` file and connect to the MongoDB service.
-
-- 📄 **SQLite** — does **not** require a separate service.  
-  SQLite is a file-based database. The agent automatically detects and loads the `.db` files directly from the filesystem.
-
-- 📄 **DuckDB** — does **not** require a separate service.  
-  DuckDB is also a file-based, embedded database. The agent automatically detects and loads the `.db` files directly from the filesystem.
-
-Only **MySQL** and **MongoDB** require you to have their respective servers running locally (or accessible on a specified host). Please make sure both database services are properly installed and configured **before running the project**. 
-**SQLite** and **DuckDB** work as standalone files — no separate server installation is needed for them.
-
-
-## ⚙️ Prerequisites
-
-### 1️⃣ Install MySQL
-
+### ✅ MySQL
+- requires a **local MySQL server** to be installed and running.  
 - Install [MySQL](https://www.mysql.com/) on your machine according to your operating system.
 - After installation, start the MySQL server. Verify that you can connect using:
   ```bash
   mysql -u root -p
   ```
-  
-2️⃣ Install MongoDB
+- The agent reads MySQL host, port, username, password, and database name from the .env file.
+
+### ✅ MongoDB
+- requires a **local MongoDB server** to be installed and running.  
 - Install [MongoDB Community Edition](https://www.mongodb.com/) on your machine according to your operating system.
 - After installation, start the MongoDB server. Verify that you can connect.
+- The agent reads MySQL host, port, username, password, and database name from the .env file.
+
+### 📄 SQLite 
+- does **not** require a separate service.
+- SQLite is a file-based database. The agent automatically detects and loads the `.db` files directly from the filesystem.
+
+### 📄 DuckDB 
+- does **not** require a separate service.
+- DuckDB is also a file-based, embedded database. The agent automatically detects and loads the `.db` files directly from the filesystem.
+
+Only **MySQL** and **MongoDB** require you to have their respective servers running locally (or accessible on a specified host). Please make sure both database services are properly installed and configured **before running the project**. 
+**SQLite** and **DuckDB** work as standalone files — no separate server installation is needed for them.
+
 
 # 📄 .env Example
 
