@@ -53,7 +53,7 @@ You need to ensure the required services are running and files are available.
 Only **MySQL** and **MongoDB** require you to have their respective servers running locally (or accessible on a specified host). Please make sure both database services are properly installed and configured **before running the project**. 
 **SQLite** and **DuckDB** work as standalone files — no separate server installation is needed for them.
 
-
+---
 ## 🔧 Configure .env 
 Create a `.env` file in the project root directory with your actual credentials.
 Here is an example:
@@ -83,6 +83,7 @@ AZURE_API_VERSION=2023-05-15
 ```
 You only need to provide the API key for either OpenAI, Azure OpenAI, or another provider, depending on the service you’re using.
 
+---
 ## 🚀 Run the Benchmark
 This benchmark can be run in two ways:  
 ✅ Run on the provided datasets  
