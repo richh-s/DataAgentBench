@@ -1,11 +1,35 @@
-# 📄 Project Dependencies
+# 📄 UCB Query Benchmark Study
 
-This project depends on **MySQL**, **SQLite**, **DuckDB**, and **MongoDB** as data sources.  
-The agent automatically reads database connection parameters from the `.env` file, detects and loads the database files, and establishes the connections as needed.  
+This project is a **benchmark study of data agents (LLM-based agents) in querying distributed databases**, evaluating the capabilities of LLM-driven agents in accessing and reasoning over diverse data sources.
 
-You only need to make sure that the required database services are running (where applicable), and the `.env` file is properly configured.  
+It supports **MySQL**, **SQLite**, **DuckDB**, and **MongoDB** as backends.  
+The agent automatically reads database connection parameters from the `.env` file, detects and loads database files, and establishes connections as needed.
 
-## 🔷 Database Requirements
+---
+## Installation
+### Clone the repository
+```bash
+git clone https://github.com/Ruiqi-Chen-0216/UCB_Query.git
+cd UCB_Query
+
+```
+### Create a virtual environment
+It is recommended to use a dedicated virtual environment named `ucb_query`:
+Using conda:
+```bash
+conda create -n ucb_query python=3.9
+conda activate ucb_query
+```
+
+### Install dependencies
+Install Python dependencies from `requirements.txt`:
+```bash
+pip install -r requirements.txt
+```
+---
+## Database Setup
+This project interacts with distributed databases, combining both server-based and file-based databases.
+You need to ensure the required services are running and files are available.
 
 - ✅ **MySQL** — requires a **local MySQL server** to be installed and running.  
   The agent will automatically read the host, port, username, and password from the `.env` file and connect to the MySQL service on your machine or specified host.
@@ -44,10 +68,12 @@ Fill in your actual MySQL and MongoDB credentials.
 
 ```env
 # MySQL configuration
+MYSQL_CLIENT=your_local_mysql.exe_path
 MYSQL_HOST=localhost
-MYSQL_USER=root
-MYSQL_PASSWORD=your_mysql_password
 MYSQL_PORT=3306
+MYSQL_USER=root
+MYSQL_PASSWORD=your_password
+MYSQL_DB=test
 
 # MongoDB configuration
 MONGO_HOST=localhost
