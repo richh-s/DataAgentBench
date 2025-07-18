@@ -1,8 +1,6 @@
 # 📄 UCB Query Benchmark Study
 
 This project is a **benchmark study of data agents (LLM-based agents) in querying distributed databases**, evaluating the capabilities of LLM-driven agents in accessing and reasoning over diverse data sources.
-
-It supports **MySQL**, **SQLite**, **DuckDB**, and **MongoDB** as backends.  
 The agent automatically reads database connection parameters from the `.env` file, detects and loads database files, and establishes connections as needed.
 
 ---
@@ -125,7 +123,6 @@ MyDataset/
 - You can use the existing datasets (`GoogleLocal`, `BookReview`, etc.) as templates for all these files.
 - The `run_experiments.py` script and related modules in `common_scaffold/agent_tools` and `common_scaffold/db_utils` already implement the core logic — you just need to prepare your data and config.
 
----
 3️⃣ Run the benchmark
 Once everything is ready, run:
 ```bash
