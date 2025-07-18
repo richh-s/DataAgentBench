@@ -98,6 +98,60 @@ Example:
 cd query_yelp
 python run_experiments.py
 ```
+####  Using your own Agent with this Project
+
+If you want to implement and run **your own agent** (instead of using the provided baseline agent), you can still leverage the built-in database loading and management logic from this project.  
+We have already encapsulated all the database initialization and checking into a few utility functions under `common_scaffold/`, so you don’t need to manually connect or verify the databases.
+
+
+####  How to load the databases in your own agent
+
+You can simply include the following lines in your agent code:
+
+```python
+from common_scaffold.agent_tools import auto_ensure_databases
+import yaml
+
+with open("db_config.yaml", "r") as f:
+    db_config = yaml.safe_load(f)
+
+db_clients = db_config["db_clients"]
+auto_ensure_databases(db_clients)
+
+print(f"\n✅ DB connections ready: {db_clients.keys()}")
+```
+Just make sure to pass the path to the appropriate `db_config.yaml` file in your dataset folder.
+
+After these three lines execute, all databases defined in `db_config.yaml` will be automatically initialized and connected.
+
+Once done, you can also use `agent_tools.list_dbs()` and `agent_tools.query_db()` to interact with the databases seamlessly — they will use the correct connections under the hood.
+
+You only need to make sure to **correctly fill in the MongoDB and MySQL connection parameters in the `.env` file** — the rest is handled automatically.
+
+
+#### What happens under the hood?
+
+✅ **Load database configuration from `db_config.yaml`**  
+Reads the file to get the database paths and formats.
+
+✅ **Run `auto_ensure_databases`**  
+This calls:
+- `common_scaffold/agent_tools/auto_db_check.py` — detects the database format and checks if the database is ready.
+- `common_scaffold/db_utils/loader.py: ensure_db()` — makes sure the database exists and a connection is established.
+- `common_scaffold/db_utils/<db>_utils.py` — format-specific utilities that verify and establish the connection if it doesn’t already exist.
+
+If the database is being used for the first time:
+- It checks if the database files or connections exist.
+- If not, it sets up the connections (for MySQL/MongoDB) and imports the database if needed.
+
+
+#### Notes
+
+- You **do not need to manually connect to MySQL, MongoDB, SQLite, or DuckDB** — all handled automatically.
+- If the required local services (MySQL/MongoDB) are not running, the utilities will alert you.
+- You can always refer to `common_scaffold/agent_tools/agent_baseline.py` as a full example.
+- 📌 **TODO**: We plan to add support for **PostgreSQL** in the future and migrate the project’s MySQL-format databases to PostgreSQL format.
+
 
 ### 📂 Run on your own datasets
 
