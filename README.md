@@ -103,7 +103,7 @@ This benchmark can be run in two ways:
 ✅ Run on the provided datasets 
 - Using our provided agent
 - Using your own agent
-- 
+  
 ✅ Run on your own custom dataset
 
 ### 📂 Run our provided agent on our datasets
