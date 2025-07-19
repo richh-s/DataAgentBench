@@ -152,6 +152,103 @@ If the database is being used for the first time:
 - You can always refer to `common_scaffold/agent_tools/agent_baseline.py` as a full example.
 - 📌 **TODO**: We plan to add support for **PostgreSQL** in the future and migrate the project’s MySQL-format databases to PostgreSQL format.
 
+#### 🔴 If you prefer not to use our `agent_tools` and `db_utils`
+If you prefer to **only load the databases and run queries yourself** — without relying on the provided `agent_tools` and `db_utils` — you can still use the project’s database configurations and follow the standard connection methods.
+
+
+**Steps to connect manually**
+
+You still need to initialize the databases by reading the `db_config.yaml` and calling `auto_ensure_databases` (to ensure databases are ready and imported if needed).  
+After that, you can use standard Python libraries to connect and query each database directly.
+
+
+Step 1: Initialize the databases
+
+```python
+from common_scaffold.agent_tools import auto_ensure_databases
+import yaml
+
+with open("db_config.yaml", "r") as f:
+    db_config = yaml.safe_load(f)
+
+db_clients = db_config["db_clients"]
+auto_ensure_databases(db_clients)
+
+print(f"\n✅ DB connections ready: {db_clients.keys()}")
+```
+This ensures all the databases defined in `db_config.yaml` are ready.
+
+Step 2: Query the databases manually
+For SQLite: 
+Load the config and use the path from `db_config["db_clients"]["review_dataset"]["db_path"]` to connect:
+```python
+import sqlite3
+import pandas as pd
+
+db_path = SQLITE_DB_PATH_FROM_CONFIG
+
+conn = sqlite3.connect(db_path)
+df = pd.read_sql_query(sql, conn)
+conn.close()
+```
+
+For DuckDB: 
+Similarly, load the DuckDB file path from the config and connect:
+```python
+import duckdb
+from pathlib import Path
+
+db_path = DUCKDB_PATH_FROM_CONFIG
+db_file = Path(db_path)
+if not db_file.exists():
+    raise FileNotFoundError(f"DuckDB file not found: {db_path}")
+
+conn = duckdb.connect(database=str(db_file))
+df = conn.execute(sql).fetchdf()
+conn.close()
+```
+
+For MongoDB: 
+Use the `MONGO_URI` from your `.env` (or config) to connect:
+```python
+from pymongo import MongoClient
+
+client = MongoClient(MONGO_URI)
+db = client[db_name]
+
+cursor = db[collection].find(query, projection).limit(limit)
+data = list(cursor)
+
+client.close()
+```
+
+For MySQL: 
+Use the MySQL config to construct the URI and connect:
+```python
+from sqlalchemy import create_engine
+import pandas as pd
+
+db_name = MYSQL_DB_FROM_CONFIG
+
+uri = (
+    f"mysql+mysqlconnector://{MYSQL_USER}:{MYSQL_PASSWORD}"
+    f"@{MYSQL_HOST}:{MYSQL_PORT}/{db_name}"
+)
+
+engine = create_engine(uri)
+
+with engine.connect() as conn:
+    df = pd.read_sql(sql, conn)
+```
+**Notes**
+
+- These examples assume you have already run `auto_ensure_databases()` to ensure databases and connections are properly set up.
+- The `agent_tools` and `db_utils` already encapsulate these steps for you — if you use them, you don’t need to write these manually.
+- You may refer to the respective `<db>_utils.py` under `common_scaffold/db_utils/` for implementation details.
+
+📌 **TODO:** We will soon add support for **PostgreSQL** with a dedicated `postgres_utils.py`, and migrate the MySQL-format datasets to PostgreSQL.
+
+
 
 ### 📂 Run on your own datasets
 
