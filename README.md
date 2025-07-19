@@ -6,7 +6,7 @@ The agent automatically reads database connection parameters from the `.env` fil
 ## 📋 Table of Contents
 
 - [📄 UCB Query Benchmark Study](#-ucb-query-benchmark-study)
-- [🚀 Installation](#-installation)
+- [🚀 Installation](#installation)
   - [Clone the repository](#clone-the-repository)
   - [Create a virtual environment](#create-a-virtual-environment)
   - [Install dependencies](#install-dependencies)
