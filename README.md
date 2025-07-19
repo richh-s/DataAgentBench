@@ -100,7 +100,9 @@ You only need to provide the API key for either OpenAI, Azure OpenAI, or another
 ---
 ## 🚀 Run the Benchmark
 This benchmark can be run in two ways:  
-✅ Run on the provided datasets  
+✅ Run on the provided datasets 
+- Using our provided agent
+- Using your own agent
 ✅ Run on your own custom dataset
 
 ### 📂 Run on our datasets
@@ -114,7 +116,8 @@ Example:
 cd query_yelp
 python run_experiments.py
 ```
-####  Using your own Agent with this Project
+
+### 📂 Run on your own agent
 
 If you want to implement and run **your own agent** (instead of using the provided baseline agent), you can still leverage the built-in database loading and management logic from this project.  
 We have already encapsulated all the database initialization and checking into a few utility functions under `common_scaffold/`, so you don’t need to manually connect or verify the databases.
