@@ -179,6 +179,7 @@ print(f"\n✅ DB connections ready: {db_clients.keys()}")
 This ensures all the databases defined in `db_config.yaml` are ready.
 
 Step 2: Query the databases manually
+
 For SQLite: 
 Load the config and use the path from `db_config["db_clients"]["review_dataset"]["db_path"]` to connect:
 ```python
