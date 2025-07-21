@@ -168,10 +168,9 @@ If the database is being used for the first time:
 
 #### Notes
 
-- You **do not need to manually connect to MySQL, MongoDB, SQLite, or DuckDB** — all handled automatically.
-- If the required local services (MySQL/MongoDB) are not running, the utilities will alert you.
+- You **do not need to manually connect to PostgreSQL, MySQL, MongoDB, SQLite, or DuckDB** — all handled automatically.
+- If the required local services (PostgreSQL/MongoDB) are not running, the utilities will alert you.
 - You can always refer to `common_scaffold/agent_tools/agent_baseline.py` as a full example.
-- 📌 **TODO**: We plan to add support for **PostgreSQL** in the future and migrate the project’s MySQL-format databases to PostgreSQL format.
 
 #### 🔴 If you prefer not to use our `agent_tools` and `db_utils`
 If you prefer to **only load the databases and run queries yourself** — without relying on the provided `agent_tools` and `db_utils` — you can still use the project’s database configurations and follow the standard connection methods.
