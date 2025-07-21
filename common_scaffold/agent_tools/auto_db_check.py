@@ -10,6 +10,11 @@ def ensure_mongo_data(db_name, dump_folder):
     ensure_db(db_type="mongo", db_name=db_name, dump_folder=dump_folder)
     print(f"✅ MongoDB `{db_name}` ready.")
 
+def ensure_postgres_data(db_name, sql_file):
+    print(f"\n=== 🔗 PostgreSQL: Ensuring database `{db_name}` is initialized ===")
+    ensure_db(db_type="postgres", db_name=db_name, sql_file=sql_file)
+    print(f"✅ PostgreSQL `{db_name}` ready.")
+
 def auto_ensure_databases(db_clients: dict):
     print("\n=== 🚀 Starting database checks ===")
     for name, cfg in db_clients.items():
@@ -18,6 +23,11 @@ def auto_ensure_databases(db_clients: dict):
 
         if db_type == "mysql":
             ensure_mysql_data(
+                db_name=cfg["db_name"],
+                sql_file=cfg["sql_file"]
+            )
+        elif db_type == "postgres":
+            ensure_postgres_data(
                 db_name=cfg["db_name"],
                 sql_file=cfg["sql_file"]
             )

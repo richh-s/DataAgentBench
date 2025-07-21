@@ -27,6 +27,13 @@ def transform_tool_args(tool_args: dict, db_clients: dict) -> dict:
             "sql": sql,
             "db_name": client["db_name"]
         }
+    
+    elif db_type == "postgres":
+        return {
+            "db_type": "postgres",
+            "sql": sql,
+            "db_name": client["db_name"]
+        }
 
     elif db_type == "sqlite":
         if not client.get("db_path"):

@@ -21,7 +21,7 @@ def get_tools_spec() -> list[dict]:
                         },
                         "db_type": {
                             "type": "string",
-                            "enum": ["mysql", "sqlite", "duckdb", "mongo"],
+                            "enum": ["mysql", "sqlite", "duckdb", "mongo", "postgres"],
                             "description": "The type/format of the database, which you can infer from the database description."
                         },
                         "sql": {

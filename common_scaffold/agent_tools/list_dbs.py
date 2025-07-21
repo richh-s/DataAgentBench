@@ -13,6 +13,8 @@ def list_dbs(db_name: str, db_clients: dict) -> dict:
 
     if db_type == "mysql":
         tables_df = list_entities(db_type, db_name=client["db_name"])
+    elif db_type == "postgres":
+        tables_df = list_entities(db_type, db_name=client["db_name"])
     elif db_type in {"sqlite", "duckdb"}:
         if not client.get("db_path"):
             raise ValueError(f"{db_type} db_path missing for {db_name}")
