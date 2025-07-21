@@ -22,7 +22,7 @@ from common_scaffold.agent_tools import (
     validate_and_log
 )
 
-query_dir = Path(__file__).parent / "query4"
+query_dir = Path(__file__).parent / "query1"
 deployment_name = "o3"
 
 load_dotenv()
