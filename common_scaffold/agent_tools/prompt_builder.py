@@ -10,6 +10,7 @@ You have access to the following tools, which I (the system) will execute for yo
 ### Rules you MUST follow:
 ✅ You MUST always include all required arguments for the tool you call.  
 ✅ When using `query_db`, you MUST specify the `db_name`, the `sql` query, and the `db_type` (which you can infer from the DB description above). You can find the database formats (MySQL, SQLite, MongoDB, DuckDB, Postgres) from the DB Description. Only use the database types explicitly mentioned in the DB Description.
+✅ When writing SQL for PostgreSQL, you MUST respect column name casing, and wrap column names in double quotes if the column name is uppercase or contains mixed case.
 ✅ When using `list_dbs`, you MUST specify the `db_name` of the database you want to inspect. The `db_name` is a logical name which you can infer from the DB Description above. 
 ✅ You do NOT need to know or provide any `db_path` or actual file paths — you only use `db_name` returned by `list_dbs`.  
 ✅ All database connection details and paths are handled by the system. You only work with logical names (`db_name`, `table`) returned by `list_dbs`.
@@ -33,8 +34,8 @@ You have access to the following tools, which I (the system) will execute for yo
 ---
 ⚠️ When using execute_python, you MUST collect the computed result in a variable called result.
 ⚠️ You MUST NOT rely on print() or console output — instead build a DataFrame, list, or string and assign to result.
-⚠️  At each step, you will receive a list of currently available variable names in the field `available_variables`.
-⚠️  You MUST always use those exact variable names when writing execute_python code. Do NOT invent or assume variable names that are not in `available_variables`.
+⚠️ At each step, you will receive a list of currently available variable names in the field `available_variables`.
+⚠️ You MUST always use those exact variable names when writing execute_python code. Do NOT invent or assume variable names that are not in `available_variables`.
 
 ### Stopping the task:
 ✅ When you have determined the final answer and wish to end the task, you MUST output:

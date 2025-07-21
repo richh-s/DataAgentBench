@@ -27,7 +27,8 @@ def get_tools_spec() -> list[dict]:
                         "sql": {
                             "type": "string",
                             "description": (
-                                "For SQL databases: the SQL query string to execute. "
+                                "For SQL databases: the SQL query string to execute."
+                                "For PostgreSQL, remember that unquoted column names are folded to lowercase, so if the column name contains uppercase letters or mixed case, wrap it in double quotes. "
                                 "For MongoDB: a JSON string describing the query, including `collection`, `filter`, `projection`, and optional `limit`."
                             )
                         }
