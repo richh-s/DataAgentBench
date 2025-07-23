@@ -101,7 +101,7 @@ def validate(llm_output: str) -> (bool, str):
                 return False, reason
 
         # After hours block, look for score
-        matches = re.findall(r"(\d+\.\d+)", window)
+        matches = re.findall(r"(\d+(?:\.\d+)?)", window)
         if not matches:
             reason = f"No score found after hours info for business: {name}"
             print(f"❌ {reason}")
