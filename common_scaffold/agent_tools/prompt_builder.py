@@ -55,6 +55,7 @@ You have access to the following tools, which I (the system) will execute for yo
     "answer": "your answer here"
   }
 }
+```
 If you cannot proceed, also use `return_answer` with an appropriate message.
 
 ---
