@@ -25,7 +25,7 @@ import textwrap
 # -----------------------------------------------------------------------------
 # Config
 # -----------------------------------------------------------------------------
-query_dir = Path(__file__).parent / "query7"
+query_dir = Path(__file__).parent / "query3"
 deployment_name = "o3"
 
 load_dotenv()
@@ -35,7 +35,7 @@ load_dotenv()
 # ----------------------------------------------------------------------
 
 class TraceRecorder:
-    def __init__(self, path="Q14_nh1.html"):
+    def __init__(self, path="Q17_nh1.html"):
         self.path = path
         self.lines = []
         self._last_messages = None
