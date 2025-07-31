@@ -25,7 +25,7 @@ import textwrap
 # -----------------------------------------------------------------------------
 # Config
 # -----------------------------------------------------------------------------
-query_dir = Path(__file__).parent / "query3"
+query_dir = Path(__file__).parent / "query5"
 deployment_name = "o3"
 
 load_dotenv()
@@ -35,7 +35,7 @@ load_dotenv()
 # ----------------------------------------------------------------------
 
 class TraceRecorder:
-    def __init__(self, path="Q3_wh2.html"):
+    def __init__(self, path="Q12_nh2.html"):
         self.path = path
         self.lines = []
         self._last_messages = None
@@ -260,7 +260,7 @@ elif isinstance(query_content, dict) and "query" in query_content:
 else:
     raise ValueError("query.json wrong format")
 
-with open("db_description_withhint.txt") as f:
+with open("db_description.txt") as f:
     db_description = f.read()
 
 project_dir = Path(__file__).parent
