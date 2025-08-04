@@ -81,17 +81,25 @@ def list_entities(db_type, **kwargs):
         pandas.DataFrame or list: Names of tables/collections
     """
     if db_type == "mongo":
-        return list_collections(**kwargs)
+        result = list_collections(**kwargs)
     elif db_type == "duckdb":
-        return list_tables(**kwargs)
+        result = list_tables(**kwargs)
     elif db_type == "sqlite":
         sql = "SELECT name FROM sqlite_master WHERE type='table';"
-        return sqlite_query(sql=sql, **kwargs)
+        result = sqlite_query(sql=sql, **kwargs)
     elif db_type == "mysql":
         sql = "SHOW TABLES;"
-        return mysql_query(sql=sql, **kwargs)
+        result = mysql_query(sql=sql, **kwargs)
     elif db_type == "postgres":
         sql = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';"
-        return postgres_query(sql=sql, **kwargs)
+        result = postgres_query(sql=sql, **kwargs)
     else:
         raise ValueError(f"Unsupported db_type: {db_type}")
+
+    if isinstance(result, dict):
+        if result.get("success", False):
+            return result["data"]
+        else:
+            raise RuntimeError(f"Query failed in list_entities: {result.get('error')}")
+
+    return result  # e.g., for Mongo or others that return list directly

@@ -137,6 +137,7 @@ def run_baseline_agent(
                 tool_args = transform_tool_args(tool_args, db_clients)
 
             result = TOOLS[tool_name](**tool_args)
+            print(f"[DEBUG] Raw result from tool {tool_name}:\n{result}")
 
             var_name = generate_var_name(tool_name, tool_args, step)
 
@@ -162,10 +163,17 @@ def run_baseline_agent(
                     preview = format_preview(result["data"])
 
             else:
-                _vars[var_name] = result
-                print(f"📄 Tool result stored in `{var_name}`")
-                preview = format_preview(result)
-            
+                if isinstance(result, dict) and not result.get("success", False):
+                    error_msg = result.get("error", "Unknown tool error.")
+                    print(f"❌ {tool_name} failed: {error_msg}")
+                    _vars[var_name] = error_msg
+                    preview = f"[ERROR] {tool_name} failed: {error_msg}"
+                else:
+                    output_data = result.get("data", result)  # fallback for legacy
+                    _vars[var_name] = output_data
+                    print(f"📄 Tool result stored in `{var_name}`")
+                    preview = format_preview(output_data)
+                        
 
             messages.append(assistant_msg)
             messages.append({

@@ -7,31 +7,33 @@ def list_dbs(db_name: str, db_clients: dict) -> dict:
     """
     client = db_clients.get(db_name)
     if not client:
-        raise ValueError(f"Unknown db_name: {db_name}")
+        return {"success": False, "error": f"Unknown db_name: {db_name}"}
     
     db_type = client["db_type"]
 
-    if db_type == "mysql":
-        tables_df = list_entities(db_type, db_name=client["db_name"])
-    elif db_type == "postgres":
-        tables_df = list_entities(db_type, db_name=client["db_name"])
-    elif db_type in {"sqlite", "duckdb"}:
-        if not client.get("db_path"):
-            raise ValueError(f"{db_type} db_path missing for {db_name}")
-        tables_df = list_entities(db_type, db_path=client["db_path"])
-    elif db_type == "mongo":
-        tables_df = list_entities(db_type, db_name=client["db_name"])
-    else:
-        raise ValueError(f"Unsupported db_type: {db_type}")
+    try:
+        if db_type in {"sqlite", "duckdb"}:
+            if not client.get("db_path"):
+                return {"success": False, "error": f"{db_type} db_path missing for {db_name}"}
+            tables_df = list_entities(db_type, db_path=client["db_path"])
+        else:
+            tables_df = list_entities(db_type, db_name=client["db_name"])
+    except Exception as e:
+        return {"success": False, "error": f"list_entities failed: {type(e).__name__}: {e}"}
     
     # standardize output
     if isinstance(tables_df, pd.DataFrame):
-        tables = tables_df.iloc[:, 0].tolist()
+        table_names = tables_df.iloc[:, 0].tolist()
+    elif isinstance(tables_df, list):
+        table_names = tables_df
     else:
-        tables = tables_df
+        return {"success": False, "error": f"Unrecognized table format: {type(tables_df)}"}
 
     return {
-        "db_name": db_name,
-        "db_type": db_type,
-        "tables": tables
+        "success": True,
+        "data": {
+            "db_name": db_name,
+            "db_type": db_type,
+            "tables": table_names  # ✅ now it's a plain list
+        }
     }
