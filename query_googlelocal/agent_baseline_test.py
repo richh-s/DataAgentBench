@@ -10,7 +10,7 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from common_scaffold.agent_tools import run_baseline_agent
 
-query_dir = Path(__file__).parent / "query4"
+query_dir = Path(__file__).parent / "query3"
 deployment_name = "o3"
 
 load_dotenv()

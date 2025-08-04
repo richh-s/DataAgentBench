@@ -137,7 +137,7 @@ def run_baseline_agent(
                 tool_args = transform_tool_args(tool_args, db_clients)
 
             result = TOOLS[tool_name](**tool_args)
-            print(f"[DEBUG] Raw result from tool {tool_name}:\n{result}")
+            # print(f"[DEBUG] Raw result from tool {tool_name}:\n{result}")
 
             var_name = generate_var_name(tool_name, tool_args, step)
 
@@ -187,7 +187,14 @@ def run_baseline_agent(
                 })
             })
 
-            print(f"📄 Preview sent to LLM:\n{preview[:10000]}...\n")
+            if not preview.strip():
+                print("📄 Preview sent to LLM: \n[empty string]\n")
+            elif len(preview) > 10000:
+                print(f"📄 Preview sent to LLM:\n{preview[:10000]}\n... (truncated)\n")
+            else:
+                print(f"📄 Preview sent to LLM:\n{preview}\n")
+
+
 
             step += 1
 
