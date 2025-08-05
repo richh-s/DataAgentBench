@@ -42,7 +42,7 @@ def main():
     load_dotenv()
 
     # Load DB description & config
-    with open(project_dir / "db_description.txt") as f:
+    with open(project_dir / "db_description_withhint.txt") as f:
         db_description = f.read()
     with open(project_dir / "db_config.yaml") as f:
         db_config = yaml.safe_load(f)
@@ -52,13 +52,13 @@ def main():
         api_version=os.getenv("AZURE_API_VERSION_o3", "2023-05-15"),
         azure_endpoint=os.getenv("AZURE_API_BASE_o3")
     )
-    deployment_name = "o3"
+    deployment_name = "gpt-4.1"
 
     queries = find_query_dirs(project_dir)
     query_names = [q.name for q in queries]
 
     # load existing results if any
-    result_path = project_dir / "pass_at_k_results.csv"
+    result_path = project_dir / "pass_at_k_results_wh_gpt-4.1.csv"
     if result_path.exists():
         df_existing = pd.read_csv(result_path)
         done_queries = set(df_existing["query_id"].dropna().tolist())
@@ -92,6 +92,7 @@ def main():
 
         for run_id in range(1, n + 1):
             print(f"   ▶ Run {run_id}/{n}")
+            print(f"🧠 Using model deployment: {deployment_name}")
             success = run_baseline_agent(
                 query_dir=query_dir,
                 project_dir=project_dir,

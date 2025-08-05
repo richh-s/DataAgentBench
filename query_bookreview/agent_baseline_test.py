@@ -10,7 +10,7 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from common_scaffold.agent_tools import run_baseline_agent
 
-query_dir = Path(__file__).parent / "query4"
+query_dir = Path(__file__).parent / "query2"
 deployment_name = "o3"
 
 load_dotenv()
@@ -51,6 +51,6 @@ if __name__ == "__main__":
         db_description=db_description,
         db_config=db_config,
         client=client,
-        deployment_name="o4-mini"
+        deployment_name="gpt-4.1"
     )
     print("✅ Test completed" if success else "❌ Test failed")
