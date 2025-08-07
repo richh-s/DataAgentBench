@@ -42,7 +42,7 @@ def main():
     load_dotenv()
 
     # Load DB description & config
-    with open(project_dir / "db_description.txt") as f:
+    with open(project_dir / "db_description_withhint.txt") as f:
         db_description = f.read()
     with open(project_dir / "db_config.yaml") as f:
         db_config = yaml.safe_load(f)
@@ -58,7 +58,7 @@ def main():
     query_names = [q.name for q in queries]
 
     # load existing results if any
-    result_path = project_dir / "pass_at_k_results_nh_gpt-4.1.csv"
+    result_path = project_dir / "pass_at_k_results_wh_gpt-4.1.csv"
     if result_path.exists():
         df_existing = pd.read_csv(result_path)
         done_queries = set(df_existing["query_id"].dropna().tolist())
