@@ -27,7 +27,7 @@ class RepeatedCallTracker:
             self.last_call = current
             self.repeat_count = 1
 
-        if self.repeat_count > self.max_repeats:
+        if self.repeat_count >= self.max_repeats:
             print(f"⚠️ Detected {self.repeat_count} repeated calls to tool '{tool_name}' with same arguments.")
             return True
         return False
