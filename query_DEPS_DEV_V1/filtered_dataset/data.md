@@ -33,4 +33,3 @@
 
 "Name" — 项目名（和 PACKAGEVERSIONTOPROJECT.ProjectName 匹配）
 
-"StarsCount" — 用于排序（SQL 最终按这个字段降序）
