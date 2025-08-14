@@ -51,6 +51,6 @@ if __name__ == "__main__":
         db_description=db_description,
         db_config=db_config,
         client=client,
-        deployment_name="gpt-4.1"
+        deployment_name="o3"
     )
     print("✅ Test completed" if success else "❌ Test failed")
