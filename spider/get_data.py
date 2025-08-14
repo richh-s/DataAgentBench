@@ -8,14 +8,11 @@ conn = snowflake.connector.connect(
 )
 
 tables = [
-    "ADVISORIES", "DEPENDENCIES", "DEPENDENCYGRAPHEDGES",
-    "DEPENDENTS", "NUGETREQUIREMENTS", "PACKAGEVERSIONHASHES",
-    "PACKAGEVERSIONS", "PACKAGEVERSIONTOPROJECT",
-    "PROJECTS", "SNAPSHOTS"
+"CPC_DEFINITION", "PUBLICATIONS"
 ]
 
 for t in tables:
-    df = pd.read_sql(f"SELECT * FROM DEPS_DEV_V1.DEPS_DEV_V1.{t}", conn)
+    df = pd.read_sql(f"SELECT * FROM PATENTS.PATENTS.{t}", conn)
 
     df.to_csv(f"{t}.csv", index=False)
     print(f"download {t}.csv")
