@@ -8,7 +8,7 @@ conn = snowflake.connector.connect(
 )
 
 tables = [
-"CPC_DEFINITION", "PUBLICATIONS"
+"PUBLICATIONS"
 ]
 
 for t in tables:
