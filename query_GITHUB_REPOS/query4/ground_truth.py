@@ -38,7 +38,7 @@ df_primary_lang = df_lang_expanded[df_lang_expanded["rank"] == 1]
 print("Step 2: Primary languages:", len(df_primary_lang))
 
 # Step 3: Filter repos with JavaScript as primary language
-df_js_repo = df_primary_lang[df_primary_lang["language"] == "JavaScript"]
+df_js_repo = df_primary_lang[df_primary_lang["language"] != "Python"]
 print("Step 3: JavaScript repos:", len(df_js_repo))
 
 # Step 4: Join with commits and count per repo
@@ -46,7 +46,7 @@ df_commits_js = df_commits[df_commits["repo_name"].isin(df_js_repo["repo_name"])
 df_commit_counts = df_commits_js.groupby("repo_name")["commit"].count().reset_index(name="num_commits")
 
 # Step 5: Sort and take top 2
-df_top2 = df_commit_counts.sort_values(by="num_commits", ascending=False).head(2)
+df_top2 = df_commit_counts.sort_values(by="num_commits", ascending=False).head(5)
 print("Step 4: Top 2 repos with commit counts")
 print(df_top2)
 

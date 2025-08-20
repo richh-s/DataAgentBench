@@ -1,22 +1,55 @@
 import re
 
+def levenshtein(s1, s2):
+    """
+    Standard Levenshtein distance implementation
+    """
+    if len(s1) < len(s2):
+        return levenshtein(s2, s1)
+    if len(s2) == 0:
+        return len(s1)
+
+    previous = list(range(len(s2) + 1))
+    for i, c1 in enumerate(s1):
+        current = [i + 1]
+        for j, c2 in enumerate(s2):
+            insert = previous[j + 1] + 1
+            delete = current[j] + 1
+            substitute = previous[j] + (c1 != c2)
+            current.append(min(insert, delete, substitute))
+        previous = current
+
+    return previous[-1]
+
 def validate(llm_output: str) -> (bool, str):
     """
-    Check if the number 1077 appears in the LLM output.
-
-    The match should be exact (as a complete number, not part of another number),
-    and can be anywhere in the text.
-
-    Returns:
-        (True, "OK") if 1077 is found
-        (False, reason) otherwise
+    Validate whether all repo_names appear in LLM output,
+    using case-insensitive fuzzy matching (<= 3 char differences).
     """
-    matches = re.findall(r"\b1077\b", llm_output)
-    if matches:
-        print("✅ Found 1077 in LLM output.")
-        return True, "OK"
-    else:
-        reason = "❌ Number 1077 not found in LLM output."
-        print(reason)
-        return False, reason
+    ground_truth = [
+        "apple/swift",
+        "twbs/bootstrap",
+        "Microsoft/vscode",
+        "facebook/react",
+        "tensorflow/tensorflow"
+    ]
 
+    llm_output_lower = llm_output.lower()
+
+    for name in ground_truth:
+        target = name.lower()
+        window_size = len(target) + 3  # allow 3-character fuzzy match
+        found = False
+        for i in range(len(llm_output_lower) - window_size + 1):
+            window = llm_output_lower[i : i + window_size]
+            if levenshtein(window, target) <= 3:
+                print(f"✅ Matched: '{name}' with window '{window}'")
+                found = True
+                break
+        if not found:
+            reason = f"❌ Could not match: '{name}'"
+            print(reason)
+            return False, reason
+
+    print("✅ All repo names matched with fuzzy tolerance.")
+    return True, "OK"
