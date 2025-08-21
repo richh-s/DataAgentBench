@@ -23,8 +23,8 @@ The agent automatically reads database connection parameters from the `.env` fil
 ## Installation
 ### Clone the repository
 ```bash
-git clone https://github.com/Ruiqi-Chen-0216/UCB_Query.git
-cd UCB_Query
+git clone https://github.com/ucbepic/DataAgentBench.git
+cd DataAgentBench
 
 ```
 ### Create a virtual environment
