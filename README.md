@@ -278,7 +278,7 @@ You can also run our benchmark on your own dataset by following these steps:
 Create a new folder under the project root, e.g., `MyDataset`, with the following structure:
 ```
 MyDataset/
-    ├── query_dataset/               <- Your data, stored in a supported format (MySQL, MongoDB, SQLite, or DuckDB)
+    ├── query_dataset/               <- Your data, stored in a supported format (PostgreSQL, MySQL, MongoDB, SQLite, or DuckDB)
     ├── db_description.txt           <- A plain text description of the database
     ├── db_config.yaml               <- Basic database configuration (used for agent initialization and connection)
     ├── query_folder/
