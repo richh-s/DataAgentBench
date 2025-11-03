@@ -10,6 +10,7 @@ from pathlib import Path
 import subprocess
 from common_scaffold import config
 import json
+from bson.json_util import dumps
 
 
 def database_exists(db_name: str) -> bool:
@@ -69,7 +70,8 @@ def mongo_query(
     collection: str,
     query: dict = None,
     projection: dict = None,
-    limit: int = None
+    limit: int = None,
+    basic: bool = True
 ):
     """
     Execute a query on a MongoDB collection and return standardized result format.
@@ -104,8 +106,11 @@ def mongo_query(
         if not data:
             return {"success": True, "data": pd.DataFrame()} 
 
-        df = pd.DataFrame(data)
-        return {"success": True, "data": df}
+        if basic:
+            output = dumps(data)
+        else:
+            output = pd.DataFrame(data)
+        return {"success": True, "data": output}
 
     except Exception as e:
         return {"success": False, "error": f"{type(e).__name__}: {str(e)}"}

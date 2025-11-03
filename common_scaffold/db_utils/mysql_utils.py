@@ -12,6 +12,8 @@ import re
 from common_scaffold import config
 from dotenv import load_dotenv
 import os
+import json
+
 MYSQL_CLIENT = os.getenv("MYSQL_CLIENT", "mysql")  
 MYSQL_USER = os.getenv("MYSQL_USER")
 MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD")
@@ -19,7 +21,7 @@ MYSQL_HOST = os.getenv("MYSQL_HOST", "localhost")
 MYSQL_PORT = os.getenv("MYSQL_PORT", "3306")
 
 load_dotenv()
-def mysql_query(sql: str, db_name: str = None):
+def mysql_query(sql: str, db_name: str = None, basic: bool = True):
     """
     Execute a MySQL query and return standardized result format.
 
@@ -44,8 +46,15 @@ def mysql_query(sql: str, db_name: str = None):
 
     try:
         with engine.connect() as conn:
-            df = pd.read_sql(sql, conn)
-        return {"success": True, "data": df}
+            if basic:
+                result = conn.execute(sql)
+                cols = result.keys()
+                rows = result.fetchall()
+                out_dict = {"columns": cols, "rows": rows}
+                output = json.dumps(out_dict)
+            else:
+                output = pd.read_sql(sql, conn)
+        return {"success": True, "data": output}
     except Exception as e:
         return {"success": False, "error": f"{type(e).__name__}: {str(e)}"}
 

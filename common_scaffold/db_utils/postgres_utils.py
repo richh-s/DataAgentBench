@@ -12,13 +12,13 @@ from pathlib import Path
 from common_scaffold import config
 import os
 import subprocess
+import json
 
-# 加载环境变量
 from dotenv import load_dotenv
 load_dotenv()
 
 
-def postgres_query(sql: str, db_name: str = None, params: dict = None):
+def postgres_query(sql: str, db_name: str = None, params: dict = None, basic: bool = True):
     """
     Execute a PostgreSQL query and return standardized result format.
 
@@ -44,8 +44,15 @@ def postgres_query(sql: str, db_name: str = None, params: dict = None):
 
     try:
         with engine.connect() as conn:
-            df = pd.read_sql(text(sql), conn, params=params)
-        return {"success": True, "data": df}
+            if basic:
+                result = conn.execute(sql, params=params)
+                cols = result.keys()
+                rows = result.fetchall()
+                out_dict = {"columns": cols, "rows": rows}
+                output = json.dumps(out_dict)
+            else:
+                output = pd.read_sql(text(sql), conn, params=params)
+        return {"success": True, "data": output}
     except Exception as e:
         return {"success": False, "error": f"{type(e).__name__}: {str(e)}"}
 

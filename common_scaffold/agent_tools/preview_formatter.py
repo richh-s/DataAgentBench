@@ -28,3 +28,30 @@ def format_preview(result: Any, max_len: int = 9500) -> str:
         preview = preview[:max_len] + "\n... (truncated)"
 
     return preview
+
+
+def format_stdout(result: Any) -> str:
+    """
+    Format a result object into a readable string.
+
+    Args:
+        result (Any): The result to format (DataFrame, dict, list, str, etc.)
+
+    Returns:
+        str: Formatted preview string.
+    """
+    try:
+        if isinstance(result, pd.DataFrame):
+            preview = result.to_markdown()
+            ext = 'md'
+        elif isinstance(result, (dict, list)):
+            preview = json.dumps(result, indent=2, ensure_ascii=False)
+            ext = 'json'
+        else:
+            preview = str(result)
+            ext = 'txt'
+    except Exception as e:
+        preview = f"[Preview formatting error: {type(e).__name__}: {e}]"
+        ext = None
+
+    return preview, ext

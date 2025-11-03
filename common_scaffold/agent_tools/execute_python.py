@@ -2,7 +2,7 @@ import pandas as pd
 from typing import Any
 
 
-def execute_python(code: str, var_store: "VariableStore") -> dict:
+def execute_python(code: str, var_store: "VariableStore" = None) -> dict:
     """
     Execute LLM-provided Python code in the context of var_store.
     The code MUST assign its result to a variable named `result`.
@@ -18,8 +18,11 @@ def execute_python(code: str, var_store: "VariableStore") -> dict:
             "success": False, "error": error_message
         }
     """
-    context = var_store.copy()
-    context.update({"pd": pd})
+    if var_store:
+        context = var_store.copy()
+        context.update({"pd": pd})
+    else:
+        context = {"pd": pd}
 
     try:
         exec(code, context)
@@ -32,10 +35,12 @@ def execute_python(code: str, var_store: "VariableStore") -> dict:
         print(f"⚠️ {error_msg}")
         return {"success": False, "error": error_msg}
 
-    var_store.update(context)
+    if var_store:
+        var_store.update(context)
 
     if "result" in context:
-        var_store["result"] = context["result"]
+        if var_store:
+            var_store["result"] = context["result"]
         return {"success": True, "data": context["result"]}
     else:
         return {"success": False, "error": "`result` was not defined in executed code."}
