@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from openai import AzureOpenAI
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
-from common_scaffold.agent_tools import run_baseline_agent
+from common_scaffold.agent_tools import run_basic_agent
 
 
 def find_query_dirs(project_dir: Path):
@@ -93,7 +93,7 @@ def main():
         for run_id in range(1, n + 1):
             print(f"   ▶ Run {run_id}/{n}")
             print(f"🧠 Using model deployment: {deployment_name}")
-            success = run_baseline_agent(
+            success = run_basic_agent(
                 query_dir=query_dir,
                 project_dir=project_dir,
                 db_description=db_description,
