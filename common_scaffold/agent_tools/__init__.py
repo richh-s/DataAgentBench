@@ -12,6 +12,7 @@ from .validation_utils import write_validation_log
 from .validation_utils import log_failed
 from .termination_tracker import RepeatedCallTracker, QueryDbFailureTracker
 from .agent_baseline import run_baseline_agent
+from .agent_basic import run_basic_agent
 from .upload_file import upload_to_client
 
 
@@ -33,5 +34,6 @@ __all__ = [
     "RepeatedCallTracker",
     "QueryDbFailureTracker",
     "run_baseline_agent",
+    "run_basic_agent",
     "upload_to_client"
 ]

@@ -21,7 +21,7 @@ from common_scaffold.agent_tools import (
 )
 
 
-def run_baseline_agent(
+def run_basic_agent(
     query_dir: Path,
     project_dir: Path,
     db_description: str,
