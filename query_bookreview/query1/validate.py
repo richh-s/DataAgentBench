@@ -1,4 +1,4 @@
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     """
     Validate if ground truth '2020' is present in LLM output.
     Returns:
@@ -8,9 +8,7 @@ def validate(llm_output: str) -> (bool, str):
     gt = "2020"
 
     if gt in llm_output:
-        print("✅ Ground truth found in LLM output.")
-        return True, "OK"
+        return True, "Ground truth found in LLM output."
     else:
         reason = f"Ground truth '{gt}' not found in LLM output."
-        print(f"❌ {reason}")
         return False, reason

@@ -1,4 +1,4 @@
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     """
     Validate that:
     - All name+country pairs from ground truth appear in LLM output
@@ -35,7 +35,7 @@ def validate(llm_output: str) -> (bool, str):
         idx = llm_lower.find(name_lower, last_idx + 1)
         if idx == -1:
             reason = f"Missing name: {name}"
-            print(f"❌ {reason}")
+            
             return False, reason
 
         # get acceptable forms for this specific country
@@ -48,11 +48,9 @@ def validate(llm_output: str) -> (bool, str):
             reason = (
                 f"Country '{country}' (or alias) not found within 20 chars after name '{name}'"
             )
-            print(f"❌ {reason}")
+            
             return False, reason
 
-        print(f"✅ Found: {name} + {country} (or alias) at position {idx}")
         last_idx = idx
 
-    print("✅ All name-country pairs matched correctly in order.")
-    return True, "OK"
+    return True, "All name-country pairs matched correctly in order."

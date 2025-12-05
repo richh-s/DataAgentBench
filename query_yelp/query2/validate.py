@@ -1,6 +1,6 @@
 import re
 
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     """
     Validate if ground truth 'PA' or 'Pennsylvania' and its number (rounded to 2 decimals) 
     are present in LLM output.
@@ -27,10 +27,9 @@ def validate(llm_output: str) -> (bool, str):
 
     if not found_name:
         reason = f"Missing name: {ground_truth_names}"
-        print(f"❌ {reason}")
+        
         return False, reason
 
-    print(f"✅ Found name: '{found_name}' at position {idx}")
 
     # search for number near name (within 50 chars after name)
     window = llm_output[idx:idx+50]
@@ -38,20 +37,19 @@ def validate(llm_output: str) -> (bool, str):
 
     if not matches:
         reason = f"No number found near name: {found_name}"
-        print(f"❌ {reason}")
+        
         return False, reason
 
     for m in matches:
         try:
             val = float(m)
             if round(val, 2) == gt_rounded:
-                print(f"✅ Found: name='{found_name}', value≈{gt_rounded}")
-                return True, "OK"
+                return True, f"Found: name='{found_name}', value≈{gt_rounded}"
         except:
             continue
 
     reason = f"Number near '{found_name}' does not match ≈{ground_truth_value}"
-    print(f"❌ {reason}")
+    
     return False, reason
 
 

@@ -5,7 +5,8 @@ Provides unified methods to:
   - List tables/collections
   - Query data and return pandas DataFrame
 """
-
+import logging
+logger = logging.getLogger(__name__)
 from .mongo_utils import (
     mongo_query,
     ensure_mongo_data,
@@ -27,7 +28,7 @@ def query_db(db_type, **kwargs):
         kwargs: Database-specific arguments
 
     Returns:
-        pandas.DataFrame
+        {"success": bool, "data": pd.DataFrame or str | "error": str or None}
     """
     if db_type == "mongo":
         return mongo_query(**kwargs)
@@ -65,7 +66,7 @@ def ensure_db(db_type, **kwargs):
     elif db_type == "postgres":
         return ensure_postgres_data(**kwargs)
     else:
-        print(f"✅ No ensure step needed for db_type: {db_type}")
+        logger.debug(f"✅ No ensure step needed for db_type: {db_type}")
 
 
 
@@ -81,18 +82,18 @@ def list_entities(db_type, **kwargs):
         pandas.DataFrame or list: Names of tables/collections
     """
     if db_type == "mongo":
-        result = list_collections(**kwargs)
+        result = list_collections(**kwargs) # list[str]
     elif db_type == "duckdb":
-        result = list_tables(**kwargs)
+        result = list_tables(**kwargs) # json str
     elif db_type == "sqlite":
         sql = "SELECT name FROM sqlite_master WHERE type='table';"
-        result = sqlite_query(sql=sql, **kwargs)
+        result = sqlite_query(sql=sql, basic=False, **kwargs) # json str
     elif db_type == "mysql":
         sql = "SHOW TABLES;"
-        result = mysql_query(sql=sql, **kwargs)
+        result = mysql_query(sql=sql, basic=False, **kwargs) # json str
     elif db_type == "postgres":
         sql = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';"
-        result = postgres_query(sql=sql, **kwargs)
+        result = postgres_query(sql=sql, basic=False, **kwargs) # json str
     else:
         raise ValueError(f"Unsupported db_type: {db_type}")
 

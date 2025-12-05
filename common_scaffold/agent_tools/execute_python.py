@@ -18,7 +18,7 @@ def execute_python(code: str, var_store: "VariableStore" = None) -> dict:
             "success": False, "error": error_message
         }
     """
-    if var_store:
+    if var_store != None:
         context = var_store.copy()
         context.update({"pd": pd})
     else:
@@ -27,19 +27,17 @@ def execute_python(code: str, var_store: "VariableStore" = None) -> dict:
     try:
         exec(code, context)
     except IndexError as e:
-        error_msg = f"IndexError during code execution: {e} (e.g., `.iloc[0]` on empty DataFrame?)"
-        print(f"⚠️ {error_msg}")
+        error_msg = f"IndexError during code execution: {str(e)} (e.g., `.iloc[0]` on empty DataFrame?)"
         return {"success": False, "error": error_msg}
     except Exception as e:
-        error_msg = f"Error executing Python code: {type(e).__name__}: {e}"
-        print(f"⚠️ {error_msg}")
+        error_msg = f"Error executing Python code: {type(e).__name__}: {str(e)}"
         return {"success": False, "error": error_msg}
 
-    if var_store:
+    if var_store != None:
         var_store.update(context)
 
     if "result" in context:
-        if var_store:
+        if var_store != None:
             var_store["result"] = context["result"]
         return {"success": True, "data": context["result"]}
     else:

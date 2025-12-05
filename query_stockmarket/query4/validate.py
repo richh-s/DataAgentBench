@@ -23,7 +23,7 @@ def levenshtein(s1: str, s2: str) -> int:
     return previous_row[-1]
 
 
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     """
     Validate that:
     - Each GT name appears in LLM output (case-insensitive, exact or <=5 edits)
@@ -49,7 +49,6 @@ def validate(llm_output: str) -> (bool, str):
 
         # First: exact match
         if gt_name_clean in llm_output_clean:
-            print(f"✅ Exact match: {gt_name}")
             continue
 
         # Else: fuzzy match within a window
@@ -81,14 +80,12 @@ def validate(llm_output: str) -> (bool, str):
                 break
 
         if min_distance <= 5:
-            print(f"⚠️ Fuzzy match: GT='{gt_name}' ↔ LLM='{best_match}' (distance={min_distance})")
+            pass
         else:
             reason = (
-                f"❌ Name not found within 5 edits: '{gt_name}', "
+                f"Name not found within 5 edits: '{gt_name}', "
                 f"closest: '{best_match}' (distance={min_distance})"
             )
-            print(reason)
             return False, reason
 
-    print("✅ All names matched (exact or ≤5 edits).")
-    return True, "OK"
+    return True, "All names matched (exact or ≤5 edits)."

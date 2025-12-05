@@ -1,6 +1,6 @@
 import re
 
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     """
     Validate LLM output for histology average expression task.
 
@@ -26,8 +26,7 @@ def validate(llm_output: str) -> (bool, str):
     for hist_code, true_score in ground_truth:
         idx = llm_output.find(hist_code)
         if idx == -1:
-            reason = f"❌ Missing histology type: {hist_code}"
-            print(reason)
+            reason = f"Missing histology type: {hist_code}"
             return False, reason
 
         # Look 50 characters after the histology code (not including the code itself)
@@ -41,14 +40,11 @@ def validate(llm_output: str) -> (bool, str):
             try:
                 val = float(m)
                 if round(val, 4) == gt_rounded:
-                    print(f"✅ Matched {hist_code} with score ~{gt_rounded}")
                     break
             except ValueError:
                 continue
         else:
-            reason = f"❌ No matching score found near {hist_code} (expected ~{gt_rounded})"
-            print(reason)
+            reason = f"No matching score found near {hist_code} (expected ~{gt_rounded})"
             return False, reason
 
-    print("✅ All histology codes and scores matched successfully.")
-    return True, "OK"
+    return True, "All histology codes and scores matched successfully."

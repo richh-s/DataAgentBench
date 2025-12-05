@@ -1,6 +1,6 @@
 import re
 
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     """
     Validate if 'PA' or 'Pennsylvania' (case-insensitive) 
     and its number (rounded to 2 decimals) are present in LLM output.
@@ -18,7 +18,6 @@ def validate(llm_output: str) -> (bool, str):
         name_lower = name.lower()
         idx = llm_output_lower.find(name_lower)
         if idx != -1:
-            print(f"✅ Found name: '{name}' at position {idx}")
 
             # look for a number in the next 50 chars
             window = llm_output[idx: idx+50]
@@ -26,23 +25,22 @@ def validate(llm_output: str) -> (bool, str):
 
             if not matches:
                 reason = f"No number found near name: {name}"
-                print(f"❌ {reason}")
+                
                 return False, reason
 
             for m in matches:
                 try:
                     val = float(m)
                     if round(val, 2) == gt_rounded:
-                        print(f"✅ Found: name='{name}', value≈{gt_rounded}")
-                        return True, "OK"
+                        return True, f"Found: name='{name}', value≈{gt_rounded}"
                 except Exception:
                     continue
 
             reason = f"Number near '{name}' does not match ≈{gt_rounded}"
-            print(f"❌ {reason}")
+            
             return False, reason
 
     reason = f"Neither 'PA' nor 'Pennsylvania' found in LLM output"
-    print(f"❌ {reason}")
+    
     return False, reason
 

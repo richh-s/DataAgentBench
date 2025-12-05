@@ -1,6 +1,6 @@
 import re
 
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     """
     Validate if LLM output contains the expected agent ID.
     Expected: 005Wt000003NIliIAG
@@ -15,8 +15,7 @@ def validate(llm_output: str) -> (bool, str):
 
     # Check for exact ID match (case sensitive for IDs)
     if expected in llm_output_clean:
-        print(f"✅ Found expected agent ID: {expected}")
-        return True, "OK"
+        return True, f"Found expected agent ID: {expected}"
 
     # Check if any agent ID pattern is present (starts with '005')
     agent_pattern = r'005[A-Za-z0-9]{15}'
@@ -24,9 +23,9 @@ def validate(llm_output: str) -> (bool, str):
 
     if found_ids:
         reason = f"Found agent IDs {found_ids}, but expected '{expected}'"
-        print(f"❌ {reason}")
+        
         return False, reason
     else:
         reason = "No agent ID found in LLM output"
-        print(f"❌ {reason}")
+        
         return False, reason

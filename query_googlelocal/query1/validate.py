@@ -1,4 +1,4 @@
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     """
     Validate LLM output for query1:
     - All names from ground truth must appear (case-sensitive, exact).
@@ -20,15 +20,14 @@ def validate(llm_output: str) -> (bool, str):
         idx = llm_output.find(name)
         if idx == -1:
             reason = f"Missing name in LLM output: {name}"
-            print(f"❌ {reason}")
+            
             return False, reason
 
         if idx < last_index:
             reason = f"Name out of order: {name}"
-            print(f"❌ {reason}")
+            
             return False, reason
 
         last_index = idx
 
-    print("✅ All names are present and in correct order.")
-    return True, "OK"
+    return True, "All names are present and in correct order."

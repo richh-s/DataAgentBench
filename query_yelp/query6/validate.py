@@ -1,4 +1,4 @@
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     """
     Validate if:
     - name is present
@@ -20,15 +20,14 @@ def validate(llm_output: str) -> (bool, str):
     # check name
     if name_lower not in llm_lower:
         reason = f"Missing name: {name}"
-        print(f"❌ {reason}")
+        
         return False, reason
 
     # check all categories
     for cat in categories_lower:
         if cat not in llm_lower:
             reason = f"Missing category: {cat}"
-            print(f"❌ {reason}")
+            
             return False, reason
 
-    print("✅ Name and all categories are present.")
-    return True, "OK"
+    return True, "Name and all categories are present."

@@ -1,4 +1,4 @@
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     """
     Validate that all ground truth project names appear in LLM output.
     
@@ -23,8 +23,7 @@ def validate(llm_output: str) -> (bool, str):
     for project in ground_truth_projects:
         if project.lower() not in llm_output_lower:
             reason = f"Missing project name: {project}"
-            print(f"❌ {reason}")
+            
             return False, reason
 
-    print("✅ All project names found.")
-    return True, "OK"
+    return True, "All project names found."

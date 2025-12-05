@@ -13,11 +13,11 @@ def transform_tool_args(tool_args: dict, db_clients: dict) -> dict:
         dict: Transformed arguments suitable for query_db.
     """
     db_name = tool_args["db_name"]
-    sql = tool_args.get("sql")
+    sql = tool_args.get("query")
     client = db_clients.get(db_name)
 
     if not client:
-        return {"success": False, "error": f"Unknown db_name: {db_name}"}
+        return {"success": False, "error": f"Unknown database name: {db_name}"}
 
     db_type = client["db_type"]
 
@@ -55,11 +55,11 @@ def transform_tool_args(tool_args: dict, db_clients: dict) -> dict:
 
     elif db_type == "mongo":
         try:
-            query_json = json.loads(tool_args["sql"])
+            query_json = json.loads(tool_args["query"])
         except json.JSONDecodeError as e:
             return {
                 "success": False,
-                "error": f"Invalid Mongo JSON query: {e}"
+                "error": f"Invalid Mongo query: {str(e)}"
             }
         
         return {
@@ -72,4 +72,4 @@ def transform_tool_args(tool_args: dict, db_clients: dict) -> dict:
         }
 
     else:
-        return {"success": False, "error": f"Unsupported db_type: {db_type}"}
+        return {"success": False, "error": f"Unsupported database type: {db_type}"}

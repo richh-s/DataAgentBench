@@ -19,7 +19,7 @@ def duckdb_query(db_path: str, sql: str, basic: bool = True):
 
     Returns:
         dict: {
-            "success": True, "data": DataFrame
+            "success": True, "data": json str if basic else DataFrame
         } or {
             "success": False, "error": error message
         }
@@ -69,4 +69,4 @@ def list_tables(db_path: str) -> pd.DataFrame:
     FROM information_schema.tables 
     WHERE table_schema = 'main';
     """
-    return duckdb_query(db_path, sql)
+    return duckdb_query(db_path, sql, False)

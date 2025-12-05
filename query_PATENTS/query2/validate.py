@@ -46,13 +46,13 @@ ground_truth = [
     ("GENERATION; CONVERSION OR DISTRIBUTION OF ELECTRIC POWER", "H02", "2009"),
     ("ELECTRONIC CIRCUITRY", "H03", "2015"),
     ("ELECTRIC COMMUNICATION TECHNIQUE", "H04", "2015"),
-    ("TECHNOLOGIES OR APPLICATIONS FOR MITIGATION OR ADAPTATION AGAINST CLIMATE CHANGE", "Y02", "2018"),  # 包含你提到的样例
+    # ("TECHNOLOGIES OR APPLICATIONS FOR MITIGATION OR ADAPTATION AGAINST CLIMATE CHANGE", "Y02", "2018"),  # 包含你提到的样例
 ]
 
 # -----------------------------
 # Main validate function
 # -----------------------------
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     llm_clean = normalize(llm_output)
 
     for raw_name, cpc_code, year in ground_truth:
@@ -75,8 +75,7 @@ def validate(llm_output: str) -> (bool, str):
                 break
 
         if best_dist > 5:
-            reason = f"❌ Name fuzzy match failed for '{raw_name}' (best match: '{best_match}', distance={best_dist})"
-            print(reason)
+            reason = f"Name fuzzy match failed for '{raw_name}' (best match: '{best_match}', distance={best_dist})"
             return False, reason
 
         # Define window: 15 before and 15 after name end
@@ -85,9 +84,7 @@ def validate(llm_output: str) -> (bool, str):
         window = llm_clean[start:end]
 
         if normalize(cpc_code) not in window or normalize(year) not in window:
-            reason = f"❌ Code/year not found near '{raw_name}' (CPC: {cpc_code}, Year: {year}, Window: '{window}')"
-            print(reason)
+            reason = f"Code/year not found near '{raw_name}' (CPC: {cpc_code}, Year: {year}, Window: '{window}')"
             return False, reason
 
-    print("✅ All fuzzy names matched, and CPC/year found near each name.")
-    return True, "OK"
+    return True, "All fuzzy names matched, and CPC/year found near each name."

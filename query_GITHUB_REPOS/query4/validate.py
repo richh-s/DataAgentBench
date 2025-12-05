@@ -21,7 +21,7 @@ def levenshtein(s1, s2):
 
     return previous[-1]
 
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     """
     Validate whether all repo_names appear in LLM output,
     using case-insensitive fuzzy matching (<= 3 char differences).
@@ -43,13 +43,10 @@ def validate(llm_output: str) -> (bool, str):
         for i in range(len(llm_output_lower) - window_size + 1):
             window = llm_output_lower[i : i + window_size]
             if levenshtein(window, target) <= 3:
-                print(f"✅ Matched: '{name}' with window '{window}'")
                 found = True
                 break
         if not found:
-            reason = f"❌ Could not match: '{name}'"
-            print(reason)
+            reason = f"Could not match: '{name}'"
             return False, reason
 
-    print("✅ All repo names matched with fuzzy tolerance.")
-    return True, "OK"
+    return True, "All repo names matched with fuzzy tolerance."

@@ -23,7 +23,7 @@ def levenshtein(s1: str, s2: str) -> int:
     return previous_row[-1]
 
 
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     """
     Validate that:
     - All GT names appear in LLM output (case-insensitive, ≤5 edit distance allowed)
@@ -61,7 +61,6 @@ def validate(llm_output: str) -> (bool, str):
         idx = llm_output_clean.find(name_clean)
 
         if idx != -1:
-            print(f"✅ Exact match: {name}")
             best_match = name_clean
             match_len = name_len
             min_distance = 0
@@ -95,12 +94,10 @@ def validate(llm_output: str) -> (bool, str):
                     break
 
             if min_distance <= 5:
-                print(f"⚠️ Fuzzy match: GT='{name}' ↔ LLM='{best_match}' (distance={min_distance})")
                 idx = best_idx
                 match_len = len(best_match)
             else:
-                reason = f"❌ Name not found within 5 edits: '{name}', closest: '{best_match}' (distance={min_distance})"
-                print(reason)
+                reason = f"Name not found within 5 edits: '{name}', closest: '{best_match}' (distance={min_distance})"
                 return False, reason
 
         # unified window based on match_len
@@ -109,7 +106,7 @@ def validate(llm_output: str) -> (bool, str):
 
         if not matches:
             reason = f"No number found near name: {name}"
-            print(f"❌ {reason}")
+            
             return False, reason
 
         expected_rounded = round(value)
@@ -126,9 +123,8 @@ def validate(llm_output: str) -> (bool, str):
 
         if not found_match:
             reason = f"Number near '{name}' does not match rounded {expected_rounded}"
-            print(f"❌ {reason}")
+            
             return False, reason
 
-    print("✅ All names (exact or ≤5 edits) and rounded numbers matched.")
-    return True, "OK"
+    return True, "All names (exact or ≤5 edits) and rounded numbers matched."
 

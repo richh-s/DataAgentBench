@@ -1,6 +1,6 @@
 import re
 
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     """
     Validate if ground truth 'Restaurant,3.63' is present in LLM output.
     - Category: ignore case
@@ -22,7 +22,7 @@ def validate(llm_output: str) -> (bool, str):
     # 检查类别
     if gt_category_lower not in llm_output.lower():
         reason = f"Category '{gt_category}' not found in LLM output."
-        print(f"❌ {reason}")
+        
         return False, reason
 
     # 提取所有浮点数
@@ -30,15 +30,14 @@ def validate(llm_output: str) -> (bool, str):
 
     if not matches:
         reason = "No float number found in LLM output."
-        print(f"❌ {reason}")
+        
         return False, reason
 
     # 检查是否有匹配的数值
     for m in matches:
         if f"{float(m):.2f}" == gt_value_str:
-            print(f"✅ Found: {gt_category}, {gt_value_str}")
-            return True, "OK"
+            return True, f"Found: {gt_category}, {gt_value_str}"
 
     reason = f"Value '{gt_value_str}' not found in LLM output."
-    print(f"❌ {reason}")
+    
     return False, reason

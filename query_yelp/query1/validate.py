@@ -1,4 +1,4 @@
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     """
     Validate if ground truth number (rounded to 2 decimals) is present in LLM output.
     Returns:
@@ -14,18 +14,17 @@ def validate(llm_output: str) -> (bool, str):
     matches = re.findall(r"(\d+\.\d+)", llm_output)
     if not matches:
         reason = f"No number found in LLM output."
-        print(f"❌ {reason}")
+        
         return False, reason
 
     for m in matches:
         try:
             val = float(m)
             if round(val, 2) == gt_rounded:
-                print(f"✅ Found matching number: {val} ≈ {gt_rounded}")
-                return True, "OK"
+                return True, f"Found matching number: {val} ≈ {gt_rounded}"
         except:
             continue
 
     reason = f"No matching number (≈ {gt_rounded:.2f}) found in LLM output."
-    print(f"❌ {reason}")
+    
     return False, reason

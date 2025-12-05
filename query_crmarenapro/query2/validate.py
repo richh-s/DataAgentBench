@@ -1,6 +1,6 @@
 import re
 
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     """
     Validate if LLM output contains the expected knowledge article ID.
     Expected: ka0Wt000000Eq0MIAS
@@ -15,8 +15,7 @@ def validate(llm_output: str) -> (bool, str):
 
     # Check for exact ID match (case sensitive for IDs)
     if expected in llm_output_clean:
-        print(f"✅ Found expected knowledge article ID: {expected}")
-        return True, "OK"
+        return True, f"Found expected agent ID: {expected}"
 
     # Check if any knowledge article ID pattern is present (starts with 'ka0')
     ka_pattern = r'ka0[A-Za-z0-9]{15}'
@@ -24,15 +23,12 @@ def validate(llm_output: str) -> (bool, str):
 
     if found_ids:
         reason = f"Found knowledge article IDs {found_ids}, but expected '{expected}'"
-        print(f"❌ {reason}")
         return False, reason
     else:
         # Check for "None" or "No violation" responses
         if re.search(r'\b(none|no violation|no policy violation)\b', llm_output_clean, re.IGNORECASE):
             reason = "LLM output indicates no policy violation, but expected knowledge article ID"
-            print(f"❌ {reason}")
             return False, reason
         else:
             reason = "No knowledge article ID found in LLM output"
-            print(f"❌ {reason}")
             return False, reason

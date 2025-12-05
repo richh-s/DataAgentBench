@@ -1,6 +1,6 @@
 import re
 
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     """
     Validate if LLM output contains the expected stage name.
     Expected: Negotiation
@@ -17,8 +17,7 @@ def validate(llm_output: str) -> (bool, str):
 
     # Check for exact stage match (case insensitive)
     if expected.lower() in llm_output_clean.lower():
-        print(f"✅ Found expected stage: {expected}")
-        return True, "OK"
+        return True, f"Found expected agent ID: {expected}"
 
     # Check if any valid stage is mentioned
     found_stages = []
@@ -28,9 +27,7 @@ def validate(llm_output: str) -> (bool, str):
 
     if found_stages:
         reason = f"Found stages {found_stages}, but expected '{expected}'"
-        print(f"❌ {reason}")
         return False, reason
     else:
         reason = "No valid stage name found in LLM output"
-        print(f"❌ {reason}")
         return False, reason
