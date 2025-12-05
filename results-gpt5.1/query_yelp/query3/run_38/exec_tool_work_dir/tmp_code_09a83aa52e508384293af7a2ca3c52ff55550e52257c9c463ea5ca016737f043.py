@@ -1,0 +1,23 @@
+code = """import pandas as pd, json
+rows = var_call_6qnR4pzyILZdMmuPKQsO0Lew
+df = pd.DataFrame(rows)
+formats = ['%Y-%m-%d %H:%M:%S','%B %d, %Y at %I:%M %p','%d %b %Y, %H:%M']
+years = []
+for s in df['date']:
+    y = None
+    for fmt in formats:
+        try:
+            y = pd.to_datetime(s, format=fmt).year
+            break
+        except Exception:
+            continue
+    years.append(y)
+df['year'] = years
+result = df.to_dict(orient='records')
+out = json.dumps(result)
+print('__RESULT__:')
+print(out)"""
+
+env_args = {'var_call_4TkOqFBKHP6sdbmIKVtt1Dre': ['checkin', 'business'], 'var_call_6qnR4pzyILZdMmuPKQsO0Lew': [{'business_ref': 'businessref_46', 'date': '2016-08-15 21:16:00'}, {'business_ref': 'businessref_35', 'date': 'December 06, 2020 at 07:48 PM'}, {'business_ref': 'businessref_37', 'date': '24 Mar 2016, 21:40'}, {'business_ref': 'businessref_91', 'date': '2019-12-15 18:28:00'}, {'business_ref': 'businessref_47', 'date': '13 Feb 2020, 22:17'}, {'business_ref': 'businessref_54', 'date': '2021-05-26 04:57:32'}, {'business_ref': 'businessref_37', 'date': 'October 09, 2019 at 01:44 PM'}, {'business_ref': 'businessref_21', 'date': '2015-12-06 21:27:12'}, {'business_ref': 'businessref_91', 'date': '09 Jan 2021, 21:20'}, {'business_ref': 'businessref_3', 'date': 'July 21, 2020 at 06:36 PM'}, {'business_ref': 'businessref_80', 'date': '2020-10-05 20:35:07'}, {'business_ref': 'businessref_79', 'date': '03 Feb 2018, 15:15'}, {'business_ref': 'businessref_96', 'date': '2012-03-23 04:39:00'}, {'business_ref': 'businessref_33', 'date': '31 Oct 2019, 17:52'}, {'business_ref': 'businessref_48', 'date': 'August 02, 2010 at 05:18 PM'}, {'business_ref': 'businessref_74', 'date': '2021-07-16 17:24:00'}, {'business_ref': 'businessref_41', 'date': '2021-04-29 12:08:00'}, {'business_ref': 'businessref_53', 'date': '2016-10-02 12:58:00'}, {'business_ref': 'businessref_7', 'date': '2019-12-29 20:57:00'}, {'business_ref': 'businessref_36', 'date': '01 Oct 2011, 22:57'}, {'business_ref': 'businessref_59', 'date': 'March 16, 2020 at 11:04 PM'}, {'business_ref': 'businessref_9', 'date': '13 Nov 2016, 14:16'}, {'business_ref': 'businessref_26', 'date': '2020-01-24 11:02:00'}, {'business_ref': 'businessref_6', 'date': '08 Aug 2016, 22:11'}, {'business_ref': 'businessref_36', 'date': '2015-11-12 01:04:50'}, {'business_ref': 'businessref_14', 'date': '2020-09-20 06:10:00'}, {'business_ref': 'businessref_46', 'date': 'June 05, 2018 at 11:54 PM'}, {'business_ref': 'businessref_10', 'date': '2017-01-07 21:21:00'}, {'business_ref': 'businessref_66', 'date': 'December 19, 2017 at 12:41 AM'}, {'business_ref': 'businessref_48', 'date': 'February 03, 2011 at 05:45 PM'}, {'business_ref': 'businessref_85', 'date': 'July 31, 2012 at 12:57 AM'}, {'business_ref': 'businessref_66', 'date': '2020-08-23 18:14:21'}, {'business_ref': 'businessref_66', 'date': '10 Jan 2020, 18:47'}, {'business_ref': 'businessref_86', 'date': '2017-10-23 18:42:00'}, {'business_ref': 'businessref_71', 'date': 'April 02, 2015 at 02:01 AM'}, {'business_ref': 'businessref_57', 'date': '26 Dec 2015, 21:34'}, {'business_ref': 'businessref_6', 'date': '18 Feb 2010, 15:57'}, {'business_ref': 'businessref_92', 'date': '28 Sep 2013, 17:37'}, {'business_ref': 'businessref_9', 'date': '2016-10-23 22:05:00'}, {'business_ref': 'businessref_66', 'date': '2016-07-20 21:17:03'}, {'business_ref': 'businessref_41', 'date': '17 Jan 2019, 20:22'}, {'business_ref': 'businessref_72', 'date': '2016-12-26 22:44:42'}, {'business_ref': 'businessref_74', 'date': '2020-07-06 14:42:00'}, {'business_ref': 'businessref_89', 'date': '27 Mar 2016, 00:58'}, {'business_ref': 'businessref_16', 'date': '15 Dec 2008, 23:36'}, {'business_ref': 'businessref_21', 'date': 'February 05, 2020 at 05:57 PM'}, {'business_ref': 'businessref_88', 'date': '14 Jun 2020, 02:18'}, {'business_ref': 'businessref_14', 'date': '2016-05-06 16:02:13'}, {'business_ref': 'businessref_60', 'date': 'June 28, 2020 at 10:12 PM'}, {'business_ref': 'businessref_79', 'date': '20 Sep 2017, 20:55'}]}
+
+exec(code, env_args)

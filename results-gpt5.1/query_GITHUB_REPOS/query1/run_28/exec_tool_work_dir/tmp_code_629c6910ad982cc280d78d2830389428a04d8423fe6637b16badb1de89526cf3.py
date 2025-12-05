@@ -1,0 +1,35 @@
+code = """import json, pandas as pd
+from pathlib import Path
+
+contents = json.loads(Path(var_call_34HHhLcljg18vrjUFGxyzDJW).read_text())
+languages = json.loads(Path(var_call_EHN3wv6vZsbUSfJUEgkvef8J).read_text())
+
+contents_df = pd.DataFrame(contents)
+languages_df = pd.DataFrame(languages)
+
+mask_no_python = ~languages_df['language_description'].str.contains('Python', case=False, na=False)
+no_python_repos = languages_df.loc[mask_no_python, 'repo_name'].unique()
+
+readmes = contents_df[contents_df['sample_repo_name'].isin(no_python_repos)].copy()
+
+pattern = r'(copyright\b|\(c\)|©)'
+readmes['has_copyright'] = readmes['content'].str.contains(pattern, case=False, regex=True, na=False)
+
+if len(readmes) == 0:
+    proportion = None
+else:
+    proportion = float(readmes['has_copyright'].sum()) / float(len(readmes))
+
+result = {
+    'num_no_python_readmes': int(len(readmes)),
+    'num_with_copyright': int(readmes['has_copyright'].sum()),
+    'proportion': proportion
+}
+
+out = json.dumps(result)
+print("__RESULT__:")
+print(out)"""
+
+env_args = {'var_call_34HHhLcljg18vrjUFGxyzDJW': 'file_storage/call_34HHhLcljg18vrjUFGxyzDJW.json', 'var_call_EHN3wv6vZsbUSfJUEgkvef8J': 'file_storage/call_EHN3wv6vZsbUSfJUEgkvef8J.json'}
+
+exec(code, env_args)
