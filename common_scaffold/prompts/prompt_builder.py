@@ -1,5 +1,11 @@
 PREVIEW_LENGTH = 10000
 
+GPT_TOOL_CALL_INSTRUCTIONS = """2. Inside execute_python code you may read storage entries directly as variables using the provided key names. You should directly use the key names as variable names in your code, e.g., if the tool call id is "call_1", you can access its result via the variable `var_call_1` in your code, without quotes or other modifications."""
+
+GEMINI_TOOL_CALL_INSTRUCTIONS = """2. Inside execute_python code you may read storage entries using the provided key names, e.g., if the tool call id is 'call-1', you can access its result via `locals()['var_call-1']` in your code."""
+
+GEMINI_25FLASH_TOOL_CALL_INSTRUCTIONS = """2. Inside execute_python code you may read storage entries using the provided key names, e.g., if the tool call id is 'call-1', you can directly access its result via `locals()['var_call-1']` in your code without indexing into additional fields."""
+
 SYSTEM_PROMPT = """
 You are a data analysis agent. Use only the tools listed below to answer the user's query, based on the provided DATABASE DESCRIPTION for logical database names and their types (SQL or MongoDB), and the results of previous tool calls.
 
@@ -15,7 +21,7 @@ TOOLS (system will execute):
 
 INSTRUCTIONS:
 1. After each tool call, its result will be stored in a storage under a key named after the tool call id (you will be told the key name). The next message will include both the result (or a preview if it's large) and the storage key name.
-2. Inside execute_python code you may read storage entries directly as variables using the provided key names. You should directly use the key names as variable names in your code, e.g., if the tool call id is "var_call_1", you can access its result via the variable `var_call_1` in your code, without quotes or other modifications.
+{TOOL_CALL_INSTRUCTIONS}
 3. You cannot modify or reassign those storage-provided variables; you may read them and create new variables as needed.
 4. If a tool result is large, the next message will include a preview (first {PREVIEW_LENGTH} characters) and the storage entry will be the .json file path (a string) where the full result is stored. To access the full result, your execute_python code must open and read that .json file.
 
@@ -60,11 +66,22 @@ Do not output explanations, reasoning, or any natural language outside of the re
 """.replace("{PREVIEW_LENGTH}", str(PREVIEW_LENGTH))
 
 
-def init_messages(user_query: str, db_description: str, system_prompt: str=SYSTEM_PROMPT) -> list[dict]:
+def init_messages(user_query: str, db_description: str, deployment_name: str, system_prompt: str=SYSTEM_PROMPT) -> list[dict]:
+    if "gemini" in deployment_name.lower():
+        tool_call_instructions = GEMINI_TOOL_CALL_INSTRUCTIONS
+        if deployment_name.lower() == "gemini-2.5-flash":
+        #     # MALFORMED_FUCTION_CALL fix: https://www.linkedin.com/pulse/3-step-fix-persistent-malformedfunctioncall-error-production-gupta-fssne/
+            tool_call_instructions = GEMINI_25FLASH_TOOL_CALL_INSTRUCTIONS
+        #     system_prompt_suffix = GEMINI_25FLASH_WARNING
+    elif "gpt" in deployment_name.lower():
+        tool_call_instructions = GPT_TOOL_CALL_INSTRUCTIONS
+    else:
+        raise ValueError(f"Unknown deployment_name: {deployment_name}")
+    
     return [
         {
             "role": "system",
-            "content": system_prompt.strip()
+            "content": system_prompt.replace("{TOOL_CALL_INSTRUCTIONS}", tool_call_instructions).strip()
         },
         {
             "role": "user",
