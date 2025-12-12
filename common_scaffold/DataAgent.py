@@ -6,7 +6,7 @@ from pathlib import Path
 from datetime import datetime
 import time
 import logging
-from openai import AzureOpenAI
+from openai import AzureOpenAI, OpenAI
 from openai.types.chat import ChatCompletionMessage, ChatCompletionMessageToolCall
 from dotenv import load_dotenv
 from common_scaffold.prompts import prompt_builder
@@ -73,11 +73,19 @@ class DataAgent:
         self.logger.info(f"\tmax_iterations: {self.max_iterations}")
         self.llm_call_count = 0
         load_dotenv()
-        self.client = AzureOpenAI(
-            api_key=os.getenv("AZURE_API_KEY"),
-            api_version=os.getenv("AZURE_API_VERSION"),
-            azure_endpoint=os.getenv("AZURE_API_BASE")
-        )
+        if "gpt" in deployment_name.lower():
+            self.client = AzureOpenAI(
+                api_key=os.getenv("AZURE_API_KEY"),
+                api_version=os.getenv("AZURE_API_VERSION"),
+                azure_endpoint=os.getenv("AZURE_API_BASE")
+            )
+        elif "gemini" in deployment_name.lower():
+            self.client = OpenAI(
+                api_key=os.getenv("GEMINI_API_KEY"),
+                base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+            )
+        else:
+            raise ValueError(f"Unsupported deployment name: {deployment_name}")
         self.deployment_name = deployment_name
         self.logger.info(f"\tdeployment: {self.deployment_name}")
 
@@ -111,6 +119,7 @@ class DataAgent:
         self.messages = prompt_builder.init_messages(
             user_query=user_query,
             db_description=db_description,
+            deployment_name=deployment_name,
         )
         self.final_result = None
         self.terminate_reason = None
