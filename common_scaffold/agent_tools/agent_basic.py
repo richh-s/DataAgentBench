@@ -1,6 +1,7 @@
 import json
 import sys
 from pathlib import Path
+import datetime
 
 from common_scaffold.db_utils.loader import query_db
 from common_scaffold.agent_tools import (
@@ -196,6 +197,7 @@ def run_basic_agent(
                     result = {"success": False, "error": str(e)}
                 # print(f"[DEBUG] Raw result from tool {tool_name}:\n{result}")
 
+                timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
                 file_id = None
 
                 if tool_name == "query_db":
@@ -209,8 +211,8 @@ def run_basic_agent(
                     else:
                         out = result["data"]
                         if len(out) > 10000:
-                            filename = f"query_result_{step}.json"
-                            file_id = upload_to_client(client, out, filename)
+                            filename = f"query_result_{step}_{timestamp}.json"
+                            file_id = upload_to_client(out, filename)
                             message = f"The result of the query is in the file {file_id}."
                         else:
                             message = out
@@ -223,8 +225,8 @@ def run_basic_agent(
                     else:
                         out, ext = format_stdout(result["data"])
                         if len(out) > 10000:
-                            filename = f"exec_result_{step}.{ext}"
-                            file_id = upload_to_client(client, out, filename)
+                            filename = f"exec_result_{step}_{timestamp}.{ext}"
+                            file_id = upload_to_client(out, filename)
                             message = f"The result of the query is in the file {file_id}."
                         else:
                             message = out
@@ -238,8 +240,8 @@ def run_basic_agent(
                         output_data = result.get("data", result)  # fallback for legacy
                         out, ext = format_stdout(output_data)
                         if len(out) > 10000:
-                            filename = f"result_{step}.{ext}"
-                            file_id = upload_to_client(client, out, filename)
+                            filename = f"result_{step}_{timestamp}.{ext}"
+                            file_id = upload_to_client(out, filename)
                             message = f"The result of the query is in the file {file_id}."
                         else:
                             message = out
@@ -249,7 +251,7 @@ def run_basic_agent(
 
                 content = {"result": message}
                 if file_id:
-                    content["file_id"] = file_id
+                    content["filename"] = file_id
 
                 messages.append({
                     "role": "tool",

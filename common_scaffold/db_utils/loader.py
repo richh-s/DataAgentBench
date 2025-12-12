@@ -16,6 +16,8 @@ from .duckdb_utils import duckdb_query, list_tables
 from .mysql_utils import mysql_query, ensure_mysql_data
 from .postgres_utils import postgres_query, ensure_postgres_data
 
+import json
+
 
 
 def query_db(db_type, **kwargs):
@@ -84,6 +86,8 @@ def list_entities(db_type, **kwargs):
         result = list_collections(**kwargs)
     elif db_type == "duckdb":
         result = list_tables(**kwargs)
+        if result.get("success"):
+            result['data'] = json.loads(result['data'])
     elif db_type == "sqlite":
         sql = "SELECT name FROM sqlite_master WHERE type='table';"
         result = sqlite_query(sql=sql, **kwargs)

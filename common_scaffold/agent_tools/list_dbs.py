@@ -26,6 +26,8 @@ def list_dbs(db_name: str, db_clients: dict) -> dict:
         table_names = tables_df.iloc[:, 0].tolist()
     elif isinstance(tables_df, list):
         table_names = tables_df
+    elif isinstance(tables_df, dict):
+        table_names = [lst[0] for lst in tables_df["rows"]]
     else:
         return {"success": False, "error": f"Unrecognized table format: {type(tables_df)}"}
 
