@@ -1,0 +1,118 @@
+code = """import json
+
+# Helper function to load data, handling both direct list and file path
+def load_data(var_name):
+    data = locals()[var_name]
+    if isinstance(data, dict) and 'results' in data:
+        return data['results']
+    elif isinstance(data, str) and data.endswith('.json'):
+        with open(data, 'r') as f:
+            return json.load(f)
+    return data # Fallback, should be a list for empty results
+
+# Load company names from the initial stockinfo_database query
+stock_info_full = load_data('var_function-call-1196030950791586646')
+company_names = {d['Symbol']: d['Company Description'] for d in stock_info_full}
+
+processed_stocks_data = []
+
+# Process AEFC data
+aefc_data = load_data('var_function-call-1980294828156932039')
+if aefc_data:
+    up_days = sum(1 for d in aefc_data if float(d['Close']) > float(d['Open']))
+    down_days = sum(1 for d in aefc_data if float(d['Close']) < float(d['Open']))
+    processed_stocks_data.append({
+        'symbol': 'AEFC',
+        'company_name': company_names.get('AEFC', 'N/A'),
+        'day_difference': up_days - down_days
+    })
+
+# Process AIN data
+ain_data = load_data('var_function-call-11239077458938920857')
+if ain_data:
+    up_days = sum(1 for d in ain_data if float(d['Close']) > float(d['Open']))
+    down_days = sum(1 for d in ain_data if float(d['Close']) < float(d['Open']))
+    processed_stocks_data.append({
+        'symbol': 'AIN',
+        'company_name': company_names.get('AIN', 'N/A'),
+        'day_difference': up_days - down_days
+    })
+
+# Process AIV data
+aiv_data = load_data('var_function-call-14000946303462645799')
+if aiv_data:
+    up_days = sum(1 for d in aiv_data if float(d['Close']) > float(d['Open']))
+    down_days = sum(1 for d in aiv_data if float(d['Close']) < float(d['Open']))
+    processed_stocks_data.append({
+        'symbol': 'AIV',
+        'company_name': company_names.get('AIV', 'N/A'),
+        'day_difference': up_days - down_days
+    })
+
+# Process AIZP data
+aizp_data = load_data('var_function-call-3225285148180011713')
+if aizp_data:
+    up_days = sum(1 for d in aizp_data if float(d['Close']) > float(d['Open']))
+    down_days = sum(1 for d in aizp_data if float(d['Close']) < float(d['Open']))
+    processed_stocks_data.append({
+        'symbol': 'AIZP',
+        'company_name': company_names.get('AIZP', 'N/A'),
+        'day_difference': up_days - down_days
+    })
+
+# Process AJRD data
+ajrd_data = load_data('var_function-call-8962430770534129849')
+if ajrd_data:
+    up_days = sum(1 for d in ajrd_data if float(d['Close']) > float(d['Open']))
+    down_days = sum(1 for d in ajrd_data if float(d['Close']) < float(d['Open']))
+    processed_stocks_data.append({
+        'symbol': 'AJRD',
+        'company_name': company_names.get('AJRD', 'N/A'),
+        'day_difference': up_days - down_days
+    })
+
+# Process AL data
+al_data = load_data('var_function-call-1169396377710212234')
+if al_data:
+    up_days = sum(1 for d in al_data if float(d['Close']) > float(d['Open']))
+    down_days = sum(1 for d in al_data if float(d['Close']) < float(d['Open']))
+    processed_stocks_data.append({
+        'symbol': 'AL',
+        'company_name': company_names.get('AL', 'N/A'),
+        'day_difference': up_days - down_days
+    })
+
+# Process AMN data
+amn_data = load_data('var_function-call-16825786640932626777')
+if amn_data:
+    up_days = sum(1 for d in amn_data if float(d['Close']) > float(d['Open']))
+    down_days = sum(1 for d in amn_data if float(d['Close']) < float(d['Open']))
+    processed_stocks_data.append({
+        'symbol': 'AMN',
+        'company_name': company_names.get('AMN', 'N/A'),
+        'day_difference': up_days - down_days
+    })
+
+# Process AMP data
+amp_data = load_data('var_function-call-1075379290820917676')
+if amp_data:
+    up_days = sum(1 for d in amp_data if float(d['Close']) > float(d['Open']))
+    down_days = sum(1 for d in amp_data if float(d['Close']) < float(d['Open']))
+    processed_stocks_data.append({
+        'symbol': 'AMP',
+        'company_name': company_names.get('AMP', 'N/A'),
+        'day_difference': up_days - down_days
+    })
+
+# Filter for stocks with more up days than down days and sort
+qualified_stocks = [s for s in processed_stocks_data if s['day_difference'] > 0]
+qualified_stocks.sort(key=lambda x: x['day_difference'], reverse=True)
+
+# Store the processed data for later use, or directly get top 5 if enough data
+# Since we only processed a few, we will store and continue with more queries.
+print("__RESULT__:")
+print(json.dumps(qualified_stocks))"""
+
+env_args = {'var_function-call-1817325595551073581': 'file_storage/function-call-1817325595551073581.json', 'var_function-call-17537764033768390306': 'file_storage/function-call-17537764033768390306.json', 'var_function-call-15459508532790814433': [{'symbol': 'AEFC', 'error': "name 'default_api' is not defined"}, {'symbol': 'AIN', 'error': "name 'default_api' is not defined"}, {'symbol': 'AIV', 'error': "name 'default_api' is not defined"}, {'symbol': 'AIZP', 'error': "name 'default_api' is not defined"}, {'symbol': 'AJRD', 'error': "name 'default_api' is not defined"}, {'symbol': 'AL', 'error': "name 'default_api' is not defined"}, {'symbol': 'AMN', 'error': "name 'default_api' is not defined"}, {'symbol': 'AMP', 'error': "name 'default_api' is not defined"}, {'symbol': 'AMT', 'error': "name 'default_api' is not defined"}, {'symbol': 'ARD', 'error': "name 'default_api' is not defined"}, {'symbol': 'ARGD', 'error': "name 'default_api' is not defined"}, {'symbol': 'ARLO', 'error': "name 'default_api' is not defined"}, {'symbol': 'ASG', 'error': "name 'default_api' is not defined"}, {'symbol': 'AVA', 'error': "name 'default_api' is not defined"}, {'symbol': 'BANC', 'error': "name 'default_api' is not defined"}, {'symbol': 'BBU', 'error': "name 'default_api' is not defined"}, {'symbol': 'BBVA', 'error': "name 'default_api' is not defined"}, {'symbol': 'BDXA', 'error': "name 'default_api' is not defined"}, {'symbol': 'BKH', 'error': "name 'default_api' is not defined"}, {'symbol': 'BKT', 'error': "name 'default_api' is not defined"}, {'symbol': 'BLD', 'error': "name 'default_api' is not defined"}, {'symbol': 'BNS', 'error': "name 'default_api' is not defined"}, {'symbol': 'BV', 'error': "name 'default_api' is not defined"}, {'symbol': 'BZH', 'error': "name 'default_api' is not defined"}, {'symbol': 'CADE', 'error': "name 'default_api' is not defined"}, {'symbol': 'CAE', 'error': "name 'default_api' is not defined"}, {'symbol': 'CAF', 'error': "name 'default_api' is not defined"}, {'symbol': 'CBT', 'error': "name 'default_api' is not defined"}, {'symbol': 'CCC', 'error': "name 'default_api' is not defined"}, {'symbol': 'CCZ', 'error': "name 'default_api' is not defined"}, {'symbol': 'CHAP', 'error': "name 'default_api' is not defined"}, {'symbol': 'CIA', 'error': "name 'default_api' is not defined"}, {'symbol': 'CMA', 'error': "name 'default_api' is not defined"}, {'symbol': 'CMI', 'error': "name 'default_api' is not defined"}, {'symbol': 'CMSA', 'error': "name 'default_api' is not defined"}, {'symbol': 'CNK', 'error': "name 'default_api' is not defined"}, {'symbol': 'COTY', 'error': "name 'default_api' is not defined"}, {'symbol': 'CRC', 'error': "name 'default_api' is not defined"}, {'symbol': 'CRM', 'error': "name 'default_api' is not defined"}, {'symbol': 'CRS', 'error': "name 'default_api' is not defined"}, {'symbol': 'CSL', 'error': "name 'default_api' is not defined"}, {'symbol': 'CTS', 'error': "name 'default_api' is not defined"}, {'symbol': 'CUBE', 'error': "name 'default_api' is not defined"}, {'symbol': 'CURO', 'error': "name 'default_api' is not defined"}, {'symbol': 'CVIA', 'error': "name 'default_api' is not defined"}, {'symbol': 'CVX', 'error': "name 'default_api' is not defined"}, {'symbol': 'CXH', 'error': "name 'default_api' is not defined"}, {'symbol': 'DAC', 'error': "name 'default_api' is not defined"}, {'symbol': 'DDS', 'error': "name 'default_api' is not defined"}, {'symbol': 'DDT', 'error': "name 'default_api' is not defined"}, {'symbol': 'DEO', 'error': "name 'default_api' is not defined"}, {'symbol': 'DGX', 'error': "name 'default_api' is not defined"}, {'symbol': 'DMB', 'error': "name 'default_api' is not defined"}, {'symbol': 'DTQ', 'error': "name 'default_api' is not defined"}, {'symbol': 'DXC', 'error': "name 'default_api' is not defined"}, {'symbol': 'EARN', 'error': "name 'default_api' is not defined"}, {'symbol': 'EBS', 'error': "name 'default_api' is not defined"}, {'symbol': 'EGO', 'error': "name 'default_api' is not defined"}, {'symbol': 'EGY', 'error': "name 'default_api' is not defined"}, {'symbol': 'EIG', 'error': "name 'default_api' is not defined"}, {'symbol': 'ELF', 'error': "name 'default_api' is not defined"}, {'symbol': 'EMP', 'error': "name 'default_api' is not defined"}, {'symbol': 'ENLC', 'error': "name 'default_api' is not defined"}, {'symbol': 'EPR', 'error': "name 'default_api' is not defined"}, {'symbol': 'EPRT', 'error': "name 'default_api' is not defined"}, {'symbol': 'ES', 'error': "name 'default_api' is not defined"}, {'symbol': 'ESRT', 'error': "name 'default_api' is not defined"}, {'symbol': 'ESS', 'error': "name 'default_api' is not defined"}, {'symbol': 'ETM', 'error': "name 'default_api' is not defined"}, {'symbol': 'EV', 'error': "name 'default_api' is not defined"}, {'symbol': 'EVT', 'error': "name 'default_api' is not defined"}, {'symbol': 'EXP', 'error': "name 'default_api' is not defined"}, {'symbol': 'FMN', 'error': "name 'default_api' is not defined"}, {'symbol': 'FPAC', 'error': "name 'default_api' is not defined"}, {'symbol': 'FSM', 'error': "name 'default_api' is not defined"}, {'symbol': 'GCO', 'error': "name 'default_api' is not defined"}, {'symbol': 'GD', 'error': "name 'default_api' is not defined"}, {'symbol': 'GDL', 'error': "name 'default_api' is not defined"}, {'symbol': 'GDV', 'error': "name 'default_api' is not defined"}, {'symbol': 'GEL', 'error': "name 'default_api' is not defined"}, {'symbol': 'GJP', 'error': "name 'default_api' is not defined"}, {'symbol': 'GLOB', 'error': "name 'default_api' is not defined"}, {'symbol': 'GLT', 'error': "name 'default_api' is not defined"}, {'symbol': 'GOL', 'error': "name 'default_api' is not defined"}, {'symbol': 'GSLD', 'error': "name 'default_api' is not defined"}, {'symbol': 'GTY', 'error': "name 'default_api' is not defined"}, {'symbol': 'GVA', 'error': "name 'default_api' is not defined"}, {'symbol': 'GWB', 'error': "name 'default_api' is not defined"}, {'symbol': 'H', 'error': "name 'default_api' is not defined"}, {'symbol': 'HBI', 'error': "name 'default_api' is not defined"}, {'symbol': 'HDB', 'error': "name 'default_api' is not defined"}, {'symbol': 'HEP', 'error': "name 'default_api' is not defined"}, {'symbol': 'HIL', 'error': "name 'default_api' is not defined"}, {'symbol': 'HIO', 'error': "name 'default_api' is not defined"}, {'symbol': 'HIX', 'error': "name 'default_api' is not defined"}, {'symbol': 'HLF', 'error': "name 'default_api' is not defined"}, {'symbol': 'HLT', 'error': "name 'default_api' is not defined"}, {'symbol': 'HNI', 'error': "name 'default_api' is not defined"}, {'symbol': 'HRB', 'error': "name 'default_api' is not defined"}, {'symbol': 'HTFA', 'error': "name 'default_api' is not defined"}], 'var_function-call-5472831697073455258': 'file_storage/function-call-5472831697073455258.json', 'var_function-call-1980294828156932039': [], 'var_function-call-11239077458938920857': 'file_storage/function-call-11239077458938920857.json', 'var_function-call-14000946303462645799': 'file_storage/function-call-14000946303462645799.json', 'var_function-call-3225285148180011713': [], 'var_function-call-8962430770534129849': 'file_storage/function-call-8962430770534129849.json', 'var_function-call-1169396377710212234': 'file_storage/function-call-1169396377710212234.json', 'var_function-call-16825786640932626777': 'file_storage/function-call-16825786640932626777.json', 'var_function-call-1075379290820917676': 'file_storage/function-call-1075379290820917676.json', 'var_function-call-1196030950791586646': 'file_storage/function-call-1196030950791586646.json'}
+
+exec(code, env_args)

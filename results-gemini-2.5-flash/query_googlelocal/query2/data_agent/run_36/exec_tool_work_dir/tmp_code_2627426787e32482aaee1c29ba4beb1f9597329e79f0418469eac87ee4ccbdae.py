@@ -1,0 +1,17 @@
+code = """import pandas as pd
+massage_businesses = locals()['var_function-call-9777613197269844828']
+ratings = locals()['var_function-call-9719529709746953837']
+
+df_massage = pd.DataFrame(massage_businesses)
+df_ratings = pd.DataFrame(ratings)
+
+merged_df = pd.merge(df_massage, df_ratings, on='gmap_id')
+
+result = merged_df[['name', 'average_rating']].to_json(orient='records')
+
+print("__RESULT__:")
+print(result)"""
+
+env_args = {'var_function-call-12720694377601934959': ['business_description'], 'var_function-call-16444187192670261344': [], 'var_function-call-14785618836993403925': [], 'var_function-call-15838071330745179448': ['review'], 'var_function-call-16661970237326407201': [{'description': ' Located in Los Angeles, CA 90023, this company specializes in the international trade of high-quality fabrics and materials.'}, {'description': ' This vibrant eatery in Los Angeles, CA 90005 offers a delightful array of traditional dishes and barbecue specialties inspired by the rich flavors of Korean cuisine.'}, {'description': ' Discover a vibrant selection of textiles and materials for all your crafting and sewing needs in Los Angeles, CA 90021.'}, {'description': ' This vibrant shop in Los Angeles, CA 90021 offers a diverse selection of textiles and sewing supplies for all your creative projects.'}, {'description': ' This vibrant shop in Commerce, CA 90023 offers a wide selection of textiles and sewing materials for all your crafting needs.'}], 'var_function-call-12087103134623712176': [{'gmap_id': 'gmap_63', 'name': 'Regus - California, Irvine - Oracle Tower', 'description': ' This company in Irvine, CA 92614 specializes in providing flexible workspace solutions tailored to meet the needs of professionals and businesses.'}, {'gmap_id': 'gmap_51', 'name': 'Taba Rug Gallery', 'description': 'Longtime boutique featuring high-quality Persian & Oriental rugs, plus repair & cleaning services. Discover a curated selection of exquisite floor coverings and textiles that enhance any space, conveniently located in La Jolla, CA 92037.'}, {'gmap_id': 'gmap_59', 'name': 'IBEW 441', 'description': ' Located in Orange, CA 92868, this professional hub offers a variety of workspace solutions and essential services for entrepreneurs and companies seeking a productive environment.'}, {'gmap_id': 'gmap_4', 'name': 'Lafayette Entrance 1', 'description': ' This serene green space in Orinda, CA 94563 offers picturesque walking trails, lush picnic areas, and a tranquil environment for outdoor recreation and relaxation.'}, {'gmap_id': 'gmap_66', 'name': 'HIGHPOINTE', 'description': ' This professional workspace in Mission Viejo, CA 92691 offers flexible office solutions and meeting facilities designed to support your business needs.'}], 'var_function-call-832047500407200382': [], 'var_function-call-9777613197269844828': [{'gmap_id': 'gmap_22', 'name': 'Angel-A Massage'}, {'gmap_id': 'gmap_25', 'name': 'Elite Massage'}, {'gmap_id': 'gmap_33', 'name': 'Happy Spa & Massage (Formerly Hawaii Massage & Spa)'}, {'gmap_id': 'gmap_24', 'name': 'SUSY massage'}, {'gmap_id': 'gmap_20', 'name': 'Aurora Massage'}, {'gmap_id': 'gmap_21', 'name': 'Orient Massage'}, {'gmap_id': 'gmap_28', 'name': 'Good Massage'}], 'var_function-call-9719529709746953837': [{'gmap_id': 'gmap_20', 'average_rating': '4.178571428571429'}, {'gmap_id': 'gmap_22', 'average_rating': '4.333333333333333'}, {'gmap_id': 'gmap_25', 'average_rating': '5.0'}]}
+
+exec(code, env_args)

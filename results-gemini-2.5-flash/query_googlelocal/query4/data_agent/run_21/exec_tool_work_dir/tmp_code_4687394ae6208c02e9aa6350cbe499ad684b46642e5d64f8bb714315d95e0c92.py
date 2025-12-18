@@ -1,0 +1,20 @@
+code = """import json
+import re
+
+result_string = locals()['var_function-call-11092242839921597371']['query_db_response']['results'][0]
+json_match = re.search(r'\[.*\]', result_string)
+
+if json_match:
+    json_data = json.loads(json_match.group(0))
+    gmap_ids = [item['gmap_id'] for item in json_data]
+    review_counts = {item['gmap_id']: item['high_rating_review_count'] for item in json_data}
+else:
+    gmap_ids = []
+    review_counts = {}
+
+print('__RESULT__:')
+print(json.dumps({'gmap_ids': gmap_ids, 'review_counts': review_counts}))"""
+
+env_args = {'var_function-call-11092242839921597371': [{'gmap_id': 'gmap_20', 'high_rating_review_count': '8'}, {'gmap_id': 'gmap_53', 'high_rating_review_count': '7'}, {'gmap_id': 'gmap_40', 'high_rating_review_count': '6'}], 'var_function-call-17591554314280437685': {'gmap_ids': ['gmap_20', 'gmap_53', 'gmap_40'], 'review_counts': {'gmap_20': '8', 'gmap_53': '7', 'gmap_40': '6'}}, 'var_function-call-5388630985925995340': [{'name': 'Aurora Massage', 'gmap_id': 'gmap_20'}, {'name': 'The Boochyard @ Local Roots', 'gmap_id': 'gmap_53'}, {'name': 'Widows Peak Salon', 'gmap_id': 'gmap_40'}]}
+
+exec(code, env_args)

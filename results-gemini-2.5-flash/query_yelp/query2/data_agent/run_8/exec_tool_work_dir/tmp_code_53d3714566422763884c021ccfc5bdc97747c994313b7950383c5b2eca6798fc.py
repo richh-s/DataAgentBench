@@ -1,0 +1,54 @@
+code = """import pandas as pd
+import re
+import json
+
+business_data_raw_list = locals()['var_function-call-2357561332185070026']['results']
+# The actual JSON string is the first element of the list
+business_data_json_str_with_noise = business_data_raw_list[0]
+
+# Extract the clean JSON array string from the noise
+match = re.search(r'\[.*\]', business_data_json_str_with_noise, re.DOTALL)
+if match:
+    clean_json_array_str = match.group(0)
+    business_data = json.loads(clean_json_array_str)
+else:
+    raise ValueError("Could not extract JSON array from business_data_json_str_with_noise")
+
+df_business = pd.DataFrame(business_data)
+
+# Function to extract state from description
+def extract_state(description):
+    if description:
+        match = re.search(r'in ([A-Z]{2}),', description)
+        if match:
+            return match.group(1)
+    return None
+
+df_business['state'] = df_business['description'].apply(extract_state)
+df_business['review_count'] = pd.to_numeric(df_business['review_count'])
+
+# Group by state and sum review counts
+state_review_counts = df_business.groupby('state')['review_count'].sum().reset_index()
+
+# Get the state with the highest review count
+highest_review_state = state_review_counts.sort_values(by='review_count', ascending=False).iloc[0]
+
+# Filter businesses for the highest review state
+businesses_in_highest_review_state = df_business[df_business['state'] == highest_review_state['state']]
+
+# Prepare business_ids for the next query (adjusting prefix)
+business_refs_for_query = [b_id.replace('businessid_', 'businessref_') for b_id in businesses_in_highest_review_state['business_id'].tolist()]
+
+# Store the state, its total review count, and business_refs for the next step
+result = {
+    "state": highest_review_state['state'],
+    "total_review_count": int(highest_review_state['review_count']),
+    "business_refs": business_refs_for_query
+}
+
+print("__RESULT__:")
+print(json.dumps(result))"""
+
+env_args = {'var_function-call-2357561332185070026': [{'business_id': 'businessid_49', 'review_count': '8', 'description': 'Located at 6901 Phelps Rd in Goleta, CA, this facility offers a nurturing environment for young learners, providing a range of services in Education, Elementary Schools, Child Care & Day Care, Local Services, Preschools, and Montessori Schools.'}, {'business_id': 'businessid_47', 'review_count': '81', 'description': 'Located at 9916 Clayton Rd in St. Louis, MO, this establishment offers a wide range of services, including Hair Salons, Beauty & Spas, Hair Stylists, Skin Care, Blow Dry/Out Services, and Makeup Artists.'}, {'business_id': 'businessid_88', 'review_count': '39', 'description': 'Located at 11655 W Executive Dr in Boise, ID, this facility offers enthusiasts a premier destination for Gun/Rifle Ranges, Active Life.'}, {'business_id': 'businessid_41', 'review_count': '5', 'description': 'Located at 1615 Pasadena Ave S, Ste 430 in Saint Petersburg, FL, this facility offers a range of services in Internal Medicine, Doctors, Health & Medical.'}, {'business_id': 'businessid_33', 'review_count': '28', 'description': 'Located at 9655 E US Hwy 36, Unit H in Avon, IN, this establishment offers a range of services including Nail Salons, Hair Removal, Beauty & Spas, and Waxing.'}]}
+
+exec(code, env_args)
