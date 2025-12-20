@@ -1,0 +1,108 @@
+code = """import json
+import re
+
+# Load metadata
+with open(locals()['var_function-call-7163315103813395117'], 'r') as f:
+    metadata_list = json.load(f)
+
+article_year = {}
+for item in metadata_list:
+    try:
+        aid = int(item['article_id'])
+        year = int(item['publication_date'].split('-')[0])
+        article_year[aid] = year
+    except ValueError:
+        pass
+
+files = [
+    locals()['var_function-call-10180680957722622743'],
+    locals()['var_function-call-18273582005806869507'],
+    locals()['var_function-call-172282731475356789']
+]
+
+# Split keywords
+word_keywords = {
+    'market', 'markets', 'stock', 'stocks', 'economy', 'economies', 'economic', 'financial', 'finance', 'invest', 'invests', 'investing', 'investment', 'investor', 'investors',
+    'bank', 'banks', 'banking', 'trade', 'trading', 'profit', 'profits', 'loss', 'losses', 'share', 'shares', 'shareholder', 'dollar', 'dollars', 'currency', 'currencies',
+    'rate', 'rates', 'inflation', 'fed', 'ipo', 'revenue', 'revenues', 'tax', 'taxes', 'taxation',
+    'fiscal', 'recession', 'debt', 'debts', 'loan', 'loans', 'growth',
+    'sales', 'retail', 'retailer', 'price', 'prices', 'ceo', 'cfo', 'company', 'companies', 'corp', 'corporation', 'inc', 
+    'money', 'capital', 'bond', 'bonds', 'commodity', 'commodities', 'gold', 'futures',
+    'job', 'jobs', 'employment', 'unemployment', 'budget', 'deficit', 'surplus', 
+    'export', 'exports', 'import', 'imports', 'tariff', 'tariffs', 'wto', 'imf', 'ecb', 'treasury',
+    'firm', 'firms', 'earning', 'earnings', 'quarterly', 'dividend', 'dividends', 
+    'acquisition', 'acquisitions', 'merger', 'mergers', 'takeover', 'takeovers', 
+    'bid', 'bids', 'stake', 'stakes', 'buyout', 'buyouts', 'industry', 'industries', 'sector', 'sectors',
+    'deal', 'deals', 'executive', 'executives', 'manager', 'managers', 'chairman', 'president', 'partner', 'partners',
+    'euro', 'euros', 'yen', 'yuan', 'business', 'businesses',
+    'crude', 'barrel', 'barrels', 'opec', 'gas'
+}
+
+phrase_keywords = [
+    'oil price', 'oil prices', 'wall street', 'wall st', 'dow jones', 'central bank'
+]
+
+symbol_keywords = ['#36;']
+
+def is_business(text):
+    text_lower = text.lower()
+    
+    # Check symbols
+    for s in symbol_keywords:
+        if s in text_lower:
+            return True
+            
+    # Check phrases
+    for p in phrase_keywords:
+        if p in text_lower:
+            return True
+            
+    # Check words
+    tokens = set(re.findall(r'\w+', text_lower))
+    if not tokens.isdisjoint(word_keywords):
+        return True
+        
+    return False
+
+counts = {}
+for y in range(2010, 2021):
+    counts[y] = 0
+
+processed_ids = set()
+matched_count = 0
+total_checked = 0
+
+for cf in files:
+    with open(cf, 'r') as f:
+        articles = json.load(f)
+        for article in articles:
+            try:
+                aid = int(article['article_id'])
+                if aid in processed_ids:
+                    continue
+                processed_ids.add(aid)
+                
+                if aid in article_year:
+                    total_checked += 1
+                    text = article['title'] + " " + article['description']
+                    if is_business(text):
+                        y = article_year[aid]
+                        if 2010 <= y <= 2020:
+                            counts[y] += 1
+                        matched_count += 1
+            except ValueError:
+                pass
+
+print(f"Unique Europe Articles found: {total_checked}")
+print(f"Identified as Business: {matched_count}")
+print(f"Counts per year: {counts}")
+
+total_business = sum(counts.values())
+average = total_business / 11
+
+print("__RESULT__:")
+print(json.dumps({"average": average, "counts": counts, "total_business": total_business}))"""
+
+env_args = {'var_function-call-7163315103813395117': 'file_storage/function-call-7163315103813395117.json', 'var_function-call-5122762543207161340': 'file_storage/function-call-5122762543207161340.json', 'var_function-call-9421319568468456406': 14860, 'var_function-call-11340183391818589866': [{'_id': '6944de90636c4ab819a4ae19', 'article_id': '0', 'title': 'Wall St. Bears Claw Back Into the Black (Reuters)', 'description': "Reuters - Short-sellers, Wall Street's dwindling\\band of ultra-cynics, are seeing green again."}, {'_id': '6944de90636c4ab819a4ae1a', 'article_id': '1', 'title': 'Carlyle Looks Toward Commercial Aerospace (Reuters)', 'description': 'Reuters - Private investment firm Carlyle Group,\\which has a reputation for making well-timed and occasionally\\controversial plays in the defense industry, has quietly placed\\its bets on another part of the market.'}, {'_id': '6944de90636c4ab819a4ae1b', 'article_id': '2', 'title': "Oil and Economy Cloud Stocks' Outlook (Reuters)", 'description': 'Reuters - Soaring crude prices plus worries\\about the economy and the outlook for earnings are expected to\\hang over the stock market next week during the depth of the\\summer doldrums.'}, {'_id': '6944de90636c4ab819a4ae1c', 'article_id': '3', 'title': 'Iraq Halts Oil Exports from Main Southern Pipeline (Reuters)', 'description': 'Reuters - Authorities have halted oil export\\flows from the main pipeline in southern Iraq after\\intelligence showed a rebel militia could strike\\infrastructure, an oil official said on Saturday.'}, {'_id': '6944de90636c4ab819a4ae1d', 'article_id': '4', 'title': 'Oil prices soar to all-time record, posing new menace to US economy (AFP)', 'description': 'AFP - Tearaway world oil prices, toppling records and straining wallets, present a new economic menace barely three months before the US presidential elections.'}], 'var_function-call-7351061642432085030': 5, 'var_function-call-1852811640888224843': 'file_storage/function-call-1852811640888224843.json', 'var_function-call-1232042616337286159': {'average': 90.54545454545455, 'counts': {'2010': 81, '2011': 94, '2012': 76, '2013': 104, '2014': 82, '2015': 96, '2016': 91, '2017': 94, '2018': 105, '2019': 78, '2020': 95}, 'total_business': 996}, 'var_function-call-2909592441845117660': [{'region': 'Asia'}, {'region': 'North America'}, {'region': 'South America'}, {'region': 'Europe'}, {'region': 'Africa'}], 'var_function-call-13836421231067896120': {'average': 111.54545454545455, 'counts': {'2010': 111, '2011': 120, '2012': 100, '2013': 123, '2014': 105, '2015': 111, '2016': 106, '2017': 112, '2018': 123, '2019': 97, '2020': 119}, 'total_business': 1227}, 'var_function-call-913872440462787043': {'sports_count': 837}, 'var_function-call-10674385032204715791': 127583, 'var_function-call-10180680957722622743': 'file_storage/function-call-10180680957722622743.json', 'var_function-call-8480328471805086617': 'file_storage/function-call-8480328471805086617.json', 'var_function-call-12701225129770448638': 'file_storage/function-call-12701225129770448638.json', 'var_function-call-11701309328523777183': {'average': 849.0, 'counts': {'2010': 801, '2011': 870, '2012': 843, '2013': 831, '2014': 822, '2015': 930, '2016': 819, '2017': 858, '2018': 858, '2019': 846, '2020': 861}, 'total_business': 9339, 'total_checked': 17286}, 'var_function-call-7166712302222882097': {'average': 283.0, 'counts': {'2010': 267, '2011': 290, '2012': 281, '2013': 277, '2014': 274, '2015': 310, '2016': 273, '2017': 286, '2018': 286, '2019': 282, '2020': 287}, 'total_business': 3113, 'total_checked': 5762}, 'var_function-call-16259027105128243548': [50000, 50000, 50000], 'var_function-call-11507233538812987263': 'file_storage/function-call-11507233538812987263.json', 'var_function-call-13477483756416762476': 'file_storage/function-call-13477483756416762476.json', 'var_function-call-118954258224715501': [50000, 50000], 'var_function-call-3929279601812517431': 'file_storage/function-call-3929279601812517431.json', 'var_function-call-9777611000529775379': {'chunk1_first': {'_id': '6944de90636c4ab819a4ae19', 'article_id': '0', 'title': 'Wall St. Bears Claw Back Into the Black (Reuters)', 'description': "Reuters - Short-sellers, Wall Street's dwindling\\band of ultra-cynics, are seeing green again."}, 'chunk2_first': {'_id': '6944de90636c4ab819a4ae19', 'article_id': '0', 'title': 'Wall St. Bears Claw Back Into the Black (Reuters)', 'description': "Reuters - Short-sellers, Wall Street's dwindling\\band of ultra-cynics, are seeing green again."}}, 'var_function-call-14056468458794143045': [], 'var_function-call-1519886245083442933': [], 'var_function-call-16686954234736408423': [], 'var_function-call-15390086360497765090': [{'_id': '6944de90636c4ab819a4ae19', 'article_id': '0', 'title': 'Wall St. Bears Claw Back Into the Black (Reuters)', 'description': "Reuters - Short-sellers, Wall Street's dwindling\\band of ultra-cynics, are seeing green again."}], 'var_function-call-18273582005806869507': 'file_storage/function-call-18273582005806869507.json', 'var_function-call-172282731475356789': 'file_storage/function-call-172282731475356789.json', 'var_function-call-1790428455135664697': {'average': 746.1818181818181, 'counts': {'2010': 725, '2011': 755, '2012': 729, '2013': 736, '2014': 735, '2015': 759, '2016': 733, '2017': 783, '2018': 774, '2019': 714, '2020': 765}, 'total_business': 8208, 'total_checked': 14860}, 'var_function-call-1336618198779526388': {'average': 0.0, 'counts': {'2010': 0, '2011': 0, '2012': 0, '2013': 0, '2014': 0, '2015': 0, '2016': 0, '2017': 0, '2018': 0, '2019': 0, '2020': 0}, 'total_business': 0}}
+
+exec(code, env_args)

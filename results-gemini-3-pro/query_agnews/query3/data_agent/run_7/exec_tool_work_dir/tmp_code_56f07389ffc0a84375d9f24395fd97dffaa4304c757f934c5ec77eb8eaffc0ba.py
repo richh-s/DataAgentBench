@@ -1,0 +1,114 @@
+code = """import json
+import re
+
+# Load Metadata
+with open(locals()['var_function-call-10971295442504843932'], 'r') as f:
+    metadata = json.load(f)
+
+# Load Articles
+with open(locals()['var_function-call-11889158057841070964'], 'r') as f:
+    articles = json.load(f)
+
+print(f"DEBUG: Articles loaded: {len(articles)}")
+print(f"DEBUG: Metadata loaded: {len(metadata)}")
+
+# Join
+meta_dict = {}
+for m in metadata:
+    try:
+        aid = int(m['article_id'])
+        meta_dict[aid] = m['publication_date']
+    except:
+        continue
+
+joined = []
+for a in articles:
+    try:
+        aid = int(a['article_id'])
+        if aid in meta_dict:
+            joined.append({
+                'title': a.get('title', ''),
+                'description': a.get('description', ''),
+                'year': int(meta_dict[aid].split('-')[0])
+            })
+    except:
+        continue
+
+print(f"DEBUG: Joined articles: {len(joined)}")
+
+categories = {
+    'Business': [
+        "business", "economy", "economic", "market", "stock", "wall street", "dow", "nasdaq",
+        "finance", "financial", "invest", "investment", "investor", "trade", "trading", "currency", "dollar", "euro",
+        "bank", "banking", "rates", "inflation", "recession", "gdp", "tax", "profit", "revenue", 
+        "earnings", "debt", "shares", "ipo", "merger", "acquisition", "company", "corporate", "industry", 
+        "oil", "crude", "gold", "fed", "federal reserve", "treasury", "bond", "loan", "sales", "retail", 
+        "ceo", "cfo", "imf", "wto", "price", "prices", "cost", "deal", "growth"
+    ],
+    'Sports': [
+        "sport", "sports", "football", "soccer", "basketball", "nba", "baseball", "mlb", "hockey", "nhl", 
+        "tennis", "golf", "cricket", "rugby", "team", "game", "match", "cup", "league", "season", 
+        "coach", "player", "athlete", "olympic", "champion", "tournament", "win", "won", "lose", "lost", 
+        "score", "victory", "defeat", "medal", "f1"
+    ],
+    'Sci/Tech': [
+        "technology", "tech", "science", "computer", "software", "hardware", "internet", "web", "mobile", 
+        "phone", "smartphone", "apple", "google", "microsoft", "ibm", "linux", "windows", "virus", 
+        "security", "hacker", "space", "nasa", "biology", "physics", "research", "study", "scientist", 
+        "discovery", "digital", "network", "chip"
+    ],
+    'World': [
+        "world", "international", "president", "minister", "election", "war", "military", "army", "bomb", 
+        "attack", "kill", "police", "government", "parliament", "nuclear", "treaty", "peace", "conflict", 
+        "disaster", "storm", "earthquake", "flood", "un", "eu", "protest", "strike", "terror"
+    ]
+}
+
+def classify(text):
+    text = text.lower()
+    scores = {cat: 0 for cat in categories}
+    tokens = re.findall(r'\w+', text)
+    for token in tokens:
+        for cat, keywords in categories.items():
+            if token in keywords:
+                scores[cat] += 1
+    
+    max_score = -1
+    best_cat = "World" # Default
+    
+    if all(s == 0 for s in scores.values()):
+        return "Unknown" # Or default to World if generic news
+        
+    for cat, score in scores.items():
+        if score > max_score:
+            max_score = score
+            best_cat = cat
+        elif score == max_score:
+             # Tie breaking: Business > Sci/Tech > Sports > World
+            if cat == 'Business':
+                best_cat = 'Business'
+            elif cat == 'Sci/Tech' and best_cat != 'Business':
+                best_cat = 'Sci/Tech'
+            elif cat == 'Sports' and best_cat not in ['Business', 'Sci/Tech']:
+                best_cat = 'Sports'
+    return best_cat
+
+business_counts = {y: 0 for y in range(2010, 2021)}
+debug_samples = []
+
+for item in joined:
+    cat = classify(item['title'] + " " + item['description'])
+    if cat == 'Business':
+        if 2010 <= item['year'] <= 2020:
+            business_counts[item['year']] += 1
+            if len(debug_samples) < 5:
+                debug_samples.append(item['title'])
+
+avg = sum(business_counts.values()) / 11.0
+
+print("__RESULT__:")
+print(json.dumps({"counts": business_counts, "average": avg, "debug_joined_count": len(joined), "samples": debug_samples}))"""
+
+env_args = {'var_function-call-10971295442504843932': 'file_storage/function-call-10971295442504843932.json', 'var_function-call-12801721283441403514': 'file_storage/function-call-12801721283441403514.json', 'var_function-call-5853784756770378776': 14860, 'var_function-call-12959133723405479980': [{'_id': '6944c4cc44a403dfe45c066e', 'article_id': '0', 'title': 'Wall St. Bears Claw Back Into the Black (Reuters)', 'description': "Reuters - Short-sellers, Wall Street's dwindling\\band of ultra-cynics, are seeing green again."}, {'_id': '6944c4cc44a403dfe45c066f', 'article_id': '1', 'title': 'Carlyle Looks Toward Commercial Aerospace (Reuters)', 'description': 'Reuters - Private investment firm Carlyle Group,\\which has a reputation for making well-timed and occasionally\\controversial plays in the defense industry, has quietly placed\\its bets on another part of the market.'}, {'_id': '6944c4cc44a403dfe45c0670', 'article_id': '2', 'title': "Oil and Economy Cloud Stocks' Outlook (Reuters)", 'description': 'Reuters - Soaring crude prices plus worries\\about the economy and the outlook for earnings are expected to\\hang over the stock market next week during the depth of the\\summer doldrums.'}, {'_id': '6944c4cc44a403dfe45c0671', 'article_id': '3', 'title': 'Iraq Halts Oil Exports from Main Southern Pipeline (Reuters)', 'description': 'Reuters - Authorities have halted oil export\\flows from the main pipeline in southern Iraq after\\intelligence showed a rebel militia could strike\\infrastructure, an oil official said on Saturday.'}, {'_id': '6944c4cc44a403dfe45c0672', 'article_id': '4', 'title': 'Oil prices soar to all-time record, posing new menace to US economy (AFP)', 'description': 'AFP - Tearaway world oil prices, toppling records and straining wallets, present a new economic menace barely three months before the US presidential elections.'}], 'var_function-call-12410638508946799314': [{'_id': '6944c4cc44a403dfe45c066e', 'article_id': '0', 'title': 'Wall St. Bears Claw Back Into the Black (Reuters)', 'description': "Reuters - Short-sellers, Wall Street's dwindling\\band of ultra-cynics, are seeing green again."}, {'_id': '6944c4cc44a403dfe45c066f', 'article_id': '1', 'title': 'Carlyle Looks Toward Commercial Aerospace (Reuters)', 'description': 'Reuters - Private investment firm Carlyle Group,\\which has a reputation for making well-timed and occasionally\\controversial plays in the defense industry, has quietly placed\\its bets on another part of the market.'}, {'_id': '6944c4cc44a403dfe45c0670', 'article_id': '2', 'title': "Oil and Economy Cloud Stocks' Outlook (Reuters)", 'description': 'Reuters - Soaring crude prices plus worries\\about the economy and the outlook for earnings are expected to\\hang over the stock market next week during the depth of the\\summer doldrums.'}, {'_id': '6944c4cc44a403dfe45c0671', 'article_id': '3', 'title': 'Iraq Halts Oil Exports from Main Southern Pipeline (Reuters)', 'description': 'Reuters - Authorities have halted oil export\\flows from the main pipeline in southern Iraq after\\intelligence showed a rebel militia could strike\\infrastructure, an oil official said on Saturday.'}, {'_id': '6944c4cc44a403dfe45c0672', 'article_id': '4', 'title': 'Oil prices soar to all-time record, posing new menace to US economy (AFP)', 'description': 'AFP - Tearaway world oil prices, toppling records and straining wallets, present a new economic menace barely three months before the US presidential elections.'}], 'var_function-call-9439585432619419389': {'counts': {'2010': 0, '2011': 0, '2012': 0, '2013': 0, '2014': 0, '2015': 0, '2016': 0, '2017': 0, '2018': 0, '2019': 0, '2020': 1}, 'average': 0.09090909090909091}, 'var_function-call-11889158057841070964': 'file_storage/function-call-11889158057841070964.json'}
+
+exec(code, env_args)

@@ -1,0 +1,39 @@
+code = """import pandas as pd
+import json
+
+# Access the raw output from the query_db call, which is a list of dictionaries
+articles_data = locals()['var_function-call-6073153279161606689']
+
+df = pd.DataFrame(articles_data)
+
+# Define keywords to identify sports articles
+sports_keywords = ['sport', 'game', 'team', 'match', 'play', 'athlete', 'championship', 'football', 'basketball', 'baseball', 'tennis', 'golf', 'olympic', 'world cup', 'race', 'score', 'win', 'lose', 'sports']
+
+# Function to check if an article is a sports article
+def is_sports_article(title, description):
+    title_lower = title.lower()
+    description_lower = description.lower()
+    for keyword in sports_keywords:
+        if keyword in title_lower or keyword in description_lower:
+            return True
+    return False
+
+# Filter for sports articles
+sports_articles = df[df.apply(lambda row: is_sports_article(row['title'], row['description']), axis=1)]
+
+result_title = ""
+
+if not sports_articles.empty:
+    # Calculate description length and find the article with the longest description
+    sports_articles.loc[:, 'description_length'] = sports_articles['description'].apply(len)
+    longest_description_article = sports_articles.loc[sports_articles['description_length'].idxmax()]
+    result_title = longest_description_article['title']
+else:
+    result_title = "No sports articles found."
+
+print('__RESULT__:')
+print(json.dumps(result_title))"""
+
+env_args = {'var_function-call-12516105523217112198': [{'_id': '6943d3cb8cdf87d466fd4138', 'title': 'Wall St. Bears Claw Back Into the Black (Reuters)', 'description': "Reuters - Short-sellers, Wall Street's dwindling\\band of ultra-cynics, are seeing green again."}, {'_id': '6943d3cb8cdf87d466fd4139', 'title': 'Carlyle Looks Toward Commercial Aerospace (Reuters)', 'description': 'Reuters - Private investment firm Carlyle Group,\\which has a reputation for making well-timed and occasionally\\controversial plays in the defense industry, has quietly placed\\its bets on another part of the market.'}, {'_id': '6943d3cb8cdf87d466fd413a', 'title': "Oil and Economy Cloud Stocks' Outlook (Reuters)", 'description': 'Reuters - Soaring crude prices plus worries\\about the economy and the outlook for earnings are expected to\\hang over the stock market next week during the depth of the\\summer doldrums.'}, {'_id': '6943d3cb8cdf87d466fd413b', 'title': 'Iraq Halts Oil Exports from Main Southern Pipeline (Reuters)', 'description': 'Reuters - Authorities have halted oil export\\flows from the main pipeline in southern Iraq after\\intelligence showed a rebel militia could strike\\infrastructure, an oil official said on Saturday.'}, {'_id': '6943d3cb8cdf87d466fd413c', 'title': 'Oil prices soar to all-time record, posing new menace to US economy (AFP)', 'description': 'AFP - Tearaway world oil prices, toppling records and straining wallets, present a new economic menace barely three months before the US presidential elections.'}], 'var_function-call-18114881157844902793': {'type_of_var_content': "<class 'list'>", 'content_keys': 'Not a dict', 'query_db_response_type': 'N/A', 'results_type': 'N/A', 'first_result_element_type': 'N/A', 'first_result_element_snippet': 'N/A'}, 'var_function-call-15798288326661052764': "No 'query_db_response' key found or it's not a dictionary.", 'var_function-call-8540598006749243741': "No 'query_db_response' key found or it's not a dictionary in the tool output.", 'var_function-call-9028384005021752410': 'Unexpected structure of query_db_response or missing keys.', 'var_function-call-16343108174136411825': 'Unexpected format of query_db output or missing JSON data.', 'var_function-call-6499692150665216770': "Unexpected structure of 'query_db_response' or missing 'results' key.", 'var_function-call-11700529370013617516': 'Unexpected structure of query_db output or missing keys.', 'var_function-call-9626920852646612115': "Unexpected structure of 'query_db_response' or missing 'results' key.", 'var_function-call-9682383176220488906': 'Query output is not a list or the first element is not a string.', 'var_function-call-6953692836321052448': 'Unexpected structure of query_db output or missing keys.', 'var_function-call-3633833666600239404': 'Unexpected structure of query_db output or missing keys.', 'var_function-call-5232589714305915453': 'Unexpected structure of query_db output or missing keys.', 'var_function-call-7941858885377456965': 'Unexpected structure of query_db output or missing keys.', 'var_function-call-5282830356994627013': 'Unexpected structure of query_db output or missing keys.', 'var_function-call-12544967623372767177': 'Unexpected structure of query_db output or missing keys.', 'var_function-call-13326944417142417661': 'Unexpected structure of query_db output or missing keys.', 'var_function-call-3471925789413337169': 'Unexpected structure of query_db output or missing keys.', 'var_function-call-6073153279161606689': [{'_id': '6943d3cb8cdf87d466fd4138', 'title': 'Wall St. Bears Claw Back Into the Black (Reuters)', 'description': "Reuters - Short-sellers, Wall Street's dwindling\\band of ultra-cynics, are seeing green again."}, {'_id': '6943d3cb8cdf87d466fd4139', 'title': 'Carlyle Looks Toward Commercial Aerospace (Reuters)', 'description': 'Reuters - Private investment firm Carlyle Group,\\which has a reputation for making well-timed and occasionally\\controversial plays in the defense industry, has quietly placed\\its bets on another part of the market.'}, {'_id': '6943d3cb8cdf87d466fd413a', 'title': "Oil and Economy Cloud Stocks' Outlook (Reuters)", 'description': 'Reuters - Soaring crude prices plus worries\\about the economy and the outlook for earnings are expected to\\hang over the stock market next week during the depth of the\\summer doldrums.'}, {'_id': '6943d3cb8cdf87d466fd413b', 'title': 'Iraq Halts Oil Exports from Main Southern Pipeline (Reuters)', 'description': 'Reuters - Authorities have halted oil export\\flows from the main pipeline in southern Iraq after\\intelligence showed a rebel militia could strike\\infrastructure, an oil official said on Saturday.'}, {'_id': '6943d3cb8cdf87d466fd413c', 'title': 'Oil prices soar to all-time record, posing new menace to US economy (AFP)', 'description': 'AFP - Tearaway world oil prices, toppling records and straining wallets, present a new economic menace barely three months before the US presidential elections.'}]}
+
+exec(code, env_args)
