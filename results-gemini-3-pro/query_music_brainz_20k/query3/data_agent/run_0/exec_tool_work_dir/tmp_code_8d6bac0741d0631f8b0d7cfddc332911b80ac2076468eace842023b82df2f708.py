@@ -1,0 +1,61 @@
+code = """import json
+import pandas as pd
+import re
+
+with open(locals()['var_function-call-8682200878932963124'], 'r') as f:
+    sales_data = json.load(f)
+with open(locals()['var_function-call-8682200878932962997'], 'r') as f:
+    tracks_data = json.load(f)
+
+df_sales = pd.DataFrame(sales_data)
+df_tracks = pd.DataFrame(tracks_data)
+df_sales['track_id'] = df_sales['track_id'].astype(str)
+df_sales['total_revenue'] = pd.to_numeric(df_sales['total_revenue'])
+df_tracks['track_id'] = df_tracks['track_id'].astype(str)
+df_merged = pd.merge(df_tracks, df_sales, on='track_id', how='left')
+df_merged['total_revenue'] = df_merged['total_revenue'].fillna(0)
+
+def normalize(s):
+    if not isinstance(s, str):
+        return ''
+    # Lowercase and strip
+    s = s.strip().lower()
+    if s in ['none', '']:
+        return ''
+    
+    # Remove leading track numbers e.g. "001-", "01 ", "12."
+    s = re.sub(r'^\d+[\s\-\.]+', '', s)
+    
+    # Remove text in parentheses/brackets (often contains "remix", "live", "feat", etc.)
+    # But wait, sometimes title is "Song (Remix)". If I strip it, I merge remixes with original.
+    # The prompt says "duplicates may not match exactly... reason about meaning".
+    # Generally, revenue for a song includes its remixes/live versions if we want "highest total revenue".
+    # Let's try stripping parentheses to be aggressive in grouping.
+    s = re.sub(r'\s*[\(\[].*?[\)\]]', '', s)
+    
+    # Remove punctuation
+    s = re.sub(r'[^\w\s]', '', s)
+    
+    return s.strip()
+
+df_merged['norm_title'] = df_merged['title'].apply(normalize)
+df_merged['norm_artist'] = df_merged['artist'].apply(normalize)
+
+# Filter where artist is present
+df_clean = df_merged[(df_merged['norm_title'] != '') & (df_merged['norm_artist'] != '')]
+
+grouped = df_clean.groupby(['norm_title', 'norm_artist']).agg({
+    'total_revenue': 'sum',
+    'title': 'first',
+    'artist': 'first'
+}).reset_index()
+
+grouped = grouped.sort_values('total_revenue', ascending=False)
+top_10 = grouped.head(10).to_dict(orient='records')
+
+print("__RESULT__:")
+print(json.dumps(top_10))"""
+
+env_args = {'var_function-call-8682200878932963124': 'file_storage/function-call-8682200878932963124.json', 'var_function-call-8682200878932962997': 'file_storage/function-call-8682200878932962997.json', 'var_function-call-1519880724859668680': {'title': 'None', 'artist': 'None', 'revenue': 17139.25, 'norm_title': '', 'norm_artist': ''}, 'var_function-call-1274804052475506745': [{'norm_title': '004', 'norm_artist': '', 'total_revenue': 7271.32, 'title': '004-/', 'artist': 'None'}, {'norm_title': '003', 'norm_artist': '', 'total_revenue': 7090.13, 'title': '003-', 'artist': 'None'}, {'norm_title': '005', 'norm_artist': '', 'total_revenue': 6155.29, 'title': '005', 'artist': 'None'}, {'norm_title': '009', 'norm_artist': '', 'total_revenue': 5045.7, 'title': '009-  ', 'artist': ' '}, {'norm_title': '002', 'norm_artist': '', 'total_revenue': 5013.4400000000005, 'title': '002-', 'artist': 'None'}], 'var_function-call-14956051246434708501': [{'norm_title': '004', 'norm_artist': '', 'total_revenue': 7271.32, 'title': '004-/', 'artist': 'None'}, {'norm_title': '003', 'norm_artist': '', 'total_revenue': 7090.13, 'title': '003-', 'artist': 'None'}, {'norm_title': '005', 'norm_artist': '', 'total_revenue': 6155.29, 'title': '005', 'artist': 'None'}, {'norm_title': '009', 'norm_artist': '', 'total_revenue': 5045.7, 'title': '009-  ', 'artist': ' '}, {'norm_title': '002', 'norm_artist': '', 'total_revenue': 5013.4400000000005, 'title': '002-', 'artist': 'None'}, {'norm_title': '010', 'norm_artist': '', 'total_revenue': 4734.360000000001, 'title': '010-', 'artist': 'None'}, {'norm_title': '001', 'norm_artist': '', 'total_revenue': 4681.75, 'title': '00-1', 'artist': 'None'}, {'norm_title': '012', 'norm_artist': '', 'total_revenue': 4641.08, 'title': '012-', 'artist': 'None'}, {'norm_title': 'groovey', 'norm_artist': 'rich matteson', 'total_revenue': 4128.59, 'title': 'Groovey', 'artist': 'Rich Matteson'}, {'norm_title': '006', 'norm_artist': '', 'total_revenue': 3946.7799999999997, 'title': '006-', 'artist': 'None'}, {'norm_title': 'the fire still burns', 'norm_artist': 'russ ballard', 'total_revenue': 3807.4, 'title': 'The Fire Still Burns', 'artist': 'Russ Ballard'}, {'norm_title': 'vostok', 'norm_artist': 'craig padilla', 'total_revenue': 3767.95, 'title': 'Vostok', 'artist': 'Craig Padilla'}, {'norm_title': 'all my friends say album version', 'norm_artist': 'luke bryan', 'total_revenue': 3241.21, 'title': 'All My Friends Say (album version)', 'artist': 'Luke Bryan'}, {'norm_title': 'beautiful instrumental', 'norm_artist': 'damian marley', 'total_revenue': 3228.62, 'title': 'Beautiful (instrumental)', 'artist': 'Damian Marley'}, {'norm_title': 'private soul security', 'norm_artist': 'down below', 'total_revenue': 3218.63, 'title': 'Private Soul Security', 'artist': 'Down Below'}, {'norm_title': 'unknown', 'norm_artist': '', 'total_revenue': 3218.35, 'title': 'unknown', 'artist': 'None'}, {'norm_title': 'bring back the love spaced out dub', 'norm_artist': 'laura harris', 'total_revenue': 3171.7, 'title': 'Bring Back the Love (Spaced Out dub)', 'artist': 'Laura Harris'}, {'norm_title': 'chi to rome broke one edit', 'norm_artist': 'lazy ants  rob threezy', 'total_revenue': 3091.77, 'title': 'Chi to Rome (Broke One edit)', 'artist': 'Lazy Ants & Rob Threezy'}, {'norm_title': 'bad hearts', 'norm_artist': 'tights', 'total_revenue': 3052.75, 'title': 'Bad Hearts', 'artist': 'Tights'}, {'norm_title': 'al stewart  year of the cat', 'norm_artist': '', 'total_revenue': 3049.9300000000003, 'title': 'Al Stewart - Year of the Cat', 'artist': 'None'}], 'var_function-call-14205048415460189365': [{'norm_title': 'groovey', 'norm_artist': 'rich matteson', 'total_revenue': 4128.59, 'title': 'Groovey', 'artist': 'Rich Matteson'}, {'norm_title': 'the fire still burns', 'norm_artist': 'russ ballard', 'total_revenue': 3807.4, 'title': 'The Fire Still Burns', 'artist': 'Russ Ballard'}, {'norm_title': 'vostok', 'norm_artist': 'craig padilla', 'total_revenue': 3767.95, 'title': 'Vostok', 'artist': 'Craig Padilla'}, {'norm_title': 'all my friends say album version', 'norm_artist': 'luke bryan', 'total_revenue': 3241.21, 'title': 'All My Friends Say (album version)', 'artist': 'Luke Bryan'}, {'norm_title': 'beautiful instrumental', 'norm_artist': 'damian marley', 'total_revenue': 3228.62, 'title': 'Beautiful (instrumental)', 'artist': 'Damian Marley'}, {'norm_title': 'private soul security', 'norm_artist': 'down below', 'total_revenue': 3218.63, 'title': 'Private Soul Security', 'artist': 'Down Below'}, {'norm_title': 'bring back the love spaced out dub', 'norm_artist': 'laura harris', 'total_revenue': 3171.7, 'title': 'Bring Back the Love (Spaced Out dub)', 'artist': 'Laura Harris'}, {'norm_title': 'chi to rome broke one edit', 'norm_artist': 'lazy ants  rob threezy', 'total_revenue': 3091.77, 'title': 'Chi to Rome (Broke One edit)', 'artist': 'Lazy Ants & Rob Threezy'}, {'norm_title': 'bad hearts', 'norm_artist': 'tights', 'total_revenue': 3052.75, 'title': 'Bad Hearts', 'artist': 'Tights'}, {'norm_title': 'skin', 'norm_artist': 'westworld', 'total_revenue': 3008.01, 'title': 'Skin', 'artist': 'Westworld'}], 'var_function-call-5871261560436786024': {'matteson': [{'track_id': '7710', 'title': '006-Groovey', 'artist': 'Rich Matteson'}, {'track_id': '8829', 'title': 'Groovey', 'artist': 'Rich Matteson'}, {'track_id': '16496', 'title': 'Groovey', 'artist': 'Rich Matteson'}, {'track_id': '17312', 'title': 'Groovey', 'artist': 'Rich Matteson'}], 'ballard': [{'track_id': '1154', 'title': 'The Fire Still Burns', 'artist': 'Russ Ballard'}, {'track_id': '1464', 'title': '008-The Fire Still Burns', 'artist': 'Russ Ballard'}, {'track_id': '6911', 'title': 'Come on and Get It - Nothing but Good: 1952-1962', 'artist': 'Hank Ballard and The Midnighters'}, {'track_id': '12644', 'title': 'The Fire Still Burns', 'artist': 'Russ Ballard'}, {'track_id': '13269', 'title': '015-Come on and Get It', 'artist': 'Hank Ballard and The Midnighters'}]}}
+
+exec(code, env_args)
