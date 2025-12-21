@@ -6,6 +6,10 @@ GEMINI_TOOL_CALL_INSTRUCTIONS = """2. Inside execute_python code you may read st
 
 GEMINI_25FLASH_TOOL_CALL_INSTRUCTIONS = """2. Inside execute_python code you may read storage entries using the provided key names, e.g., if the tool call id is 'call-1', you can directly access its result via `locals()['var_call-1']` in your code without indexing into additional fields."""
 
+GEMINI_25FLASH_WARNING = """WARNING (must follow exactly):
+- Do not generate code for tool calling. Always generate the tool call JSON.
+When calling tools, output the tool name exactly as defined. Do not prepend 'default_api.' or any other namespace to the tool name."""
+
 SYSTEM_PROMPT = """
 You are a data analysis agent. Use only the tools listed below to answer the user's query, based on the provided DATABASE DESCRIPTION for logical database names and their types (SQL or MongoDB), and the results of previous tool calls.
 
@@ -67,12 +71,12 @@ Do not output explanations, reasoning, or any natural language outside of the re
 
 
 def init_messages(user_query: str, db_description: str, deployment_name: str, system_prompt: str=SYSTEM_PROMPT) -> list[dict]:
+    system_prompt_suffix = ""
     if "gemini" in deployment_name.lower():
         tool_call_instructions = GEMINI_TOOL_CALL_INSTRUCTIONS
         if deployment_name.lower() == "gemini-2.5-flash":
-        #     # MALFORMED_FUCTION_CALL fix: https://www.linkedin.com/pulse/3-step-fix-persistent-malformedfunctioncall-error-production-gupta-fssne/
             tool_call_instructions = GEMINI_25FLASH_TOOL_CALL_INSTRUCTIONS
-        #     system_prompt_suffix = GEMINI_25FLASH_WARNING
+            system_prompt_suffix = "\n\n" + GEMINI_25FLASH_WARNING # MALFORMED_FUCTION_CALL fix: https://www.linkedin.com/pulse/3-step-fix-persistent-malformedfunctioncall-error-production-gupta-fssne/
     elif "gpt" in deployment_name.lower():
         tool_call_instructions = GPT_TOOL_CALL_INSTRUCTIONS
     else:
@@ -81,7 +85,7 @@ def init_messages(user_query: str, db_description: str, deployment_name: str, sy
     return [
         {
             "role": "system",
-            "content": system_prompt.replace("{TOOL_CALL_INSTRUCTIONS}", tool_call_instructions).strip()
+            "content": system_prompt.replace("{TOOL_CALL_INSTRUCTIONS}", tool_call_instructions).strip() + system_prompt_suffix
         },
         {
             "role": "user",
