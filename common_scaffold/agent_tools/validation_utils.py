@@ -1,22 +1,23 @@
 from pathlib import Path
 from datetime import datetime
 import importlib.util
+import os
+import json
 
-def validate_and_log(query_dir: Path, llm_answer: str) -> tuple[bool, str]:
+def validate_and_log(query_dir: Path, llm_answer: str, root_log_dir: str) -> tuple[bool, str]:
     """
-    执行 query_dir/validate.py 校验 LLM 输出，并记录日志。
+    Run query_dir/validate.py to check the LLM answer, and log the result.
 
     Args:
-        query_dir (Path): query 目录，例如 query_stockmarket/query2
-        llm_answer (str): LLM 返回的答案
+        query_dir (Path)
+        llm_answer (str)
 
     Returns:
-        (is_valid, reason): 校验是否通过，以及原因
+        (is_valid, reason)
     """
-    # 调用 validate.py
     validate_py = query_dir / "validate.py"
     if not validate_py.exists():
-        raise FileNotFoundError(f"❌ validate.py not found at: {validate_py}")
+        raise FileNotFoundError(f"validate.py not found at: {validate_py}")
 
     spec = importlib.util.spec_from_file_location("validate", str(validate_py))
     validate_mod = importlib.util.module_from_spec(spec)
@@ -24,25 +25,21 @@ def validate_and_log(query_dir: Path, llm_answer: str) -> tuple[bool, str]:
 
     is_valid, reason = validate_mod.validate(llm_answer)
 
-    # 写日志
     write_validation_log(
-        query_name=query_dir.name,
+        query_dir=query_dir,
         llm_answer=llm_answer,
         match_result=is_valid,
-        reason=reason
+        reason=reason,
+        root_log_dir=root_log_dir,
     )
 
     return is_valid, reason
 
 
-def write_validation_log(query_name: str, llm_answer: str, match_result: bool, reason: str):
-    """
-    写 validation_log.txt
-    """
-    log_path = Path.cwd() / "validation_log.txt"
-    gt_path = Path.cwd() / query_name / "ground_truth.csv"
+def write_validation_log(query_dir: Path, llm_answer: str, match_result: bool, reason: str, root_log_dir: str = None):
+    log_path = os.path.join(root_log_dir, "validation.jsonl")
+    gt_path = query_dir / "ground_truth.csv"
 
-    # 读 ground truth
     if not gt_path.exists():
         print(f"⚠️ ground_truth.csv not found: {gt_path}")
         gt_lines = ["<ground truth file missing>"]
@@ -52,42 +49,28 @@ def write_validation_log(query_name: str, llm_answer: str, match_result: bool, r
 
     gt_str = "\n".join(gt_lines)
 
-    timestamp = datetime.now().isoformat(timespec="seconds")
-    result_str = "✅ MATCH" if match_result else f"❌ MISMATCH: {reason}"
+    log_dict = {
+        "timestamp": datetime.now().strftime("%Y%m%d_%H%M%S"),
+        "query_name": query_dir.name,
+        "is_match": match_result,
+        "reason": reason,
+        "ground_truth": gt_str,
+        "llm_answer": llm_answer.strip(),
+    }
 
-    log_lines = [
-        f"=== Validation Log ({timestamp}) ===",
-        f"Query: {query_name}",
-        "",
-        "LLM Answer:",
-        llm_answer.strip(),
-        "",
-        "Ground Truth:",
-        gt_str,
-        "",
-        f"Result: {result_str}",
-        "="*80,
-        ""
-    ]
-    log_entry = "\n".join(log_lines)
+    with open(log_path, "a", encoding="utf-8") as f:
+        f.write(json.dumps(log_dict, ensure_ascii=False) + "\n")
 
-    if log_path.exists():
-        old_content = log_path.read_text(encoding="utf-8")
-    else:
-        old_content = ""
+    print(f"\nValidation log updated at: {log_path}")
 
-    with open(log_path, "w", encoding="utf-8") as f:
-        f.write(log_entry + "\n" + old_content)
-
-    print(f"\n📄 Validation log updated at: {log_path}")
-
-def log_failed(query_dir: Path, reason: str):
+def log_failed(query_dir: Path, reason: str, root_log_dir: str):
     """
     when agent break down due to code issue
     """
     write_validation_log(
-        query_name=query_dir.name,
+        query_dir=query_dir,
         llm_answer="FAILED due to agent crash",
         match_result=False,
-        reason=reason
+        reason=reason,
+        root_log_dir=root_log_dir,
     )

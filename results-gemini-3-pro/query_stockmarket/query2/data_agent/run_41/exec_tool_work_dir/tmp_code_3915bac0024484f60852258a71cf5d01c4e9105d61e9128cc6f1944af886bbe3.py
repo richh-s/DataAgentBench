@@ -1,0 +1,21 @@
+code = """import json
+
+with open(locals()['var_function-call-4241544829162874194'], 'r') as f:
+    valid_symbols = json.load(f)
+
+# Batch 1: first 500
+batch = valid_symbols[:500]
+queries = []
+for sym in batch:
+    # Use double quotes for table name in case of reserved words or special chars
+    # Although symbols are usually fine, some might be reserved like "ALL", "AND" etc.
+    q = f"SELECT '{sym}' as Symbol FROM \"{sym}\" WHERE Date >= '2015-01-01' AND Date <= '2015-12-31' AND \"Adj Close\" > 200 LIMIT 1"
+    queries.append(q)
+
+final_query = " UNION ALL ".join(queries)
+print("__RESULT__:")
+print(json.dumps(final_query))"""
+
+env_args = {'var_function-call-14195711220532126717': [{'ETF': 'Y', 'Listing Exchange': 'P'}, {'ETF': 'N', 'Listing Exchange': 'Q'}, {'ETF': 'Y', 'Listing Exchange': 'Q'}, {'ETF': 'Y', 'Listing Exchange': 'Z'}, {'ETF': 'N', 'Listing Exchange': 'A'}, {'ETF': 'N', 'Listing Exchange': 'N'}, {'ETF': 'N', 'Listing Exchange': 'Z'}, {'ETF': 'N', 'Listing Exchange': 'P'}, {'ETF': 'Y', 'Listing Exchange': 'A'}], 'var_function-call-13030058367102200413': 'file_storage/function-call-13030058367102200413.json', 'var_function-call-151626240589154895': 'file_storage/function-call-151626240589154895.json', 'var_function-call-4241544829162874194': 'file_storage/function-call-4241544829162874194.json', 'var_function-call-10903685240376781787': 1435}
+
+exec(code, env_args)

@@ -1,0 +1,67 @@
+code = """import json
+import pandas as pd
+
+# Load Metadata
+with open(locals()['var_function-call-8582204155257448886'], 'r') as f:
+    metadata_list = json.load(f)
+
+# Load Articles (large dump)
+with open(locals()['var_function-call-16287651020434173004'], 'r') as f:
+    articles_list = json.load(f)
+
+# Convert to DataFrames
+df_meta = pd.DataFrame(metadata_list)
+df_articles = pd.DataFrame(articles_list)
+
+# Ensure article_id is string
+df_meta['article_id'] = df_meta['article_id'].astype(str)
+df_articles['article_id'] = df_articles['article_id'].astype(str)
+
+# Join
+df_merged = pd.merge(df_meta, df_articles, on='article_id', how='inner')
+
+# Business Keywords
+business_keywords = [
+    'economy', 'economic', 'market', 'stock', 'share', 'invest', 'trade', 'bank', 
+    'profit', 'loss', 'revenue', 'dollar', 'euro', 'currency', 'financial', 'finance', 
+    'business', 'corp', 'firm', 'company', 'ipo', 'merger', 'acquisition', 'wall street', 
+    'oil price', 'dow jones', 'nasdaq', 'tax', 'employment', 'job', 'growth', 'recession',
+    'inflation', 'budget', 'debt', 'ceo', 'manager', 'sales', 'retail', 'industry', 'commercial',
+    'export', 'import', 'deal'
+]
+
+def is_business(row):
+    text = (str(row['title']) + " " + str(row['description'])).lower()
+    for kw in business_keywords:
+        if kw in text:
+            return True
+    return False
+
+# Filter
+df_merged['is_business'] = df_merged.apply(is_business, axis=1)
+business_articles = df_merged[df_merged['is_business']]
+
+# Extract Year
+business_articles['year'] = pd.to_datetime(business_articles['publication_date']).dt.year
+
+# Count per year
+counts = business_articles.groupby('year').size()
+
+# Fill missing years 2010-2020
+all_years = list(range(2010, 2021))
+counts = counts.reindex(all_years, fill_value=0)
+
+# Calculate Average
+average = counts.mean()
+
+print("__RESULT__:")
+print(json.dumps({
+    "counts_per_year": counts.to_dict(),
+    "average": average,
+    "total_filtered_articles": len(df_merged),
+    "total_business_articles": len(business_articles)
+}))"""
+
+env_args = {'var_function-call-8582204155257448886': 'file_storage/function-call-8582204155257448886.json', 'var_function-call-10360183093832859744': 'file_storage/function-call-10360183093832859744.json', 'var_function-call-8113535131067025306': [{'_id': '6944e32773df47891b047b1c', 'article_id': '0', 'title': 'Wall St. Bears Claw Back Into the Black (Reuters)', 'description': "Reuters - Short-sellers, Wall Street's dwindling\\band of ultra-cynics, are seeing green again."}, {'_id': '6944e32773df47891b047b1d', 'article_id': '1', 'title': 'Carlyle Looks Toward Commercial Aerospace (Reuters)', 'description': 'Reuters - Private investment firm Carlyle Group,\\which has a reputation for making well-timed and occasionally\\controversial plays in the defense industry, has quietly placed\\its bets on another part of the market.'}, {'_id': '6944e32773df47891b047b1e', 'article_id': '2', 'title': "Oil and Economy Cloud Stocks' Outlook (Reuters)", 'description': 'Reuters - Soaring crude prices plus worries\\about the economy and the outlook for earnings are expected to\\hang over the stock market next week during the depth of the\\summer doldrums.'}, {'_id': '6944e32773df47891b047b1f', 'article_id': '3', 'title': 'Iraq Halts Oil Exports from Main Southern Pipeline (Reuters)', 'description': 'Reuters - Authorities have halted oil export\\flows from the main pipeline in southern Iraq after\\intelligence showed a rebel militia could strike\\infrastructure, an oil official said on Saturday.'}, {'_id': '6944e32773df47891b047b20', 'article_id': '4', 'title': 'Oil prices soar to all-time record, posing new menace to US economy (AFP)', 'description': 'AFP - Tearaway world oil prices, toppling records and straining wallets, present a new economic menace barely three months before the US presidential elections.'}], 'var_function-call-15993919006908130781': 5, 'var_function-call-17518911728583085632': ['articles'], 'var_function-call-12830304169509026760': 'file_storage/function-call-12830304169509026760.json', 'var_function-call-6208908002913557937': {'counts_per_year': {'2010': 71, '2011': 80, '2012': 64, '2013': 77, '2014': 65, '2015': 69, '2016': 75, '2017': 78, '2018': 88, '2019': 65, '2020': 77}, 'average': 73.54545454545455, 'total_filtered_articles': 2273, 'total_business_articles': 809}, 'var_function-call-12150434252402105029': 20000, 'var_function-call-6451618528801554253': 127583, 'var_function-call-16287651020434173004': 'file_storage/function-call-16287651020434173004.json'}
+
+exec(code, env_args)

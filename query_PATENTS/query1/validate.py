@@ -1,4 +1,4 @@
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     """
     Validate that all CPC codes in ground truth appear in the LLM output.
 
@@ -23,10 +23,7 @@ def validate(llm_output: str) -> (bool, str):
     for code in ground_truth:
         if code.lower() not in llm_lower:
             reason = f"Missing CPC code: {code}"
-            print(f"❌ {reason}")
+            
             return False, reason
-        else:
-            print(f"✅ Found CPC code: {code}")
 
-    print("✅ All CPC codes present in LLM output.")
-    return True, "OK"
+    return True, "All CPC codes present in LLM output."

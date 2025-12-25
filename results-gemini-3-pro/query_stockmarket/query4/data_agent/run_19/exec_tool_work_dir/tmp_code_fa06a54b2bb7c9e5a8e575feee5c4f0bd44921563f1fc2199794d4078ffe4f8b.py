@@ -1,0 +1,18 @@
+code = """import json
+
+with open(locals()['var_function-call-263902295550874818'], 'r') as f:
+    batches = json.load(f)
+
+# The previous batches were size 40.
+# Let's take the first one and split it into 2.
+b0 = batches[0]
+sub_batches = b0.split(' UNION ALL ')
+# Take first 10
+q_small = ' UNION ALL '.join(sub_batches[:10])
+
+print('__RESULT__:')
+print(json.dumps(q_small))"""
+
+env_args = {'var_function-call-16367055759489104877': 'file_storage/function-call-16367055759489104877.json', 'var_function-call-4289538722941154091': 234, 'var_function-call-9869948339806265724': [{'Date': '1987-09-30', 'Open': '14.988152503967283', 'High': '15.701873779296877', 'Low': '14.988152503967283', 'Close': '15.107105255126951', 'Adj Close': '8.918145179748535', 'Volume': '2292200'}, {'Date': '1987-10-01', 'Open': '15.107105255126951', 'High': '15.345012664794922', 'Low': '14.988152503967283', 'Close': '15.345012664794922', 'Adj Close': '9.05859375', 'Volume': '468200'}, {'Date': '1987-10-02', 'Open': '15.345012664794922', 'High': '15.701873779296877', 'Low': '15.107105255126951', 'Close': '15.701873779296877', 'Adj Close': '9.26926040649414', 'Volume': '371600'}, {'Date': '1987-10-05', 'Open': '15.701873779296877', 'High': '15.701873779296877', 'Low': '15.226058959960938', 'Close': '15.701873779296877', 'Adj Close': '9.26926040649414', 'Volume': '121300'}, {'Date': '1987-10-06', 'Open': '15.58292007446289', 'High': '15.58292007446289', 'Low': '15.226058959960938', 'Close': '15.463966369628906', 'Adj Close': '9.128814697265623', 'Volume': '159300'}], 'var_function-call-10823379769543872171': 'file_storage/function-call-10823379769543872171.json', 'var_function-call-2362606166897037787': 'file_storage/function-call-2362606166897037787.json', 'var_function-call-14698605307208549419': 'Done', 'var_function-call-5721304688526480649': 'file_storage/function-call-5721304688526480649.json', 'var_function-call-16962306804993068248': 'Hello', 'var_function-call-11987320632037346715': 'file_storage/function-call-11987320632037346715.json', 'var_function-call-263902295550874818': 'file_storage/function-call-263902295550874818.json'}
+
+exec(code, env_args)

@@ -1,0 +1,41 @@
+code = """import json
+from datetime import datetime
+
+# Access the raw output from the previous tool call
+query_result_dict = locals()['var_function-call-14427941967854933840']
+
+# The actual query result is nested under 'query_db_response' and then 'results'.
+# 'results' is a list, and the actual string containing the JSON is the first element of this list.
+raw_output_string = query_result_dict['query_db_response']['results'][0]
+
+# Extract the JSON array string by splitting the raw output string.
+# The JSON array is after "The result is:\n" and has a trailing newline which we strip.
+# We split only once to ensure we get the correct second part even if "The result is:\n" appears elsewhere.
+json_data_string = raw_output_string.split("The result is:\n", 1)[1].strip()
+
+# Parse the JSON string to get the list of dictionaries
+order_item_ids_raw = json.loads(json_data_string)
+
+# Clean and extract the item IDs: remove '#' and strip whitespace
+order_item_ids = [item['Id'].replace('#', '').strip() for item in order_item_ids_raw]
+
+# Prepare the IDs for the SQL IN clause by single-quoting each ID
+# This will produce a list like ["'802Wt0000078yuGIAQ'", "'802Wt00000790mOIAQ'", ...]
+quoted_ids_for_sql = [f"'{id_val}'" for id_val in order_item_ids]
+
+# Construct the IN clause content: a comma-separated string of quoted IDs
+in_clause_values = ', '.join(quoted_ids_for_sql)
+
+# Construct the full SQL query string for PostgreSQL.
+# Use double quotes for the Python string literal.
+# Escape internal double quotes for PostgreSQL identifiers (table/column names).
+# The 'in_clause_values' already contains single-quoted IDs, so no further quoting is needed around it.
+sql_query = f"SELECT \"createddate\" FROM \"Case\" WHERE \"orderitemid__c\" IN ({in_clause_values});"
+
+# Print the resulting SQL query string as a JSON-serializable string
+print('__RESULT__:')
+print(json.dumps(sql_query))"""
+
+env_args = {'var_function-call-14427941967854933840': [{'Id': '#802Wt0000078yuGIAQ'}, {'Id': '802Wt00000790mOIAQ'}, {'Id': '802Wt00000790zGIAQ'}, {'Id': '802Wt00000794F2IAI'}, {'Id': '802Wt000007968eIAA'}, {'Id': '802Wt00000796bfIAA'}, {'Id': '802Wt00000796qFIAQ'}, {'Id': '802Wt0000079734IAA'}, {'Id': '802Wt00000797W5IAI'}, {'Id': '802Wt00000797z7IAA'}, {'Id': '802Wt00000798YdIAI'}, {'Id': '802Wt00000798okIAA'}, {'Id': '802Wt0000079B0EIAU'}]}
+
+exec(code, env_args)

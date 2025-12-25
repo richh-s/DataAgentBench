@@ -1,0 +1,18 @@
+code = """import json
+import re
+
+# Test classifier logic
+categories = {
+    'World': ["iraq", "oil", "war"] # minimal set for test
+}
+kws = categories['World']
+pattern = r'\b(' + '|'.join(re.escape(kw) for kw in kws) + r')\b'
+regex = re.compile(pattern)
+text = "iraq halts oil exports from main southern pipeline"
+matches = regex.findall(text)
+print("__RESULT__:")
+print(json.dumps({"matches": matches, "pattern": pattern}))"""
+
+env_args = {'var_function-call-4524539130792533253': 'file_storage/function-call-4524539130792533253.json', 'var_function-call-12841960327215520545': 'file_storage/function-call-12841960327215520545.json', 'var_function-call-17275925162365337320': [{'_id': '6944ea9ed4512ac83e64878c', 'article_id': '0', 'title': 'Wall St. Bears Claw Back Into the Black (Reuters)', 'description': "Reuters - Short-sellers, Wall Street's dwindling\\band of ultra-cynics, are seeing green again."}, {'_id': '6944ea9ed4512ac83e64878d', 'article_id': '1', 'title': 'Carlyle Looks Toward Commercial Aerospace (Reuters)', 'description': 'Reuters - Private investment firm Carlyle Group,\\which has a reputation for making well-timed and occasionally\\controversial plays in the defense industry, has quietly placed\\its bets on another part of the market.'}, {'_id': '6944ea9ed4512ac83e64878e', 'article_id': '2', 'title': "Oil and Economy Cloud Stocks' Outlook (Reuters)", 'description': 'Reuters - Soaring crude prices plus worries\\about the economy and the outlook for earnings are expected to\\hang over the stock market next week during the depth of the\\summer doldrums.'}, {'_id': '6944ea9ed4512ac83e64878f', 'article_id': '3', 'title': 'Iraq Halts Oil Exports from Main Southern Pipeline (Reuters)', 'description': 'Reuters - Authorities have halted oil export\\flows from the main pipeline in southern Iraq after\\intelligence showed a rebel militia could strike\\infrastructure, an oil official said on Saturday.'}, {'_id': '6944ea9ed4512ac83e648790', 'article_id': '4', 'title': 'Oil prices soar to all-time record, posing new menace to US economy (AFP)', 'description': 'AFP - Tearaway world oil prices, toppling records and straining wallets, present a new economic menace barely three months before the US presidential elections.'}], 'var_function-call-845048519728556146': {'top_region': 'None', 'count': 0, 'all_counts': {}}, 'var_function-call-15108040845174692452': {'count_2015': 0, 'sample_titles': [], 'sample_descriptions': []}, 'var_function-call-16784580192302694402': {'len_articles': 5, 'first_ids': ['0', '1', '2', '3', '4']}, 'var_function-call-8766970931896504381': 'file_storage/function-call-8766970931896504381.json', 'var_function-call-10866169233379572562': {'top_region': 'Europe', 'count': 452, 'all_counts': {'Asia': 434, 'North America': 449, 'South America': 430, 'Europe': 452, 'Africa': 448}, 'total_2015_classified_world': 2213, 'total_2015_articles': 5226, 'sample_world_articles': ['Oracle Sales Data Seen Being Released (Reuters)', "What's in a Name? Well, Matt Is Sexier Than Paul (Reuters)", 'Indictments Using DNA on Rise Nationally (AP)', "News: Climate Change Could Doom Alaska's Tundra", 'News: Warmer Weather, Human Disturbances Interact to Change Forests']}, 'var_function-call-4688185215621790112': {'top_region': 'None', 'count': 0, 'all_counts': {}, 'sample_world_articles': []}}
+
+exec(code, env_args)

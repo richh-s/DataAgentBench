@@ -1,0 +1,24 @@
+code = """import json
+
+path = locals()['var_function-call-17904107048790784824']
+with open(path, 'r') as f:
+    syms = json.load(f)
+
+batches = []
+chunk_size = 500
+
+for i in range(0, len(syms), chunk_size):
+    chunk = syms[i:i+chunk_size]
+    parts = []
+    for s in chunk:
+        # Construct query safely
+        query = "SELECT '{0}' as Symbol FROM \"{0}\" WHERE Date >= '2015-01-01' AND Date <= '2015-12-31' AND \"Adj Close\" > 200 LIMIT 1".format(s)
+        parts.append(query)
+    batches.append(" UNION ALL ".join(parts))
+
+print("__RESULT__:")
+print(json.dumps(batches))"""
+
+env_args = {'var_function-call-8664818229940641972': [{'ETF': 'Y', 'Listing Exchange': 'P'}, {'ETF': 'N', 'Listing Exchange': 'Q'}, {'ETF': 'Y', 'Listing Exchange': 'Q'}, {'ETF': 'Y', 'Listing Exchange': 'Z'}, {'ETF': 'N', 'Listing Exchange': 'A'}, {'ETF': 'N', 'Listing Exchange': 'N'}, {'ETF': 'N', 'Listing Exchange': 'Z'}, {'ETF': 'N', 'Listing Exchange': 'P'}, {'ETF': 'Y', 'Listing Exchange': 'A'}], 'var_function-call-925302824515021952': 'file_storage/function-call-925302824515021952.json', 'var_function-call-16367137017631694844': 'file_storage/function-call-16367137017631694844.json', 'var_function-call-17904107048790784824': 'file_storage/function-call-17904107048790784824.json'}
+
+exec(code, env_args)

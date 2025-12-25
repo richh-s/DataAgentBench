@@ -1,6 +1,6 @@
 import re
 
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     """
     Validate if LLM output contains the expected state abbreviation.
     Expected: MI
@@ -24,8 +24,7 @@ def validate(llm_output: str) -> (bool, str):
 
     # Check for exact state match (case insensitive)
     if expected.upper() in llm_output_clean.upper():
-        print(f"✅ Found expected state: {expected}")
-        return True, "OK"
+        return True, f"Found expected state: {expected}"
 
     # Check if any valid state abbreviation is mentioned
     found_states = []
@@ -35,9 +34,9 @@ def validate(llm_output: str) -> (bool, str):
 
     if found_states:
         reason = f"Found states {found_states}, but expected '{expected}'"
-        print(f"❌ {reason}")
+        
         return False, reason
     else:
         reason = "No state abbreviation found in LLM output"
-        print(f"❌ {reason}")
+        
         return False, reason

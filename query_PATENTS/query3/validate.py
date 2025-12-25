@@ -117,7 +117,6 @@ def validate(llm_output: str) -> Tuple[bool, str]:
             window = llm_output_norm[i : i + window_size]
             if levenshtein(window, combined) <= 10:
                 found_fuzzy = True
-                print(f"✅ Fuzzy matched: {assignee} + {title}")
                 break
 
         # Local window matching
@@ -132,13 +131,10 @@ def validate(llm_output: str) -> Tuple[bool, str]:
             window = normalize(llm_output_with_space[start:end])
             if norm_title in window:
                 found_local = True
-                print(f"✅ Local window matched: {assignee} + {title}")
 
         # If neither method matches, return failure
         if not (found_fuzzy or found_local):
-            reason = f"❌ No match for: {assignee} + {title}"
-            print(reason)
+            reason = f"No match for: {assignee} + {title}"
             return False, reason
 
-    print("✅ All assignee-title pairs matched successfully by at least one method.")
-    return True, "OK"
+    return True, "All assignee-title pairs matched successfully by at least one method."

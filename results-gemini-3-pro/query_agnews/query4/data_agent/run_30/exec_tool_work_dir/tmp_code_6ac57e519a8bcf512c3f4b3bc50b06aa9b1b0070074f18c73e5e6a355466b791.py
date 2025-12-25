@@ -1,0 +1,37 @@
+code = """import json
+
+with open(locals()['var_function-call-9402959819383380444'], 'r') as f:
+    metadata_list = json.load(f)
+
+metadata_ids = [int(row['article_id']) for row in metadata_list]
+print(f"Max metadata ID: {max(metadata_ids)}")
+print(f"Min metadata ID: {min(metadata_ids)}")
+print(f"Count metadata: {len(metadata_ids)}")
+
+with open(locals()['var_function-call-6775040428661401644'], 'r') as f:
+    articles_list = json.load(f)
+
+article_ids = [int(art['article_id']) for art in articles_list]
+print(f"Max article ID: {max(article_ids)}")
+print(f"Min article ID: {min(article_ids)}")
+print(f"Count articles: {len(article_ids)}")
+
+# Check intersection
+meta_set = set(metadata_ids)
+art_set = set(article_ids)
+intersection = meta_set.intersection(art_set)
+print(f"Intersection count: {len(intersection)}")
+
+# Check regex matching on one example
+import re
+text = "The United Nations is meeting."
+kw = "united nations"
+pattern = re.compile(r'\b' + re.escape(kw) + r'\b', re.IGNORECASE)
+print(f"Match test '{kw}': {pattern.findall(text)}")
+
+print("__RESULT__:")
+print(json.dumps({"intersection": len(intersection)}))"""
+
+env_args = {'var_function-call-9402959819383380444': 'file_storage/function-call-9402959819383380444.json', 'var_function-call-4777546986780690904': {'count': 6696, 'sample_ids': [13, 18, 26, 51, 52, 67, 70, 74, 86, 97]}, 'var_function-call-5898384611534578925': [{'_id': '69450cd080dae318e2b3a6cf', 'article_id': '0', 'title': 'Wall St. Bears Claw Back Into the Black (Reuters)', 'description': "Reuters - Short-sellers, Wall Street's dwindling\\band of ultra-cynics, are seeing green again."}, {'_id': '69450cd080dae318e2b3a6d0', 'article_id': '1', 'title': 'Carlyle Looks Toward Commercial Aerospace (Reuters)', 'description': 'Reuters - Private investment firm Carlyle Group,\\which has a reputation for making well-timed and occasionally\\controversial plays in the defense industry, has quietly placed\\its bets on another part of the market.'}, {'_id': '69450cd080dae318e2b3a6d1', 'article_id': '2', 'title': "Oil and Economy Cloud Stocks' Outlook (Reuters)", 'description': 'Reuters - Soaring crude prices plus worries\\about the economy and the outlook for earnings are expected to\\hang over the stock market next week during the depth of the\\summer doldrums.'}, {'_id': '69450cd080dae318e2b3a6d2', 'article_id': '3', 'title': 'Iraq Halts Oil Exports from Main Southern Pipeline (Reuters)', 'description': 'Reuters - Authorities have halted oil export\\flows from the main pipeline in southern Iraq after\\intelligence showed a rebel militia could strike\\infrastructure, an oil official said on Saturday.'}, {'_id': '69450cd080dae318e2b3a6d3', 'article_id': '4', 'title': 'Oil prices soar to all-time record, posing new menace to US economy (AFP)', 'description': 'AFP - Tearaway world oil prices, toppling records and straining wallets, present a new economic menace barely three months before the US presidential elections.'}], 'var_function-call-3661929660469194168': [{'article_id': '0', 'title': 'Wall St. Bears Claw Back Into the Black (Reuters)', 'description': "Reuters - Short-sellers, Wall Street's dwindling\\band of ultra-cynics, are seeing green again."}, {'article_id': '1', 'title': 'Carlyle Looks Toward Commercial Aerospace (Reuters)', 'description': 'Reuters - Private investment firm Carlyle Group,\\which has a reputation for making well-timed and occasionally\\controversial plays in the defense industry, has quietly placed\\its bets on another part of the market.'}, {'article_id': '2', 'title': "Oil and Economy Cloud Stocks' Outlook (Reuters)", 'description': 'Reuters - Soaring crude prices plus worries\\about the economy and the outlook for earnings are expected to\\hang over the stock market next week during the depth of the\\summer doldrums.'}, {'article_id': '3', 'title': 'Iraq Halts Oil Exports from Main Southern Pipeline (Reuters)', 'description': 'Reuters - Authorities have halted oil export\\flows from the main pipeline in southern Iraq after\\intelligence showed a rebel militia could strike\\infrastructure, an oil official said on Saturday.'}, {'article_id': '4', 'title': 'Oil prices soar to all-time record, posing new menace to US economy (AFP)', 'description': 'AFP - Tearaway world oil prices, toppling records and straining wallets, present a new economic menace barely three months before the US presidential elections.'}], 'var_function-call-1182930291285511740': {'count': 5}, 'var_function-call-6775040428661401644': 'file_storage/function-call-6775040428661401644.json', 'var_function-call-4109657372586011047': {'max_region': 'Africa', 'max_count': 106, 'counts': {'Asia': 83, 'North America': 102, 'Europe': 80, 'South America': 91, 'Africa': 106}, 'debug': [{'id': '67', 'title': 'IT Myth 5: Most IT projects fail', 'region': 'Asia', 'cat': 'World'}, {'id': '86', 'title': 'Oracle Sales Data Seen Being Released (Reuters)', 'region': 'Asia', 'cat': 'World'}, {'id': '97', 'title': "What's in a Name? Well, Matt Is Sexier Than Paul (Reuters)", 'region': 'North America', 'cat': 'World'}, {'id': '141', 'title': 'Indictments Using DNA on Rise Nationally (AP)', 'region': 'Asia', 'cat': 'World'}, {'id': '179', 'title': 'Reverse Psychology', 'region': 'Europe', 'cat': 'World'}]}, 'var_function-call-7220003289478085877': {'world_counts_by_region': {}, 'total_classified': {'Unknown': 998}}}
+
+exec(code, env_args)

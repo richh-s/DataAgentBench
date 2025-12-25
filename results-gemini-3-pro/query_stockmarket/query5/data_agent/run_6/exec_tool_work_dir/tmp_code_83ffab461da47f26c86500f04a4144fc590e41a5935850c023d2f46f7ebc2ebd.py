@@ -1,0 +1,20 @@
+code = """import json
+
+valid = locals()['var_function-call-783910517678674010']
+
+subqueries = []
+for sym in valid:
+    # Query for one symbol
+    # (High - Low) > 0.2 * Low
+    # Date in 2019
+    q = "SELECT '{}' AS Symbol, COUNT(*) AS Count FROM \"{}\" WHERE Date LIKE '2019-%' AND (High - Low) > (0.2 * Low)".format(sym, sym)
+    subqueries.append(q)
+
+final_query = " UNION ALL ".join(subqueries) + " ORDER BY Count DESC LIMIT 5"
+
+print('__RESULT__:')
+print(json.dumps(final_query))"""
+
+env_args = {'var_function-call-277767683765402362': [{'Nasdaq Traded': 'Y', 'Symbol': 'AAAU', 'Listing Exchange': 'P', 'Market Category': 'Not applicable or not NASDAQ-listed', 'ETF': 'Y', 'Round Lot Size': '100.0', 'Test Issue': 'N', 'Financial Status': 'None', 'NextShares': 'N', 'Company Description': 'Perth Mint Physical Gold ETF offers investors an opportunity to buy shares backed by physical gold, providing a secure and tangible way to invest in precious metals.'}], 'var_function-call-13664371360467966876': 'file_storage/function-call-13664371360467966876.json', 'var_function-call-2894604771842111862': 86, 'var_function-call-9828464466004639384': 'file_storage/function-call-9828464466004639384.json', 'var_function-call-9364308099402691955': [{'Date': '2018-08-15'}], 'var_function-call-783910517678674010': ['AGMH', 'ALACU', 'AMHC', 'ANDA', 'APEX', 'BCLI', 'BHAT', 'BIOC', 'BKYI', 'BLFS', 'BOSC', 'BOTJ', 'BWEN', 'CBAT', 'CCCL', 'CDMOP', 'CEMI', 'CFBK', 'CFFA', 'CLRB', 'CORV', 'CPAAU', 'CPAH', 'CUBA', 'CVV', 'DZSI', 'ELSE', 'EXPC', 'EYEG', 'FAMI', 'FNCB', 'FSBW', 'FTFT', 'GDYN', 'GLG', 'GRNVU', 'GTEC', 'HCCOU', 'HNNA', 'HQI', 'HRTX', 'IDEX', 'IGIC', 'IOTS', 'ISNS', 'ITI', 'LACQ', 'MBCN', 'MBNKP', 'MCEP', 'MLND', 'MMAC', 'MNCLU', 'MNPR', 'NVEE', 'NXTD', 'OPOF', 'OPTT', 'ORGO', 'ORSNU', 'OTEL', 'PBFS', 'PBTS', 'PCSB', 'PECK', 'PEIX', 'PFIE', 'PLIN', 'POPE', 'QRHC', 'SES', 'SHSP', 'SNSS', 'SSNT', 'STKS', 'TGLS', 'TMSR', 'VERB', 'VMD', 'VRRM', 'VTIQW', 'VVPR', 'WHLM', 'WHLR', 'XBIOW', 'XPEL']}
+
+exec(code, env_args)

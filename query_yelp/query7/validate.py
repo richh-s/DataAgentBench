@@ -1,4 +1,4 @@
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     """
     Validate if all ground truth categories are present in LLM output (case-insensitive).
 
@@ -22,8 +22,7 @@ def validate(llm_output: str) -> (bool, str):
     for cat in categories_lower:
         if cat not in llm_lower:
             reason = f"Missing category: {cat}"
-            print(f"❌ {reason}")
+            
             return False, reason
 
-    print("✅ All categories are present.")
-    return True, "OK"
+    return True, "All categories are present."

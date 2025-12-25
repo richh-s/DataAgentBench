@@ -1,4 +1,4 @@
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     """
     Validate that:
     - '399001.SZ' is present in LLM output
@@ -21,15 +21,14 @@ def validate(llm_output: str) -> (bool, str):
     # check gt
     if gt_lower not in llm_lower:
         reason = f"Missing target: {gt}"
-        print(f"❌ {reason}")
+        
         return False, reason
 
     # check forbidden
     for f in forbidden_lower:
         if f in llm_lower:
             reason = f"Found forbidden value: {f}"
-            print(f"❌ {reason}")
+            
             return False, reason
 
-    print(f"✅ Only target '{gt}' present, no forbidden values.")
-    return True, "OK"
+    return True, f"Only target '{gt}' present, no forbidden values."

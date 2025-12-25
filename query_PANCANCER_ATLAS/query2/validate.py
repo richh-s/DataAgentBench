@@ -29,7 +29,7 @@ def fuzzy_match(name: str, text: str, max_distance: int = 3) -> bool:
             return True
     return False
 
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     """
     Fuzzy validate histological type names in LLM output with max 3-character difference.
     Case-insensitive and spacing-normalized.
@@ -46,10 +46,7 @@ def validate(llm_output: str) -> (bool, str):
     for name in ground_truth_names:
         name_norm = normalize(name)
         if not fuzzy_match(name_norm, llm_output_norm):
-            reason = f"❌ Not matched (fuzzy) within 3 chars: '{name}'"
-            print(reason)
+            reason = f"Not matched (fuzzy) within 3 chars: '{name}'"
             return False, reason
-        print(f"✅ Matched (fuzzy) within 3 chars: '{name}'")
 
-    print("✅ All histological types matched (fuzzy).")
-    return True, "OK"
+    return True, "All histological types matched (fuzzy)."

@@ -1,0 +1,54 @@
+code = """import json
+import pandas as pd
+
+# Load data
+stock_info = locals()['var_function-call-9887399374676938410']
+vol_batch1 = locals()['var_function-call-3534047544527358135']
+vol_batch2 = locals()['var_function-call-10911747952585600449']
+
+# Convert to DataFrames
+df_info = pd.DataFrame(stock_info)
+df_vol1 = pd.DataFrame(vol_batch1)
+df_vol2 = pd.DataFrame(vol_batch2)
+df_vol = pd.concat([df_vol1, df_vol2])
+
+# Merge
+merged = pd.merge(df_info, df_vol, on='Symbol')
+
+# Filter for non-null/non-nan volume
+# "nan" string might be in the result from query_db if it was null?
+# Let's check how nan is represented. The previous output showed "nan" as a string.
+merged = merged[merged['AvgVol'].notna()]
+merged = merged[merged['AvgVol'] != 'nan']
+
+# Extract Company Name
+def extract_name(desc):
+    # Heuristics to extract name
+    # Split by common verbs/phrases
+    separators = [" specializes", " is ", " provides", " harnesses", " offers", " based in", " dedicated to"]
+    name = desc
+    for sep in separators:
+        if sep in name:
+            name = name.split(sep)[0]
+            break
+    # Remove trailing comma if any
+    name = name.strip().rstrip(',')
+    return name
+
+merged['Company Name'] = merged['Company Description'].apply(extract_name)
+
+# Format result
+result_list = []
+for index, row in merged.iterrows():
+    result_list.append({
+        "Company Name": row['Company Name'],
+        "Symbol": row['Symbol'],
+        "Average Daily Trading Volume (2008)": float(row['AvgVol'])
+    })
+
+print("__RESULT__:")
+print(json.dumps(result_list))"""
+
+env_args = {'var_function-call-9887399374676938410': [{'Symbol': 'AGMH', 'Company Description': 'AGM Group Holdings Inc. specializes in providing financial technology solutions and services, focusing on enhancing efficiency and performance for businesses in the financial sector.', 'Financial Status': 'D', 'Listing Exchange': 'Q', 'Market Category': 'S'}, {'Symbol': 'AMTX', 'Company Description': 'Aemetis, Inc is an advanced renewable fuels and biochemicals company, focused on producing sustainable energy solutions and reducing carbon emissions through innovative technologies.', 'Financial Status': 'D', 'Listing Exchange': 'Q', 'Market Category': 'G'}, {'Symbol': 'APEX', 'Company Description': 'Apex Global Brands Inc. specializes in creating and marketing a diverse portfolio of fashion and lifestyle brands, connecting consumers with trendy and innovative products worldwide.', 'Financial Status': 'D', 'Listing Exchange': 'Q', 'Market Category': 'S'}, {'Symbol': 'BIOC', 'Company Description': 'Biocept, Inc. specializes in developing advanced diagnostic solutions that help detect and analyze cancer cells, driving innovation in personalized medicine and cancer treatment.', 'Financial Status': 'D', 'Listing Exchange': 'Q', 'Market Category': 'S'}, {'Symbol': 'BKYI', 'Company Description': 'BIO-key International, Inc. specializes in advanced biometric solutions, providing secure and convenient identity verification systems for enterprises and consumers alike.', 'Financial Status': 'D', 'Listing Exchange': 'Q', 'Market Category': 'S'}, {'Symbol': 'CBAT', 'Company Description': 'CBAK Energy Technology, Inc. specializes in developing and manufacturing high-performance lithium-ion batteries, playing a pivotal role in powering electric vehicles and renewable energy solutions.', 'Financial Status': 'D', 'Listing Exchange': 'Q', 'Market Category': 'S'}, {'Symbol': 'CCCL', 'Company Description': 'China Ceramics Co., Ltd. specializes in manufacturing high-quality ceramic tiles, catering to both residential and commercial markets with a wide range of designs and finishes.', 'Financial Status': 'D', 'Listing Exchange': 'Q', 'Market Category': 'S'}, {'Symbol': 'CORV', 'Company Description': 'Correvio Pharma Corp., based in Canada, specializes in developing and commercializing innovative cardiovascular therapies to improve patient outcomes.', 'Financial Status': 'D', 'Listing Exchange': 'Q', 'Market Category': 'S'}, {'Symbol': 'CPAH', 'Company Description': 'CounterPath Corporation specializes in developing software solutions that enhance communication by providing seamless VoIP and unified communications applications for businesses and individuals.', 'Financial Status': 'D', 'Listing Exchange': 'Q', 'Market Category': 'S'}, {'Symbol': 'DZSI', 'Company Description': 'DASAN Zhone Solutions, Inc. specializes in providing advanced broadband access solutions, empowering telecommunications networks to deliver faster and more reliable internet services worldwide.', 'Financial Status': 'D', 'Listing Exchange': 'Q', 'Market Category': 'S'}, {'Symbol': 'FAMI', 'Company Description': 'Farmmi, Inc. specializes in the cultivation and distribution of high-quality agricultural products, with a focus on mushrooms and other nutritious foods.', 'Financial Status': 'D', 'Listing Exchange': 'Q', 'Market Category': 'S'}, {'Symbol': 'FTFT', 'Company Description': 'Future FinTech Group Inc. specializes in the development and marketing of blockchain-based products and financial technology solutions, aiming to revolutionize the digital economy with innovative applications.', 'Financial Status': 'D', 'Listing Exchange': 'Q', 'Market Category': 'S'}, {'Symbol': 'FTR', 'Company Description': 'Frontier Communications Corporation provides telecommunications services, including internet, phone, and television solutions, to residential and business customers across the United States.', 'Financial Status': 'D', 'Listing Exchange': 'Q', 'Market Category': 'Q'}, {'Symbol': 'IDEX', 'Company Description': 'Ideanomics, Inc. is at the forefront of transforming the commercial electric vehicle industry, providing comprehensive solutions that drive innovation and sustainability in transportation and energy.', 'Financial Status': 'D', 'Listing Exchange': 'Q', 'Market Category': 'S'}, {'Symbol': 'ISDS', 'Company Description': 'Invesco RAFI Strategic Developed ex-US Small Company ETF offers investors a unique opportunity to access a portfolio of small-cap stocks from developed markets outside the United States, focusing on strategic financial growth and diversification.', 'Financial Status': 'D', 'Listing Exchange': 'Q', 'Market Category': 'G'}, {'Symbol': 'MCEP', 'Company Description': 'Mid-Con Energy Partners, LP specializes in the exploration and production of oil and natural gas, focusing on maximizing energy resources across the United States.', 'Financial Status': 'D', 'Listing Exchange': 'Q', 'Market Category': 'S'}, {'Symbol': 'NXTD', 'Company Description': 'NXT-ID Inc. specializes in developing innovative technology solutions that enhance security and convenience in the fields of healthcare and electronic payments.', 'Financial Status': 'D', 'Listing Exchange': 'Q', 'Market Category': 'S'}, {'Symbol': 'OPTT', 'Company Description': 'Ocean Power Technologies, Inc. harnesses the power of the ocean to develop innovative renewable energy solutions, specializing in wave energy technology.', 'Financial Status': 'D', 'Listing Exchange': 'Q', 'Market Category': 'S'}, {'Symbol': 'PEIX', 'Company Description': 'Pacific Ethanol, Inc. specializes in producing renewable fuels and high-quality alcohol products, contributing to sustainable energy solutions and cleaner alternatives for the transportation sector.', 'Financial Status': 'D', 'Listing Exchange': 'Q', 'Market Category': 'S'}, {'Symbol': 'RBZ', 'Company Description': 'Reebonz Holding Limited is an online luxury marketplace that specializes in offering a curated selection of high-end fashion items and accessories to discerning shoppers worldwide.', 'Financial Status': 'D', 'Listing Exchange': 'Q', 'Market Category': 'G'}, {'Symbol': 'SES', 'Company Description': 'Synthesis Energy Systems, Inc. specializes in transforming low-cost carbon resources into clean energy and valuable chemical products, driving innovation in sustainable energy solutions.', 'Financial Status': 'H', 'Listing Exchange': 'Q', 'Market Category': 'S'}, {'Symbol': 'SNSS', 'Company Description': 'Sunesis Pharmaceuticals, Inc. is dedicated to developing innovative cancer therapies, striving to advance treatments that target the underlying mechanisms of the disease.', 'Financial Status': 'D', 'Listing Exchange': 'Q', 'Market Category': 'S'}, {'Symbol': 'SPI', 'Company Description': 'SPI Energy Co., Ltd. specializes in providing renewable energy solutions, focusing on solar power products and services to drive sustainable energy initiatives globally.', 'Financial Status': 'D', 'Listing Exchange': 'Q', 'Market Category': 'Q'}, {'Symbol': 'SYPR', 'Company Description': 'Sypris Solutions, Inc. specializes in providing engineering and manufacturing services for the aerospace and defense sectors, ensuring high-quality solutions for complex technological challenges.', 'Financial Status': 'D', 'Listing Exchange': 'Q', 'Market Category': 'G'}, {'Symbol': 'VTIQW', 'Company Description': 'VectoIQ Acquisition Corp. is an investment company specializing in identifying and merging with innovative technology and automotive firms to drive growth and transformation in the mobility sector.', 'Financial Status': 'D', 'Listing Exchange': 'Q', 'Market Category': 'S'}], 'var_function-call-14780793382310705719': 'file_storage/function-call-14780793382310705719.json', 'var_function-call-14728554775539307690': ['AGMH', 'AMTX', 'APEX', 'BIOC', 'BKYI', 'CBAT', 'CCCL', 'CORV', 'CPAH', 'DZSI', 'FAMI', 'FTFT', 'FTR', 'IDEX', 'ISDS', 'MCEP', 'NXTD', 'OPTT', 'PEIX', 'RBZ', 'SES', 'SNSS', 'SPI', 'SYPR', 'VTIQW'], 'var_function-call-7032603766309864045': [{'Date': '2018-04-18'}], 'var_function-call-3534047544527358135': [{'Symbol': 'AGMH', 'AvgVol': 'nan'}, {'Symbol': 'AMTX', 'AvgVol': 'nan'}, {'Symbol': 'APEX', 'AvgVol': '23781.422924901184'}, {'Symbol': 'BIOC', 'AvgVol': 'nan'}, {'Symbol': 'BKYI', 'AvgVol': '10988.142292490118'}, {'Symbol': 'CBAT', 'AvgVol': '86223.32015810277'}, {'Symbol': 'CCCL', 'AvgVol': '4366.798418972332'}, {'Symbol': 'CORV', 'AvgVol': '145247.8260869565'}, {'Symbol': 'CPAH', 'AvgVol': '375.49407114624506'}, {'Symbol': 'DZSI', 'AvgVol': '15578.656126482214'}, {'Symbol': 'FAMI', 'AvgVol': 'nan'}, {'Symbol': 'FTFT', 'AvgVol': '9.845238095238095'}], 'var_function-call-10911747952585600449': [{'Symbol': 'FTR', 'AvgVol': '254397.62845849802'}, {'Symbol': 'IDEX', 'AvgVol': '10.276679841897232'}, {'Symbol': 'ISDS', 'AvgVol': 'nan'}, {'Symbol': 'MCEP', 'AvgVol': 'nan'}, {'Symbol': 'NXTD', 'AvgVol': 'nan'}, {'Symbol': 'OPTT', 'AvgVol': '254.1501976284585'}, {'Symbol': 'PEIX', 'AvgVol': '10706.719367588932'}, {'Symbol': 'RBZ', 'AvgVol': 'nan'}, {'Symbol': 'SES', 'AvgVol': '2390.513833992095'}, {'Symbol': 'SNSS', 'AvgVol': '781.8181818181819'}, {'Symbol': 'SPI', 'AvgVol': 'nan'}, {'Symbol': 'SYPR', 'AvgVol': '36836.36363636364'}, {'Symbol': 'VTIQW', 'AvgVol': 'nan'}]}
+
+exec(code, env_args)

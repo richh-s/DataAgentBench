@@ -20,7 +20,7 @@ def sqlite_query(sql: str, db_path: str = None, basic: bool = True):
 
     Returns:
         dict: {
-            "success": True, "data": DataFrame
+            "success": True, "data": json str if basic else DataFrame
         } or {
             "success": False, "error": error message
         }

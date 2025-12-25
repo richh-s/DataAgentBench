@@ -1,0 +1,46 @@
+code = """import json
+import re
+
+# Load the previous result
+with open(locals()['var_function-call-13331368934336599154'], 'r') as f:
+    repos_data = json.load(f)
+
+shell_repos = []
+
+# Regex to extract language and bytes
+# Examples: "Ruby (22,438 bytes)", "C++ (13,345 bytes)"
+pattern = re.compile(r'([A-Za-z0-9\+\-\#\.\s]+?)\s+\(([\d,]+)\s+bytes(?: of code)?\)')
+
+for entry in repos_data:
+    desc = entry.get('language_description', '')
+    if not desc or desc == "No language information available.":
+        continue
+    
+    matches = pattern.findall(desc)
+    
+    languages = {}
+    for lang, bytes_str in matches:
+        # Clean up language name
+        lang = lang.strip()
+        # Parse bytes
+        bytes_count = int(bytes_str.replace(',', ''))
+        languages[lang] = bytes_count
+        
+    if not languages:
+        continue
+        
+    # Find primary language
+    # Sort by bytes descending
+    sorted_langs = sorted(languages.items(), key=lambda item: item[1], reverse=True)
+    
+    if sorted_langs:
+        primary_lang = sorted_langs[0][0]
+        if primary_lang == 'Shell':
+            shell_repos.append(entry['repo_name'])
+
+print("__RESULT__:")
+print(json.dumps(shell_repos))"""
+
+env_args = {'var_function-call-8702921968820709496': [{'repo_name': 'juliandunn/rackspacecloud', 'language_description': 'The codebase includes: Ruby (22,438 bytes), Shell (465 bytes).'}, {'repo_name': 'xMarkusSpringerx/coloranalyzer', 'language_description': 'This repository is mainly written in Ruby (1,897 bytes), with additional code in Shell (115 bytes).'}, {'repo_name': 'michaellihs/gitlab', 'language_description': 'The codebase includes: Ruby (162,002 bytes), Shell (168 bytes).'}, {'repo_name': 'vyorkin/xftp', 'language_description': 'The majority of the code is in Ruby (25,709 bytes), followed by Shell (115 bytes).'}, {'repo_name': 'airatshigapov/drophunter', 'language_description': 'The majority of the code is in Ruby (4,198 bytes), followed by Shell (115 bytes).'}], 'var_function-call-8702921968820710985': [{'repo_name': 'benstreb/os-test-harness', 'license': 'isc'}, {'repo_name': 'hanklords/sftpd', 'license': 'isc'}, {'repo_name': 'ivoreis/trine', 'license': 'isc'}, {'repo_name': 'dega37/VIRL2', 'license': 'isc'}, {'repo_name': 'mcgrof/compat-user', 'license': 'isc'}], 'var_function-call-13331368934336599154': 'file_storage/function-call-13331368934336599154.json'}
+
+exec(code, env_args)

@@ -1,0 +1,20 @@
+code = """import json
+import os
+
+# Load metadata
+meta_var = locals()['var_function-call-2966547176505599547']
+if isinstance(meta_var, str) and os.path.exists(meta_var):
+    with open(meta_var, 'r') as f:
+        metadata_list = json.load(f)
+else:
+    metadata_list = meta_var
+
+# Get all article IDs as integers
+meta_ids = [int(item['article_id']) for item in metadata_list]
+
+print("__RESULT__:")
+print(json.dumps(meta_ids))"""
+
+env_args = {'var_function-call-2966547176505599547': 'file_storage/function-call-2966547176505599547.json', 'var_function-call-17218163166465404922': {'count': 6696, 'sample_ids': ['13', '18', '26', '51', '52', '67', '70', '74', '86', '97']}, 'var_function-call-1597702634935355858': [{'_id': '694503fa506371ba165c4cdf', 'article_id': '0', 'title': 'Wall St. Bears Claw Back Into the Black (Reuters)', 'description': "Reuters - Short-sellers, Wall Street's dwindling\\band of ultra-cynics, are seeing green again."}, {'_id': '694503fa506371ba165c4ce0', 'article_id': '1', 'title': 'Carlyle Looks Toward Commercial Aerospace (Reuters)', 'description': 'Reuters - Private investment firm Carlyle Group,\\which has a reputation for making well-timed and occasionally\\controversial plays in the defense industry, has quietly placed\\its bets on another part of the market.'}, {'_id': '694503fa506371ba165c4ce1', 'article_id': '2', 'title': "Oil and Economy Cloud Stocks' Outlook (Reuters)", 'description': 'Reuters - Soaring crude prices plus worries\\about the economy and the outlook for earnings are expected to\\hang over the stock market next week during the depth of the\\summer doldrums.'}, {'_id': '694503fa506371ba165c4ce2', 'article_id': '3', 'title': 'Iraq Halts Oil Exports from Main Southern Pipeline (Reuters)', 'description': 'Reuters - Authorities have halted oil export\\flows from the main pipeline in southern Iraq after\\intelligence showed a rebel militia could strike\\infrastructure, an oil official said on Saturday.'}, {'_id': '694503fa506371ba165c4ce3', 'article_id': '4', 'title': 'Oil prices soar to all-time record, posing new menace to US economy (AFP)', 'description': 'AFP - Tearaway world oil prices, toppling records and straining wallets, present a new economic menace barely three months before the US presidential elections.'}], 'var_function-call-327116729614798104': {'world_counts': {}, 'total_articles_fetched': 5, 'articles_matched_2015': 0, 'unclassified': 0}, 'var_function-call-1315168482124239170': 'file_storage/function-call-1315168482124239170.json', 'var_function-call-11095760226154555113': {'total_meta_ids': 6696, 'max_meta_id': 127570, 'fetched_count': 20000, 'missing_count': 5698, 'sample_missing': ['101726', '60498', '61408', '38579', '114118', '86186', '24727', '108338', '103830', '48457']}, 'var_function-call-5070811610805299418': [{'_id': '694503fa506371ba165c4cec', 'article_id': '13', 'title': 'Google IPO Auction Off to Rocky Start', 'description': " WASHINGTON/NEW YORK (Reuters) - The auction for Google  Inc.'s highly anticipated initial public offering got off to a  rocky start on Friday after the Web search company sidestepped  a bullet from U.S. securities regulators."}]}
+
+exec(code, env_args)

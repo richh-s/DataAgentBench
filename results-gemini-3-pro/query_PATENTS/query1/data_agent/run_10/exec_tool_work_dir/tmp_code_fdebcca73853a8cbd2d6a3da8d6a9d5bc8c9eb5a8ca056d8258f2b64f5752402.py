@@ -1,0 +1,11 @@
+code = """import json
+
+results = json.loads(locals()['var_function-call-3161117112344071821'])
+results.sort()
+
+print("__RESULT__:")
+print(json.dumps(results))"""
+
+env_args = {'var_function-call-2156360617671993543': 'file_storage/function-call-2156360617671993543.json', 'var_function-call-2156360617671993474': [{'symbol': 'A01K2227/108', 'level': '9.0'}, {'symbol': 'A01K2227/105', 'level': '9.0'}, {'symbol': 'A01K2227/101', 'level': '9.0'}, {'symbol': 'A01K2227/107', 'level': '9.0'}, {'symbol': 'A01K2227/103', 'level': '9.0'}], 'var_function-call-13197801515955793315': [{'count(*)': '277813'}], 'var_function-call-13197801515955789834': [{'count': '677'}], 'var_function-call-7269545379291600604': 'file_storage/function-call-7269545379291600604.json', 'var_function-call-7269545379291602853': 'file_storage/function-call-7269545379291602853.json', 'var_function-call-5018208914705499515': [], 'var_function-call-5189175782737133234': {'lengths': [4], 'sample_symbols': ['A01H', 'A01F', 'A01C', 'A01G', 'A23J', 'A01N', 'A01P', 'A01D', 'A01L', 'A01K'], 'sample_years': [], 'max_year_sample': None, 'match_count_first_100': 100}, 'var_function-call-15279429834221810901': {'dates_preview': ['dated 5th March 2019', 'March the 18th, 2019', '29th March 2019', 'on March 29th, 2019', '2nd April 2019', 'on April 8th, 2019', '15th April 2019', 'April 19th, 2019', '2019, April 24th', 'April 26th, 2019'], 'regex_test': 'No match'}, 'var_function-call-3161117112344071821': ['H01M', 'C01P', 'Y02E', 'C01G', 'G10L', 'G06V', 'G06Q', 'H02J', 'G16H', 'H03H', 'H02G', 'G08B', 'Y02B', 'Y02T', 'F02K', 'G06T', 'G01L', 'G06N', 'F41C', 'B22F', 'B33Y', 'F25J', 'G01S', 'B08B', 'B60P', 'E04B', 'A61G', 'G09F', 'B60D', 'B60L', 'G01H', 'G01K', 'B65G', 'G01D', 'B05B', 'C21D', 'B21B', 'B21C', 'G01P', 'B22D', 'C21C', 'H02B', 'B07B', 'A23P', 'C01D', 'B25D', 'C07B', 'G04F', 'E02D', 'E04G', 'B04B', 'E03B', 'A41H', 'B21H', 'F23N', 'E03F', 'A24F', 'C21B', 'E01C', 'F16M', 'A62C', 'B02C', 'G21F', 'B66F', 'B09B', 'E03D', 'G21G', 'C01F', 'H04S', 'G16B', 'C22B', 'F42C', 'Y04S', 'B03C', 'E01D', 'F04F', 'E21F', 'A44D', 'D06H', 'B63C', 'B27M', 'B27G', 'F16N', 'B27C', 'B63G', 'B09C', 'A23J', 'D03J', 'G16Y']}
+
+exec(code, env_args)

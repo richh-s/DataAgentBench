@@ -1,0 +1,52 @@
+code = """import json
+import re
+
+data_key = 'var_function-call-3846196706058509729'
+data = locals().get(data_key)
+if isinstance(data, str):
+    with open(data, 'r') as f:
+        articles = json.load(f)
+else:
+    articles = data
+
+strong_sports_keywords = [
+    "olympic", "nba", "nfl", "mlb", "nhl", "fifa", "uefa", "athens", 
+    "wimbledon", "super bowl", "world series", "stanley cup", "ryder cup",
+    "tour de france", "formula one", "nascar", "pga", "lpga",
+    "red sox", "yankees", "lakers", "pistons", "spurs", "pacers", 
+    "patriots", "eagles", "colts", "real madrid", "manchester united", "arsenal",
+    "chelsea", "ac milan", "juventus", "inter milan", "barcelona",
+    "michael phelps", "lance armstrong", "roger federer", "andy roddick", 
+    "serena williams", "venus williams", "tiger woods", "kobe", "shaq", "lebron",
+    "swimming", "gymnastics", "basketball", "baseball", "football", "soccer", "tennis",
+    "cycling", "marathon", "sprint"
+]
+
+candidates = []
+for art in articles:
+    text = (art.get('title', '') + " " + art.get('description', '')).lower()
+    
+    # Check strong keywords
+    for kw in strong_sports_keywords:
+        if kw in text:
+            candidates.append(art)
+            break
+
+# Sort by description length descending
+candidates.sort(key=lambda x: len(x.get('description', '')), reverse=True)
+
+# Print top 10
+top_10 = []
+for c in candidates[:10]:
+    top_10.append({
+        'title': c['title'],
+        'len': len(c['description']),
+        'desc_snippet': c['description'][:100]
+    })
+
+print('__RESULT__:')
+print(json.dumps(top_10))"""
+
+env_args = {'var_function-call-10490437154642486884': ['articles'], 'var_function-call-16060478269300868870': [{'_id': '69447092d43dab771ac0dd01', 'article_id': '0', 'title': 'Wall St. Bears Claw Back Into the Black (Reuters)', 'description': "Reuters - Short-sellers, Wall Street's dwindling\\band of ultra-cynics, are seeing green again."}, {'_id': '69447092d43dab771ac0dd02', 'article_id': '1', 'title': 'Carlyle Looks Toward Commercial Aerospace (Reuters)', 'description': 'Reuters - Private investment firm Carlyle Group,\\which has a reputation for making well-timed and occasionally\\controversial plays in the defense industry, has quietly placed\\its bets on another part of the market.'}, {'_id': '69447092d43dab771ac0dd03', 'article_id': '2', 'title': "Oil and Economy Cloud Stocks' Outlook (Reuters)", 'description': 'Reuters - Soaring crude prices plus worries\\about the economy and the outlook for earnings are expected to\\hang over the stock market next week during the depth of the\\summer doldrums.'}, {'_id': '69447092d43dab771ac0dd04', 'article_id': '3', 'title': 'Iraq Halts Oil Exports from Main Southern Pipeline (Reuters)', 'description': 'Reuters - Authorities have halted oil export\\flows from the main pipeline in southern Iraq after\\intelligence showed a rebel militia could strike\\infrastructure, an oil official said on Saturday.'}, {'_id': '69447092d43dab771ac0dd05', 'article_id': '4', 'title': 'Oil prices soar to all-time record, posing new menace to US economy (AFP)', 'description': 'AFP - Tearaway world oil prices, toppling records and straining wallets, present a new economic menace barely three months before the US presidential elections.'}], 'var_function-call-9311861591054791868': [{'_id': '69447092d43dab771ac0dd01', 'article_id': '0', 'title': 'Wall St. Bears Claw Back Into the Black (Reuters)', 'description': "Reuters - Short-sellers, Wall Street's dwindling\\band of ultra-cynics, are seeing green again."}, {'_id': '69447092d43dab771ac0dd02', 'article_id': '1', 'title': 'Carlyle Looks Toward Commercial Aerospace (Reuters)', 'description': 'Reuters - Private investment firm Carlyle Group,\\which has a reputation for making well-timed and occasionally\\controversial plays in the defense industry, has quietly placed\\its bets on another part of the market.'}, {'_id': '69447092d43dab771ac0dd03', 'article_id': '2', 'title': "Oil and Economy Cloud Stocks' Outlook (Reuters)", 'description': 'Reuters - Soaring crude prices plus worries\\about the economy and the outlook for earnings are expected to\\hang over the stock market next week during the depth of the\\summer doldrums.'}, {'_id': '69447092d43dab771ac0dd04', 'article_id': '3', 'title': 'Iraq Halts Oil Exports from Main Southern Pipeline (Reuters)', 'description': 'Reuters - Authorities have halted oil export\\flows from the main pipeline in southern Iraq after\\intelligence showed a rebel militia could strike\\infrastructure, an oil official said on Saturday.'}, {'_id': '69447092d43dab771ac0dd05', 'article_id': '4', 'title': 'Oil prices soar to all-time record, posing new menace to US economy (AFP)', 'description': 'AFP - Tearaway world oil prices, toppling records and straining wallets, present a new economic menace barely three months before the US presidential elections.'}], 'var_function-call-2138815974854363807': [{'_id': '69447092d43dab771ac0dd01', 'article_id': '0', 'title': 'Wall St. Bears Claw Back Into the Black (Reuters)', 'description': "Reuters - Short-sellers, Wall Street's dwindling\\band of ultra-cynics, are seeing green again."}, {'_id': '69447092d43dab771ac0dd02', 'article_id': '1', 'title': 'Carlyle Looks Toward Commercial Aerospace (Reuters)', 'description': 'Reuters - Private investment firm Carlyle Group,\\which has a reputation for making well-timed and occasionally\\controversial plays in the defense industry, has quietly placed\\its bets on another part of the market.'}, {'_id': '69447092d43dab771ac0dd03', 'article_id': '2', 'title': "Oil and Economy Cloud Stocks' Outlook (Reuters)", 'description': 'Reuters - Soaring crude prices plus worries\\about the economy and the outlook for earnings are expected to\\hang over the stock market next week during the depth of the\\summer doldrums.'}, {'_id': '69447092d43dab771ac0dd04', 'article_id': '3', 'title': 'Iraq Halts Oil Exports from Main Southern Pipeline (Reuters)', 'description': 'Reuters - Authorities have halted oil export\\flows from the main pipeline in southern Iraq after\\intelligence showed a rebel militia could strike\\infrastructure, an oil official said on Saturday.'}, {'_id': '69447092d43dab771ac0dd05', 'article_id': '4', 'title': 'Oil prices soar to all-time record, posing new menace to US economy (AFP)', 'description': 'AFP - Tearaway world oil prices, toppling records and straining wallets, present a new economic menace barely three months before the US presidential elections.'}], 'var_function-call-16333879224723824131': 'No sports articles found.', 'var_function-call-3846196706058509729': 'file_storage/function-call-3846196706058509729.json', 'var_function-call-16733021958024539417': {'title': "Why Windows isn't Unix", 'length': 708, 'description_snippet': '\\\\"I first heard about this from one of the develo'}, 'var_function-call-6924971850173435336': {'error': 'No sports articles found'}, 'var_function-call-9843822974461349720': {'count': 78, 'examples': ["'Madden,' 'ESPN' Football Score in Different Ways (Reuters)", "'Invisible' technology for Olympics", 'Satellite boosts Olympic security', "'Madden,' 'ESPN' Football Score in Different Ways", 'GAO Calls Stryker Too Heavy for Transport']}, 'var_function-call-10913299268745413690': {'title': 'Rehabbing his career', 'length': 402}, 'var_function-call-15187143756996191701': [{'title': 'They flocked from Games', 'description': "ATHENS -- During yesterday's celebration of the assumption of the Virgin Mary, the Greek orthodox clergy had a stern reminder for the organizers of the Olympic Games: No matter what the advertisements and speeches say about Greece's modern, Western orientation, this country is still the domain of its decidedly traditional, ubiquitous state-sanctioned religion. Speaking over the Byzantine chants of a ...", 'length': 406}, {'title': 'Rehabbing his career', 'description': "Player introductions at the final Citizens Bank Summer Caravan stop produced an awkward moment. Walter McCarty and Raef LaFrentz were the featured guests for the free basketball clinic at the Cambridge Family YMCA late last week. McCarty's presence yielded chants of  quot;Walter, Walter quot; from the crowd of 125 kids. LaFrentz left the young fans wondering,  quot;Who is he? quot; The projected ...", 'length': 402}, {'title': 'Phelps #146;s quest for 8 golds goes under', 'description': "ATHENS -- The evening began on a down note for the US swimming team, and descended from there. First, world champion Jenny Thompson struggled home fifth in the 100-meter butterfly. Then world record-holder Brendan Hansen was caught by Japan's Kosuke Kitajima in the 100 breaststroke. Finally, the men's 4 x 100 freestyle relay finished third behind South Africa and the ...", 'length': 373}, {'title': 'Phelps to Take on Thorpe in Busy Night', 'description': "ATHENS, Greece - Michael Phelps, still smarting after America's upset loss to South Africa in the 400 freestyle relay, returned to the pool Monday and qualified fastest for the Olympic 200-meter butterfly. Phelps' quest to break Mark Spitz's record of seven gold medals at the 1972 Munich Games was dashed with the Americans' bronze medal in the relay Sunday night...", 'length': 367}, {'title': 'Phelps, Thorpe Advance in 200 Freestyle', 'description': "ATHENS, Greece - Michael Phelps took care of qualifying for the Olympic 200-meter freestyle semifinals Sunday, and then found out he had been added to the American team for the evening's 400 freestyle relay final.    Phelps' rivals Ian Thorpe and Pieter van den Hoogenband and teammate Klete Keller were faster than the teenager in the 200 free preliminaries...", 'length': 361}], 'var_function-call-14301533427168408346': 'file_storage/function-call-14301533427168408346.json', 'var_function-call-7663974876645537720': {'Rehabbing his career': '469', 'They flocked from Games': '763'}, 'var_function-call-11976008972518320519': [{'article_id': '469', 'name': 'Kimberly Sanchez', 'region': 'North America', 'publication_date': '2016-02-23'}, {'article_id': '763', 'name': 'Deborah Martinez', 'region': 'Europe', 'publication_date': '2012-12-10'}]}
+
+exec(code, env_args)

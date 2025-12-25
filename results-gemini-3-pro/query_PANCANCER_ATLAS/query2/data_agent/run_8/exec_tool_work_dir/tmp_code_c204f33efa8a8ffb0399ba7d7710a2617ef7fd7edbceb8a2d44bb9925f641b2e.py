@@ -1,0 +1,67 @@
+code = """import json
+import pandas as pd
+import re
+
+# Load clinical data for Bladder (already loaded? no, need to re-read or combine)
+# I have var_function-call-15996700253708356124 (Bladder) and var_function-call-2838754228492663436 (Breast)
+# Load mutation data var_function-call-6711025636614681997
+
+with open(locals()['var_function-call-15996700253708356124'], 'r') as f:
+    bladder_data = json.load(f)
+
+with open(locals()['var_function-call-2838754228492663436'], 'r') as f:
+    breast_data = json.load(f)
+
+with open(locals()['var_function-call-6711025636614681997'], 'r') as f:
+    mutation_data = json.load(f)
+
+mutated_barcodes = set(item['ParticipantBarcode'] for item in mutation_data)
+
+def process_cohort(data, name):
+    parsed = []
+    for entry in data:
+        desc = entry.get('Patient_description', '')
+        hist_type = entry.get('histological_type', 'Unknown')
+        
+        barcode_match = re.search(r'(TCGA-[A-Z0-9]{2}-[A-Z0-9]{4})', desc)
+        barcode = barcode_match.group(1) if barcode_match else None
+        
+        is_alive = "Alive" in desc
+        
+        if barcode and is_alive:
+            parsed.append({
+                'ParticipantBarcode': barcode,
+                'histological_type': hist_type
+            })
+    
+    df = pd.DataFrame(parsed)
+    if df.empty:
+        return []
+
+    df['has_cdh1_mutation'] = df['ParticipantBarcode'].apply(lambda x: x in mutated_barcodes)
+    
+    results = []
+    grouped = df.groupby('histological_type')
+
+    for name, group in grouped:
+        total = len(group)
+        mutated = group['has_cdh1_mutation'].sum()
+        percentage = (mutated / total) * 100 if total > 0 else 0
+        results.append({
+            'histological_type': name,
+            'percentage': percentage,
+            'mutated_count': int(mutated),
+            'total_count': total
+        })
+    
+    return sorted(results, key=lambda x: x['percentage'], reverse=True)
+
+bladder_results = process_cohort(bladder_data, "Bladder")
+breast_results = process_cohort(breast_data, "Breast")
+
+print("__RESULT__:")
+print(json.dumps({"bladder": bladder_results, "breast": breast_results}))"""
+
+env_args = {'var_function-call-7986884853947112329': ['clinical_info'], 'var_function-call-1389047998563369335': [{'Patient_description': 'In the Ovarian serous cystadenocarcinoma dataset, patient TCGA-31-1953 (UUID 61feee94-3ac9-42fe-aaa3-dc6a3efe563c) is recorded as a FEMALE with vital status: Alive.', 'days_to_birth': '-19064.0', 'days_to_death': '[Not Applicable]', 'days_to_last_followup': '204.0', 'days_to_initial_pathologic_diagnosis': '0.0', 'age_at_initial_pathologic_diagnosis': '52.0', 'icd_10': 'C56.9', 'tissue_retrospective_collection_indicator': 'None', 'icd_o_3_histology': '8441/3', 'tissue_prospective_collection_indicator': 'None', 'history_of_neoadjuvant_treatment': 'No', 'icd_o_3_site': 'C56.9', 'tumor_tissue_site': 'Ovary', 'new_tumor_event_after_initial_treatment': 'None', 'radiation_therapy': 'NO', 'race': 'ASIAN', 'prior_dx': 'None', 'ethnicity': 'NOT HISPANIC OR LATINO', 'informed_consent_verified': 'YES', 'person_neoplasm_cancer_status': 'WITH TUMOR', 'patient_id': '1953', 'year_of_initial_pathologic_diagnosis': '2008.0', 'histological_type': 'Serous Cystadenocarcinoma', 'tissue_source_site': '31', 'form_completion_date': '2009-10-20', 'pathologic_T': '[Not Applicable]', 'pathologic_M': '[Not Applicable]', 'clinical_M': '[Not Applicable]', 'pathologic_N': '[Not Applicable]', 'system_version': 'None', 'pathologic_stage': '[Not Applicable]', 'clinical_stage': 'Stage IIIC', 'clinical_T': '[Not Applicable]', 'clinical_N': '[Not Applicable]', 'extranodal_involvement': '[Not Applicable]', 'postoperative_rx_tx': 'None', 'primary_therapy_outcome_success': 'None', 'lymph_node_examined_count': 'None', 'primary_lymph_node_presentation_assessment': 'None', 'initial_pathologic_diagnosis_method': 'Tumor resection', 'number_of_lymphnodes_positive_by_he': 'None', 'eastern_cancer_oncology_group': '1', 'anatomic_neoplasm_subdivision': 'Bilateral', 'residual_tumor': 'None', 'histological_type_other': 'None', 'init_pathology_dx_method_other': '[Not Applicable]', 'karnofsky_performance_score': 'None', 'neoplasm_histologic_grade': 'G3', 'height': 'None', 'weight': 'None', 'number_of_lymphnodes_positive_by_ihc': 'None', 'tobacco_smoking_history': 'None', 'number_pack_years_smoked': 'None', 'stopped_smoking_year': 'None', 'performance_status_scale_timing': 'Pre-Adjuvant Therapy', 'laterality': 'None', 'targeted_molecular_therapy': 'None', 'year_of_tobacco_smoking_onset': 'None', 'anatomic_neoplasm_subdivision_other': 'None', 'patient_death_reason': 'None', 'tumor_tissue_site_other': 'None', 'menopause_status': 'None', 'margin_status': 'None', 'kras_gene_analysis_performed': 'None', 'venous_invasion': 'NO', 'lymphatic_invasion': 'NO', 'perineural_invasion_present': 'None', 'her2_immunohistochemistry_level_result': 'None', 'breast_carcinoma_progesterone_receptor_status': 'None', 'breast_carcinoma_surgical_procedure_name': 'None', 'breast_neoplasm_other_surgical_procedure_descriptive_text': 'None', 'axillary_lymph_node_stage_method_type': 'None', 'breast_carcinoma_estrogen_receptor_status': 'None', 'cytokeratin_immunohistochemistry_staining_method_micrometastasi': 'None', 'lab_proc_her2_neu_immunohistochemistry_receptor_status': 'None', 'lab_procedure_her2_neu_in_situ_hybrid_outcome_type': 'None', 'additional_pharmaceutical_therapy': 'None', 'additional_radiation_therapy': 'None', 'lymphovascular_invasion_present': 'None', 'location_in_lung_parenchyma': 'None', 'pulmonary_function_test_performed': 'None', 'egfr_mutation_performed': 'None', 'diagnosis': 'None', 'eml4_alk_translocation_performed': 'None', 'days_to_new_tumor_event_after_initial_treatment': 'None', 'hemoglobin_result': 'None', 'serum_calcium_result': 'None', 'platelet_qualitative_result': 'None', 'number_of_lymphnodes_positive': 'None', 'white_cell_count_result': 'None', 'alcohol_history_documented': 'None', 'family_history_of_cancer': 'None', 'braf_gene_analysis_performed': 'None', 'city_of_procurement': 'None', 'surgical_approach': 'None', 'peritoneal_wash': 'None', 'total_pelv_lnr': 'None', 'total_aor_lnr': 'None', 'prior_glioma': 'None'}], 'var_function-call-3748101446068573857': [{'Patient_description': "Patient TCGA-DK-A6AW, registered under UUID 01C815BA-7BDA-4F7E-865C-0C5776FEBF2C, belongs to the Bladder urothelial carcinoma cohort. This MALE patient's vital status is Alive.", 'histological_type': 'Muscle invasive urothelial carcinoma (pT2 or above)'}, {'Patient_description': 'In the Bladder urothelial carcinoma dataset, patient TCGA-GD-A3OQ (UUID 2E85C30C-C4C4-4096-9EEF-4EB2C7D991A3) is recorded as a MALE with vital status: Alive.', 'histological_type': 'Muscle invasive urothelial carcinoma (pT2 or above)'}, {'Patient_description': 'The individual with barcode TCGA-CF-A47W and UUID 122FC134-8915-47DB-96C9-AB1853C3CD18 is a MALE case of Bladder urothelial carcinoma, documented with vital status = Alive.', 'histological_type': 'Muscle invasive urothelial carcinoma (pT2 or above)'}, {'Patient_description': 'Patient TCGA-CF-A3MF (MALE, UUID 1E308B12-0590-4DAE-94D0-A539FCF25DF7) is enrolled in the study of Bladder urothelial carcinoma. Vital status: Alive.', 'histological_type': 'Muscle invasive urothelial carcinoma (pT2 or above)'}, {'Patient_description': 'Case DE810AF0-4C18-4E8F-9836-F8ABC425E3EB, linked to barcode TCGA-DK-A2I6, corresponds to a MALE patient diagnosed with Bladder urothelial carcinoma, with vital status Alive.', 'histological_type': 'Muscle invasive urothelial carcinoma (pT2 or above)'}], 'var_function-call-15996700253708356124': 'file_storage/function-call-15996700253708356124.json', 'var_function-call-6711025636614681997': 'file_storage/function-call-6711025636614681997.json', 'var_function-call-2784666659863185006': [{'histological_type': 'Muscle invasive urothelial carcinoma (pT2 or above)', 'percentage': 3.070175438596491, 'mutated_count': 7, 'total_count': 228}, {'histological_type': 'None', 'percentage': 0.0, 'mutated_count': 0, 'total_count': 2}], 'var_function-call-7825505097252437224': [{'histological_type': 'None'}, {'histological_type': 'Muscle invasive urothelial carcinoma (pT2 or above)'}], 'var_function-call-12092854121495323892': [{'dataset': 'None'}, {'dataset': 'Kidney Chromophobe'}, {'dataset': 'Brain lower grade glioma'}, {'dataset': 'Lung adenocarcinoma'}, {'dataset': 'Mesothelioma'}, {'dataset': 'Colon adenocarcinoma'}, {'dataset': 'Uveal Melanoma'}, {'dataset': 'Thymoma'}, {'dataset': 'Kidney renal papillary cell carcinoma'}, {'dataset': 'Sarcoma'}, {'dataset': 'Lymphoid Neoplasm Diffuse Large B-cell Lymphoma'}, {'dataset': 'Liver hepatocellular carcinoma'}, {'dataset': 'Head and Neck squamous cell carcinoma'}, {'dataset': 'Lung squamous cell carcinoma'}, {'dataset': 'Cholangiocarcinoma'}, {'dataset': 'Pheochromocytoma and Paraganglioma'}, {'dataset': 'Breast invasive carcinoma'}, {'dataset': 'Esophageal carcinoma'}, {'dataset': 'Uterine Carcinosarcoma'}, {'dataset': 'Pancreatic adenocarcinoma'}, {'dataset': 'Thyroid carcinoma'}, {'dataset': 'Ovarian serous cystadenocarcinoma'}, {'dataset': 'Cervical squamous cell carcinoma and endocervical adenocarcinoma'}, {'dataset': 'Bladder urothelial carcinoma'}, {'dataset': 'Testicular Germ Cell Tumors'}, {'dataset': 'Kidney renal clear cell carcinoma'}, {'dataset': 'Uterine Corpus Endometrial Carcinoma'}, {'dataset': 'Stomach adenocarcinoma'}, {'dataset': 'Skin Cutaneous Melanoma'}, {'dataset': 'Rectum adenocarcinoma'}, {'dataset': 'Adrenocortical carcinoma'}, {'dataset': 'Glioblastoma multiforme'}, {'dataset': 'Prostate adenocarcinoma'}], 'var_function-call-10194642918421937754': [{'histological_type': 'None'}, {'histological_type': 'Infiltrating Ductal Carcinoma'}, {'histological_type': 'Mucinous Carcinoma'}, {'histological_type': 'Metaplastic Carcinoma'}, {'histological_type': 'Mixed Histology (please specify)'}, {'histological_type': 'Infiltrating Lobular Carcinoma'}, {'histological_type': 'Other  specify'}, {'histological_type': 'Medullary Carcinoma'}, {'histological_type': 'Infiltrating Carcinoma NOS'}], 'var_function-call-2089481211008894686': [], 'var_function-call-11666221521513401008': [{'histological_type': 'Muscle invasive urothelial carcinoma (pT2 or above)', 'icd_o_3_histology': '8070/3', 'cnt': '1'}, {'histological_type': 'None', 'icd_o_3_histology': '8130/3', 'cnt': '1'}, {'histological_type': 'Muscle invasive urothelial carcinoma (pT2 or above)', 'icd_o_3_histology': '8260/3', 'cnt': '1'}, {'histological_type': 'None', 'icd_o_3_histology': '8120/3', 'cnt': '1'}, {'histological_type': 'None', 'icd_o_3_histology': '8010/3', 'cnt': '1'}, {'histological_type': 'Muscle invasive urothelial carcinoma (pT2 or above)', 'icd_o_3_histology': '8130/3', 'cnt': '67'}, {'histological_type': 'Muscle invasive urothelial carcinoma (pT2 or above)', 'icd_o_3_histology': '8120/3', 'cnt': '340'}], 'var_function-call-4853533162247152109': [{'histological_type': 'Infiltrating Ductal Carcinoma', 'cnt': '777'}, {'histological_type': 'Infiltrating Lobular Carcinoma', 'cnt': '201'}, {'histological_type': 'Other  specify', 'cnt': '46'}, {'histological_type': 'Mixed Histology (please specify)', 'cnt': '30'}, {'histological_type': 'Mucinous Carcinoma', 'cnt': '17'}, {'histological_type': 'Metaplastic Carcinoma', 'cnt': '8'}, {'histological_type': 'Medullary Carcinoma', 'cnt': '6'}, {'histological_type': 'Infiltrating Carcinoma NOS', 'cnt': '1'}, {'histological_type': 'None', 'cnt': '1'}], 'var_function-call-2838754228492663436': 'file_storage/function-call-2838754228492663436.json'}
+
+exec(code, env_args)

@@ -3,7 +3,7 @@ MySQL utility functions.
 These include ensuring the database exists and is populated,
 querying MySQL using SQLAlchemy, and checking database existence & tables.
 """
-
+import subprocess
 from sqlalchemy import create_engine
 import mysql.connector
 import pandas as pd
@@ -13,6 +13,8 @@ from common_scaffold import config
 from dotenv import load_dotenv
 import os
 import json
+import logging
+logger = logging.getLogger(__name__)
 
 MYSQL_CLIENT = os.getenv("MYSQL_CLIENT", "mysql")  
 MYSQL_USER = os.getenv("MYSQL_USER")
@@ -31,7 +33,7 @@ def mysql_query(sql: str, db_name: str = None, basic: bool = True):
 
     Returns:
         dict: {
-            "success": True, "data": DataFrame
+            "success": True, "data": json str if basic else DataFrame
         } or {
             "success": False, "error": error message
         }
@@ -108,9 +110,6 @@ def database_has_tables(db_name: str) -> bool:
     return len(tables) > 0
 
 
-import subprocess
-from pathlib import Path
-
 def import_sql_to_mysql(sql_file: str, db_name: str):
     """
     Import a .sql file into MySQL using the mysql CLI.
@@ -140,14 +139,14 @@ def import_sql_to_mysql(sql_file: str, db_name: str):
         db_name
     ]
 
-    print(f"▶️ Importing `{sql_file}` into `{db_name}`...")
+    logger.debug(f"▶️ Importing `{sql_file}` into `{db_name}`...")
     try:
         subprocess.run(cmd, stdin=open(sql_file, 'rb'), check=True)
     except subprocess.CalledProcessError as e:
-        print(f"⚠️ Import failed: {e}")
+        logger.debug(f"⚠️ Import failed: {e}")
         raise
     else:
-        print(f"🎉 Successfully imported `{sql_file}` into `{db_name}`.")
+        logger.debug(f"🎉 Successfully imported `{sql_file}` into `{db_name}`.")
 
 
 
@@ -161,10 +160,10 @@ def ensure_mysql_data(db_name: str, sql_file: str):
         sql_file (str): Path to the .sql file.
     """
     if not database_exists(db_name):
-        print(f"⚠️ Database '{db_name}' not found. Importing from '{sql_file}'...")
+        logger.debug(f"⚠️ Database '{db_name}' not found. Importing from '{sql_file}'...")
         import_sql_to_mysql(sql_file, db_name)
     elif not database_has_tables(db_name):
-        print(f"⚠️ Database '{db_name}' is empty. Importing from '{sql_file}'...")
+        logger.debug(f"⚠️ Database '{db_name}' is empty. Importing from '{sql_file}'...")
         import_sql_to_mysql(sql_file, db_name)
     else:
-        print(f"✅ Database '{db_name}' already exists and has tables. No action needed.")
+        logger.debug(f"✅ Database '{db_name}' already exists and has tables. No action needed.")

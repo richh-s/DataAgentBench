@@ -1,0 +1,19 @@
+code = """import json
+data = locals()['var_function-call-7340008235534419819'] # The intersection list
+if isinstance(data, str):
+    symbols = json.loads(data)
+else:
+    symbols = data
+
+batch1 = symbols[:45]
+q_parts = []
+for s in batch1:
+    q_parts.append("SELECT '" + s + "' as Symbol, COUNT(*) as c FROM \"" + s + "\" WHERE Date LIKE '2019-%' AND (High - Low) > 0.20 * Low")
+
+q1 = " UNION ALL ".join(q_parts)
+print("__RESULT__:")
+print(json.dumps(q1))"""
+
+env_args = {'var_function-call-15906074317050011412': 'file_storage/function-call-15906074317050011412.json', 'var_function-call-13696343153078358647': 'file_storage/function-call-13696343153078358647.json', 'var_function-call-7340008235534419819': ['AGMH', 'ALACU', 'AMHC', 'ANDA', 'APEX', 'BCLI', 'BHAT', 'BIOC', 'BKYI', 'BLFS', 'BOSC', 'BOTJ', 'BWEN', 'CBAT', 'CCCL', 'CDMOP', 'CEMI', 'CFBK', 'CFFA', 'CLRB', 'CORV', 'CPAAU', 'CPAH', 'CUBA', 'CVV', 'DZSI', 'ELSE', 'EXPC', 'EYEG', 'FAMI', 'FNCB', 'FSBW', 'FTFT', 'GDYN', 'GLG', 'GRNVU', 'GTEC', 'HCCOU', 'HNNA', 'HQI', 'HRTX', 'IDEX', 'IGIC', 'IOTS', 'ISNS', 'ITI', 'LACQ', 'MBCN', 'MBNKP', 'MCEP', 'MLND', 'MMAC', 'MNCLU', 'MNPR', 'NVEE', 'NXTD', 'OPOF', 'OPTT', 'ORGO', 'ORSNU', 'OTEL', 'PBFS', 'PBTS', 'PCSB', 'PECK', 'PEIX', 'PFIE', 'PLIN', 'POPE', 'QRHC', 'SES', 'SHSP', 'SNSS', 'SSNT', 'STKS', 'TGLS', 'TMSR', 'VERB', 'VMD', 'VRRM', 'VTIQW', 'VVPR', 'WHLM', 'WHLR', 'XBIOW', 'XPEL'], 'var_function-call-16241352907035461447': 'file_storage/function-call-16241352907035461447.json', 'var_function-call-9138016341354443335': 'file_storage/function-call-9138016341354443335.json'}
+
+exec(code, env_args)

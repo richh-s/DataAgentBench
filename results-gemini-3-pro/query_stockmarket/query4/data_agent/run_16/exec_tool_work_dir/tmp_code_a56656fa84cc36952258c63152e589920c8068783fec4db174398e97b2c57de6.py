@@ -1,0 +1,21 @@
+code = """import json
+
+# Load common symbols from previous step (I have them in the code above, but better to load or redefine)
+common_symbols = ["AEFC", "AIN", "AIV", "AIZP", "AJRD", "AL", "AMN", "AMP", "AMT", "ARD", "ARGD", "ARLO", "ASG", "AVA", "BANC", "BBU", "BBVA", "BDXA", "BKH", "BKT", "BLD", "BNS", "BV", "BZH", "CADE", "CAE", "CAF", "CBT", "CCC", "CCZ", "CHAP", "CIA", "CMA", "CMI", "CMSA", "CNK", "COTY", "CRC", "CRM", "CRS", "CSL", "CTS", "CUBE", "CURO", "CVIA", "CVX", "CXH", "DAC", "DDS", "DDT", "DEO", "DGX", "DMB", "DTQ", "DXC", "EARN", "EBS", "EGO", "EGY", "EIG", "ELF", "EMP", "ENLC", "EPR", "EPRT", "ES", "ESRT", "ESS", "ETM", "EV", "EVT", "EXP", "FMN", "FPAC", "FSM", "GCO", "GD", "GDL", "GDV", "GEL", "GJP", "GLOB", "GLT", "GOL", "GSLD", "GTY", "GVA", "GWB", "H", "HBI", "HDB", "HEP", "HIL", "HIO", "HIX", "HLF", "HLT", "HNI", "HRB", "HTFA", "IBM", "IGR", "IHC", "IPG", "IRM", "IT", "JGH", "JHY", "JKS", "JMP", "JNPR", "KMB", "KNX", "KW", "KYN", "LB", "LDOS", "LHC", "LHX", "LOMA", "MANU", "MDLX", "MDLY", "MED", "MFO", "MGR", "MGU", "MHE", "MIY", "MKC", "MLI", "MNE", "MR", "MS", "MTD", "MYD", "NFH", "NGG", "NJV", "NNI", "NNY", "NRUC", "NUE", "NXN", "OCFT", "OEC", "ORA", "ORAN", "ORCL", "ORN", "PAG", "PBI", "PFE", "PFSI", "PGR", "PIM", "PKE", "PLAN", "PLNT", "PMT", "PNM", "PPG", "PRSP", "PRTY", "PSV", "PSXP", "QTS", "QUAD", "RBC", "RCB", "RCI", "RES", "REXR", "RH", "RMT", "ROG", "ROL", "RPAI", "RPM", "RQI", "RWT", "SAF", "SAIL", "SAM", "SBR", "SCU", "SFUN", "SHAK", "SI", "SITC", "SJM", "SJT", "SJW", "SLF", "SMP", "SOL", "SPOT", "SRC", "SRF", "SRT", "SSD", "STG", "STL", "STON", "SYX", "TBB", "TCP", "TDJ", "TGP", "TLYS", "TNC", "TPH", "TRV", "TTI", "TUFN", "TWTR", "UHT", "UIS", "USX", "UTL", "VET", "VGR", "VHI", "VIV", "VKQ", "VRT", "VVI", "WOR", "WPG", "WSM", "X", "YEXT", "ZNH", "ZTR"]
+
+chunk_size = 50
+chunk_index = 0
+chunk = common_symbols[chunk_index*chunk_size : (chunk_index+1)*chunk_size]
+
+queries = []
+for sym in chunk:
+    q = "SELECT '" + sym + "' as Symbol, COUNT(CASE WHEN Close > Open THEN 1 END) as UpDays, COUNT(CASE WHEN Close < Open THEN 1 END) as DownDays FROM \"" + sym + "\" WHERE Date >= '2017-01-01' AND Date <= '2017-12-31'"
+    queries.append(q)
+
+query = " UNION ALL ".join(queries)
+print("__RESULT__:")
+print(json.dumps(query))"""
+
+env_args = {'var_function-call-10306632499863550006': 'file_storage/function-call-10306632499863550006.json', 'var_function-call-13311948755519531520': 'file_storage/function-call-13311948755519531520.json', 'var_function-call-1154161550025719079': ['AEFC', 'AIN', 'AIV', 'AIZP', 'AJRD', 'AL', 'AMN', 'AMP', 'AMT', 'ARD', 'ARGD', 'ARLO', 'ASG', 'AVA', 'BANC', 'BBU', 'BBVA', 'BDXA', 'BKH', 'BKT', 'BLD', 'BNS', 'BV', 'BZH', 'CADE', 'CAE', 'CAF', 'CBT', 'CCC', 'CCZ', 'CHAP', 'CIA', 'CMA', 'CMI', 'CMSA', 'CNK', 'COTY', 'CRC', 'CRM', 'CRS', 'CSL', 'CTS', 'CUBE', 'CURO', 'CVIA', 'CVX', 'CXH', 'DAC', 'DDS', 'DDT', 'DEO', 'DGX', 'DMB', 'DTQ', 'DXC', 'EARN', 'EBS', 'EGO', 'EGY', 'EIG', 'ELF', 'EMP', 'ENLC', 'EPR', 'EPRT', 'ES', 'ESRT', 'ESS', 'ETM', 'EV', 'EVT', 'EXP', 'FMN', 'FPAC', 'FSM', 'GCO', 'GD', 'GDL', 'GDV', 'GEL', 'GJP', 'GLOB', 'GLT', 'GOL', 'GSLD', 'GTY', 'GVA', 'GWB', 'H', 'HBI', 'HDB', 'HEP', 'HIL', 'HIO', 'HIX', 'HLF', 'HLT', 'HNI', 'HRB', 'HTFA', 'IBM', 'IGR', 'IHC', 'IPG', 'IRM', 'IT', 'JGH', 'JHY', 'JKS', 'JMP', 'JNPR', 'KMB', 'KNX', 'KW', 'KYN', 'LB', 'LDOS', 'LHC', 'LHX', 'LOMA', 'MANU', 'MDLX', 'MDLY', 'MED', 'MFO', 'MGR', 'MGU', 'MHE', 'MIY', 'MKC', 'MLI', 'MNE', 'MR', 'MS', 'MTD', 'MYD', 'NFH', 'NGG', 'NJV', 'NNI', 'NNY', 'NRUC', 'NUE', 'NXN', 'OCFT', 'OEC', 'ORA', 'ORAN', 'ORCL', 'ORN', 'PAG', 'PBI', 'PFE', 'PFSI', 'PGR', 'PIM', 'PKE', 'PLAN', 'PLNT', 'PMT', 'PNM', 'PPG', 'PRSP', 'PRTY', 'PSV', 'PSXP', 'QTS', 'QUAD', 'RBC', 'RCB', 'RCI', 'RES', 'REXR', 'RH', 'RMT', 'ROG', 'ROL', 'RPAI', 'RPM', 'RQI', 'RWT', 'SAF', 'SAIL', 'SAM', 'SBR', 'SCU', 'SFUN', 'SHAK', 'SI', 'SITC', 'SJM', 'SJT', 'SJW', 'SLF', 'SMP', 'SOL', 'SPOT', 'SRC', 'SRF', 'SRT', 'SSD', 'STG', 'STL', 'STON', 'SYX', 'TBB', 'TCP', 'TDJ', 'TGP', 'TLYS', 'TNC', 'TPH', 'TRV', 'TTI', 'TUFN', 'TWTR', 'UHT', 'UIS', 'USX', 'UTL', 'VET', 'VGR', 'VHI', 'VIV', 'VKQ', 'VRT', 'VVI', 'WOR', 'WPG', 'WSM', 'X', 'YEXT', 'ZNH', 'ZTR'], 'var_function-call-263539264045860881': 'file_storage/function-call-263539264045860881.json'}
+
+exec(code, env_args)

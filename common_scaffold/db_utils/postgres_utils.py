@@ -13,6 +13,8 @@ from common_scaffold import config
 import os
 import subprocess
 import json
+import logging
+logger = logging.getLogger(__name__)
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -29,7 +31,7 @@ def postgres_query(sql: str, db_name: str = None, params: dict = None, basic: bo
 
     Returns:
         dict: {
-            "success": True, "data": DataFrame
+            "success": True, "data": json str if basic else DataFrame
         } or {
             "success": False, "error": error message
         }
@@ -86,7 +88,7 @@ def database_exists(db_name: str) -> bool:
         bool: True if the database exists, False otherwise.
     """
     conn = psycopg2.connect(
-        dbname="postgres",  # 连接到系统库
+        dbname="postgres",
         user=config.PG_USER,
         password=config.PG_PASSWORD,
         host=config.PG_HOST,
@@ -137,9 +139,9 @@ def import_sql_to_postgres(sql_file: str, db_name: str):
         sql_file (str): Path to the .sql file.
         db_name (str): Target database name.
     """
-    # 确保数据库存在
+    
     if not database_exists(db_name):
-        print(f"▶️ Creating database '{db_name}'...")
+        logger.debug(f"▶️ Creating database '{db_name}'...")
         conn = psycopg2.connect(
             dbname="postgres",
             user=config.PG_USER,
@@ -166,14 +168,14 @@ def import_sql_to_postgres(sql_file: str, db_name: str):
     env["PGPASSWORD"] = config.PG_PASSWORD
     env["PGCLIENTENCODING"] = "UTF8"
 
-    print(f"▶️ Importing `{sql_file}` into `{db_name}`...")
+    logger.debug(f"▶️ Importing `{sql_file}` into `{db_name}`...")
     try:
         subprocess.run(cmd, check=True, env=env)
     except subprocess.CalledProcessError as e:
-        print(f"⚠️ Import failed: {e}")
+        logger.debug(f"⚠️ Import failed: {e}")
         raise
     else:
-        print(f"🎉 Successfully imported `{sql_file}` into `{db_name}`.")
+        logger.debug(f"🎉 Successfully imported `{sql_file}` into `{db_name}`.")
 
 
 def ensure_postgres_data(db_name: str, sql_file: str):
@@ -186,10 +188,10 @@ def ensure_postgres_data(db_name: str, sql_file: str):
         sql_file (str): Path to the .sql file.
     """
     if not database_exists(db_name):
-        print(f"⚠️ Database '{db_name}' not found. Importing from '{sql_file}'...")
+        logger.debug(f"⚠️ Database '{db_name}' not found. Importing from '{sql_file}'...")
         import_sql_to_postgres(sql_file, db_name)
     elif not database_has_tables(db_name):
-        print(f"⚠️ Database '{db_name}' is empty. Importing from '{sql_file}'...")
+        logger.debug(f"⚠️ Database '{db_name}' is empty. Importing from '{sql_file}'...")
         import_sql_to_postgres(sql_file, db_name)
     else:
-        print(f"✅ Database '{db_name}' already exists and has tables. No action needed.")
+        logger.debug(f"✅ Database '{db_name}' already exists and has tables. No action needed.")

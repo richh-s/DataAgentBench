@@ -6,7 +6,7 @@ ground_truth = [
     ("Aurora Massage", 14),
 ]
 
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     """
     Validate LLM output:
     - All names from ground truth appear (case-insensitive)
@@ -22,7 +22,7 @@ def validate(llm_output: str) -> (bool, str):
         idx = llm_lower.find(name_lower)
         if idx == -1:
             reason = f"Missing business name: {name}"
-            print(f"❌ {reason}")
+            
             return False, reason
 
         after_name_start = idx + len(name)
@@ -31,16 +31,14 @@ def validate(llm_output: str) -> (bool, str):
 
         if not matches:
             reason = f"No number found after {name}"
-            print(f"❌ {reason}")
+            
             return False, reason
 
         found_match = any(int(m) == expected_num for m in matches)
         if not found_match:
             reason = f"Number mismatch for {name}: expected {expected_num}"
-            print(f"❌ {reason}")
+            
             return False, reason
 
-        print(f"✅ Matched: {name} → {expected_num}")
 
-    print("✅ All names and numbers matched.")
-    return True, "OK"
+    return True, "All names and numbers matched."

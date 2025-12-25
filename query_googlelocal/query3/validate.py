@@ -69,7 +69,7 @@ ground_truth = [
 ]
 
 
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     """
     Validate LLM output for query3:
     - Business names must appear
@@ -86,7 +86,7 @@ def validate(llm_output: str) -> (bool, str):
         idx = llm_lower.find(name_lower)
         if idx == -1:
             reason = f"Missing business name: {name}"
-            print(f"❌ {reason}")
+            
             return False, reason
 
         # Get a window after name to check hours and score
@@ -97,14 +97,14 @@ def validate(llm_output: str) -> (bool, str):
             day_l, hours_l = day.lower(), hours.lower()
             if day_l not in window or hours_l not in window:
                 reason = f"Missing hours [{day}, {hours}] for business: {name}"
-                print(f"❌ {reason}")
+                
                 return False, reason
 
         # After hours block, look for score
         matches = re.findall(r"(\d+(?:\.\d+)?)", window)
         if not matches:
             reason = f"No score found after hours info for business: {name}"
-            print(f"❌ {reason}")
+            
             return False, reason
 
         # Compare each number found in window
@@ -121,8 +121,7 @@ def validate(llm_output: str) -> (bool, str):
 
         if not found:
             reason = f"Score mismatch for business: {name}, expected ~{gt_score_rounded:.2f}"
-            print(f"❌ {reason}")
+            
             return False, reason
 
-    print("✅ All businesses validated successfully.")
-    return True, "OK"
+    return True, "All businesses validated successfully."

@@ -1,0 +1,25 @@
+code = """import json
+
+# Load ppv_data
+with open(locals()['var_function-call-16573085129529931613'], 'r') as f:
+    ppv_data = json.load(f)
+
+# Load sorted projects
+with open(locals()['var_function-call-535077207919426475'], 'r') as f:
+    projects = json.load(f)
+
+top_10_projects = [p['ProjectName'] for p in projects[:10]]
+
+names_for_top_10 = set()
+for item in ppv_data:
+    if item['ProjectName'] in top_10_projects:
+        names_for_top_10.add(item['Name'])
+
+in_clause = ", ".join([f"'{n}'" for n in names_for_top_10])
+
+print("__RESULT__:")
+print(json.dumps(in_clause))"""
+
+env_args = {'var_function-call-13586301765518601491': [{'System': 'NPM', 'Name': '@ecl/twig-component-carousel', 'Version': '3.11.1', 'Licenses': '[\n  "EUPL-1.2"\n]', 'VersionInfo': '{\n  "IsRelease": true,\n  "Ordinal": 29\n}'}], 'var_function-call-13586301765518598202': [{'System': 'NPM', 'Name': '@dms/io', 'Version': '0.9.0', 'ProjectType': 'GITHUB', 'ProjectName': 'dataminingsupply/dms-io', 'RelationProvenance': 'UNVERIFIED_METADATA', 'RelationType': 'SOURCE_REPO_TYPE'}], 'var_function-call-13586301765518599009': [{'Project_Information': 'The project lberrocal/npm-packages-template is hosted on GitHub and currently has 0 open issues, 0 stars, and 0 forks.', 'Licenses': '[]', 'Description': 'Template for npm package library configured to be used with CI/CD', 'Homepage': 'None', 'OSSFuzz': 'nan'}], 'var_function-call-9951546590118661345': [{'column_name': 'Project_Information', 'column_type': 'VARCHAR', 'null': 'YES', 'key': 'None', 'default': 'None', 'extra': 'None'}, {'column_name': 'Licenses', 'column_type': 'VARCHAR', 'null': 'YES', 'key': 'None', 'default': 'None', 'extra': 'None'}, {'column_name': 'Description', 'column_type': 'VARCHAR', 'null': 'YES', 'key': 'None', 'default': 'None', 'extra': 'None'}, {'column_name': 'Homepage', 'column_type': 'VARCHAR', 'null': 'YES', 'key': 'None', 'default': 'None', 'extra': 'None'}, {'column_name': 'OSSFuzz', 'column_type': 'DOUBLE', 'null': 'YES', 'key': 'None', 'default': 'None', 'extra': 'None'}], 'var_function-call-7971549504435370225': [{'COUNT(*)': '176170'}], 'var_function-call-7971549504435371826': [{'count_star()': '770'}], 'var_function-call-12496890318966527329': 'file_storage/function-call-12496890318966527329.json', 'var_function-call-535077207919426475': 'file_storage/function-call-535077207919426475.json', 'var_function-call-18336475640949512116': ['mui-org/material-ui', 'rails/rails', 'microsoft/typescript', 'mozilla/pdf.js', 'swagger-api/swagger-ui', 'strapi/strapi', 'moment/moment', 'lodash/lodash', 'leaflet/leaflet', 'react-navigation/react-navigation', 'semantic-org/semantic-ui', 'react-native-elements/react-native-elements', 'sveltejs/svelte', 'tailwindcss/tailwindcss', 'mono/mono', 'microsoft/monaco-editor', 'quilljs/quill', 'request/request', 'tencent/vconsole', 'react-native-community/react-native-webview', 'sortablejs/vue.draggable', 'styled-components/styled-components', 'theia-ide/theia', 'leecade/react-native-swiper', 'mapbox/mapbox-gl-js', 'rjsf-team/react-jsonschema-form', 'mozilla-services/react-jsonschema-form', 'reactive-extensions/rxjs', 'mobxjs/mobx', 'tj/commander.js', 'medusajs/medusa', 'tmpvar/jsdom', 'react-native-device-info/react-native-device-info', 'svg/svgo', 'sass/node-sass', 'shaka-project/shaka-player', 'microsoft/typescript-website', 'sockjs/sockjs-client', 'sboudrias/inquirer.js', 'react-native-webrtc/react-native-webrtc', 'shopify/polaris-react', 'rebilly/redoc', 'mishoo/uglifyjs2', 'react-native-community/react-native-tab-view', 'mbrn/material-table', 'leaflet/leaflet.markercluster', 'react-toolbox/react-toolbox', 'rrag/react-stockcharts', 'snowpackjs/snowpack', 'ternjs/acorn'], 'var_function-call-16573085129529931613': 'file_storage/function-call-16573085129529931613.json', 'var_function-call-13704101041083966993': 'file_storage/function-call-13704101041083966993.json', 'var_function-call-16191078977572767334': 'file_storage/function-call-16191078977572767334.json'}
+
+exec(code, env_args)

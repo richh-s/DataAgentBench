@@ -31,7 +31,7 @@ cd DataAgentBench
 It is recommended to use a dedicated virtual environment named `ucb_query`:
 Using conda:
 ```bash
-conda create -n ucb_query python=3.9
+conda create -n ucb_query python=3.12
 conda activate ucb_query
 ```
 
@@ -46,7 +46,7 @@ This project interacts with distributed databases, combining both server-based a
 You need to ensure the required services are running and files are available.
 
 #### ✅ PostgreSQL
-- Requires a **local PostgreSQL server** to be installed and running.  
+- Requires a **local PostgreSQL server** (version >= 17.5) to be installed and running.  
 - Install [PostgreSQL](https://www.postgresql.org/) on your machine according to your operating system.
 - After installation, start the PostgreSQL server. Verify that you can connect using:
   ```bash

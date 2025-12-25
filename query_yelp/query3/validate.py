@@ -1,6 +1,6 @@
 import re
 
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     """
     Validate if the integer 35 is present in LLM output.
     Returns:
@@ -14,14 +14,13 @@ def validate(llm_output: str) -> (bool, str):
 
     if not matches:
         reason = "No number found in LLM output."
-        print(f"❌ {reason}")
+        
         return False, reason
 
     for m in matches:
         if int(m) == ground_truth:
-            print(f"✅ Found number: {ground_truth}")
-            return True, "OK"
+            return True, f"Found number: {ground_truth}"
 
     reason = f"Number {ground_truth} not found in LLM output."
-    print(f"❌ {reason}")
+    
     return False, reason

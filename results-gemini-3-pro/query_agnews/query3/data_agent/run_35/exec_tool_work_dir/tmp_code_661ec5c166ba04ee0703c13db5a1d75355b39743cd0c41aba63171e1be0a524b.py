@@ -1,0 +1,14 @@
+code = """import json
+
+# Access the file path from the variable
+file_path = locals()['var_function-call-3785327814520365478']
+
+with open(file_path, 'r') as f:
+    metadata = json.load(f)
+
+print("__RESULT__:")
+print(len(metadata))"""
+
+env_args = {'var_function-call-3785327814520365478': 'file_storage/function-call-3785327814520365478.json'}
+
+exec(code, env_args)

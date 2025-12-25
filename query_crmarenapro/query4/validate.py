@@ -1,6 +1,6 @@
 import re
 
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     """
     Validate if LLM output contains the expected month name.
     Expected: November
@@ -17,8 +17,7 @@ def validate(llm_output: str) -> (bool, str):
 
     # Check for exact month match (case insensitive)
     if expected.lower() in llm_output_clean.lower():
-        print(f"✅ Found expected month: {expected}")
-        return True, "OK"
+        return True, f"Found expected agent ID: {expected}"
 
     # Check if any month is mentioned
     found_months = []
@@ -28,9 +27,7 @@ def validate(llm_output: str) -> (bool, str):
 
     if found_months:
         reason = f"Found months {found_months}, but expected '{expected}'"
-        print(f"❌ {reason}")
         return False, reason
     else:
         reason = "No month name found in LLM output"
-        print(f"❌ {reason}")
         return False, reason

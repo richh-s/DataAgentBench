@@ -1,0 +1,28 @@
+code = """import json
+
+with open(locals()['var_function-call-7798542961144321385'], 'r') as f:
+    nyse_non_etf_stocks_info = json.load(f)
+
+stock_data_for_analysis = {
+    stock['Symbol']: {'Company Description': stock['Company Description'], 'up_days': 0, 'down_days': 0}
+    for stock in nyse_non_etf_stocks_info
+}
+
+# This dictionary is too large to pass as a direct tool output. Instead, I'll just output the symbols for now.
+# I will process the stocks in batches.
+
+# Get all symbols that exist as tables in stocktrade_database.
+with open(locals()['var_function-call-10322901102601676989'], 'r') as f:
+    stocktrade_tables = json.load(f)
+
+available_symbols_in_trade_db = set(stocktrade_tables)
+
+symbols_to_process = [symbol for symbol in stock_data_for_analysis.keys() if symbol in available_symbols_in_trade_db]
+
+__RESULT__ = symbols_to_process
+print('__RESULT__:')
+print(json.dumps(__RESULT__))"""
+
+env_args = {'var_function-call-6311066923539582578': 'file_storage/function-call-6311066923539582578.json', 'var_function-call-2537435295667910216': [{'Symbol': 'AEFC', 'Company Description': 'Aegon Funding Company LLC is part of Aegon N.V., a global financial services group offering life insurance, pensions, and asset management solutions to help people achieve a lifetime of financial security.'}, {'Symbol': 'AIN', 'Company Description': 'Albany International Corporation specializes in producing advanced materials and engineered components, serving industries such as aerospace and paper manufacturing with innovative solutions.'}, {'Symbol': 'AIV', 'Company Description': 'Apartment Investment and Management Company specializes in owning and managing a diverse portfolio of apartment communities, offering quality rental housing across various regions.'}, {'Symbol': 'AIZP', 'Company Description': 'Assurant, Inc. specializes in providing a diverse range of insurance products and services, focusing on lifestyle and housing solutions to protect what matters most to their customers.'}, {'Symbol': 'AJRD', 'Company Description': 'Aerojet Rocketdyne Holdings, Inc. specializes in developing advanced propulsion systems and aerospace technologies, playing a crucial role in powering rockets and missiles for both defense and space exploration.'}], 'var_function-call-11635736103682654991': [], 'var_function-call-10322901102601676989': 'file_storage/function-call-10322901102601676989.json', 'var_function-call-2933241298307364571': ['ZTR', 'MHE', 'CTS', 'CAE', 'MR', 'GD', 'STL', 'AIV', 'CVIA', 'CSL', 'SBR', 'PBI', 'RCI', 'DGX', 'MDLX', 'CRS', 'SPOT', 'DEO', 'IHC', 'AIZP', 'EPRT', 'TNC', 'BZH', 'QUAD', 'ARD', 'EV', 'SRC', 'EXP', 'PMT', 'PRTY', 'MGU', 'OEC', 'ASG', 'PSV', 'CCC', 'RH', 'RPM', 'MS', 'MTD', 'VET', 'BBVA', 'BLD', 'GCO', 'IGR', 'GSLD', 'PNM', 'UHT', 'X', 'DTQ', 'GVA', 'SRT', 'LHC', 'EBS', 'SITC', 'VRT', 'EIG', 'GJP', 'HEP', 'AMP', 'CMI', 'AJRD', 'ARGD', 'ETM', 'KMB', 'EMP', 'GWB', 'AL', 'PAG', 'BV', 'HLT', 'SYX', 'ORCL', 'SFUN', 'SAM', 'RPAI', 'HDB', 'SHAK', 'CAF', 'BDXA', 'SI', 'BANC', 'HTFA', 'RQI', 'NGG', 'ORAN', 'LB', 'TPH', 'VKQ', 'GLOB', 'COTY', 'RES', 'FPAC', 'H', 'MED', 'DDS', 'NXN', 'CCZ', 'NFH', 'VIV', 'SMP', 'CHAP', 'IT', 'EPR', 'LOMA', 'RWT', 'GLT', 'ZNH', 'DMB', 'IRM', 'STON', 'JHY', 'HIO', 'OCFT', 'MLI', 'NJV', 'SAF', 'REXR', 'NNI', 'ORA', 'NNY', 'ORN', 'HBI', 'SJM', 'AVA', 'ARLO', 'SJT', 'TUFN', 'GDV', 'MKC', 'WOR', 'PRSP', 'ROL', 'SLF', 'KW', 'DAC', 'PKE', 'JKS', 'CUBE', 'FMN', 'AMN', 'IBM', 'STG', 'LDOS', 'UTL', 'PLNT', 'ESRT', 'VVI', 'MGR', 'MIY', 'ELF', 'PSXP', 'WPG', 'EGY', 'EARN', 'PPG', 'HIX', 'AEFC', 'ES', 'NUE', 'JNPR', 'TCP', 'TDJ', 'FSM', 'CVX', 'CURO', 'CIA', 'CMA', 'RBC', 'SSD', 'YEXT', 'HNI', 'AIN', 'CXH', 'TWTR', 'CMSA', 'SCU', 'WSM', 'NRUC', 'DDT', 'PFE', 'HIL', 'ENLC', 'SJW', 'MNE', 'BNS', 'CRM', 'CBT', 'BKH', 'VGR', 'PGR', 'BKT', 'JMP', 'TTI', 'IPG', 'HLF', 'EVT', 'TRV', 'MANU', 'SRF', 'GTY', 'GDL', 'HRB', 'PFSI', 'GOL', 'TLYS', 'DXC', 'AMT', 'SAIL', 'MFO', 'KYN', 'USX', 'LHX', 'CNK', 'MDLY', 'JGH', 'SOL', 'TGP', 'KNX', 'CADE', 'PIM', 'BBU', 'VHI', 'CRC', 'PLAN', 'RCB', 'RMT', 'MYD', 'EGO', 'GEL', 'TBB', 'ESS', 'ROG', 'QTS', 'UIS'], 'var_function-call-15039833709052301394': 'file_storage/function-call-15039833709052301394.json', 'var_function-call-7798542961144321385': 'file_storage/function-call-7798542961144321385.json'}
+
+exec(code, env_args)

@@ -1,4 +1,4 @@
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     """
     Validate if all ground truth book titles are present in LLM output.
     Only checks book titles (ignores categories).
@@ -29,8 +29,6 @@ def validate(llm_output: str) -> (bool, str):
     for book in ground_truth_books:
         if book.lower() not in llm_lower:
             reason = f"Missing book title in LLM output: {book}"
-            print(f"❌ {reason}")
             return False, reason
 
-    print("✅ All book titles found in LLM output.")
-    return True, "OK"
+    return True, "All book titles found in LLM output."

@@ -1,0 +1,71 @@
+code = """import json
+
+# Load data
+reviews = locals()['var_function-call-18032970780558021669']
+# Check if reviews is a file path or list
+if isinstance(reviews, str):
+    with open(reviews, 'r') as f:
+        reviews = json.load(f)
+
+businesses_raw = locals()['var_function-call-7576662622308867332']
+if isinstance(businesses_raw, str):
+    with open(businesses_raw, 'r') as f:
+        businesses_raw = json.load(f)
+
+# Helper to extract categories
+def extract_categories(desc):
+    separators = ["services in ", "including ", "destination for "]
+    part = None
+    for sep in separators:
+        if sep in desc:
+            part = desc.split(sep, 1)[1]
+            break
+    
+    if not part:
+        return []
+    
+    # Split by comma
+    cats = [c.strip() for c in part.split(',')]
+    
+    cleaned_cats = []
+    for c in cats:
+        # Remove trailing period
+        if c.endswith('.'):
+            c = c[:-1]
+        # Remove leading 'and '
+        if c.lower().startswith('and '):
+            c = c[4:]
+        cleaned_cats.append(c)
+    return cleaned_cats
+
+# Map business_id to categories
+business_cat_map = {}
+for b in businesses_raw:
+    bid = b['business_id']
+    desc = b.get('description', '')
+    cats = extract_categories(desc)
+    business_cat_map[bid] = cats
+
+# Aggregate counts
+category_counts = {}
+
+for r in reviews:
+    # Convert business_ref to business_id
+    bref = r['business_ref']
+    bid = bref.replace('businessref_', 'businessid_')
+    count = int(r['review_cnt'])
+    
+    cats = business_cat_map.get(bid, [])
+    for cat in cats:
+        category_counts[cat] = category_counts.get(cat, 0) + count
+
+# Sort and get top 5
+sorted_cats = sorted(category_counts.items(), key=lambda x: x[1], reverse=True)
+top_5 = sorted_cats[:5]
+
+print("__RESULT__:")
+print(json.dumps(top_5))"""
+
+env_args = {'var_function-call-6734760019395436049': [{'_id': '6859a000fe8b31cd7362e2ab', 'business_id': 'businessid_49', 'name': 'Steps to Learning Montessori Preschool', 'review_count': '8', 'is_open': '1', 'attributes': {'BusinessAcceptsCreditCards': 'True', 'WiFi': "u'no'", 'BusinessAcceptsBitcoin': 'False'}, 'hours': {'Monday': '0:0-0:0', 'Tuesday': '8:0-17:0', 'Wednesday': '8:0-17:0', 'Thursday': '8:0-17:0', 'Friday': '8:0-17:0'}, 'description': 'Located at 6901 Phelps Rd in Goleta, CA, this facility offers a nurturing environment for young learners, providing a range of services in Education, Elementary Schools, Child Care & Day Care, Local Services, Preschools, and Montessori Schools.'}], 'var_function-call-18032970780558021669': [{'business_ref': 'businessref_13', 'review_cnt': '1'}, {'business_ref': 'businessref_79', 'review_cnt': '1'}, {'business_ref': 'businessref_74', 'review_cnt': '2'}, {'business_ref': 'businessref_66', 'review_cnt': '2'}, {'business_ref': 'businessref_9', 'review_cnt': '1'}, {'business_ref': 'businessref_33', 'review_cnt': '3'}, {'business_ref': 'businessref_15', 'review_cnt': '1'}, {'business_ref': 'businessref_36', 'review_cnt': '2'}, {'business_ref': 'businessref_60', 'review_cnt': '2'}, {'business_ref': 'businessref_12', 'review_cnt': '1'}, {'business_ref': 'businessref_53', 'review_cnt': '1'}, {'business_ref': 'businessref_51', 'review_cnt': '2'}, {'business_ref': 'businessref_8', 'review_cnt': '1'}, {'business_ref': 'businessref_57', 'review_cnt': '2'}, {'business_ref': 'businessref_86', 'review_cnt': '1'}, {'business_ref': 'businessref_97', 'review_cnt': '1'}, {'business_ref': 'businessref_62', 'review_cnt': '1'}, {'business_ref': 'businessref_72', 'review_cnt': '1'}, {'business_ref': 'businessref_37', 'review_cnt': '1'}, {'business_ref': 'businessref_31', 'review_cnt': '1'}, {'business_ref': 'businessref_92', 'review_cnt': '2'}, {'business_ref': 'businessref_26', 'review_cnt': '1'}, {'business_ref': 'businessref_68', 'review_cnt': '1'}, {'business_ref': 'businessref_41', 'review_cnt': '1'}, {'business_ref': 'businessref_10', 'review_cnt': '1'}, {'business_ref': 'businessref_45', 'review_cnt': '3'}, {'business_ref': 'businessref_96', 'review_cnt': '2'}, {'business_ref': 'businessref_98', 'review_cnt': '1'}, {'business_ref': 'businessref_14', 'review_cnt': '1'}, {'business_ref': 'businessref_20', 'review_cnt': '1'}, {'business_ref': 'businessref_6', 'review_cnt': '2'}], 'var_function-call-7576662622308867332': [{'_id': '6859a000fe8b31cd7362e2ab', 'business_id': 'businessid_49', 'description': 'Located at 6901 Phelps Rd in Goleta, CA, this facility offers a nurturing environment for young learners, providing a range of services in Education, Elementary Schools, Child Care & Day Care, Local Services, Preschools, and Montessori Schools.'}, {'_id': '6859a000fe8b31cd7362e2ac', 'business_id': 'businessid_47', 'description': 'Located at 9916 Clayton Rd in St. Louis, MO, this establishment offers a wide range of services, including Hair Salons, Beauty & Spas, Hair Stylists, Skin Care, Blow Dry/Out Services, and Makeup Artists.'}, {'_id': '6859a000fe8b31cd7362e2ad', 'business_id': 'businessid_88', 'description': 'Located at 11655 W Executive Dr in Boise, ID, this facility offers enthusiasts a premier destination for Gun/Rifle Ranges, Active Life.'}, {'_id': '6859a000fe8b31cd7362e2ae', 'business_id': 'businessid_41', 'description': 'Located at 1615 Pasadena Ave S, Ste 430 in Saint Petersburg, FL, this facility offers a range of services in Internal Medicine, Doctors, Health & Medical.'}, {'_id': '6859a000fe8b31cd7362e2af', 'business_id': 'businessid_33', 'description': 'Located at 9655 E US Hwy 36, Unit H in Avon, IN, this establishment offers a range of services including Nail Salons, Hair Removal, Beauty & Spas, and Waxing.'}]}
+
+exec(code, env_args)

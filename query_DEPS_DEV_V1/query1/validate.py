@@ -9,7 +9,7 @@ gt_pairs = [
     ("@dwarvesf/react-scripts>0.7.0>lodash.indexof", "4.0.5"),
 ]
 
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     """
     Validate:
     - Each name in ground truth appears in LLM output (case-insensitive)
@@ -27,7 +27,7 @@ def validate(llm_output: str) -> (bool, str):
 
         if idx == -1:
             reason = f"Missing name: {name}"
-            print(f"❌ {reason}")
+            
             return False, reason
 
         # Only check in the 50 characters *after* the name
@@ -36,10 +36,7 @@ def validate(llm_output: str) -> (bool, str):
 
         if version.lower() not in window:
             reason = f"Version '{version}' not found after name '{name}'"
-            print(f"❌ {reason}")
+            
             return False, reason
 
-        print(f"✅ Matched name + version: {name} → {version}")
-
-    print("✅ All name-version pairs validated successfully.")
-    return True, "OK"
+    return True, f"All name-version pairs validated successfully."

@@ -1,6 +1,6 @@
 import re
 
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     """
     Validate whether the LLM output contains a numeric value that matches
     the ground truth (305.1239198007461) when rounded to 2 decimals,
@@ -31,11 +31,9 @@ def validate(llm_output: str) -> (bool, str):
             if rounded in {target_2dp, target_1dp, target_int} or \
                f"{round(value, 1):.1f}" == target_1dp or \
                str(int(value)) == target_int:
-                print(f"✅ Matched value: {raw} -> rounded {rounded}")
-                return True, "OK"
+                return True, f"Matched value: {raw} -> rounded {rounded}"
         except:
             continue
 
-    reason = f"❌ No value in LLM output matches {target_2dp}, {target_1dp}, or {target_int}"
-    print(reason)
+    reason = f"No value in LLM output matches {target_2dp}, {target_1dp}, or {target_int}"
     return False, reason

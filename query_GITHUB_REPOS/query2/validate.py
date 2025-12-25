@@ -21,7 +21,7 @@ def levenshtein(s1, s2):
 
     return previous[-1]
 
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     """
     Validate if target string 'SwiftAndroid/swift' appears in LLM output,
     allowing up to 3 character differences and ignoring case.
@@ -35,9 +35,7 @@ def validate(llm_output: str) -> (bool, str):
         window = llm_output_lower[i : i + window_size]
         dist = levenshtein(window, target)
         if dist <= 3:
-            print(f"✅ Fuzzy matched: '{window}' with distance {dist}")
-            return True, "OK"
+            return True, f"Fuzzy matched: '{window}' with distance {dist}"
 
-    reason = f"❌ No fuzzy match found for '{target}' within 3-character distance"
-    print(reason)
+    reason = f"No fuzzy match found for '{target}' within 3-character distance"
     return False, reason

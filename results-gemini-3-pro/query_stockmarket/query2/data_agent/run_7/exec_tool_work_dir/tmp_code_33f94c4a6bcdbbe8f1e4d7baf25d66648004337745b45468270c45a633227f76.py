@@ -1,0 +1,39 @@
+code = """import json
+import os
+
+key_syms = 'var_function-call-12240742963505795241'
+with open(locals()[key_syms], 'r') as f:
+    valid_symbols = json.load(f)
+
+state = {
+    'valid_symbols': valid_symbols,
+    'current_index': 0,
+    'batch_size': 50,
+    'found_symbols': []
+}
+with open('state.json', 'w') as f:
+    json.dump(state, f)
+
+idx = state['current_index']
+batch_size = state['batch_size']
+chunk = state['valid_symbols'][idx : idx + batch_size]
+
+if not chunk:
+    print('__RESULT__:')
+    print(json.dumps({"action": "DONE", "found_symbols": state['found_symbols']}))
+else:
+    sq = chr(39)
+    dq = chr(34)
+    sub_queries = []
+    for sym in chunk:
+        q = "SELECT " + sq + sym + sq + " as Symbol FROM " + dq + sym + dq + " WHERE " + dq + "Adj Close" + dq + " > 200 AND Date >= " + sq + "2015-01-01" + sq + " AND Date <= " + sq + "2015-12-31" + sq + " LIMIT 1"
+        sub_queries.append(q)
+    
+    full_query = " UNION ALL ".join(sub_queries)
+    
+    print('__RESULT__:')
+    print(json.dumps({"action": "QUERY", "query": full_query}))"""
+
+env_args = {'var_function-call-11304267723591981203': [{'ETF': 'Y', 'Listing Exchange': 'P'}, {'ETF': 'N', 'Listing Exchange': 'Q'}, {'ETF': 'Y', 'Listing Exchange': 'Q'}, {'ETF': 'Y', 'Listing Exchange': 'Z'}, {'ETF': 'N', 'Listing Exchange': 'A'}, {'ETF': 'N', 'Listing Exchange': 'N'}, {'ETF': 'N', 'Listing Exchange': 'Z'}, {'ETF': 'N', 'Listing Exchange': 'P'}, {'ETF': 'Y', 'Listing Exchange': 'A'}], 'var_function-call-9114954391718964864': 'file_storage/function-call-9114954391718964864.json', 'var_function-call-10741500597713023606': 'file_storage/function-call-10741500597713023606.json', 'var_function-call-12240742963505795241': 'file_storage/function-call-12240742963505795241.json', 'var_function-call-10700936405339732652': 1435, 'var_function-call-8853969729957837933': 1435, 'var_function-call-7545740587256053064': 'file_storage/function-call-7545740587256053064.json', 'var_function-call-3307129532403844382': 'file_storage/function-call-3307129532403844382.json', 'var_function-call-15908291984480387280': 'file_storage/function-call-15908291984480387280.json'}
+
+exec(code, env_args)

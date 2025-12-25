@@ -1,0 +1,936 @@
+{
+  "timestamp": "20251216_195145",
+  "start_time": 1765943385.1039908,
+  "end_time": 1765943505.9240456,
+  "duration": 120.82005476951599,
+  "final_result": "",
+  "terminate_reason": "no_tool_call",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a data analysis agent. Use only the tools listed below to answer the user's query, based on the provided DATABASE DESCRIPTION for logical database names and their types (SQL or MongoDB), and the results of previous tool calls.\n\nTOOLS (system will execute):\n- query_db: run a SQL or Mongo query. Returns a list of JSON-serializable records or an error string.\n  Required args: {\"db_name\": \"<logical_db_name>\", \"query\": \"<SQL or Mongo query>\"}\n- list_db: list tables or collections for a given database.\n  Required args: {\"db_name\": \"<logical_db_name>\"}\n- execute_python: run Python code.\n  Required args: {\"code\": \"<python_code>\"}\n- return_answer: finish and return the final answer (plain text).\n  Required args: {\"answer\": \"<final plain-text answer>\"}\n\nINSTRUCTIONS:\n1. After each tool call, its result will be stored in a storage under a key named after the tool call id (you will be told the key name). The next message will include both the result (or a preview if it's large) and the storage key name.\n2. Inside execute_python code you may read storage entries using the provided key names, e.g., if the tool call id is 'call-1', you can directly access its result via `locals()['var_call-1']` in your code without indexing into additional fields.\n3. You cannot modify or reassign those storage-provided variables; you may read them and create new variables as needed.\n4. If a tool result is large, the next message will include a preview (first 10000 characters) and the storage entry will be the .json file path (a string) where the full result is stored. To access the full result, your execute_python code must open and read that .json file.\n\nKEY RULES (must follow exactly):\n1. Always use tool calls. Do not output plain text, explanations, or reasoning.\n2. Include all required arguments for the tool you call.\n3. For query_db, always specify db_name and query. Refer the DATABASE DESCRIPTION for db_name and query format.\n4. For PostgreSQL, wrap mixed-case or uppercase column names in double quotes.\n5. For list_db, refer the DATABASE DESCRIPTION to specify db_name.\n6. Use execute_python for data processing as needed. \n7. When using execute_python, your code will be quoted by triple double-quotes and passed as a string to `exec(...)` for execution in a Python 3.12 environment with only pandas and pyarrow installed. So you must ensure your code is compatible with this execution method. For exampe, do not use triple double-quotes in your code, as they may interfere with parsing. Do not use non-built-in or non-installed packages.\n8. When using execute_python, your code must print the result at the end exactly as shown in the PRINT FORMAT section below. The printed result must be a string that can be successfully parsed by json.loads() without errors.\n\nPRINT FORMAT (must match exactly):\n----BEGIN PRINT FORMAT----\nprint(\"__RESULT__:\")\nprint(your_json_serializable_string_here)\n----END PRINT FORMAT----\n\nFor simple types (int, float, str, bool, None), you may use json.dumps() to produce a valid JSON string.\nFor complex or non-JSON-serializable types, you must convert them into JSON-compatible forms before printing.\nFor lists or dictionaries, you must ensure that all nested elements are also converted into JSON-serializable types.\n9. Return the final answer only via a single return_answer tool call. Do not include extra text, explanation, or formatting.\n\nEXAMPLES:\n- query_db:\n{\"tool\": \"query_db\", \"args\": {\"db_name\": \"some_db_name\", \"query\": \"SELECT * FROM some_table LIMIT some_limit;\"}} # for SQL databases\n{\"tool\": \"query_db\", \"args\": {\"db_name\": \"some_db_name\", \"query\": \"{\"collection\": \"some_collection\", \"filter\": {some_filter}, \"projection\": {some_projection}, \"limit\": some_limit}\"}} # for MongoDB databases\n\n- list_db:\n{\"tool\": \"list_db\", \"args\": {\"db_name\": \"some_db_name\"}}\n\n- execute_python:\n{\"tool\": \"execute_python\", \"args\": {\"code\": \"import pandas as pd\n# rl1 and rl2 are the keys of two JSON-serializable record lists in storage\ndf1 = pd.DataFrame(rl1)\ndf2 = pd.DataFrame(rl2)\nresult = pd.merge(df1, df2, on='id').head(10).to_json(orient='records')\nprint('__RESULT__:')\nprint(result)\"}}\n\n- return_answer:\n{\"tool\": \"return_answer\", \"args\": {\"answer\": \"\u2026final plain-text answer\u2026\"}}\n\nIf you cannot proceed, call return_answer with a short explanatory message.\n\nDo not output explanations, reasoning, or any natural language outside of the required tool calls.\n\nWARNING (must follow exactly):\n- Do not generate code for tool calling. Always generate the tool call JSON.\nWhen calling tools, output the tool name exactly as defined. Do not prepend 'default_api.' or any other namespace to the tool name."
+    },
+    {
+      "role": "user",
+      "content": "QUERY:\nList all company names on the NASDAQ-listed Market that were financially troubled (delinquent, deficient, or both) and have trading volume in 2008, for each, report its exisiting non-null average daily trading volume in 2008.\n\nDATABASE DESCRIPTION:\nYou are working with two databases to solve this query.\n\nHere are the descriptions of these two databases:\n\n1. stockinfo_database\n   - This database is stored in a SQLite database and contains metadata about publicly traded stocks and ETFs listed on U.S. exchanges, including ticker symbols, market categories, trading venues, and company descriptions.\n   - This database consists of one table: \n    - stockinfo:\n      - Fields:\n        - Nasdaq Traded (str): Whether stock is traded on NASDAQ\n        - Symbol (str): Stock ticker symbol\n        - Listing Exchange (str): Exchange where stock is listed\n        - Market Category (str): Market category classification\n        - ETF (str): Whether security is an ETF\n        - Round Lot Size (float): Standard trading unit size\n        - Test Issue (str): Whether this is a test issue\n        - Financial Status (str or null): Financial status (delinquent, deficient, etc.)\n        - NextShares (str): NextShares designation\n        - Company Description (str): Company name and description\n\n2. stocktrade_database\n   - This database is stored in a DuckDB database and contains daily price data for 2,753 individual stocks and ETFs listed on U.S. exchanges. Each table in the database is named after a stock's ticker symbol and contains the historical daily trading data for that stock.\n   - Fields (for each table):\n     - Date (str): Trading date\n     - Open (float): Opening price\n     - High (float): Highest price during the day\n     - Low (float): Lowest price during the day\n     - Close (float): Closing price\n     - Adj Close (float): Adjusted closing price\n     - Volume (int): Number of shares traded\n\nHINTS: \nBelow are the definitions of stock market symbols for the relevant columns.  \n- Listing Exchange Codes:\n  - A = NYSE MKT\n  - N = New York Stock Exchange (NYSE)\n  - P = NYSE ARCA\n  - Z = BATS Global Markets (BATS)\n  - V = Investors' Exchange, LLC (IEXG)\n  - Q = NASDAQ Global Select Market (top-tier NASDAQ market)\n- Financial Status Codes:\n  - D = Deficient: Issuer failed to meet NASDAQ continued listing requirements\n  - E = Delinquent: Issuer missed regulatory filing deadline\n  - Q = Bankrupt: Issuer has filed for bankruptcy\n  - N = Normal (default): Issuer is NOT deficient, delinquent, or bankrupt\n  - G = Deficient and bankrupt\n  - H = Deficient and delinquent\n  - J = Delinquent and bankrupt\n  - K = Deficient, delinquent, and bankrupt\n- A company is considered financially troubled if it is deficient, delinquent, or both.\n- Market Category Codes:\n  - Q = NASDAQ Global Select Market\n  - G = NASDAQ Global Market\n  - S = NASDAQ Capital Market"
+    },
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "id": "function-call-14214633252286060092",
+          "function": {
+            "arguments": "{\"db_name\":\"stockinfo_database\",\"query\":\"SELECT Symbol, \\\"Company Description\\\" FROM stockinfo WHERE \\\"Nasdaq Traded\\\" = 'Y' AND \\\"Financial Status\\\" IN ('D', 'E', 'H');\"}",
+            "name": "query_db"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "function-call-14214633252286060092",
+      "name": "query_db",
+      "content": "\nThe tool query_db was executed successfully.\n\nThe result is stored under key:\nvar_function-call-14214633252286060092\n\nThe result is:\n[{\"Symbol\": \"AGMH\", \"Company Description\": \"AGM Group Holdings Inc. specializes in providing financial technology solutions and services, focusing on enhancing efficiency and performance for businesses in the financial sector.\"}, {\"Symbol\": \"AMTX\", \"Company Description\": \"Aemetis, Inc is an advanced renewable fuels and biochemicals company, focused on producing sustainable energy solutions and reducing carbon emissions through innovative technologies.\"}, {\"Symbol\": \"APEX\", \"Company Description\": \"Apex Global Brands Inc. specializes in creating and marketing a diverse portfolio of fashion and lifestyle brands, connecting consumers with trendy and innovative products worldwide.\"}, {\"Symbol\": \"BIOC\", \"Company Description\": \"Biocept, Inc. specializes in developing advanced diagnostic solutions that help detect and analyze cancer cells, driving innovation in personalized medicine and cancer treatment.\"}, {\"Symbol\": \"BKYI\", \"Company Description\": \"BIO-key International, Inc. specializes in advanced biometric solutions, providing secure and convenient identity verification systems for enterprises and consumers alike.\"}, {\"Symbol\": \"CBAT\", \"Company Description\": \"CBAK Energy Technology, Inc. specializes in developing and manufacturing high-performance lithium-ion batteries, playing a pivotal role in powering electric vehicles and renewable energy solutions.\"}, {\"Symbol\": \"CCCL\", \"Company Description\": \"China Ceramics Co., Ltd. specializes in manufacturing high-quality ceramic tiles, catering to both residential and commercial markets with a wide range of designs and finishes.\"}, {\"Symbol\": \"CORV\", \"Company Description\": \"Correvio Pharma Corp., based in Canada, specializes in developing and commercializing innovative cardiovascular therapies to improve patient outcomes.\"}, {\"Symbol\": \"CPAH\", \"Company Description\": \"CounterPath Corporation specializes in developing software solutions that enhance communication by providing seamless VoIP and unified communications applications for businesses and individuals.\"}, {\"Symbol\": \"DZSI\", \"Company Description\": \"DASAN Zhone Solutions, Inc. specializes in providing advanced broadband access solutions, empowering telecommunications networks to deliver faster and more reliable internet services worldwide.\"}, {\"Symbol\": \"FAMI\", \"Company Description\": \"Farmmi, Inc. specializes in the cultivation and distribution of high-quality agricultural products, with a focus on mushrooms and other nutritious foods.\"}, {\"Symbol\": \"FTFT\", \"Company Description\": \"Future FinTech Group Inc. specializes in the development and marketing of blockchain-based products and financial technology solutions, aiming to revolutionize the digital economy with innovative applications.\"}, {\"Symbol\": \"FTR\", \"Company Description\": \"Frontier Communications Corporation provides telecommunications services, including internet, phone, and television solutions, to residential and business customers across the United States.\"}, {\"Symbol\": \"IDEX\", \"Company Description\": \"Ideanomics, Inc. is at the forefront of transforming the commercial electric vehicle industry, providing comprehensive solutions that drive innovation and sustainability in transportation and energy.\"}, {\"Symbol\": \"ISDS\", \"Company Description\": \"Invesco RAFI Strategic Developed ex-US Small Company ETF offers investors a unique opportunity to access a portfolio of small-cap stocks from developed markets outside the United States, focusing on strategic financial growth and diversification.\"}, {\"Symbol\": \"MCEP\", \"Company Description\": \"Mid-Con Energy Partners, LP specializes in the exploration and production of oil and natural gas, focusing on maximizing energy resources across the United States.\"}, {\"Symbol\": \"NXTD\", \"Company Description\": \"NXT-ID Inc. specializes in developing innovative technology solutions that enhance security and convenience in the fields of healthcare and electronic payments.\"}, {\"Symbol\": \"OPTT\", \"Company Description\": \"Ocean Power Technologies, Inc. harnesses the power of the ocean to develop innovative renewable energy solutions, specializing in wave energy technology.\"}, {\"Symbol\": \"PEIX\", \"Company Description\": \"Pacific Ethanol, Inc. specializes in producing renewable fuels and high-quality alcohol products, contributing to sustainable energy solutions and cleaner alternatives for the transportation sector.\"}, {\"Symbol\": \"RBZ\", \"Company Description\": \"Reebonz Holding Limited is an online luxury marketplace that specializes in offering a curated selection of high-end fashion items and accessories to discerning shoppers worldwide.\"}, {\"Symbol\": \"SES\", \"Company Description\": \"Synthesis Energy Systems, Inc. specializes in transforming low-cost carbon resources into clean energy and valuable chemical products, driving innovation in sustainable energy solutions.\"}, {\"Symbol\": \"SNSS\", \"Company Description\": \"Sunesis Pharmaceuticals, Inc. is dedicated to developing innovative cancer therapies, striving to advance treatments that target the underlying mechanisms of the disease.\"}, {\"Symbol\": \"SPI\", \"Company Description\": \"SPI Energy Co., Ltd. specializes in providing renewable energy solutions, focusing on solar power products and services to drive sustainable energy initiatives globally.\"}, {\"Symbol\": \"SYPR\", \"Company Description\": \"Sypris Solutions, Inc. specializes in providing engineering and manufacturing services for the aerospace and defense sectors, ensuring high-quality solutions for complex technological challenges.\"}, {\"Symbol\": \"VTIQW\", \"Company Description\": \"VectoIQ Acquisition Corp. is an investment company specializing in identifying and merging with innovative technology and automotive firms to drive growth and transformation in the mobility sector.\"}]\n"
+    },
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "id": "function-call-2095392861939764986",
+          "function": {
+            "arguments": "{\"code\":\"import pandas as pd\\nimport json\\n\\ndf_stockinfo = pd.DataFrame(locals()['var_function-call-14214633252286060092'])\\nsymbols = df_stockinfo['Symbol'].tolist()\\n\\n# Initialize an empty list to store results\\nresults = []\\n\\n# Prepare the data for the next step (querying stocktrade_database)\\n# We need to create a list of dictionaries, where each dictionary contains the symbol and company description\\n# This will be used to create the final output by joining with the trading volume data\\nfor index, row in df_stockinfo.iterrows():\\n    results.append({\\\"Symbol\\\": row[\\\"Symbol\\\"], \\\"Company Description\\\": row[\\\"Company Description\\\"]})\\n\\nprint('__RESULT__:')\\nprint(json.dumps(results))\"}",
+            "name": "execute_python"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "function-call-2095392861939764986",
+      "name": "execute_python",
+      "content": "\nThe tool execute_python was executed successfully.\n\nThe result is stored under key:\nvar_function-call-2095392861939764986\n\nThe result is:\n[{\"Symbol\": \"AGMH\", \"Company Description\": \"AGM Group Holdings Inc. specializes in providing financial technology solutions and services, focusing on enhancing efficiency and performance for businesses in the financial sector.\"}, {\"Symbol\": \"AMTX\", \"Company Description\": \"Aemetis, Inc is an advanced renewable fuels and biochemicals company, focused on producing sustainable energy solutions and reducing carbon emissions through innovative technologies.\"}, {\"Symbol\": \"APEX\", \"Company Description\": \"Apex Global Brands Inc. specializes in creating and marketing a diverse portfolio of fashion and lifestyle brands, connecting consumers with trendy and innovative products worldwide.\"}, {\"Symbol\": \"BIOC\", \"Company Description\": \"Biocept, Inc. specializes in developing advanced diagnostic solutions that help detect and analyze cancer cells, driving innovation in personalized medicine and cancer treatment.\"}, {\"Symbol\": \"BKYI\", \"Company Description\": \"BIO-key International, Inc. specializes in advanced biometric solutions, providing secure and convenient identity verification systems for enterprises and consumers alike.\"}, {\"Symbol\": \"CBAT\", \"Company Description\": \"CBAK Energy Technology, Inc. specializes in developing and manufacturing high-performance lithium-ion batteries, playing a pivotal role in powering electric vehicles and renewable energy solutions.\"}, {\"Symbol\": \"CCCL\", \"Company Description\": \"China Ceramics Co., Ltd. specializes in manufacturing high-quality ceramic tiles, catering to both residential and commercial markets with a wide range of designs and finishes.\"}, {\"Symbol\": \"CORV\", \"Company Description\": \"Correvio Pharma Corp., based in Canada, specializes in developing and commercializing innovative cardiovascular therapies to improve patient outcomes.\"}, {\"Symbol\": \"CPAH\", \"Company Description\": \"CounterPath Corporation specializes in developing software solutions that enhance communication by providing seamless VoIP and unified communications applications for businesses and individuals.\"}, {\"Symbol\": \"DZSI\", \"Company Description\": \"DASAN Zhone Solutions, Inc. specializes in providing advanced broadband access solutions, empowering telecommunications networks to deliver faster and more reliable internet services worldwide.\"}, {\"Symbol\": \"FAMI\", \"Company Description\": \"Farmmi, Inc. specializes in the cultivation and distribution of high-quality agricultural products, with a focus on mushrooms and other nutritious foods.\"}, {\"Symbol\": \"FTFT\", \"Company Description\": \"Future FinTech Group Inc. specializes in the development and marketing of blockchain-based products and financial technology solutions, aiming to revolutionize the digital economy with innovative applications.\"}, {\"Symbol\": \"FTR\", \"Company Description\": \"Frontier Communications Corporation provides telecommunications services, including internet, phone, and television solutions, to residential and business customers across the United States.\"}, {\"Symbol\": \"IDEX\", \"Company Description\": \"Ideanomics, Inc. is at the forefront of transforming the commercial electric vehicle industry, providing comprehensive solutions that drive innovation and sustainability in transportation and energy.\"}, {\"Symbol\": \"ISDS\", \"Company Description\": \"Invesco RAFI Strategic Developed ex-US Small Company ETF offers investors a unique opportunity to access a portfolio of small-cap stocks from developed markets outside the United States, focusing on strategic financial growth and diversification.\"}, {\"Symbol\": \"MCEP\", \"Company Description\": \"Mid-Con Energy Partners, LP specializes in the exploration and production of oil and natural gas, focusing on maximizing energy resources across the United States.\"}, {\"Symbol\": \"NXTD\", \"Company Description\": \"NXT-ID Inc. specializes in developing innovative technology solutions that enhance security and convenience in the fields of healthcare and electronic payments.\"}, {\"Symbol\": \"OPTT\", \"Company Description\": \"Ocean Power Technologies, Inc. harnesses the power of the ocean to develop innovative renewable energy solutions, specializing in wave energy technology.\"}, {\"Symbol\": \"PEIX\", \"Company Description\": \"Pacific Ethanol, Inc. specializes in producing renewable fuels and high-quality alcohol products, contributing to sustainable energy solutions and cleaner alternatives for the transportation sector.\"}, {\"Symbol\": \"RBZ\", \"Company Description\": \"Reebonz Holding Limited is an online luxury marketplace that specializes in offering a curated selection of high-end fashion items and accessories to discerning shoppers worldwide.\"}, {\"Symbol\": \"SES\", \"Company Description\": \"Synthesis Energy Systems, Inc. specializes in transforming low-cost carbon resources into clean energy and valuable chemical products, driving innovation in sustainable energy solutions.\"}, {\"Symbol\": \"SNSS\", \"Company Description\": \"Sunesis Pharmaceuticals, Inc. is dedicated to developing innovative cancer therapies, striving to advance treatments that target the underlying mechanisms of the disease.\"}, {\"Symbol\": \"SPI\", \"Company Description\": \"SPI Energy Co., Ltd. specializes in providing renewable energy solutions, focusing on solar power products and services to drive sustainable energy initiatives globally.\"}, {\"Symbol\": \"SYPR\", \"Company Description\": \"Sypris Solutions, Inc. specializes in providing engineering and manufacturing services for the aerospace and defense sectors, ensuring high-quality solutions for complex technological challenges.\"}, {\"Symbol\": \"VTIQW\", \"Company Description\": \"VectoIQ Acquisition Corp. is an investment company specializing in identifying and merging with innovative technology and automotive firms to drive growth and transformation in the mobility sector.\"}]\n"
+    },
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "id": "function-call-2111148087501837454",
+          "function": {
+            "arguments": "{\"db_name\":\"stocktrade_database\"}",
+            "name": "list_db"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "function-call-2111148087501837454",
+      "name": "list_db",
+      "content": "\nThe tool list_db was executed successfully.\n\nThe result is too large, so it is stored in a file. The file path is stored under key: \nvar_function-call-2111148087501837454\n\nThe preview (first 10000 characters) of the result is:\n[\"AAAU\", \"AADR\", \"AAME\", \"AAWW\", \"AAXJ\", \"ABEQ\", \"ABMD\", \"ACAD\", \"ACES\", \"ACIO\", \"ACLS\", \"ACSG\", \"ACSI\", \"ACT\", \"ACWF\", \"ACWI\", \"ACWV\", \"ACWX\", \"ACY\", \"ADAP\", \"ADES\", \"ADI\", \"ADMA\", \"ADME\", \"ADP\", \"ADRE\", \"ADXS\", \"AEFC\", \"AESR\", \"AFIF\", \"AFK\", \"AFLG\", \"AFMC\", \"AFSM\", \"AFTY\", \"AGG\", \"AGGP\", \"AGGY\", \"AGMH\", \"AGND\", \"AGQ\", \"AGT\", \"AGZ\", \"AGZD\", \"AIA\", \"AIEQ\", \"AIIQ\", \"AIN\", \"AIQ\", \"AIRR\", \"AIV\", \"AIZP\", \"AJRD\", \"AKRO\", \"AL\", \"ALACU\", \"ALFA\", \"ALGT\", \"ALLT\", \"ALO\", \"ALT\", \"ALTS\", \"ALTY\", \"AMCA\", \"AMHC\", \"AMLP\", \"AMN\", \"AMOM\", \"AMP\", \"AMRN\", \"AMT\", \"AMTX\", \"AMZA\", \"ANDA\", \"ANGL\", \"AOA\", \"AOK\", \"AOM\", \"AOR\", \"APEX\", \"APTX\", \"ARCM\", \"ARD\", \"ARGD\", \"ARGT\", \"ARKF\", \"ARKG\", \"ARKK\", \"ARKQ\", \"ARKW\", \"ARLO\", \"ARMR\", \"ARNA\", \"ASEA\", \"ASET\", \"ASG\", \"ASHR\", \"ASHS\", \"ASHX\", \"ASYS\", \"AUMN\", \"AUSF\", \"AUTL\", \"AVA\", \"AVDE\", \"AVDV\", \"AVEM\", \"AVNW\", \"AVUS\", \"AVUV\", \"AWAY\", \"AWTM\", \"AXJL\", \"BAB\", \"BANC\", \"BANFP\", \"BAPR\", \"BATRA\", \"BATT\", \"BAUG\", \"BBAX\", \"BBC\", \"BBCA\", \"BBEU\", \"BBH\", \"BBIN\", \"BBJP\", \"BBP\", \"BBRE\", \"BBSA\", \"BBU\", \"BBUS\", \"BBVA\", \"BCD\", \"BCI\", \"BCLI\", \"BDCY\", \"BDEC\", \"BDRY\", \"BDXA\", \"BFEB\", \"BFIT\", \"BFOR\", \"BGRN\", \"BHAT\", \"BIB\", \"BIBL\", \"BICK\", \"BIL\", \"BIOC\", \"BIS\", \"BIV\", \"BIZD\", \"BJAN\", \"BJK\", \"BJUL\", \"BJUN\", \"BKF\", \"BKH\", \"BKLN\", \"BKT\", \"BKYI\", \"BLCN\", \"BLD\", \"BLES\", \"BLFS\", \"BLHY\", \"BLOK\", \"BLV\", \"BMAR\", \"BND\", \"BNDC\", \"BNDW\", \"BNDX\", \"BNO\", \"BNOV\", \"BNS\", \"BOCT\", \"BOIL\", \"BOKFL\", \"BOND\", \"BOSC\", \"BOSS\", \"BOTJ\", \"BOTZ\", \"BOUT\", \"BPOPM\", \"BPOPN\", \"BRF\", \"BRKL\", \"BRZU\", \"BSAE\", \"BSBE\", \"BSCE\", \"BSCK\", \"BSCL\", \"BSCM\", \"BSCN\", \"BSCO\", \"BSCP\", \"BSCQ\", \"BSCR\", \"BSCS\", \"BSCT\", \"BSDE\", \"BSEP\", \"BSJK\", \"BSJL\", \"BSJM\", \"BSJN\", \"BSJO\", \"BSJP\", \"BSJQ\", \"BSJR\", \"BSML\", \"BSMM\", \"BSMN\", \"BSMO\", \"BSMP\", \"BSMQ\", \"BSMR\", \"BSMS\", \"BSMT\", \"BSV\", \"BTAL\", \"BTEC\", \"BTYS\", \"BUG\", \"BUL\", \"BUY\", \"BUYN\", \"BUYZ\", \"BV\", \"BVAL\", \"BWEN\", \"BWX\", \"BWZ\", \"BYLD\", \"BZH\", \"BZQ\", \"CACG\", \"CADE\", \"CAE\", \"CAF\", \"CALF\", \"CANE\", \"CARE\", \"CARR#\", \"CARZ\", \"CASA\", \"CATH\", \"CBAT\", \"CBAY\", \"CBFV\", \"CBON\", \"CBSHP\", \"CBT\", \"CCC\", \"CCCL\", \"CCOR\", \"CCZ\", \"CDC\", \"CDL\", \"CDMOP\", \"CEF\", \"CEFS\", \"CEMB\", \"CEMI\", \"CENT\", \"CERS\", \"CEW\", \"CEY\", \"CEZ\", \"CFA\", \"CFBK\", \"CFFA\", \"CFO\", \"CGNX\", \"CGW\", \"CHAD\", \"CHAP\", \"CHAU\", \"CHDN\", \"CHEP\", \"CHGX\", \"CHI\", \"CHIC\", \"CHIE\", \"CHIH\", \"CHII\", \"CHIK\", \"CHIL\", \"CHIM\", \"CHIQ\", \"CHIR\", \"CHIS\", \"CHIU\", \"CHIX\", \"CHNA\", \"CHSCL\", \"CHSCN\", \"CHW\", \"CIA\", \"CIBR\", \"CID\", \"CIK\", \"CIL\", \"CIZ\", \"CLBK\", \"CLIX\", \"CLOU\", \"CLRB\", \"CLRG\", \"CLTL\", \"CMA\", \"CMBS\", \"CMDY\", \"CMF\", \"CMI\", \"CMRX\", \"CMSA\", \"CN\", \"CNBS\", \"CNCR\", \"CNFRL\", \"CNK\", \"CNOB\", \"CNRG\", \"CNTG\", \"CNXN\", \"CNXT\", \"CNYA\", \"COHR\", \"COKE\", \"COLB\", \"COM\", \"COMB\", \"COMM\", \"COMT\", \"COPX\", \"CORN\", \"CORP\", \"CORV\", \"COTY\", \"COWN\", \"COWZ\", \"CPAAU\", \"CPAH\", \"CPER\", \"CPI\", \"CPTA\", \"CQQQ\", \"CRAK\", \"CRBN\", \"CRC\", \"CRHM\", \"CRIS\", \"CRM\", \"CRMT\", \"CROP\", \"CROX\", \"CRS\", \"CSA\", \"CSB\", \"CSD\", \"CSF\", \"CSL\", \"CSM\", \"CSML\", \"CSWI\", \"CTG\", \"CTS\", \"CUBA\", \"CUBE\", \"CURE\", \"CURO\", \"CUT\", \"CVCO\", \"CVGW\", \"CVIA\", \"CVV\", \"CVX\", \"CVY\", \"CWB\", \"CWEB\", \"CWI\", \"CWS\", \"CXH\", \"CXSE\", \"CYB\", \"CYOU\", \"CZA\", \"DAC\", \"DALI\", \"DALT\", \"DAUG\", \"DAX\", \"DBA\", \"DBAW\", \"DBB\", \"DBC\", \"DBE\", \"DBEF\", \"DBEH\", \"DBEM\", \"DBEU\", \"DBEZ\", \"DBGR\", \"DBJP\", \"DBLV\", \"DBMF\", \"DBO\", \"DBP\", \"DBS\", \"DBV\", \"DCPH\", \"DDG\", \"DDIV\", \"DDLS\", \"DDM\", \"DDS\", \"DDT\", \"DDWM\", \"DEEF\", \"DEF\", \"DEFA\", \"DEM\", \"DEO\", \"DES\", \"DEUS\", \"DEW\", \"DFE\", \"DFEB\", \"DFEN\", \"DFJ\", \"DFND\", \"DFNL\", \"DFVL\", \"DGBP\", \"DGII\", \"DGL\", \"DGRE\", \"DGRO\", \"DGRS\", \"DGRW\", \"DGS\", \"DGT\", \"DGX\", \"DHS\", \"DIA\", \"DIAL\", \"DIET\", \"DIG\", \"DIM\", \"DINT\", \"DISCB\", \"DIV\", \"DIVA\", \"DIVB\", \"DIVO\", \"DIVY\", \"DJCB\", \"DJD\", \"DLBR\", \"DLN\", \"DLS\", \"DLTH\", \"DMB\", \"DMDV\", \"DMRE\", \"DMRI\", \"DMRL\", \"DMRM\", \"DMRS\", \"DNKN\", \"DNL\", \"DNOV\", \"DOG\", \"DOGS\", \"DOL\", \"DON\", \"DOO\", \"DPST\", \"DRAD\", \"DRIP\", \"DRIV\", \"DRN\", \"DRSK\", \"DRV\", \"DRW\", \"DSI\", \"DSTL\", \"DTD\", \"DTEC\", \"DTH\", \"DTN\", \"DTQ\", \"DTUL\", \"DUG\", \"DURA\", \"DUSA\", \"DUSL\", \"DUST\", \"DVLU\", \"DVOL\", \"DVOP\", \"DVP\", \"DVY\", \"DVYA\", \"DVYE\", \"DWAS\", \"DWAT\", \"DWAW\", \"DWCR\", \"DWEQ\", \"DWFI\", \"DWLD\", \"DWM\", \"DWMC\", \"DWMF\", \"DWPP\", \"DWSH\", \"DWT\", \"DWUS\", \"DWX\", \"DXC\", \"DXD\", \"DXGE\", \"DXJ\", \"DXJS\", \"DXYN\", \"DYLS\", \"DYNF\", \"DZK\", \"DZSI\", \"EAGG\", \"EARN\", \"EASG\", \"EASI\", \"EBIZ\", \"EBND\", \"EBS\", \"ECH\", \"ECHO\", \"ECLN\", \"ECNS\", \"ECOL\", \"ECON\", \"ECOW\", \"ECOZ\", \"EDC\", \"EDEN\", \"EDIV\", \"EDOG\", \"EDOW\", \"EDUC\", \"EDV\", \"EDZ\", \"EEFT\", \"EELV\", \"EEM\", \"EEMA\", \"EEMD\", \"EEMO\", \"EEMS\", \"EEMV\", \"EEMX\", \"EES\", \"EET\", \"EEV\", \"EFA\", \"EFAD\", \"EFAS\", \"EFAV\", \"EFAX\", \"EFG\", \"EFNL\", \"EFO\", \"EFU\", \"EFV\", \"EFZ\", \"EGO\", \"EGPT\", \"EGY\", \"EH\", \"EIDO\", \"EIG\", \"EINC\", \"EIRL\", \"EIS\", \"EJAN\", \"EJUL\", \"EKAR\", \"ELD\", \"ELF\", \"ELSE\", \"EMAG\", \"EMAN\", \"EMB\", \"EMBH\", \"EMCB\", \"EMCG\", \"EMDV\", \"EMFM\", \"EMGF\", \"EMHY\", \"EMIF\", \"EMIH\", \"EMLC\", \"EMLP\", \"EMMF\", \"EMNT\", \"EMP\", \"EMQQ\", \"EMSG\", \"EMSH\", \"EMTL\", \"EMTY\", \"EMXC\", \"ENFR\", \"ENLC\", \"ENOR\", \"ENSG\", \"ENTR\", \"ENZL\", \"EPAY\", \"EPHE\", \"EPI\", \"EPM\", \"EPOL\", \"EPP\", \"EPR\", \"EPRF\", \"EPRT\", \"EPS\", \"EPSN\", \"EPU\", \"EPV\", \"EPZM\", \"EQAL\", \"EQL\", \"EQRR\", \"EQWL\", \"ERH\", \"ERIE\", \"ERM\", \"ERSX\", \"ERUS\", \"ERX\", \"ERY\", \"ES\", \"ESG\", \"ESGD\", \"ESGE\", \"ESGG\", \"ESGN\", \"ESGR\", \"ESGS\", \"ESGU\", \"ESGV\", \"ESML\", \"ESNG\", \"ESP\", \"ESPO\", \"ESRT\", \"ESS\", \"ETHO\", \"ETM\", \"EUDG\", \"EUDV\", \"EUFN\", \"EUFX\", \"EUM\", \"EUMF\", \"EUMV\", \"EUO\", \"EURL\", \"EURZ\", \"EUSA\", \"EUSC\", \"EV\", \"EVIX\", \"EVLMC\", \"EVT\", \"EVX\", \"EWA\", \"EWC\", \"EWCO\", \"EWD\", \"EWG\", \"EWGS\", \"EWH\", \"EWI\", \"EWJ\", \"EWJE\", \"EWJV\", \"EWK\", \"EWL\", \"EWM\", \"EWMC\", \"EWN\", \"EWO\", \"EWP\", \"EWQ\", \"EWRE\", \"EWS\", \"EWSC\", \"EWT\", \"EWU\", \"EWUS\", \"EWV\", \"EWW\", \"EWX\", \"EWY\", \"EWZ\", \"EWZS\", \"EXI\", \"EXIV\", \"EXP\", \"EXPC\", \"EYEG\", \"EYLD\", \"EZA\", \"EZJ\", \"EZM\", \"EZU\", \"FAAR\", \"FAB\", \"FAD\", \"FALN\", \"FAMI\", \"FAN\", \"FAS\", \"FAUG\", \"FAUS\", \"FAZ\", \"FBMS\", \"FBND\", \"FBT\", \"FBZ\", \"FCA\", \"FCAL\", \"FCAN\", \"FCEF\", \"FCG\", \"FCNCA\", \"FCNCP\", \"FCOM\", \"FCOR\", \"FCPI\", \"FCTR\", \"FCVT\", \"FDD\", \"FDEM\", \"FDEV\", \"FDG\", \"FDHY\", \"FDIS\", \"FDIV\", \"FDL\", \"FDLO\", \"FDM\", \"FDMO\", \"FDN\", \"FDNI\", \"FDRR\", \"FDT\", \"FDTS\", \"FDVV\", \"FEM\", \"FEMB\", \"FEMS\", \"FENY\", \"FEP\", \"FEUZ\", \"FEX\", \"FEZ\", \"FFEB\", \"FFHG\", \"FFIU\", \"FFR\", \"FFSG\", \"FFTG\", \"FFTI\", \"FFTY\", \"FGD\", \"FGEN\", \"FGM\", \"FHK\", \"FHLC\", \"FIBR\", \"FID\", \"FIDI\", \"FIDU\", \"FILL\", \"FINX\", \"FISR\", \"FISV\", \"FITB\", \"FITE\", \"FIVA\", \"FIVG\", \"FIW\", \"FIXD\", \"FJNK\", \"FJP\", \"FKO\", \"FKU\", \"FLAG\", \"FLAU\", \"FLAX\", \"FLBL\", \"FLBR\", \"FLCA\", \"FLCB\", \"FLCH\", \"FLCO\", \"FLDM\", \"FLDR\", \"FLEE\", \"FLEH\", \"FLEU\", \"FLFR\", \"FLGB\", \"FLGR\", \"FLHK\", \"FLHY\", \"FLIA\", \"FLIN\", \"FLIY\", \"FLJH\", \"FLJP\", \"FLKR\", \"FLLA\", \"FLLV\", \"FLM\", \"FLMB\", \"FLMI\", \"FLMX\", \"FLN\", \"FLOT\", \"FLQD\", \"FLQE\", \"FLQG\", \"FLQH\", \"FLQL\", \"FLQM\", \"FLQS\", \"FLRN\", \"FLRT\", \"FLRU\", \"FLSA\", \"FLSP\", \"FLSW\", \"FLTB\", \"FLTR\", \"FLTW\", \"FLXS\", \"FLYT\", \"FLZA\", \"FM\", \"FMAT\", \"FMB\", \"FMF\", \"FMHI\", \"FMK\", \"FMN\", \"FNCB\", \"FNCL\", \"FNDA\", \"FNDB\", \"FNDC\", \"FNDE\", \"FNDF\", \"FNDX\", \"FNGS\", \"FNI\", \"FNK\", \"FNOV\", \"FNX\", \"FNY\", \"FOVL\", \"FOXA\", \"FPA\", \"FPAC\", \"FPE\", \"FPEI\", \"FPX\", \"FPXE\", \"FPXI\", \"FQAL\", \"FRAK\", \"FRAN\", \"FRDM\", \"FREL\", \"FRI\", \"FRLG\", \"FRPT\", \"FRTA\", \"FSBW\", \"FSM\", \"FSMB\", \"FSMD\", \"FSTA\", \"FSZ\", \"FTA\", \"FTAG\", \"FTC\", \"FTCS\", \"FTEC\", \"FTFT\", \"FTGC\", \"FTHI\", \"FTLB\", \"FTLS\", \"FTR\", \"FTRI\", \"FTSD\", \"FTSL\", \"FTSM\", \"FTXD\", \"FTXG\", \"FTXH\", \"FTXL\", \"FTXN\", \"FTXO\", \"FTXR\", \"FUMB\", \"FUT\", \"FUTY\", \"FV\", \"FVAL\", \"FVC\", \"FVD\", \"FVL\", \"FWDB\", \"FXA\", \"FXB\", \"FXC\", \"FXD\", \"FXE\", \"FXF\", \"FXG\", \"FXH\", \"FXI\", \"FXL\", \"FXN\", \"FXO\", \"FXP\", \"FXR\", \"FXU\", \"FXY\", \"FXZ\", \"FYC\", \"FYLD\", \"FYT\", \"FYX\", \"GAA\", \"GAL\", \"GAMR\", \"GBDV\", \"GBF\", \"GBIL\", \"GBUG\", \"GBUY\", \"GCC\", \"GCO\", \"GCOW\", \"GD\", \"GDAT\", \"GDL\", \"GDMA\", \"GDNA\", \"GDV\", \"GDVD\", \"GDX\", \"GDXJ\", \"GDYN\", \"GECC\", \"GEL\", \"GEM\", \"GENY\", \"GFED\", \"GFIN\", \"GGN\", \"GHYB\", \"GHYG\", \"GIGB\", \"GIGE\", \"GII\", \"GJP\", \"GLADL\", \"GLBY\", \"GLD\", \"GLDM\", \"GLG\", \"GLIBA\", \"GLIF\", \"GLL\", \"GLO\", \"GLOB\", \"GLT\", \"GLTR\", \"GMAN\", \"GMF\", \"GMOM\", \"GNMA\", \"GNOM\", \"GNR\", \"GOAT\", \"GOAU\", \"GOEX\", \"GOGL\", \"GOL\", \"GOSS\", \"GOVT\", \"GPP\", \"GQRE\", \"GREK\", \"GRES\", \"GRID\", \"GRNB\", \"GRNVU\", \"GSEU\", \"GSEW\", \"GSG\", \"GSIE\", \"GSJY\", \"GSLC\", \"GSLD\", \"GSSC\", \"GSST\", \"GSY\", \"GT\", \"GTEC\", \"GTHX\", \"GTIP\", \"GTO\", \"GTY\", \"GUDB\", \"GULF\", \"GUNR\", \"GURU\", \"GUSH\", \"GV\", \"GVA\", \"GVAL\", \"GVI\", \"GVIP\", \"GWB\", \"GWX\", \"GXC\", \"GXF\", \"GXG\", \"GXTG\", \"GYLD\", \"H\", \"HA\", \"HACK\", \"HAIL\", \"HALO\", \"HAP\", \"HAUD\", \"HAUZ\", \"HAWX\", \"HBI\", \"HCCOU\", \"HCRB\", \"HDAW\", \"HDB\", \"HDEF\", \"HDG\", \"HDGE\", \"HDIV\", \"HDLB\", \"HDMV\", \"HDV\", \"HECO\", \"HEDJ\", \"HEEM\", \"HEFA\", \"HELE\", \"HELX\", \"HEP\", \"HERD\", \"HERO\", \"HEWC\", \"HEWG\", \"HEWI\", \"HEWJ\", \"HEWL\", \"HEWP\", \"HEWU\", \"HEWW\", \"HEWY\", \"HEZU\", \"HFXE\", \"HFXI\", \"HFXJ\", \"HIBL\", \"HIBS\", \"HIL\", \"HIO\", \"HIPS\", \"HIX\", \"HJPX\", \"HLAL\", \"HLF\", \"HLT\", \"HMOP\", \"HNDL\", \"HNI\", \"HNNA\", \"HOLD\", \"HOMZ\", \"HOVNP\", \"HQI\", \"HQY\", \"HRB\", \"HRTX\", \"HSCZ\", \"HSPX\", \"HSRT\", \"HTAB\", \"HTBI\", \"HTEC\", \"HTFA\", \"HTRB\", \"HTUS\", \"HUSE\", \"HUSV\", \"HYD\", \"HYDB\", \"HYDW\", \"HYEM\", \"HYG\", \"HYGH\", \"HYGV\", \"HYHG\", \"HYIH\", \"HYLB\", \"HYLD\", \"HYLS\", \"HYLV\", \"HYMB\", \"HYND\", \"HYS\", \"HYTR\", \"HYUP\", \"HYXE\", \"HYXU\", \"HYZD\", \"IAGG\", \"IAI\", \"IAK\", \"IAT\", \"IAU\", \"IAUF\", \"IBB\", \"IBCE\", \"IBD\", \"IBDD\", \"IBDL\", \"IBDM\", \"IBDN\", \"IBDO\", \"IBDP\", \"IBDQ\", \"IBDR\", \"IBDS\", \"IBDT\", \"IBDU\", \"IBHA\", \"IBHB\", \"IBHC\", \"IBHD\", \"IBHE\", \"IBM\", \"IBMI\", \"IBMJ\", \"IBMK\", \"IBML\", \"IBMM\", \"IBMN\", \"IBMO\", \"IBMP\", \"IBMQ\", \"IBND\", \"IBTE\", \"IBTF\", \"IBTG\", \"IBTH\", \"IBTI\", \"IBTJ\", \"IBTX\", \"IBUY\", \"ICF\", \"ICHR\", \"ICLN\", \"ICLR\", \"ICOL\", \"ICOW\", \"ICSH\", \"ICVT\", \"IDEV\", \"IDEX\", \"IDHD\", \"IDHQ\", \"IDIV\", \"IDLB\", \"IDLV\", \"IDMO\", \"IDNA\", \"IDOG\", \"IDRV\", \"IDU\", \"IDV\", \"IDX\", \"IDY\", \"IECS\", \"IEDI\", \"IEF\", \"IEFA\", \"IEFN\", \"IEHS\", \"IEI\", \"IEIH\", \"IEME\", \"IEMG\", \"IEO\", \"IETC\", \"IEUR\", \"IEUS\", \"IEV\", \"IEZ\", \"IFEU\", \"IFGL\", \"IFLY\", \"IFRA\", \"IFV\", \"IG\", \"IGBH\", \"IGE\", \"IGEB\", \"IGF\", \"IGHG\", \"IGIB\", \"IGIC\", \"IGIH\", \"IGLB\", \"IGM\", \"IGN\", \"IGOV\", \"IGR\", \"IGRO\", \"IGSB\", \"IGV\", \"IHAK\", \"IHC\", \"IHDG\", \"IHE\", \"IHF\", \"IHI\", \"IHY\", \"IIGD\", \"IIGV\", \"IJAN\", \"IJH\", \"IJJ\", \"IJK\", \"IJR\", \"IJS\", \"IJT\", \"IJUL\", \"ILF\", \"ILMN\", \"ILTB\", \"IMOM\", \"IMTB\", \"IMTM\", \"INBKZ\", \"INCO\", \"INDA\", \"INDL\", \"INDS\", \"INDY\", \"INFR\", \"INKM\", \"INMD\", \"INTF\", \"IOO\", \"IOTS\", \"IPAC\", \"IPAY\", \"IPB\", \"IPFF\", \"IPG\", \"IPGP\", \"IPKW\", \"IPO\n"
+    },
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "id": "function-call-8607171385699176317",
+          "function": {
+            "arguments": "{\"code\":\"import json\\nimport pandas as pd\\n\\n# Load the list of financially troubled NASDAQ companies and their descriptions\\nf_troubled_companies = locals()['var_function-call-2095392861939764986']\\n\\n# Load the list of all tables (symbols) in stocktrade_database\\nwith open(locals()['var_function-call-2111148087501837454'], 'r') as f:\\n    all_stocktrade_tables = json.load(f)\\n\\n# Convert to a set for efficient lookup\\nstocktrade_tables_set = set(all_stocktrade_tables)\\n\\n# Filter financially troubled companies that have data in stocktrade_database\\nfiltered_companies = []\\nfor company_info in f_troubled_companies:\\n    if company_info['Symbol'] in stocktrade_tables_set:\\n        filtered_companies.append(company_info)\\n\\nprint('__RESULT__:')\\nprint(json.dumps(filtered_companies))\"}",
+            "name": "execute_python"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "function-call-8607171385699176317",
+      "name": "execute_python",
+      "content": "\nThe tool execute_python was executed successfully.\n\nThe result is stored under key:\nvar_function-call-8607171385699176317\n\nThe result is:\n[{\"Symbol\": \"AGMH\", \"Company Description\": \"AGM Group Holdings Inc. specializes in providing financial technology solutions and services, focusing on enhancing efficiency and performance for businesses in the financial sector.\"}, {\"Symbol\": \"AMTX\", \"Company Description\": \"Aemetis, Inc is an advanced renewable fuels and biochemicals company, focused on producing sustainable energy solutions and reducing carbon emissions through innovative technologies.\"}, {\"Symbol\": \"APEX\", \"Company Description\": \"Apex Global Brands Inc. specializes in creating and marketing a diverse portfolio of fashion and lifestyle brands, connecting consumers with trendy and innovative products worldwide.\"}, {\"Symbol\": \"BIOC\", \"Company Description\": \"Biocept, Inc. specializes in developing advanced diagnostic solutions that help detect and analyze cancer cells, driving innovation in personalized medicine and cancer treatment.\"}, {\"Symbol\": \"BKYI\", \"Company Description\": \"BIO-key International, Inc. specializes in advanced biometric solutions, providing secure and convenient identity verification systems for enterprises and consumers alike.\"}, {\"Symbol\": \"CBAT\", \"Company Description\": \"CBAK Energy Technology, Inc. specializes in developing and manufacturing high-performance lithium-ion batteries, playing a pivotal role in powering electric vehicles and renewable energy solutions.\"}, {\"Symbol\": \"CCCL\", \"Company Description\": \"China Ceramics Co., Ltd. specializes in manufacturing high-quality ceramic tiles, catering to both residential and commercial markets with a wide range of designs and finishes.\"}, {\"Symbol\": \"CORV\", \"Company Description\": \"Correvio Pharma Corp., based in Canada, specializes in developing and commercializing innovative cardiovascular therapies to improve patient outcomes.\"}, {\"Symbol\": \"CPAH\", \"Company Description\": \"CounterPath Corporation specializes in developing software solutions that enhance communication by providing seamless VoIP and unified communications applications for businesses and individuals.\"}, {\"Symbol\": \"DZSI\", \"Company Description\": \"DASAN Zhone Solutions, Inc. specializes in providing advanced broadband access solutions, empowering telecommunications networks to deliver faster and more reliable internet services worldwide.\"}, {\"Symbol\": \"FAMI\", \"Company Description\": \"Farmmi, Inc. specializes in the cultivation and distribution of high-quality agricultural products, with a focus on mushrooms and other nutritious foods.\"}, {\"Symbol\": \"FTFT\", \"Company Description\": \"Future FinTech Group Inc. specializes in the development and marketing of blockchain-based products and financial technology solutions, aiming to revolutionize the digital economy with innovative applications.\"}, {\"Symbol\": \"FTR\", \"Company Description\": \"Frontier Communications Corporation provides telecommunications services, including internet, phone, and television solutions, to residential and business customers across the United States.\"}, {\"Symbol\": \"IDEX\", \"Company Description\": \"Ideanomics, Inc. is at the forefront of transforming the commercial electric vehicle industry, providing comprehensive solutions that drive innovation and sustainability in transportation and energy.\"}, {\"Symbol\": \"ISDS\", \"Company Description\": \"Invesco RAFI Strategic Developed ex-US Small Company ETF offers investors a unique opportunity to access a portfolio of small-cap stocks from developed markets outside the United States, focusing on strategic financial growth and diversification.\"}, {\"Symbol\": \"MCEP\", \"Company Description\": \"Mid-Con Energy Partners, LP specializes in the exploration and production of oil and natural gas, focusing on maximizing energy resources across the United States.\"}, {\"Symbol\": \"NXTD\", \"Company Description\": \"NXT-ID Inc. specializes in developing innovative technology solutions that enhance security and convenience in the fields of healthcare and electronic payments.\"}, {\"Symbol\": \"OPTT\", \"Company Description\": \"Ocean Power Technologies, Inc. harnesses the power of the ocean to develop innovative renewable energy solutions, specializing in wave energy technology.\"}, {\"Symbol\": \"PEIX\", \"Company Description\": \"Pacific Ethanol, Inc. specializes in producing renewable fuels and high-quality alcohol products, contributing to sustainable energy solutions and cleaner alternatives for the transportation sector.\"}, {\"Symbol\": \"RBZ\", \"Company Description\": \"Reebonz Holding Limited is an online luxury marketplace that specializes in offering a curated selection of high-end fashion items and accessories to discerning shoppers worldwide.\"}, {\"Symbol\": \"SES\", \"Company Description\": \"Synthesis Energy Systems, Inc. specializes in transforming low-cost carbon resources into clean energy and valuable chemical products, driving innovation in sustainable energy solutions.\"}, {\"Symbol\": \"SNSS\", \"Company Description\": \"Sunesis Pharmaceuticals, Inc. is dedicated to developing innovative cancer therapies, striving to advance treatments that target the underlying mechanisms of the disease.\"}, {\"Symbol\": \"SPI\", \"Company Description\": \"SPI Energy Co., Ltd. specializes in providing renewable energy solutions, focusing on solar power products and services to drive sustainable energy initiatives globally.\"}, {\"Symbol\": \"SYPR\", \"Company Description\": \"Sypris Solutions, Inc. specializes in providing engineering and manufacturing services for the aerospace and defense sectors, ensuring high-quality solutions for complex technological challenges.\"}, {\"Symbol\": \"VTIQW\", \"Company Description\": \"VectoIQ Acquisition Corp. is an investment company specializing in identifying and merging with innovative technology and automotive firms to drive growth and transformation in the mobility sector.\"}]\n"
+    },
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "id": "function-call-9538714346494105862",
+          "function": {
+            "arguments": "{\"code\":\"import json\\nimport pandas as pd\\n\\nfiltered_companies = locals()['var_function-call-8607171385699176317']\\n\\nqueries = []\\nfor company_info in filtered_companies:\\n    symbol = company_info['Symbol']\\n    query = f\\\"SELECT AVG(Volume) AS AvgVolume2008 FROM \\\\\\\"{symbol}\\\\\\\" WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\\\"\\n    queries.append({\\\"symbol\\\": symbol, \\\"company_description\\\": company_info[\\\"Company Description\\\"], \\\"query\\\": query})\\n\\nprint('__RESULT__:')\\nprint(json.dumps(queries))\"}",
+            "name": "execute_python"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "function-call-9538714346494105862",
+      "name": "execute_python",
+      "content": "\nThe tool execute_python execution failed. The error message is:\n\"Execution failed with exit code 1\\nSyntaxError: invalid syntax\"\n"
+    },
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "id": "function-call-4546616963188967544",
+          "function": {
+            "arguments": "{\"code\":\"import json\\nimport pandas as pd\\n\\nfiltered_companies = locals()['var_function-call-8607171385699176317']\\n\\nqueries = []\\nfor company_info in filtered_companies:\\n    symbol = company_info['Symbol']\\n    query = f\\\"SELECT AVG(Volume) AS AvgVolume2008 FROM \\\\\\\"{symbol}\\\\\\\" WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\\\"\\n    queries.append({\\\"symbol\\\": symbol, \\\"company_description\\\": company_info[\\\"Company Description\\\"], \\\"query\\\": query})\\n\\nprint('__RESULT__:')\\nprint(json.dumps(queries))\"}",
+            "name": "execute_python"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "function-call-4546616963188967544",
+      "name": "execute_python",
+      "content": "\nThe tool execute_python execution failed. The error message is:\n\"Execution failed with exit code 1\\nSyntaxError: invalid syntax\"\n"
+    },
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "id": "function-call-11575646530440905492",
+          "function": {
+            "arguments": "{\"code\":\"import json\\nimport pandas as pd\\n\\nfiltered_companies = locals()['var_function-call-8607171385699176317']\\n\\nqueries = []\\nfor company_info in filtered_companies:\\n    symbol = company_info['Symbol']\\n    # Removed double quotes around {symbol} to simplify and avoid potential syntax issues\\n    query = f\\\"SELECT AVG(Volume) AS AvgVolume2008 FROM {symbol} WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\\\"\\n    queries.append({\\\"symbol\\\": symbol, \\\"company_description\\\": company_info[\\\"Company Description\\\"], \\\"query\\\": query})\\n\\nprint('__RESULT__:')\\nprint(json.dumps(queries))\"}",
+            "name": "execute_python"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "function-call-11575646530440905492",
+      "name": "execute_python",
+      "content": "\nThe tool execute_python was executed successfully.\n\nThe result is stored under key:\nvar_function-call-11575646530440905492\n\nThe result is:\n[{\"symbol\": \"AGMH\", \"company_description\": \"AGM Group Holdings Inc. specializes in providing financial technology solutions and services, focusing on enhancing efficiency and performance for businesses in the financial sector.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM AGMH WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"AMTX\", \"company_description\": \"Aemetis, Inc is an advanced renewable fuels and biochemicals company, focused on producing sustainable energy solutions and reducing carbon emissions through innovative technologies.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM AMTX WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"APEX\", \"company_description\": \"Apex Global Brands Inc. specializes in creating and marketing a diverse portfolio of fashion and lifestyle brands, connecting consumers with trendy and innovative products worldwide.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM APEX WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"BIOC\", \"company_description\": \"Biocept, Inc. specializes in developing advanced diagnostic solutions that help detect and analyze cancer cells, driving innovation in personalized medicine and cancer treatment.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM BIOC WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"BKYI\", \"company_description\": \"BIO-key International, Inc. specializes in advanced biometric solutions, providing secure and convenient identity verification systems for enterprises and consumers alike.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM BKYI WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"CBAT\", \"company_description\": \"CBAK Energy Technology, Inc. specializes in developing and manufacturing high-performance lithium-ion batteries, playing a pivotal role in powering electric vehicles and renewable energy solutions.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM CBAT WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"CCCL\", \"company_description\": \"China Ceramics Co., Ltd. specializes in manufacturing high-quality ceramic tiles, catering to both residential and commercial markets with a wide range of designs and finishes.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM CCCL WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"CORV\", \"company_description\": \"Correvio Pharma Corp., based in Canada, specializes in developing and commercializing innovative cardiovascular therapies to improve patient outcomes.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM CORV WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"CPAH\", \"company_description\": \"CounterPath Corporation specializes in developing software solutions that enhance communication by providing seamless VoIP and unified communications applications for businesses and individuals.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM CPAH WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"DZSI\", \"company_description\": \"DASAN Zhone Solutions, Inc. specializes in providing advanced broadband access solutions, empowering telecommunications networks to deliver faster and more reliable internet services worldwide.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM DZSI WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"FAMI\", \"company_description\": \"Farmmi, Inc. specializes in the cultivation and distribution of high-quality agricultural products, with a focus on mushrooms and other nutritious foods.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM FAMI WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"FTFT\", \"company_description\": \"Future FinTech Group Inc. specializes in the development and marketing of blockchain-based products and financial technology solutions, aiming to revolutionize the digital economy with innovative applications.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM FTFT WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"FTR\", \"company_description\": \"Frontier Communications Corporation provides telecommunications services, including internet, phone, and television solutions, to residential and business customers across the United States.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM FTR WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"IDEX\", \"company_description\": \"Ideanomics, Inc. is at the forefront of transforming the commercial electric vehicle industry, providing comprehensive solutions that drive innovation and sustainability in transportation and energy.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM IDEX WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"ISDS\", \"company_description\": \"Invesco RAFI Strategic Developed ex-US Small Company ETF offers investors a unique opportunity to access a portfolio of small-cap stocks from developed markets outside the United States, focusing on strategic financial growth and diversification.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM ISDS WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"MCEP\", \"company_description\": \"Mid-Con Energy Partners, LP specializes in the exploration and production of oil and natural gas, focusing on maximizing energy resources across the United States.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM MCEP WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"NXTD\", \"company_description\": \"NXT-ID Inc. specializes in developing innovative technology solutions that enhance security and convenience in the fields of healthcare and electronic payments.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM NXTD WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"OPTT\", \"company_description\": \"Ocean Power Technologies, Inc. harnesses the power of the ocean to develop innovative renewable energy solutions, specializing in wave energy technology.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM OPTT WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"PEIX\", \"company_description\": \"Pacific Ethanol, Inc. specializes in producing renewable fuels and high-quality alcohol products, contributing to sustainable energy solutions and cleaner alternatives for the transportation sector.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM PEIX WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"RBZ\", \"company_description\": \"Reebonz Holding Limited is an online luxury marketplace that specializes in offering a curated selection of high-end fashion items and accessories to discerning shoppers worldwide.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM RBZ WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"SES\", \"company_description\": \"Synthesis Energy Systems, Inc. specializes in transforming low-cost carbon resources into clean energy and valuable chemical products, driving innovation in sustainable energy solutions.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM SES WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"SNSS\", \"company_description\": \"Sunesis Pharmaceuticals, Inc. is dedicated to developing innovative cancer therapies, striving to advance treatments that target the underlying mechanisms of the disease.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM SNSS WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"SPI\", \"company_description\": \"SPI Energy Co., Ltd. specializes in providing renewable energy solutions, focusing on solar power products and services to drive sustainable energy initiatives globally.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM SPI WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"SYPR\", \"company_description\": \"Sypris Solutions, Inc. specializes in providing engineering and manufacturing services for the aerospace and defense sectors, ensuring high-quality solutions for complex technological challenges.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM SYPR WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"VTIQW\", \"company_description\": \"VectoIQ Acquisition Corp. is an investment company specializing in identifying and merging with innovative technology and automotive firms to drive growth and transformation in the mobility sector.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM VTIQW WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}]\n"
+    },
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "id": "function-call-616791248354363248",
+          "function": {
+            "arguments": "{\"code\":\"import json\\n\\nqueries_to_execute = locals()['var_function-call-11575646530440905492']\\n\\nresults = []\\nfor query_info in queries_to_execute:\\n    symbol = query_info['symbol']\\n    company_description = query_info['company_description']\\n    query = query_info['query']\\n\\n    try:\\n        # Assuming a function `query_db` is available to execute the query\\n        # and returns a list of dictionaries, e.g., [{'AvgVolume2008': 12345.67}]\\n        db_result = default_api.query_db(db_name=\\\"stocktrade_database\\\", query=query)\\n        avg_volume = db_result['results'][0]['AvgVolume2008'] if db_result['results'] and db_result['results'][0]['AvgVolume2008'] is not None else None\\n\\n        if avg_volume is not None:\\n            results.append({\\n                \\\"Company Name\\\": company_description,\\n                \\\"Symbol\\\": symbol,\\n                \\\"Average Daily Trading Volume 2008\\\": avg_volume\\n            })\\n    except Exception as e:\\n        # Handle cases where a table might not exist or other query errors\\n        print(f\\\"Error querying for {symbol}: {e}\\\")\\n\\nprint('__RESULT__:')\\nprint(json.dumps(results))\"}",
+            "name": "execute_python"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "function-call-616791248354363248",
+      "name": "execute_python",
+      "content": "\nThe tool execute_python was executed successfully.\n\nThe result is stored under key:\nvar_function-call-616791248354363248\n\nThe result is:\n[]\n"
+    },
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "id": "function-call-14991783992704281992",
+          "function": {
+            "arguments": "{\"db_name\":\"stocktrade_database\",\"query\":\"SELECT Volume FROM AGMH WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}",
+            "name": "query_db"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "function-call-14991783992704281992",
+      "name": "query_db",
+      "content": "\nThe tool query_db was executed successfully.\n\nThe result is stored under key:\nvar_function-call-14991783992704281992\n\nThe result is:\n[]\n"
+    },
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "id": "function-call-4453739727473461815",
+          "function": {
+            "arguments": "{\"code\":\"import json\\n\\nfiltered_companies = locals()['var_function-call-8607171385699176317']\\nsymbols_to_query = [company['Symbol'] for company in filtered_companies]\\n\\nprint('__RESULT__:')\\nprint(json.dumps(symbols_to_query))\"}",
+            "name": "execute_python"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "function-call-4453739727473461815",
+      "name": "execute_python",
+      "content": "\nThe tool execute_python was executed successfully.\n\nThe result is stored under key:\nvar_function-call-4453739727473461815\n\nThe result is:\n[\"AGMH\", \"AMTX\", \"APEX\", \"BIOC\", \"BKYI\", \"CBAT\", \"CCCL\", \"CORV\", \"CPAH\", \"DZSI\", \"FAMI\", \"FTFT\", \"FTR\", \"IDEX\", \"ISDS\", \"MCEP\", \"NXTD\", \"OPTT\", \"PEIX\", \"RBZ\", \"SES\", \"SNSS\", \"SPI\", \"SYPR\", \"VTIQW\"]\n"
+    },
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "id": "function-call-5020358122858329065",
+          "function": {
+            "arguments": "{\"code\":\"import json\\n\\nfiltered_companies = locals()['var_function-call-8607171385699176317']\\n\\nqueries = []\\nfor company_info in filtered_companies:\\n    symbol = company_info['Symbol']\\n    query = f\\\"SELECT AVG(Volume) AS AvgVolume2008 FROM {symbol} WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\\\"\\n    queries.append({\\\"symbol\\\": symbol, \\\"company_description\\\": company_info[\\\"Company Description\\\"], \\\"query\\\": query})\\n\\nprint('__RESULT__:')\\nprint(json.dumps(queries))\"}",
+            "name": "execute_python"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "function-call-5020358122858329065",
+      "name": "execute_python",
+      "content": "\nThe tool execute_python was executed successfully.\n\nThe result is stored under key:\nvar_function-call-5020358122858329065\n\nThe result is:\n[{\"symbol\": \"AGMH\", \"company_description\": \"AGM Group Holdings Inc. specializes in providing financial technology solutions and services, focusing on enhancing efficiency and performance for businesses in the financial sector.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM AGMH WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"AMTX\", \"company_description\": \"Aemetis, Inc is an advanced renewable fuels and biochemicals company, focused on producing sustainable energy solutions and reducing carbon emissions through innovative technologies.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM AMTX WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"APEX\", \"company_description\": \"Apex Global Brands Inc. specializes in creating and marketing a diverse portfolio of fashion and lifestyle brands, connecting consumers with trendy and innovative products worldwide.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM APEX WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"BIOC\", \"company_description\": \"Biocept, Inc. specializes in developing advanced diagnostic solutions that help detect and analyze cancer cells, driving innovation in personalized medicine and cancer treatment.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM BIOC WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"BKYI\", \"company_description\": \"BIO-key International, Inc. specializes in advanced biometric solutions, providing secure and convenient identity verification systems for enterprises and consumers alike.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM BKYI WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"CBAT\", \"company_description\": \"CBAK Energy Technology, Inc. specializes in developing and manufacturing high-performance lithium-ion batteries, playing a pivotal role in powering electric vehicles and renewable energy solutions.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM CBAT WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"CCCL\", \"company_description\": \"China Ceramics Co., Ltd. specializes in manufacturing high-quality ceramic tiles, catering to both residential and commercial markets with a wide range of designs and finishes.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM CCCL WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"CORV\", \"company_description\": \"Correvio Pharma Corp., based in Canada, specializes in developing and commercializing innovative cardiovascular therapies to improve patient outcomes.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM CORV WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"CPAH\", \"company_description\": \"CounterPath Corporation specializes in developing software solutions that enhance communication by providing seamless VoIP and unified communications applications for businesses and individuals.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM CPAH WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"DZSI\", \"company_description\": \"DASAN Zhone Solutions, Inc. specializes in providing advanced broadband access solutions, empowering telecommunications networks to deliver faster and more reliable internet services worldwide.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM DZSI WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"FAMI\", \"company_description\": \"Farmmi, Inc. specializes in the cultivation and distribution of high-quality agricultural products, with a focus on mushrooms and other nutritious foods.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM FAMI WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"FTFT\", \"company_description\": \"Future FinTech Group Inc. specializes in the development and marketing of blockchain-based products and financial technology solutions, aiming to revolutionize the digital economy with innovative applications.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM FTFT WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"FTR\", \"company_description\": \"Frontier Communications Corporation provides telecommunications services, including internet, phone, and television solutions, to residential and business customers across the United States.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM FTR WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"IDEX\", \"company_description\": \"Ideanomics, Inc. is at the forefront of transforming the commercial electric vehicle industry, providing comprehensive solutions that drive innovation and sustainability in transportation and energy.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM IDEX WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"ISDS\", \"company_description\": \"Invesco RAFI Strategic Developed ex-US Small Company ETF offers investors a unique opportunity to access a portfolio of small-cap stocks from developed markets outside the United States, focusing on strategic financial growth and diversification.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM ISDS WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"MCEP\", \"company_description\": \"Mid-Con Energy Partners, LP specializes in the exploration and production of oil and natural gas, focusing on maximizing energy resources across the United States.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM MCEP WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"NXTD\", \"company_description\": \"NXT-ID Inc. specializes in developing innovative technology solutions that enhance security and convenience in the fields of healthcare and electronic payments.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM NXTD WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"OPTT\", \"company_description\": \"Ocean Power Technologies, Inc. harnesses the power of the ocean to develop innovative renewable energy solutions, specializing in wave energy technology.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM OPTT WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"PEIX\", \"company_description\": \"Pacific Ethanol, Inc. specializes in producing renewable fuels and high-quality alcohol products, contributing to sustainable energy solutions and cleaner alternatives for the transportation sector.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM PEIX WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"RBZ\", \"company_description\": \"Reebonz Holding Limited is an online luxury marketplace that specializes in offering a curated selection of high-end fashion items and accessories to discerning shoppers worldwide.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM RBZ WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"SES\", \"company_description\": \"Synthesis Energy Systems, Inc. specializes in transforming low-cost carbon resources into clean energy and valuable chemical products, driving innovation in sustainable energy solutions.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM SES WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"SNSS\", \"company_description\": \"Sunesis Pharmaceuticals, Inc. is dedicated to developing innovative cancer therapies, striving to advance treatments that target the underlying mechanisms of the disease.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM SNSS WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"SPI\", \"company_description\": \"SPI Energy Co., Ltd. specializes in providing renewable energy solutions, focusing on solar power products and services to drive sustainable energy initiatives globally.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM SPI WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"SYPR\", \"company_description\": \"Sypris Solutions, Inc. specializes in providing engineering and manufacturing services for the aerospace and defense sectors, ensuring high-quality solutions for complex technological challenges.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM SYPR WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}, {\"symbol\": \"VTIQW\", \"company_description\": \"VectoIQ Acquisition Corp. is an investment company specializing in identifying and merging with innovative technology and automotive firms to drive growth and transformation in the mobility sector.\", \"query\": \"SELECT AVG(Volume) AS AvgVolume2008 FROM VTIQW WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;\"}]\n"
+    },
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "id": "function-call-16835399629531768809",
+          "function": {
+            "arguments": "{\"code\":\"import json\\n\\nfiltered_companies = locals()['var_function-call-8607171385699176317']\\n\\nunion_queries = []\\nfor company_info in filtered_companies:\\n    symbol = company_info['Symbol']\\n    # Use double quotes around table name for DuckDB in case of special characters, though not strictly needed for these symbols\\n    # Also, include the symbol and company description in the subquery result for later joining\\n    union_queries.append(f\\\"SELECT '{symbol}' AS Symbol, \\\\'{company_info[\\\"Company Description\\\"]}\\\\' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM \\\\\\\"{symbol}\\\\\\\" WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL\\\")\\n\\n# Combine all individual queries into a single UNION ALL query\\nfull_query = \\\" UNION ALL \\\".join(union_queries)\\n\\nprint('__RESULT__:')\\nprint(json.dumps(full_query))\"}",
+            "name": "execute_python"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "function-call-16835399629531768809",
+      "name": "execute_python",
+      "content": "\nThe tool execute_python execution failed. The error message is:\n\"Execution failed with exit code 1\\nSyntaxError: invalid syntax. Perhaps you forgot a comma?\"\n"
+    },
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "id": "function-call-13901791447160211496",
+          "function": {
+            "arguments": "{\"code\":\"import json\\n\\nfiltered_companies = locals()['var_function-call-8607171385699176317']\\n\\nunion_queries = []\\nfor company_info in filtered_companies:\\n    symbol = company_info['Symbol']\\n    # Escape single quotes in company description for SQL string literal\\n    escaped_company_description = company_info[\\\"Company Description\\\"].replace(\\\"'\\\", \\\"''\\\")\\n    # Use double quotes for table name as a good practice for DuckDB, though not strictly needed for these symbols\\n    union_queries.append(f\\\"SELECT '{symbol}' AS Symbol, '{escaped_company_description}' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM \\\\\\\"{symbol}\\\\\\\" WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL\\\")\\n\\n# Combine all individual queries into a single UNION ALL query\\nfull_query = \\\" UNION ALL \\\".join(union_queries)\\n\\nprint('__RESULT__:')\\nprint(json.dumps(full_query))\"}",
+            "name": "execute_python"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "function-call-13901791447160211496",
+      "name": "execute_python",
+      "content": "\nThe tool execute_python execution failed. The error message is:\n\"Execution failed with exit code 1\\nSyntaxError: invalid syntax. Perhaps you forgot a comma?\"\n"
+    },
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "id": "function-call-10420510661157370304",
+          "function": {
+            "arguments": "{\"code\":\"import json\\n\\nfiltered_companies = locals()['var_function-call-8607171385699176317']\\n\\nunion_queries = []\\nfor company_info in filtered_companies:\\n    symbol = company_info['Symbol']\\n    escaped_company_description = company_info['Company Description'].replace(\\\"'\\\", \\\"''\\\")\\n    \\n    # Use str.format() for clarity and to avoid f-string internal escaping issues\\n    query_part = \\\"SELECT '{symbol_val}' AS Symbol, '{company_desc_val}' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM \\\\\\\"{table_name}\\\\\\\" WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL\\\".format(\\n        symbol_val=symbol,\\n        company_desc_val=escaped_company_description,\\n        table_name=symbol\\n    )\\n    union_queries.append(query_part)\\n\\nfull_query = \\\" UNION ALL \\\".join(union_queries)\\n\\nprint('__RESULT__:')\\nprint(json.dumps(full_query))\"}",
+            "name": "execute_python"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "function-call-10420510661157370304",
+      "name": "execute_python",
+      "content": "\nThe tool execute_python execution failed. The error message is:\n\"Execution failed with exit code 1\\nSyntaxError: invalid syntax\"\n"
+    },
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "id": "function-call-17736524391182203081",
+          "function": {
+            "arguments": "{\"code\":\"import json\\n\\nfiltered_companies = locals()['var_function-call-8607171385699176317']\\n\\nunion_queries = []\\nfor company_info in filtered_companies:\\n    symbol = company_info['Symbol']\\n    escaped_company_description = company_info['Company Description'].replace(\\\"'\\\", \\\"''\\\")\\n    \\n    # Construct each SELECT part using f-string, ensuring proper quoting for DuckDB table names and string literals\\n    # For DuckDB, table names that are valid SQL identifiers generally don't need quotes, but if they could contain\\n    # special characters or conflict with keywords, double quotes are used. Here, symbols are simple, so unquoted should work,\\n    # but let's use double quotes for robustness as per good practice.\\n    query_part = f\\\"SELECT '{symbol}' AS Symbol, '{escaped_company_description}' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM \\\\\\\"{symbol}\\\\\\\" WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL\\\"\\n    union_queries.append(query_part)\\n\\n# Combine all individual queries into a single UNION ALL query\\nfull_query = \\\" UNION ALL \\\".join(union_queries)\\n\\nprint('__RESULT__:')\\nprint(json.dumps(full_query))\"}",
+            "name": "execute_python"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "function-call-17736524391182203081",
+      "name": "execute_python",
+      "content": "\nThe tool execute_python execution failed. The error message is:\n\"Execution failed with exit code 1\\nSyntaxError: invalid syntax\"\n"
+    },
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "id": "function-call-13556349109348576435",
+          "function": {
+            "arguments": "{\"code\":\"import json\\n\\nfiltered_companies = locals()['var_function-call-8607171385699176317']\\n\\nunion_queries = []\\nfor company_info in filtered_companies:\\n    symbol = company_info['Symbol']\\n    # Escape single quotes in company description for SQL string literal\\n    escaped_company_description = company_info[\\\"Company Description\\\"].replace(\\\"'\\\", \\\"''\\\")\\n    \\n    # Construct each SELECT part using f-string, using single quotes for the Python string and\\n    # ensuring no problematic escaping within the SQL query itself for the table name.\\n    # For DuckDB, simple table names (like ticker symbols) generally don't need to be double-quoted.\\n    query_part = f\\\"SELECT '{symbol}' AS Symbol, '{escaped_company_description}' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM {symbol} WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL\\\"\\n    union_queries.append(query_part)\\n\\n# Combine all individual queries into a single UNION ALL query\\nfull_query = \\\" UNION ALL \\\".join(union_queries)\\n\\nprint('__RESULT__:')\\nprint(json.dumps(full_query))\"}",
+            "name": "execute_python"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "function-call-13556349109348576435",
+      "name": "execute_python",
+      "content": "\nThe tool execute_python was executed successfully.\n\nThe result is stored under key:\nvar_function-call-13556349109348576435\n\nThe result is:\n\"SELECT 'AGMH' AS Symbol, 'AGM Group Holdings Inc. specializes in providing financial technology solutions and services, focusing on enhancing efficiency and performance for businesses in the financial sector.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM AGMH WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'AMTX' AS Symbol, 'Aemetis, Inc is an advanced renewable fuels and biochemicals company, focused on producing sustainable energy solutions and reducing carbon emissions through innovative technologies.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM AMTX WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'APEX' AS Symbol, 'Apex Global Brands Inc. specializes in creating and marketing a diverse portfolio of fashion and lifestyle brands, connecting consumers with trendy and innovative products worldwide.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM APEX WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'BIOC' AS Symbol, 'Biocept, Inc. specializes in developing advanced diagnostic solutions that help detect and analyze cancer cells, driving innovation in personalized medicine and cancer treatment.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM BIOC WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'BKYI' AS Symbol, 'BIO-key International, Inc. specializes in advanced biometric solutions, providing secure and convenient identity verification systems for enterprises and consumers alike.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM BKYI WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'CBAT' AS Symbol, 'CBAK Energy Technology, Inc. specializes in developing and manufacturing high-performance lithium-ion batteries, playing a pivotal role in powering electric vehicles and renewable energy solutions.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM CBAT WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'CCCL' AS Symbol, 'China Ceramics Co., Ltd. specializes in manufacturing high-quality ceramic tiles, catering to both residential and commercial markets with a wide range of designs and finishes.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM CCCL WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'CORV' AS Symbol, 'Correvio Pharma Corp., based in Canada, specializes in developing and commercializing innovative cardiovascular therapies to improve patient outcomes.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM CORV WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'CPAH' AS Symbol, 'CounterPath Corporation specializes in developing software solutions that enhance communication by providing seamless VoIP and unified communications applications for businesses and individuals.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM CPAH WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'DZSI' AS Symbol, 'DASAN Zhone Solutions, Inc. specializes in providing advanced broadband access solutions, empowering telecommunications networks to deliver faster and more reliable internet services worldwide.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM DZSI WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'FAMI' AS Symbol, 'Farmmi, Inc. specializes in the cultivation and distribution of high-quality agricultural products, with a focus on mushrooms and other nutritious foods.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM FAMI WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'FTFT' AS Symbol, 'Future FinTech Group Inc. specializes in the development and marketing of blockchain-based products and financial technology solutions, aiming to revolutionize the digital economy with innovative applications.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM FTFT WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'FTR' AS Symbol, 'Frontier Communications Corporation provides telecommunications services, including internet, phone, and television solutions, to residential and business customers across the United States.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM FTR WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'IDEX' AS Symbol, 'Ideanomics, Inc. is at the forefront of transforming the commercial electric vehicle industry, providing comprehensive solutions that drive innovation and sustainability in transportation and energy.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM IDEX WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'ISDS' AS Symbol, 'Invesco RAFI Strategic Developed ex-US Small Company ETF offers investors a unique opportunity to access a portfolio of small-cap stocks from developed markets outside the United States, focusing on strategic financial growth and diversification.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM ISDS WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'MCEP' AS Symbol, 'Mid-Con Energy Partners, LP specializes in the exploration and production of oil and natural gas, focusing on maximizing energy resources across the United States.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM MCEP WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'NXTD' AS Symbol, 'NXT-ID Inc. specializes in developing innovative technology solutions that enhance security and convenience in the fields of healthcare and electronic payments.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM NXTD WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'OPTT' AS Symbol, 'Ocean Power Technologies, Inc. harnesses the power of the ocean to develop innovative renewable energy solutions, specializing in wave energy technology.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM OPTT WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'PEIX' AS Symbol, 'Pacific Ethanol, Inc. specializes in producing renewable fuels and high-quality alcohol products, contributing to sustainable energy solutions and cleaner alternatives for the transportation sector.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM PEIX WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'RBZ' AS Symbol, 'Reebonz Holding Limited is an online luxury marketplace that specializes in offering a curated selection of high-end fashion items and accessories to discerning shoppers worldwide.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM RBZ WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'SES' AS Symbol, 'Synthesis Energy Systems, Inc. specializes in transforming low-cost carbon resources into clean energy and valuable chemical products, driving innovation in sustainable energy solutions.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM SES WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'SNSS' AS Symbol, 'Sunesis Pharmaceuticals, Inc. is dedicated to developing innovative cancer therapies, striving to advance treatments that target the underlying mechanisms of the disease.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM SNSS WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'SPI' AS Symbol, 'SPI Energy Co., Ltd. specializes in providing renewable energy solutions, focusing on solar power products and services to drive sustainable energy initiatives globally.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM SPI WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'SYPR' AS Symbol, 'Sypris Solutions, Inc. specializes in providing engineering and manufacturing services for the aerospace and defense sectors, ensuring high-quality solutions for complex technological challenges.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM SYPR WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'VTIQW' AS Symbol, 'VectoIQ Acquisition Corp. is an investment company specializing in identifying and merging with innovative technology and automotive firms to drive growth and transformation in the mobility sector.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM VTIQW WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL\"\n"
+    },
+    {
+      "role": "assistant",
+      "content": null
+    }
+  ],
+  "result_storage": {
+    "var_function-call-14214633252286060092": [
+      {
+        "Symbol": "AGMH",
+        "Company Description": "AGM Group Holdings Inc. specializes in providing financial technology solutions and services, focusing on enhancing efficiency and performance for businesses in the financial sector."
+      },
+      {
+        "Symbol": "AMTX",
+        "Company Description": "Aemetis, Inc is an advanced renewable fuels and biochemicals company, focused on producing sustainable energy solutions and reducing carbon emissions through innovative technologies."
+      },
+      {
+        "Symbol": "APEX",
+        "Company Description": "Apex Global Brands Inc. specializes in creating and marketing a diverse portfolio of fashion and lifestyle brands, connecting consumers with trendy and innovative products worldwide."
+      },
+      {
+        "Symbol": "BIOC",
+        "Company Description": "Biocept, Inc. specializes in developing advanced diagnostic solutions that help detect and analyze cancer cells, driving innovation in personalized medicine and cancer treatment."
+      },
+      {
+        "Symbol": "BKYI",
+        "Company Description": "BIO-key International, Inc. specializes in advanced biometric solutions, providing secure and convenient identity verification systems for enterprises and consumers alike."
+      },
+      {
+        "Symbol": "CBAT",
+        "Company Description": "CBAK Energy Technology, Inc. specializes in developing and manufacturing high-performance lithium-ion batteries, playing a pivotal role in powering electric vehicles and renewable energy solutions."
+      },
+      {
+        "Symbol": "CCCL",
+        "Company Description": "China Ceramics Co., Ltd. specializes in manufacturing high-quality ceramic tiles, catering to both residential and commercial markets with a wide range of designs and finishes."
+      },
+      {
+        "Symbol": "CORV",
+        "Company Description": "Correvio Pharma Corp., based in Canada, specializes in developing and commercializing innovative cardiovascular therapies to improve patient outcomes."
+      },
+      {
+        "Symbol": "CPAH",
+        "Company Description": "CounterPath Corporation specializes in developing software solutions that enhance communication by providing seamless VoIP and unified communications applications for businesses and individuals."
+      },
+      {
+        "Symbol": "DZSI",
+        "Company Description": "DASAN Zhone Solutions, Inc. specializes in providing advanced broadband access solutions, empowering telecommunications networks to deliver faster and more reliable internet services worldwide."
+      },
+      {
+        "Symbol": "FAMI",
+        "Company Description": "Farmmi, Inc. specializes in the cultivation and distribution of high-quality agricultural products, with a focus on mushrooms and other nutritious foods."
+      },
+      {
+        "Symbol": "FTFT",
+        "Company Description": "Future FinTech Group Inc. specializes in the development and marketing of blockchain-based products and financial technology solutions, aiming to revolutionize the digital economy with innovative applications."
+      },
+      {
+        "Symbol": "FTR",
+        "Company Description": "Frontier Communications Corporation provides telecommunications services, including internet, phone, and television solutions, to residential and business customers across the United States."
+      },
+      {
+        "Symbol": "IDEX",
+        "Company Description": "Ideanomics, Inc. is at the forefront of transforming the commercial electric vehicle industry, providing comprehensive solutions that drive innovation and sustainability in transportation and energy."
+      },
+      {
+        "Symbol": "ISDS",
+        "Company Description": "Invesco RAFI Strategic Developed ex-US Small Company ETF offers investors a unique opportunity to access a portfolio of small-cap stocks from developed markets outside the United States, focusing on strategic financial growth and diversification."
+      },
+      {
+        "Symbol": "MCEP",
+        "Company Description": "Mid-Con Energy Partners, LP specializes in the exploration and production of oil and natural gas, focusing on maximizing energy resources across the United States."
+      },
+      {
+        "Symbol": "NXTD",
+        "Company Description": "NXT-ID Inc. specializes in developing innovative technology solutions that enhance security and convenience in the fields of healthcare and electronic payments."
+      },
+      {
+        "Symbol": "OPTT",
+        "Company Description": "Ocean Power Technologies, Inc. harnesses the power of the ocean to develop innovative renewable energy solutions, specializing in wave energy technology."
+      },
+      {
+        "Symbol": "PEIX",
+        "Company Description": "Pacific Ethanol, Inc. specializes in producing renewable fuels and high-quality alcohol products, contributing to sustainable energy solutions and cleaner alternatives for the transportation sector."
+      },
+      {
+        "Symbol": "RBZ",
+        "Company Description": "Reebonz Holding Limited is an online luxury marketplace that specializes in offering a curated selection of high-end fashion items and accessories to discerning shoppers worldwide."
+      },
+      {
+        "Symbol": "SES",
+        "Company Description": "Synthesis Energy Systems, Inc. specializes in transforming low-cost carbon resources into clean energy and valuable chemical products, driving innovation in sustainable energy solutions."
+      },
+      {
+        "Symbol": "SNSS",
+        "Company Description": "Sunesis Pharmaceuticals, Inc. is dedicated to developing innovative cancer therapies, striving to advance treatments that target the underlying mechanisms of the disease."
+      },
+      {
+        "Symbol": "SPI",
+        "Company Description": "SPI Energy Co., Ltd. specializes in providing renewable energy solutions, focusing on solar power products and services to drive sustainable energy initiatives globally."
+      },
+      {
+        "Symbol": "SYPR",
+        "Company Description": "Sypris Solutions, Inc. specializes in providing engineering and manufacturing services for the aerospace and defense sectors, ensuring high-quality solutions for complex technological challenges."
+      },
+      {
+        "Symbol": "VTIQW",
+        "Company Description": "VectoIQ Acquisition Corp. is an investment company specializing in identifying and merging with innovative technology and automotive firms to drive growth and transformation in the mobility sector."
+      }
+    ],
+    "var_function-call-2095392861939764986": [
+      {
+        "Symbol": "AGMH",
+        "Company Description": "AGM Group Holdings Inc. specializes in providing financial technology solutions and services, focusing on enhancing efficiency and performance for businesses in the financial sector."
+      },
+      {
+        "Symbol": "AMTX",
+        "Company Description": "Aemetis, Inc is an advanced renewable fuels and biochemicals company, focused on producing sustainable energy solutions and reducing carbon emissions through innovative technologies."
+      },
+      {
+        "Symbol": "APEX",
+        "Company Description": "Apex Global Brands Inc. specializes in creating and marketing a diverse portfolio of fashion and lifestyle brands, connecting consumers with trendy and innovative products worldwide."
+      },
+      {
+        "Symbol": "BIOC",
+        "Company Description": "Biocept, Inc. specializes in developing advanced diagnostic solutions that help detect and analyze cancer cells, driving innovation in personalized medicine and cancer treatment."
+      },
+      {
+        "Symbol": "BKYI",
+        "Company Description": "BIO-key International, Inc. specializes in advanced biometric solutions, providing secure and convenient identity verification systems for enterprises and consumers alike."
+      },
+      {
+        "Symbol": "CBAT",
+        "Company Description": "CBAK Energy Technology, Inc. specializes in developing and manufacturing high-performance lithium-ion batteries, playing a pivotal role in powering electric vehicles and renewable energy solutions."
+      },
+      {
+        "Symbol": "CCCL",
+        "Company Description": "China Ceramics Co., Ltd. specializes in manufacturing high-quality ceramic tiles, catering to both residential and commercial markets with a wide range of designs and finishes."
+      },
+      {
+        "Symbol": "CORV",
+        "Company Description": "Correvio Pharma Corp., based in Canada, specializes in developing and commercializing innovative cardiovascular therapies to improve patient outcomes."
+      },
+      {
+        "Symbol": "CPAH",
+        "Company Description": "CounterPath Corporation specializes in developing software solutions that enhance communication by providing seamless VoIP and unified communications applications for businesses and individuals."
+      },
+      {
+        "Symbol": "DZSI",
+        "Company Description": "DASAN Zhone Solutions, Inc. specializes in providing advanced broadband access solutions, empowering telecommunications networks to deliver faster and more reliable internet services worldwide."
+      },
+      {
+        "Symbol": "FAMI",
+        "Company Description": "Farmmi, Inc. specializes in the cultivation and distribution of high-quality agricultural products, with a focus on mushrooms and other nutritious foods."
+      },
+      {
+        "Symbol": "FTFT",
+        "Company Description": "Future FinTech Group Inc. specializes in the development and marketing of blockchain-based products and financial technology solutions, aiming to revolutionize the digital economy with innovative applications."
+      },
+      {
+        "Symbol": "FTR",
+        "Company Description": "Frontier Communications Corporation provides telecommunications services, including internet, phone, and television solutions, to residential and business customers across the United States."
+      },
+      {
+        "Symbol": "IDEX",
+        "Company Description": "Ideanomics, Inc. is at the forefront of transforming the commercial electric vehicle industry, providing comprehensive solutions that drive innovation and sustainability in transportation and energy."
+      },
+      {
+        "Symbol": "ISDS",
+        "Company Description": "Invesco RAFI Strategic Developed ex-US Small Company ETF offers investors a unique opportunity to access a portfolio of small-cap stocks from developed markets outside the United States, focusing on strategic financial growth and diversification."
+      },
+      {
+        "Symbol": "MCEP",
+        "Company Description": "Mid-Con Energy Partners, LP specializes in the exploration and production of oil and natural gas, focusing on maximizing energy resources across the United States."
+      },
+      {
+        "Symbol": "NXTD",
+        "Company Description": "NXT-ID Inc. specializes in developing innovative technology solutions that enhance security and convenience in the fields of healthcare and electronic payments."
+      },
+      {
+        "Symbol": "OPTT",
+        "Company Description": "Ocean Power Technologies, Inc. harnesses the power of the ocean to develop innovative renewable energy solutions, specializing in wave energy technology."
+      },
+      {
+        "Symbol": "PEIX",
+        "Company Description": "Pacific Ethanol, Inc. specializes in producing renewable fuels and high-quality alcohol products, contributing to sustainable energy solutions and cleaner alternatives for the transportation sector."
+      },
+      {
+        "Symbol": "RBZ",
+        "Company Description": "Reebonz Holding Limited is an online luxury marketplace that specializes in offering a curated selection of high-end fashion items and accessories to discerning shoppers worldwide."
+      },
+      {
+        "Symbol": "SES",
+        "Company Description": "Synthesis Energy Systems, Inc. specializes in transforming low-cost carbon resources into clean energy and valuable chemical products, driving innovation in sustainable energy solutions."
+      },
+      {
+        "Symbol": "SNSS",
+        "Company Description": "Sunesis Pharmaceuticals, Inc. is dedicated to developing innovative cancer therapies, striving to advance treatments that target the underlying mechanisms of the disease."
+      },
+      {
+        "Symbol": "SPI",
+        "Company Description": "SPI Energy Co., Ltd. specializes in providing renewable energy solutions, focusing on solar power products and services to drive sustainable energy initiatives globally."
+      },
+      {
+        "Symbol": "SYPR",
+        "Company Description": "Sypris Solutions, Inc. specializes in providing engineering and manufacturing services for the aerospace and defense sectors, ensuring high-quality solutions for complex technological challenges."
+      },
+      {
+        "Symbol": "VTIQW",
+        "Company Description": "VectoIQ Acquisition Corp. is an investment company specializing in identifying and merging with innovative technology and automotive firms to drive growth and transformation in the mobility sector."
+      }
+    ],
+    "var_function-call-2111148087501837454": "file_storage/function-call-2111148087501837454.json",
+    "var_function-call-8607171385699176317": [
+      {
+        "Symbol": "AGMH",
+        "Company Description": "AGM Group Holdings Inc. specializes in providing financial technology solutions and services, focusing on enhancing efficiency and performance for businesses in the financial sector."
+      },
+      {
+        "Symbol": "AMTX",
+        "Company Description": "Aemetis, Inc is an advanced renewable fuels and biochemicals company, focused on producing sustainable energy solutions and reducing carbon emissions through innovative technologies."
+      },
+      {
+        "Symbol": "APEX",
+        "Company Description": "Apex Global Brands Inc. specializes in creating and marketing a diverse portfolio of fashion and lifestyle brands, connecting consumers with trendy and innovative products worldwide."
+      },
+      {
+        "Symbol": "BIOC",
+        "Company Description": "Biocept, Inc. specializes in developing advanced diagnostic solutions that help detect and analyze cancer cells, driving innovation in personalized medicine and cancer treatment."
+      },
+      {
+        "Symbol": "BKYI",
+        "Company Description": "BIO-key International, Inc. specializes in advanced biometric solutions, providing secure and convenient identity verification systems for enterprises and consumers alike."
+      },
+      {
+        "Symbol": "CBAT",
+        "Company Description": "CBAK Energy Technology, Inc. specializes in developing and manufacturing high-performance lithium-ion batteries, playing a pivotal role in powering electric vehicles and renewable energy solutions."
+      },
+      {
+        "Symbol": "CCCL",
+        "Company Description": "China Ceramics Co., Ltd. specializes in manufacturing high-quality ceramic tiles, catering to both residential and commercial markets with a wide range of designs and finishes."
+      },
+      {
+        "Symbol": "CORV",
+        "Company Description": "Correvio Pharma Corp., based in Canada, specializes in developing and commercializing innovative cardiovascular therapies to improve patient outcomes."
+      },
+      {
+        "Symbol": "CPAH",
+        "Company Description": "CounterPath Corporation specializes in developing software solutions that enhance communication by providing seamless VoIP and unified communications applications for businesses and individuals."
+      },
+      {
+        "Symbol": "DZSI",
+        "Company Description": "DASAN Zhone Solutions, Inc. specializes in providing advanced broadband access solutions, empowering telecommunications networks to deliver faster and more reliable internet services worldwide."
+      },
+      {
+        "Symbol": "FAMI",
+        "Company Description": "Farmmi, Inc. specializes in the cultivation and distribution of high-quality agricultural products, with a focus on mushrooms and other nutritious foods."
+      },
+      {
+        "Symbol": "FTFT",
+        "Company Description": "Future FinTech Group Inc. specializes in the development and marketing of blockchain-based products and financial technology solutions, aiming to revolutionize the digital economy with innovative applications."
+      },
+      {
+        "Symbol": "FTR",
+        "Company Description": "Frontier Communications Corporation provides telecommunications services, including internet, phone, and television solutions, to residential and business customers across the United States."
+      },
+      {
+        "Symbol": "IDEX",
+        "Company Description": "Ideanomics, Inc. is at the forefront of transforming the commercial electric vehicle industry, providing comprehensive solutions that drive innovation and sustainability in transportation and energy."
+      },
+      {
+        "Symbol": "ISDS",
+        "Company Description": "Invesco RAFI Strategic Developed ex-US Small Company ETF offers investors a unique opportunity to access a portfolio of small-cap stocks from developed markets outside the United States, focusing on strategic financial growth and diversification."
+      },
+      {
+        "Symbol": "MCEP",
+        "Company Description": "Mid-Con Energy Partners, LP specializes in the exploration and production of oil and natural gas, focusing on maximizing energy resources across the United States."
+      },
+      {
+        "Symbol": "NXTD",
+        "Company Description": "NXT-ID Inc. specializes in developing innovative technology solutions that enhance security and convenience in the fields of healthcare and electronic payments."
+      },
+      {
+        "Symbol": "OPTT",
+        "Company Description": "Ocean Power Technologies, Inc. harnesses the power of the ocean to develop innovative renewable energy solutions, specializing in wave energy technology."
+      },
+      {
+        "Symbol": "PEIX",
+        "Company Description": "Pacific Ethanol, Inc. specializes in producing renewable fuels and high-quality alcohol products, contributing to sustainable energy solutions and cleaner alternatives for the transportation sector."
+      },
+      {
+        "Symbol": "RBZ",
+        "Company Description": "Reebonz Holding Limited is an online luxury marketplace that specializes in offering a curated selection of high-end fashion items and accessories to discerning shoppers worldwide."
+      },
+      {
+        "Symbol": "SES",
+        "Company Description": "Synthesis Energy Systems, Inc. specializes in transforming low-cost carbon resources into clean energy and valuable chemical products, driving innovation in sustainable energy solutions."
+      },
+      {
+        "Symbol": "SNSS",
+        "Company Description": "Sunesis Pharmaceuticals, Inc. is dedicated to developing innovative cancer therapies, striving to advance treatments that target the underlying mechanisms of the disease."
+      },
+      {
+        "Symbol": "SPI",
+        "Company Description": "SPI Energy Co., Ltd. specializes in providing renewable energy solutions, focusing on solar power products and services to drive sustainable energy initiatives globally."
+      },
+      {
+        "Symbol": "SYPR",
+        "Company Description": "Sypris Solutions, Inc. specializes in providing engineering and manufacturing services for the aerospace and defense sectors, ensuring high-quality solutions for complex technological challenges."
+      },
+      {
+        "Symbol": "VTIQW",
+        "Company Description": "VectoIQ Acquisition Corp. is an investment company specializing in identifying and merging with innovative technology and automotive firms to drive growth and transformation in the mobility sector."
+      }
+    ],
+    "var_function-call-11575646530440905492": [
+      {
+        "symbol": "AGMH",
+        "company_description": "AGM Group Holdings Inc. specializes in providing financial technology solutions and services, focusing on enhancing efficiency and performance for businesses in the financial sector.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM AGMH WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "AMTX",
+        "company_description": "Aemetis, Inc is an advanced renewable fuels and biochemicals company, focused on producing sustainable energy solutions and reducing carbon emissions through innovative technologies.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM AMTX WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "APEX",
+        "company_description": "Apex Global Brands Inc. specializes in creating and marketing a diverse portfolio of fashion and lifestyle brands, connecting consumers with trendy and innovative products worldwide.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM APEX WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "BIOC",
+        "company_description": "Biocept, Inc. specializes in developing advanced diagnostic solutions that help detect and analyze cancer cells, driving innovation in personalized medicine and cancer treatment.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM BIOC WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "BKYI",
+        "company_description": "BIO-key International, Inc. specializes in advanced biometric solutions, providing secure and convenient identity verification systems for enterprises and consumers alike.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM BKYI WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "CBAT",
+        "company_description": "CBAK Energy Technology, Inc. specializes in developing and manufacturing high-performance lithium-ion batteries, playing a pivotal role in powering electric vehicles and renewable energy solutions.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM CBAT WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "CCCL",
+        "company_description": "China Ceramics Co., Ltd. specializes in manufacturing high-quality ceramic tiles, catering to both residential and commercial markets with a wide range of designs and finishes.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM CCCL WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "CORV",
+        "company_description": "Correvio Pharma Corp., based in Canada, specializes in developing and commercializing innovative cardiovascular therapies to improve patient outcomes.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM CORV WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "CPAH",
+        "company_description": "CounterPath Corporation specializes in developing software solutions that enhance communication by providing seamless VoIP and unified communications applications for businesses and individuals.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM CPAH WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "DZSI",
+        "company_description": "DASAN Zhone Solutions, Inc. specializes in providing advanced broadband access solutions, empowering telecommunications networks to deliver faster and more reliable internet services worldwide.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM DZSI WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "FAMI",
+        "company_description": "Farmmi, Inc. specializes in the cultivation and distribution of high-quality agricultural products, with a focus on mushrooms and other nutritious foods.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM FAMI WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "FTFT",
+        "company_description": "Future FinTech Group Inc. specializes in the development and marketing of blockchain-based products and financial technology solutions, aiming to revolutionize the digital economy with innovative applications.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM FTFT WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "FTR",
+        "company_description": "Frontier Communications Corporation provides telecommunications services, including internet, phone, and television solutions, to residential and business customers across the United States.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM FTR WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "IDEX",
+        "company_description": "Ideanomics, Inc. is at the forefront of transforming the commercial electric vehicle industry, providing comprehensive solutions that drive innovation and sustainability in transportation and energy.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM IDEX WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "ISDS",
+        "company_description": "Invesco RAFI Strategic Developed ex-US Small Company ETF offers investors a unique opportunity to access a portfolio of small-cap stocks from developed markets outside the United States, focusing on strategic financial growth and diversification.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM ISDS WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "MCEP",
+        "company_description": "Mid-Con Energy Partners, LP specializes in the exploration and production of oil and natural gas, focusing on maximizing energy resources across the United States.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM MCEP WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "NXTD",
+        "company_description": "NXT-ID Inc. specializes in developing innovative technology solutions that enhance security and convenience in the fields of healthcare and electronic payments.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM NXTD WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "OPTT",
+        "company_description": "Ocean Power Technologies, Inc. harnesses the power of the ocean to develop innovative renewable energy solutions, specializing in wave energy technology.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM OPTT WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "PEIX",
+        "company_description": "Pacific Ethanol, Inc. specializes in producing renewable fuels and high-quality alcohol products, contributing to sustainable energy solutions and cleaner alternatives for the transportation sector.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM PEIX WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "RBZ",
+        "company_description": "Reebonz Holding Limited is an online luxury marketplace that specializes in offering a curated selection of high-end fashion items and accessories to discerning shoppers worldwide.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM RBZ WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "SES",
+        "company_description": "Synthesis Energy Systems, Inc. specializes in transforming low-cost carbon resources into clean energy and valuable chemical products, driving innovation in sustainable energy solutions.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM SES WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "SNSS",
+        "company_description": "Sunesis Pharmaceuticals, Inc. is dedicated to developing innovative cancer therapies, striving to advance treatments that target the underlying mechanisms of the disease.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM SNSS WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "SPI",
+        "company_description": "SPI Energy Co., Ltd. specializes in providing renewable energy solutions, focusing on solar power products and services to drive sustainable energy initiatives globally.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM SPI WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "SYPR",
+        "company_description": "Sypris Solutions, Inc. specializes in providing engineering and manufacturing services for the aerospace and defense sectors, ensuring high-quality solutions for complex technological challenges.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM SYPR WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "VTIQW",
+        "company_description": "VectoIQ Acquisition Corp. is an investment company specializing in identifying and merging with innovative technology and automotive firms to drive growth and transformation in the mobility sector.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM VTIQW WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      }
+    ],
+    "var_function-call-616791248354363248": [],
+    "var_function-call-14991783992704281992": [],
+    "var_function-call-4453739727473461815": [
+      "AGMH",
+      "AMTX",
+      "APEX",
+      "BIOC",
+      "BKYI",
+      "CBAT",
+      "CCCL",
+      "CORV",
+      "CPAH",
+      "DZSI",
+      "FAMI",
+      "FTFT",
+      "FTR",
+      "IDEX",
+      "ISDS",
+      "MCEP",
+      "NXTD",
+      "OPTT",
+      "PEIX",
+      "RBZ",
+      "SES",
+      "SNSS",
+      "SPI",
+      "SYPR",
+      "VTIQW"
+    ],
+    "var_function-call-5020358122858329065": [
+      {
+        "symbol": "AGMH",
+        "company_description": "AGM Group Holdings Inc. specializes in providing financial technology solutions and services, focusing on enhancing efficiency and performance for businesses in the financial sector.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM AGMH WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "AMTX",
+        "company_description": "Aemetis, Inc is an advanced renewable fuels and biochemicals company, focused on producing sustainable energy solutions and reducing carbon emissions through innovative technologies.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM AMTX WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "APEX",
+        "company_description": "Apex Global Brands Inc. specializes in creating and marketing a diverse portfolio of fashion and lifestyle brands, connecting consumers with trendy and innovative products worldwide.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM APEX WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "BIOC",
+        "company_description": "Biocept, Inc. specializes in developing advanced diagnostic solutions that help detect and analyze cancer cells, driving innovation in personalized medicine and cancer treatment.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM BIOC WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "BKYI",
+        "company_description": "BIO-key International, Inc. specializes in advanced biometric solutions, providing secure and convenient identity verification systems for enterprises and consumers alike.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM BKYI WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "CBAT",
+        "company_description": "CBAK Energy Technology, Inc. specializes in developing and manufacturing high-performance lithium-ion batteries, playing a pivotal role in powering electric vehicles and renewable energy solutions.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM CBAT WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "CCCL",
+        "company_description": "China Ceramics Co., Ltd. specializes in manufacturing high-quality ceramic tiles, catering to both residential and commercial markets with a wide range of designs and finishes.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM CCCL WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "CORV",
+        "company_description": "Correvio Pharma Corp., based in Canada, specializes in developing and commercializing innovative cardiovascular therapies to improve patient outcomes.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM CORV WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "CPAH",
+        "company_description": "CounterPath Corporation specializes in developing software solutions that enhance communication by providing seamless VoIP and unified communications applications for businesses and individuals.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM CPAH WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "DZSI",
+        "company_description": "DASAN Zhone Solutions, Inc. specializes in providing advanced broadband access solutions, empowering telecommunications networks to deliver faster and more reliable internet services worldwide.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM DZSI WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "FAMI",
+        "company_description": "Farmmi, Inc. specializes in the cultivation and distribution of high-quality agricultural products, with a focus on mushrooms and other nutritious foods.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM FAMI WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "FTFT",
+        "company_description": "Future FinTech Group Inc. specializes in the development and marketing of blockchain-based products and financial technology solutions, aiming to revolutionize the digital economy with innovative applications.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM FTFT WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "FTR",
+        "company_description": "Frontier Communications Corporation provides telecommunications services, including internet, phone, and television solutions, to residential and business customers across the United States.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM FTR WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "IDEX",
+        "company_description": "Ideanomics, Inc. is at the forefront of transforming the commercial electric vehicle industry, providing comprehensive solutions that drive innovation and sustainability in transportation and energy.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM IDEX WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "ISDS",
+        "company_description": "Invesco RAFI Strategic Developed ex-US Small Company ETF offers investors a unique opportunity to access a portfolio of small-cap stocks from developed markets outside the United States, focusing on strategic financial growth and diversification.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM ISDS WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "MCEP",
+        "company_description": "Mid-Con Energy Partners, LP specializes in the exploration and production of oil and natural gas, focusing on maximizing energy resources across the United States.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM MCEP WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "NXTD",
+        "company_description": "NXT-ID Inc. specializes in developing innovative technology solutions that enhance security and convenience in the fields of healthcare and electronic payments.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM NXTD WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "OPTT",
+        "company_description": "Ocean Power Technologies, Inc. harnesses the power of the ocean to develop innovative renewable energy solutions, specializing in wave energy technology.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM OPTT WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "PEIX",
+        "company_description": "Pacific Ethanol, Inc. specializes in producing renewable fuels and high-quality alcohol products, contributing to sustainable energy solutions and cleaner alternatives for the transportation sector.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM PEIX WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "RBZ",
+        "company_description": "Reebonz Holding Limited is an online luxury marketplace that specializes in offering a curated selection of high-end fashion items and accessories to discerning shoppers worldwide.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM RBZ WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "SES",
+        "company_description": "Synthesis Energy Systems, Inc. specializes in transforming low-cost carbon resources into clean energy and valuable chemical products, driving innovation in sustainable energy solutions.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM SES WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "SNSS",
+        "company_description": "Sunesis Pharmaceuticals, Inc. is dedicated to developing innovative cancer therapies, striving to advance treatments that target the underlying mechanisms of the disease.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM SNSS WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "SPI",
+        "company_description": "SPI Energy Co., Ltd. specializes in providing renewable energy solutions, focusing on solar power products and services to drive sustainable energy initiatives globally.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM SPI WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "SYPR",
+        "company_description": "Sypris Solutions, Inc. specializes in providing engineering and manufacturing services for the aerospace and defense sectors, ensuring high-quality solutions for complex technological challenges.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM SYPR WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      },
+      {
+        "symbol": "VTIQW",
+        "company_description": "VectoIQ Acquisition Corp. is an investment company specializing in identifying and merging with innovative technology and automotive firms to drive growth and transformation in the mobility sector.",
+        "query": "SELECT AVG(Volume) AS AvgVolume2008 FROM VTIQW WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL;"
+      }
+    ],
+    "var_function-call-13556349109348576435": "SELECT 'AGMH' AS Symbol, 'AGM Group Holdings Inc. specializes in providing financial technology solutions and services, focusing on enhancing efficiency and performance for businesses in the financial sector.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM AGMH WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'AMTX' AS Symbol, 'Aemetis, Inc is an advanced renewable fuels and biochemicals company, focused on producing sustainable energy solutions and reducing carbon emissions through innovative technologies.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM AMTX WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'APEX' AS Symbol, 'Apex Global Brands Inc. specializes in creating and marketing a diverse portfolio of fashion and lifestyle brands, connecting consumers with trendy and innovative products worldwide.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM APEX WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'BIOC' AS Symbol, 'Biocept, Inc. specializes in developing advanced diagnostic solutions that help detect and analyze cancer cells, driving innovation in personalized medicine and cancer treatment.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM BIOC WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'BKYI' AS Symbol, 'BIO-key International, Inc. specializes in advanced biometric solutions, providing secure and convenient identity verification systems for enterprises and consumers alike.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM BKYI WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'CBAT' AS Symbol, 'CBAK Energy Technology, Inc. specializes in developing and manufacturing high-performance lithium-ion batteries, playing a pivotal role in powering electric vehicles and renewable energy solutions.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM CBAT WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'CCCL' AS Symbol, 'China Ceramics Co., Ltd. specializes in manufacturing high-quality ceramic tiles, catering to both residential and commercial markets with a wide range of designs and finishes.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM CCCL WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'CORV' AS Symbol, 'Correvio Pharma Corp., based in Canada, specializes in developing and commercializing innovative cardiovascular therapies to improve patient outcomes.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM CORV WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'CPAH' AS Symbol, 'CounterPath Corporation specializes in developing software solutions that enhance communication by providing seamless VoIP and unified communications applications for businesses and individuals.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM CPAH WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'DZSI' AS Symbol, 'DASAN Zhone Solutions, Inc. specializes in providing advanced broadband access solutions, empowering telecommunications networks to deliver faster and more reliable internet services worldwide.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM DZSI WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'FAMI' AS Symbol, 'Farmmi, Inc. specializes in the cultivation and distribution of high-quality agricultural products, with a focus on mushrooms and other nutritious foods.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM FAMI WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'FTFT' AS Symbol, 'Future FinTech Group Inc. specializes in the development and marketing of blockchain-based products and financial technology solutions, aiming to revolutionize the digital economy with innovative applications.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM FTFT WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'FTR' AS Symbol, 'Frontier Communications Corporation provides telecommunications services, including internet, phone, and television solutions, to residential and business customers across the United States.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM FTR WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'IDEX' AS Symbol, 'Ideanomics, Inc. is at the forefront of transforming the commercial electric vehicle industry, providing comprehensive solutions that drive innovation and sustainability in transportation and energy.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM IDEX WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'ISDS' AS Symbol, 'Invesco RAFI Strategic Developed ex-US Small Company ETF offers investors a unique opportunity to access a portfolio of small-cap stocks from developed markets outside the United States, focusing on strategic financial growth and diversification.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM ISDS WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'MCEP' AS Symbol, 'Mid-Con Energy Partners, LP specializes in the exploration and production of oil and natural gas, focusing on maximizing energy resources across the United States.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM MCEP WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'NXTD' AS Symbol, 'NXT-ID Inc. specializes in developing innovative technology solutions that enhance security and convenience in the fields of healthcare and electronic payments.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM NXTD WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'OPTT' AS Symbol, 'Ocean Power Technologies, Inc. harnesses the power of the ocean to develop innovative renewable energy solutions, specializing in wave energy technology.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM OPTT WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'PEIX' AS Symbol, 'Pacific Ethanol, Inc. specializes in producing renewable fuels and high-quality alcohol products, contributing to sustainable energy solutions and cleaner alternatives for the transportation sector.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM PEIX WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'RBZ' AS Symbol, 'Reebonz Holding Limited is an online luxury marketplace that specializes in offering a curated selection of high-end fashion items and accessories to discerning shoppers worldwide.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM RBZ WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'SES' AS Symbol, 'Synthesis Energy Systems, Inc. specializes in transforming low-cost carbon resources into clean energy and valuable chemical products, driving innovation in sustainable energy solutions.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM SES WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'SNSS' AS Symbol, 'Sunesis Pharmaceuticals, Inc. is dedicated to developing innovative cancer therapies, striving to advance treatments that target the underlying mechanisms of the disease.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM SNSS WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'SPI' AS Symbol, 'SPI Energy Co., Ltd. specializes in providing renewable energy solutions, focusing on solar power products and services to drive sustainable energy initiatives globally.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM SPI WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'SYPR' AS Symbol, 'Sypris Solutions, Inc. specializes in providing engineering and manufacturing services for the aerospace and defense sectors, ensuring high-quality solutions for complex technological challenges.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM SYPR WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL UNION ALL SELECT 'VTIQW' AS Symbol, 'VectoIQ Acquisition Corp. is an investment company specializing in identifying and merging with innovative technology and automotive firms to drive growth and transformation in the mobility sector.' AS CompanyDescription, AVG(Volume) AS AvgVolume2008 FROM VTIQW WHERE substr(Date, 1, 4) = '2008' AND Volume IS NOT NULL"
+  },
+  "llm_call_count": 17,
+  "tools": {
+    "query_db": null,
+    "list_db": null,
+    "execute_python": null,
+    "return_answer": {
+      "name": "return_answer",
+      "log_path": "/home/ruiying/DataAgentBench/query_stockmarket/query3/logs/data_agent/run_6/tool_calls.jsonl"
+    }
+  },
+  "query_dir": "/home/ruiying/DataAgentBench/query_stockmarket/query3",
+  "max_iterations": 100,
+  "deployment_name": "gemini-2.5-flash",
+  "file_storage_dir": "/home/ruiying/DataAgentBench/query_stockmarket/query3/logs/data_agent/run_6/exec_tool_work_dir/file_storage",
+  "llm_log_path": "/home/ruiying/DataAgentBench/query_stockmarket/query3/logs/data_agent/run_6/llm_calls.jsonl",
+  "validation_log_path": "/home/ruiying/DataAgentBench/query_stockmarket/query3/logs/data_agent/run_6/validation.jsonl",
+  "tool_log_path": "/home/ruiying/DataAgentBench/query_stockmarket/query3/logs/data_agent/run_6/tool_calls.jsonl"
+}

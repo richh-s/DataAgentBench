@@ -1,6 +1,4 @@
-import re
-
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     """
     Validate if LLM output contains the expected BANT factor(s).
     Expected: Authority
@@ -15,8 +13,7 @@ def validate(llm_output: str) -> (bool, str):
 
     # Check for exact word match (case insensitive)
     if expected.lower() in llm_output_clean.lower():
-        print(f"✅ Found expected BANT factor: {expected}")
-        return True, "OK"
+        return True, f"Found expected BANT factor: {expected}"
 
     # Check if any of the BANT factors are mentioned
     bant_factors = ["Budget", "Authority", "Need", "Timeline"]
@@ -27,9 +24,7 @@ def validate(llm_output: str) -> (bool, str):
 
     if found_factors:
         reason = f"Found BANT factors {found_factors}, but expected '{expected}'"
-        print(f"❌ {reason}")
         return False, reason
     else:
         reason = "No BANT factors found in LLM output"
-        print(f"❌ {reason}")
         return False, reason

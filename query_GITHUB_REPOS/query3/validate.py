@@ -1,6 +1,6 @@
 import re
 
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     """
     Check if the number 1077 appears in the LLM output.
 
@@ -13,10 +13,8 @@ def validate(llm_output: str) -> (bool, str):
     """
     matches = re.findall(r"\b1077\b", llm_output)
     if matches:
-        print("✅ Found 1077 in LLM output.")
-        return True, "OK"
+        return True, "Found 1077 in LLM output."
     else:
-        reason = "❌ Number 1077 not found in LLM output."
-        print(reason)
+        reason = "Number 1077 not found in LLM output."
         return False, reason
 

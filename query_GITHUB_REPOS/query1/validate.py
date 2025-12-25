@@ -1,6 +1,6 @@
 import re
 
-def validate(llm_output: str) -> (bool, str):
+def validate(llm_output: str):
     """
     Validate LLM output:
     - Ground truth is 0.3333333333333333
@@ -15,11 +15,9 @@ def validate(llm_output: str) -> (bool, str):
         try:
             val = float(m)
             if round(val, 2) == gt_rounded:
-                print(f"✅ Found matching value: {val} → ~{gt_rounded}")
-                return True, "OK"
+                return True, f"Found matching value: {val} → ~{gt_rounded}"
         except:
             continue
 
-    reason = f"❌ No value in LLM output rounds to {gt_rounded}"
-    print(reason)
+    reason = f"No value in LLM output rounds to {gt_rounded}"
     return False, reason

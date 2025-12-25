@@ -11,6 +11,8 @@ import subprocess
 from common_scaffold import config
 import json
 from bson.json_util import dumps
+import logging
+logger = logging.getLogger(__name__)
 
 
 def database_exists(db_name: str) -> bool:
@@ -41,12 +43,12 @@ def import_bson_to_mongo(dump_folder: str, db_name: str):
     if not dump_path.exists():
         raise FileNotFoundError(f"Dump folder not found: {dump_folder}")
 
-    print(f"▶️ Importing MongoDB dump from: {dump_path}")
+    logger.debug(f"▶️ Importing MongoDB dump from: {dump_path}")
     subprocess.run(
         ["mongorestore", f"--nsInclude={db_name}.*", str(dump_path)],
         check=True
     )
-    print(f"🎉 MongoDB dump imported into database '{db_name}'.")
+    logger.debug(f"🎉 MongoDB dump imported into database '{db_name}'.")
 
 
 def ensure_mongo_data(db_name: str, dump_folder: str):
@@ -59,9 +61,10 @@ def ensure_mongo_data(db_name: str, dump_folder: str):
         dump_folder (str): Path to the dump folder.
     """
     if database_exists(db_name):
-        print(f"✅ MongoDB database '{db_name}' already exists. No action needed.")
+        pass
+        logger.debug(f"✅ MongoDB database '{db_name}' already exists. No action needed.")
     else:
-        print(f"⚠️ MongoDB database '{db_name}' not found. Importing from '{dump_folder}'...")
+        logger.debug(f"⚠️ MongoDB database '{db_name}' not found. Importing from '{dump_folder}'...")
         import_bson_to_mongo(dump_folder, db_name)
 
 
@@ -85,7 +88,7 @@ def mongo_query(
 
     Returns:
         dict: {
-            "success": True, "data": DataFrame
+            "success": True, "data": json str if basic else DataFrame
         } or {
             "success": False, "error": error message
         }
@@ -93,6 +96,9 @@ def mongo_query(
     query = query or {}
 
     try:
+        if not database_exists(db_name):
+            return {"success": False, "error": f"Database '{db_name}' does not exist."}
+        
         client = MongoClient(config.MONGO_URI)
         db = client[db_name]
 
@@ -104,7 +110,8 @@ def mongo_query(
         client.close()
 
         if not data:
-            return {"success": True, "data": pd.DataFrame()} 
+            data = pd.DataFrame()
+            # return {"success": True, "data": pd.DataFrame()} 
 
         if basic:
             output = dumps(data)
@@ -116,7 +123,7 @@ def mongo_query(
         return {"success": False, "error": f"{type(e).__name__}: {str(e)}"}
 
 
-def list_collections(db_name: str) -> list:
+def list_collections(db_name: str) -> list[str]:
     """
     List all collections in the specified MongoDB database.
 
@@ -126,8 +133,15 @@ def list_collections(db_name: str) -> list:
     Returns:
         list: List of collection names.
     """
-    client = MongoClient(config.MONGO_URI)
-    db = client[db_name]
-    collections = db.list_collection_names()
-    client.close()
-    return collections
+    try:
+        client = MongoClient(config.MONGO_URI)
+        if db_name not in client.list_database_names():
+            return {"success": False, "error": f"Database '{db_name}' does not exist."}
+        db = client[db_name]
+        collections = db.list_collection_names()
+        client.close()
+        return {"success": True, "entities": collections}
+    except Exception as e:
+        return {"success": False, "error": f"{type(e).__name__}: {str(e)}"}
+    finally:
+        client.close()

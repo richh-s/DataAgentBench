@@ -2,6 +2,7 @@ from .list_dbs import list_dbs
 from .transform_tool_args import transform_tool_args
 from .generate_var_name import generate_var_name
 from .execute_python import execute_python
+from .upload_file import upload_to_client
 from .prompt_builder import build_messages
 from .tool_spec import get_tools_spec
 from .variable_store import VariableStore
@@ -13,7 +14,6 @@ from .validation_utils import log_failed
 from .termination_tracker import RepeatedCallTracker, QueryDbFailureTracker
 from .agent_baseline import run_baseline_agent
 from .agent_basic import run_basic_agent
-from .upload_file import upload_to_client
 
 
 

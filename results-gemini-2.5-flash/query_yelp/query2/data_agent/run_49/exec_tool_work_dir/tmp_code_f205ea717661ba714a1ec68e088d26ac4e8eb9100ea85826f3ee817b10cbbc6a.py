@@ -1,0 +1,58 @@
+code = """import pandas as pd
+import re
+import json
+
+# Access the raw string output from the previous query_db call
+raw_db_output = locals()['var_function-call-14089125062202856495']['query_db_response']['results'][0]
+
+# Load the JSON string into a Python list of dictionaries
+business_data = json.loads(raw_db_output)
+df_business = pd.DataFrame(business_data)
+
+# Function to extract state from description (e.g., 'in Goleta, CA,')
+def extract_state(description):
+    if isinstance(description, str):
+        match = re.search(r'in ([A-Z]{2}),', description)
+        if match:
+            return match.group(1)
+    return None
+
+# Apply the function to create a new 'state' column
+df_business['state'] = df_business['description'].apply(extract_state)
+
+# Convert 'review_count' to numeric, handling potential errors by coercing to NaN
+df_business['review_count'] = pd.to_numeric(df_business['review_count'], errors='coerce')
+
+# Filter out rows where state is None or review_count is NaN
+df_business_filtered = df_business.dropna(subset=['state', 'review_count'])
+
+# Group by state and sum the review counts
+state_review_counts = df_business_filtered.groupby('state')['review_count'].sum().reset_index()
+
+# Find the state with the highest review count
+if not state_review_counts.empty:
+    highest_review_state_info = state_review_counts.loc[state_review_counts['review_count'].idxmax()]
+    highest_review_state = highest_review_state_info['state']
+    highest_review_count = int(highest_review_state_info['review_count'])
+else:
+    highest_review_state = None
+    highest_review_count = 0
+
+# Get all business_ids for the state with the highest review count
+if highest_review_state:
+    business_ids_in_highest_review_state = df_business_filtered[df_business_filtered['state'] == highest_review_state]['business_id'].tolist()
+    # Convert business_id to business_ref format for the next query
+    business_refs_in_highest_review_state = [biz_id.replace('businessid_', 'businessref_') for biz_id in business_ids_in_highest_review_state]
+else:
+    business_refs_in_highest_review_state = []
+
+print('__RESULT__:')
+print(json.dumps({
+    "highest_review_state": highest_review_state,
+    "highest_review_count": highest_review_count,
+    "business_refs": business_refs_in_highest_review_state
+}))"""
+
+env_args = {'var_function-call-8085027810388199841': [{'business_id': 'businessid_49', 'review_count': '8', 'description': 'Located at 6901 Phelps Rd in Goleta, CA, this facility offers a nurturing environment for young learners, providing a range of services in Education, Elementary Schools, Child Care & Day Care, Local Services, Preschools, and Montessori Schools.'}, {'business_id': 'businessid_47', 'review_count': '81', 'description': 'Located at 9916 Clayton Rd in St. Louis, MO, this establishment offers a wide range of services, including Hair Salons, Beauty & Spas, Hair Stylists, Skin Care, Blow Dry/Out Services, and Makeup Artists.'}, {'business_id': 'businessid_88', 'review_count': '39', 'description': 'Located at 11655 W Executive Dr in Boise, ID, this facility offers enthusiasts a premier destination for Gun/Rifle Ranges, Active Life.'}, {'business_id': 'businessid_41', 'review_count': '5', 'description': 'Located at 1615 Pasadena Ave S, Ste 430 in Saint Petersburg, FL, this facility offers a range of services in Internal Medicine, Doctors, Health & Medical.'}, {'business_id': 'businessid_33', 'review_count': '28', 'description': 'Located at 9655 E US Hwy 36, Unit H in Avon, IN, this establishment offers a range of services including Nail Salons, Hair Removal, Beauty & Spas, and Waxing.'}], 'var_function-call-16177882201032042024': [{'business_id': 'businessid_49', 'review_count': '8', 'description': 'Located at 6901 Phelps Rd in Goleta, CA, this facility offers a nurturing environment for young learners, providing a range of services in Education, Elementary Schools, Child Care & Day Care, Local Services, Preschools, and Montessori Schools.'}, {'business_id': 'businessid_47', 'review_count': '81', 'description': 'Located at 9916 Clayton Rd in St. Louis, MO, this establishment offers a wide range of services, including Hair Salons, Beauty & Spas, Hair Stylists, Skin Care, Blow Dry/Out Services, and Makeup Artists.'}, {'business_id': 'businessid_88', 'review_count': '39', 'description': 'Located at 11655 W Executive Dr in Boise, ID, this facility offers enthusiasts a premier destination for Gun/Rifle Ranges, Active Life.'}, {'business_id': 'businessid_41', 'review_count': '5', 'description': 'Located at 1615 Pasadena Ave S, Ste 430 in Saint Petersburg, FL, this facility offers a range of services in Internal Medicine, Doctors, Health & Medical.'}, {'business_id': 'businessid_33', 'review_count': '28', 'description': 'Located at 9655 E US Hwy 36, Unit H in Avon, IN, this establishment offers a range of services including Nail Salons, Hair Removal, Beauty & Spas, and Waxing.'}], 'var_function-call-10870623024257106570': [{'business_id': 'businessid_49', 'review_count': '8', 'description': 'Located at 6901 Phelps Rd in Goleta, CA, this facility offers a nurturing environment for young learners, providing a range of services in Education, Elementary Schools, Child Care & Day Care, Local Services, Preschools, and Montessori Schools.'}, {'business_id': 'businessid_47', 'review_count': '81', 'description': 'Located at 9916 Clayton Rd in St. Louis, MO, this establishment offers a wide range of services, including Hair Salons, Beauty & Spas, Hair Stylists, Skin Care, Blow Dry/Out Services, and Makeup Artists.'}, {'business_id': 'businessid_88', 'review_count': '39', 'description': 'Located at 11655 W Executive Dr in Boise, ID, this facility offers enthusiasts a premier destination for Gun/Rifle Ranges, Active Life.'}, {'business_id': 'businessid_41', 'review_count': '5', 'description': 'Located at 1615 Pasadena Ave S, Ste 430 in Saint Petersburg, FL, this facility offers a range of services in Internal Medicine, Doctors, Health & Medical.'}, {'business_id': 'businessid_33', 'review_count': '28', 'description': 'Located at 9655 E US Hwy 36, Unit H in Avon, IN, this establishment offers a range of services including Nail Salons, Hair Removal, Beauty & Spas, and Waxing.'}], 'var_function-call-14089125062202856495': [{'business_id': 'businessid_49', 'review_count': '8', 'description': 'Located at 6901 Phelps Rd in Goleta, CA, this facility offers a nurturing environment for young learners, providing a range of services in Education, Elementary Schools, Child Care & Day Care, Local Services, Preschools, and Montessori Schools.'}, {'business_id': 'businessid_47', 'review_count': '81', 'description': 'Located at 9916 Clayton Rd in St. Louis, MO, this establishment offers a wide range of services, including Hair Salons, Beauty & Spas, Hair Stylists, Skin Care, Blow Dry/Out Services, and Makeup Artists.'}, {'business_id': 'businessid_88', 'review_count': '39', 'description': 'Located at 11655 W Executive Dr in Boise, ID, this facility offers enthusiasts a premier destination for Gun/Rifle Ranges, Active Life.'}, {'business_id': 'businessid_41', 'review_count': '5', 'description': 'Located at 1615 Pasadena Ave S, Ste 430 in Saint Petersburg, FL, this facility offers a range of services in Internal Medicine, Doctors, Health & Medical.'}, {'business_id': 'businessid_33', 'review_count': '28', 'description': 'Located at 9655 E US Hwy 36, Unit H in Avon, IN, this establishment offers a range of services including Nail Salons, Hair Removal, Beauty & Spas, and Waxing.'}]}
+
+exec(code, env_args)
