@@ -110,6 +110,9 @@ def database_has_tables(db_name: str) -> bool:
     return len(tables) > 0
 
 
+import subprocess
+from pathlib import Path
+
 def import_sql_to_mysql(sql_file: str, db_name: str):
     """
     Import a .sql file into MySQL using the mysql CLI.

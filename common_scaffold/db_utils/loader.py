@@ -70,6 +70,7 @@ def ensure_db(db_type, **kwargs):
 
 
 
+
 def list_entities(db_type, **kwargs):
     """
     List tables or collections in the specified database.
