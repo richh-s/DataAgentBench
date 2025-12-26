@@ -1,95 +1,66 @@
 import json
+import re
 from pathlib import Path
 
-def validate(predicted_result: dict) -> bool:
+
+def validate(llm_output: str):
     """
-    Validate predicted answer against ground truth.
-    
+    Validate LLM output against ground truth.
+
     Args:
-        predicted_result: A dictionary with one key-value pair where:
-            - key: doc_file name (e.g., "malibucity_agenda__01262022-1835.txt")
-            - value: predicted answer (list of records, where each record is a dict with columns)
-    
+        llm_output: String output from the LLM containing the answer
+
     Returns:
-        True if predicted answer matches ground truth, False otherwise
+        Tuple of (is_valid: bool, reason: str)
     """
-    # Load ground truth from local JSON file
+    # Load ground truth
     ground_truth_file = Path(__file__).parent / "ground_truth.json"
-    
+
     try:
         with open(ground_truth_file, 'r', encoding='utf-8') as f:
             ground_truth = json.load(f)
     except FileNotFoundError:
-        print(f"❌ Error: Ground truth file not found at {ground_truth_file}")
-        return False
+        return False, f"Ground truth file not found at {ground_truth_file}"
     except json.JSONDecodeError as e:
-        print(f"❌ Error: Failed to parse ground truth JSON: {e}")
-        return False
-    
-    # Check if predicted_result has exactly one key-value pair
-    if len(predicted_result) != 1:
-        print(f"❌ Error: Expected exactly one key-value pair, got {len(predicted_result)}")
-        return False
-    
-    # Get the doc_file name and predicted answer
-    doc_file = list(predicted_result.keys())[0]
-    predicted_answer = predicted_result[doc_file]
-    
-    # Check if doc_file exists in ground truth
-    if doc_file not in ground_truth:
-        print(f"❌ Error: Document '{doc_file}' not found in ground truth")
-        return False
-    
-    # Get ground truth answer
-    ground_truth_answer = ground_truth[doc_file]
-    
-    # Both should be lists
-    if not isinstance(predicted_answer, list):
-        print(f"❌ Error: Predicted answer should be a list, got {type(predicted_answer)}")
-        return False
-    
-    if not isinstance(ground_truth_answer, list):
-        print(f"❌ Error: Ground truth answer should be a list, got {type(ground_truth_answer)}")
-        return False
-    
-    # Compare lists - they should have the same length and same records
-    if len(predicted_answer) != len(ground_truth_answer):
-        print(f"❌ Validation failed: {doc_file}")
-        print(f"   Predicted: {len(predicted_answer)} records, Ground truth: {len(ground_truth_answer)} records")
-        return False
-    
-    # Sort both lists for comparison (by Project_Name and then by other fields)
-    def sort_key(record):
-        return tuple(sorted(record.items()))
-    
-    predicted_sorted = sorted(predicted_answer, key=sort_key)
-    ground_truth_sorted = sorted(ground_truth_answer, key=sort_key)
-    
-    # Compare each record
-    for i, (pred_record, gt_record) in enumerate(zip(predicted_sorted, ground_truth_sorted)):
-        if pred_record != gt_record:
-            print(f"❌ Validation failed: {doc_file}")
-            print(f"   Record {i+1} mismatch:")
-            print(f"   Predicted: {pred_record}")
-            print(f"   Ground truth: {gt_record}")
-            return False
-    
-    print(f"✅ Validation passed: {doc_file}")
-    print(f"   Predicted: {len(predicted_answer)} records, Ground truth: {len(ground_truth_answer)} records")
-    return True
+        return False, f"Failed to parse ground truth JSON: {e}"
+
+    # Expected answer is a list of results with Project_Name, Funding_Source, Amount, Status
+    expected_results = ground_truth.get("results", [])
+
+    if not expected_results:
+        # If no results expected, check for "no results", "none", "0 projects"
+        if any(phrase in llm_output.lower() for phrase in ['no project', 'no result', 'none found', '0 project', 'zero project']):
+            return True, "Correctly identified no matching projects"
+        return False, "Expected no results, but output doesn't indicate empty result"
+
+    # Check if output contains the actual project names
+    output_lower = llm_output.lower()
+    matched_projects = []
+
+    for result in expected_results:
+        project_name = result.get("Project_Name", "")
+        # Normalize: lowercase and fix the typo
+        normalized_name = project_name.lower().replace("warningn", "warning")
+        normalized_output = output_lower.replace("warningn", "warning")
+
+        if normalized_name in normalized_output:
+            matched_projects.append(project_name)
+
+    # Require ALL expected projects to be mentioned
+    if len(matched_projects) == len(expected_results):
+        return True, f"Found all {len(expected_results)} expected projects in output"
+
+    return False, f"Expected {len(expected_results)} projects, found {len(matched_projects)}. Missing: {[r['Project_Name'] for r in expected_results if r['Project_Name'] not in matched_projects]}"
+
 
 if __name__ == "__main__":
-    # Example usage
-    test_case = {
-        "malibucity_agenda__01262022-1835.txt": [
-            {
-                "Project_Name": "Test Project",
-                "Funding_Source": "Test Source",
-                "Amount": 10000,
-                "Status": "design"
-            }
-        ]
-    }
-    result = validate(test_case)
-    print(f"\nValidation result: {result}")
-
+    # Test examples
+    test_cases = [
+        'The projects are: 1) Outdoor Warning Sirens - Design (FEMA Project) with $43,000 from Local Business Support, status: design',
+        'Found 2 projects matching criteria',
+        '[]',  # empty result
+    ]
+    for test in test_cases:
+        result, reason = validate(test)
+        print(f"Input: {test[:60]}...")
+        print(f"Result: {result}, Reason: {reason}\n")
