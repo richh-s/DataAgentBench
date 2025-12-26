@@ -6,9 +6,10 @@ These include querying DuckDB and listing tables.
 import duckdb
 import pandas as pd
 from pathlib import Path
+import json
 
 
-def duckdb_query(db_path: str, sql: str):
+def duckdb_query(db_path: str, sql: str, basic: bool = True):
     """
     Execute a query on a DuckDB database and return a standardized result format.
 
@@ -32,11 +33,18 @@ def duckdb_query(db_path: str, sql: str):
 
     try:
         conn = duckdb.connect(database=str(db_file))
-        df = conn.execute(sql).fetchdf()
+        result = conn.execute(sql)
+        if basic:
+            cols = [desc[0] for desc in result.description]
+            rows = result.fetchall()
+            result = {"columns": cols, "rows": rows}
+            output = json.dumps(result)
+        else:
+            output = result.fetchdf()
         conn.close()
         return {
             "success": True,
-            "data": df
+            "data": output
         }
     except Exception as e:
         return {

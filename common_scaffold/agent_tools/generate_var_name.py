@@ -1,5 +1,6 @@
 import re
 from uuid import uuid4
+from typing import Optional
 
 def sanitize_name(name: str) -> str:
     """
@@ -20,7 +21,7 @@ def extract_table_name(sql: str) -> str:
         return sanitize_name(match.group(1))
     return "result"
 
-def generate_var_name(tool_name: str, tool_args: dict, step: int | None = None) -> str:
+def generate_var_name(tool_name: str, tool_args: dict, step: Optional[int] = None) -> str:
     """
     Generate a unique variable name for a given tool call.
 

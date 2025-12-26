@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from openai import AzureOpenAI
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
-from common_scaffold.agent_tools import run_baseline_agent
+from common_scaffold.agent_tools import run_basic_agent
 
 
 def find_query_dirs(project_dir: Path):
@@ -35,7 +35,7 @@ def main():
     args = parser.parse_args()
 
     # Configurable parameters
-    n = 50
+    n = 5
     k_list = [1, 5, 10, 15, 20, 30, 40, 50]
 
     project_dir = Path(__file__).parent
@@ -48,9 +48,9 @@ def main():
         db_config = yaml.safe_load(f)
 
     client = AzureOpenAI(
-        api_key=os.getenv("AZURE_API_KEY_o3"),
-        api_version=os.getenv("AZURE_API_VERSION_o3", "2023-05-15"),
-        azure_endpoint=os.getenv("AZURE_API_BASE_o3")
+        api_key=os.getenv("AZURE_API_KEY"),
+        api_version=os.getenv("AZURE_API_VERSION", "2023-05-15"),
+        azure_endpoint=os.getenv("AZURE_API_BASE")
     )
     deployment_name = "gpt-4.1"
 
@@ -93,7 +93,7 @@ def main():
         for run_id in range(1, n + 1):
             print(f"   ▶ Run {run_id}/{n}")
             print(f"🧠 Using model deployment: {deployment_name}")
-            success = run_baseline_agent(
+            success = run_basic_agent(
                 query_dir=query_dir,
                 project_dir=project_dir,
                 db_description=db_description,
