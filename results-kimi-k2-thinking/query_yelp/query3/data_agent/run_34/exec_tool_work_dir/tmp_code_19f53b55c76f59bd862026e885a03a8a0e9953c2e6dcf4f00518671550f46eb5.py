@@ -1,0 +1,17 @@
+code = """import json
+
+# Extract business IDs from the query result
+business_refs = [row['business_ref'] for row in var_functions.query_db:2]
+
+# Convert business_ref to business_id format
+business_ids = [bid.replace('businessref_', 'businessid_') for bid in business_refs]
+
+print('__RESULT__:')
+print(json.dumps({
+    'business_count': len(business_ids),
+    'sample_ids': business_ids[:5]
+}))"""
+
+env_args = {'var_functions.query_db:0': [{'count': '65'}], 'var_functions.query_db:2': [{'business_ref': 'businessref_13'}, {'business_ref': 'businessref_79'}, {'business_ref': 'businessref_91'}, {'business_ref': 'businessref_46'}, {'business_ref': 'businessref_47'}, {'business_ref': 'businessref_73'}, {'business_ref': 'businessref_59'}, {'business_ref': 'businessref_67'}, {'business_ref': 'businessref_15'}, {'business_ref': 'businessref_24'}, {'business_ref': 'businessref_36'}, {'business_ref': 'businessref_17'}, {'business_ref': 'businessref_43'}, {'business_ref': 'businessref_99'}, {'business_ref': 'businessref_66'}, {'business_ref': 'businessref_25'}, {'business_ref': 'businessref_80'}, {'business_ref': 'businessref_40'}, {'business_ref': 'businessref_83'}, {'business_ref': 'businessref_86'}, {'business_ref': 'businessref_62'}, {'business_ref': 'businessref_8'}, {'business_ref': 'businessref_57'}, {'business_ref': 'businessref_37'}, {'business_ref': 'businessref_82'}, {'business_ref': 'businessref_35'}, {'business_ref': 'businessref_45'}, {'business_ref': 'businessref_20'}, {'business_ref': 'businessref_22'}, {'business_ref': 'businessref_14'}, {'business_ref': 'businessref_28'}, {'business_ref': 'businessref_77'}, {'business_ref': 'businessref_27'}, {'business_ref': 'businessref_26'}, {'business_ref': 'businessref_4'}, {'business_ref': 'businessref_68'}], 'var_functions.query_db:5': [{'_id': '6859a000fe8b31cd7362e30d', 'business_id': 'businessid_13', 'name': 'Avian Glen Winery', 'review_count': '12', 'is_open': '1', 'attributes': {'RestaurantsPriceRange2': '2', 'RestaurantsTakeOut': 'True', 'ByAppointmentOnly': 'False', 'BusinessAcceptsCreditCards': 'True', 'GoodForKids': 'False', 'BusinessParking': "{'garage': False, 'street': True, 'validated': False, 'lot': True, 'valet': False}"}, 'hours': {'Monday': '12:0-20:0', 'Tuesday': '12:0-20:0', 'Wednesday': '12:0-20:0', 'Thursday': '12:0-20:0', 'Friday': '12:0-20:0', 'Saturday': '12:0-20:0', 'Sunday': '12:0-20:0'}, 'description': 'Located at 3545 Almaville Rd in Smyrna, TN, this establishment offers a delightful experience encompassing Food, Arts & Entertainment, Wineries, and a Wine Tasting Room.'}]}
+
+exec(code, env_args)

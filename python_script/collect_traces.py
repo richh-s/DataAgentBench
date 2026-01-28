@@ -7,10 +7,10 @@ import logging_config
 import json
 import shutil
 
-RESULT_ROOT = Path("/home/ruiying/DataAgentBench")
-# DST_ROOT = Path("/home/ruiying/DataAgentBench/results-gemini-2.5-flash")
-DST_ROOT = Path("/home/ruiying/DataAgentBench/results-gemini-3-pro")
-# DST_ROOT = Path("/home/ruiying/DataAgentBench/results-gpt5.1")
+RESULT_ROOT = Path("/home/ruiying/DataAgentBench-local")
+DST_ROOT = Path("/home/ruiying/DataAgentBench-local/results-gemini-2.5-flash")
+# DST_ROOT = Path("/home/ruiying/DataAgentBench-local/results-gemini-3-pro")
+# DST_ROOT = Path("/home/ruiying/DataAgentBench-local/results-gpt5.1")
 
 if __name__ == "__main__":
     for task in [
@@ -24,8 +24,10 @@ if __name__ == "__main__":
         # "stockindex",
         # "stockmarket",
         # "yelp",
-        "agnews",
-        "music_brainz_20k",
+        # "agnews",
+        # "music_brainz_20k",
+        "civic_unstructured",
+        "paper_unstructured"
     ]:
         query_dir = RESULT_ROOT / f"query_{task}"
         for folder_name in sorted(os.listdir(query_dir)):

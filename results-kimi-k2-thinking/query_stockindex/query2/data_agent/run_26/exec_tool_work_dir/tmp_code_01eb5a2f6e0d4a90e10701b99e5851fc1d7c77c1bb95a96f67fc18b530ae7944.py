@@ -1,0 +1,57 @@
+code = """import json
+import pandas as pd
+
+# Load the data - the result is stored in a file
+file_path = locals()['var_functions.query_db:8']
+
+# Read the full data from the file
+with open(file_path, 'r') as f:
+    data = json.load(f)
+
+# Convert to DataFrame
+df = pd.DataFrame(data)
+
+# Convert Open and Close to float
+df['Open'] = df['Open'].astype(float)
+df['Close'] = df['Close'].astype(float)
+
+# Determine up days (Close > Open) and down days (Close < Open)
+# Ignore days where Close == Open (flat days)
+df['day_type'] = 'flat'
+df.loc[df['Close'] > df['Open'], 'day_type'] = 'up'
+df.loc[df['Close'] < df['Open'], 'day_type'] = 'down'
+
+# Count up and down days for each index
+results = []
+for index in df['Index'].unique():
+    index_data = df[df['Index'] == index]
+    up_days = (index_data['day_type'] == 'up').sum()
+    down_days = (index_data['day_type'] == 'down').sum()
+    flat_days = (index_data['day_type'] == 'flat').sum()
+    total_days = len(index_data)
+    
+    results.append({
+        'Index': index,
+        'UpDays': int(up_days),
+        'DownDays': int(down_days),
+        'FlatDays': int(flat_days),
+        'TotalDays': int(total_days),
+        'MoreUpThanDown': bool(up_days > down_days)
+    })
+
+# Create DataFrame and sort
+results_df = pd.DataFrame(results)
+results_df = results_df.sort_values('Index')
+
+# Get indices with more up days than down days
+positive_indices = results_df[results_df['MoreUpThanDown'] == True]['Index'].tolist()
+
+print('__RESULT__:')
+print(json.dumps({
+    'summary': results_df.to_dict('records'),
+    'indices_with_more_up_days': positive_indices
+}, default=str))"""
+
+env_args = {'var_functions.list_db:0': ['index_info'], 'var_functions.query_db:2': [{'Exchange': 'New York Stock Exchange', 'Currency': 'USD'}, {'Exchange': 'NASDAQ', 'Currency': 'USD'}, {'Exchange': 'Hong Kong Stock Exchange', 'Currency': 'HKD'}, {'Exchange': 'Shanghai Stock Exchange', 'Currency': 'CNY'}, {'Exchange': 'Tokyo Stock Exchange', 'Currency': 'JPY'}, {'Exchange': 'Euronext', 'Currency': 'EUR'}, {'Exchange': 'Shenzhen Stock Exchange', 'Currency': 'CNY'}, {'Exchange': 'Toronto Stock Exchange', 'Currency': 'CAD'}, {'Exchange': 'National Stock Exchange of India', 'Currency': 'INR'}, {'Exchange': 'Frankfurt Stock Exchange', 'Currency': 'EUR'}, {'Exchange': 'Korea Exchange', 'Currency': 'KRW'}, {'Exchange': 'SIX Swiss Exchange', 'Currency': 'CHF'}, {'Exchange': 'Taiwan Stock Exchange', 'Currency': 'TWD'}, {'Exchange': 'Johannesburg Stock Exchange', 'Currency': 'ZAR'}], 'var_functions.list_db:5': ['index_trade'], 'var_functions.query_db:6': [{'Index': '000001.SS'}, {'Index': '399001.SZ'}, {'Index': 'GDAXI'}, {'Index': 'GSPTSE'}, {'Index': 'HSI'}, {'Index': 'IXIC'}, {'Index': 'J203.JO'}, {'Index': 'N100'}, {'Index': 'N225'}, {'Index': 'NSEI'}, {'Index': 'NYA'}, {'Index': 'SSMI'}, {'Index': 'TWII'}], 'var_functions.query_db:8': 'file_storage/functions.query_db:8.json', 'var_functions.query_db:10': [{'Index': 'NYA', 'Date': '2018-01-09 00:00:00', 'Open': '13123.83008', 'Close': '13120.83984'}, {'Index': 'NYA', 'Date': '2018-01-16 00:00:00', 'Open': '13343.82031', 'Close': '13246.86035'}, {'Index': 'NYA', 'Date': '2018-01-18 00:00:00', 'Open': '13341.75977', 'Close': '13315.91016'}, {'Index': 'NYA', 'Date': '2018-01-22 00:00:00', 'Open': '13388.32031', 'Close': '13470.37012'}, {'Index': 'NYA', 'Date': '2018-01-30 00:00:00', 'Open': '13441.24023', 'Close': '13375.50977'}, {'Index': 'NYA', 'Date': '2018-02-01 00:00:00', 'Open': '13338.99023', 'Close': '13381.96973'}, {'Index': 'NYA', 'Date': '2018-02-02 00:00:00', 'Open': '13294.34961', 'Close': '13085.34961'}, {'Index': 'NYA', 'Date': '2018-02-05 00:00:00', 'Open': '12974.19043', 'Close': '12572.92969'}, {'Index': 'NYA', 'Date': '2018-02-07 00:00:00', 'Open': '12696.9502', 'Close': '12687.17969'}, {'Index': 'NYA', 'Date': '2018-02-13 00:00:00', 'Open': '12512.29981', 'Close': '12574.37012'}, {'Index': 'NYA', 'Date': '2018-02-15 00:00:00', 'Open': '12817.17969', 'Close': '12856.87012'}, {'Index': 'NYA', 'Date': '2018-02-21 00:00:00', 'Open': '12777.36035', 'Close': '12695.53027'}, {'Index': 'NYA', 'Date': '2018-02-23 00:00:00', 'Open': '12766.12988', 'Close': '12884.11035'}, {'Index': 'NYA', 'Date': '2018-03-01 00:00:00', 'Open': '12644.42969', 'Close': '12518.73047'}, {'Index': 'NYA', 'Date': '2018-03-02 00:00:00', 'Open': '12444.65039', 'Close': '12557.99023'}, {'Index': 'NYA', 'Date': '2018-03-06 00:00:00', 'Open': '12722.30957', 'Close': '12720.76953'}, {'Index': 'NYA', 'Date': '2018-03-13 00:00:00', 'Open': '12938.5', 'Close': '12831.75'}, {'Index': 'NYA', 'Date': '2018-03-20 00:00:00', 'Open': '12663.25', 'Close': '12663.63965'}, {'Index': 'NYA', 'Date': '2018-04-02 00:00:00', 'Open': '12432.88965', 'Close': '12216.70996'}, {'Index': 'NYA', 'Date': '2018-04-04 00:00:00', 'Open': '12218.91016', 'Close': '12466.4502'}, {'Index': 'NYA', 'Date': '2018-04-06 00:00:00', 'Open': '12511.59961', 'Close': '12349.11035'}, {'Index': 'NYA', 'Date': '2018-04-10 00:00:00', 'Open': '12380.55957', 'Close': '12565.96973'}, {'Index': 'NYA', 'Date': '2018-04-11 00:00:00', 'Open': '12509.38965', 'Close': '12514.58984'}, {'Index': 'NYA', 'Date': '2018-04-12 00:00:00', 'Open': '12558.98047', 'Close': '12580.21973'}, {'Index': 'NYA', 'Date': '2018-04-23 00:00:00', 'Open': '12618.07031', 'Close': '12610.76953'}, {'Index': 'NYA', 'Date': '2018-04-24 00:00:00', 'Open': '12659.92969', 'Close': '12514.0'}, {'Index': 'NYA', 'Date': '2018-04-25 00:00:00', 'Open': '12491.42969', 'Close': '12517.86035'}, {'Index': 'NYA', 'Date': '2018-05-01 00:00:00', 'Open': '12490.24023', 'Close': '12493.01953'}, {'Index': 'NYA', 'Date': '2018-05-02 00:00:00', 'Open': '12486.11035', 'Close': '12418.05957'}, {'Index': 'NYA', 'Date': '2018-05-03 00:00:00', 'Open': '12395.46973', 'Close': '12392.5'}, {'Index': 'NYA', 'Date': '2018-05-08 00:00:00', 'Open': '12498.16016', 'Close': '12520.24023'}, {'Index': 'NYA', 'Date': '2018-05-16 00:00:00', 'Open': '12710.62988', 'Close': '12743.79981'}, {'Index': 'NYA', 'Date': '2018-05-17 00:00:00', 'Open': '12741.54004', 'Close': '12747.83008'}, {'Index': 'NYA', 'Date': '2018-05-21 00:00:00', 'Open': '12771.57031', 'Close': '12804.00977'}, {'Index': 'NYA', 'Date': '2018-05-22 00:00:00', 'Open': '12832.16992', 'Close': '12766.65039'}, {'Index': 'NYA', 'Date': '2018-06-06 00:00:00', 'Open': '12696.53027', 'Close': '12778.23047'}, {'Index': 'NYA', 'Date': '2018-06-15 00:00:00', 'Open': '12727.38965', 'Close': '12734.63965'}, {'Index': 'NYA', 'Date': '2018-06-18 00:00:00', 'Open': '12660.66992', 'Close': '12708.62988'}, {'Index': 'NYA', 'Date': '2018-06-19 00:00:00', 'Open': '12708.62988', 'Close': '12638.98047'}, {'Index': 'NYA', 'Date': '2018-06-22 00:00:00', 'Open': '12653.33984', 'Close': '12639.57031'}, {'Index': 'NYA', 'Date': '2018-06-25 00:00:00', 'Open': '12584.9502', 'Close': '12481.59961'}, {'Index': 'NYA', 'Date': '2018-06-26 00:00:00', 'Open': '12501.33984', 'Close': '12510.54981'}, {'Index': 'NYA', 'Date': '2018-06-29 00:00:00', 'Open': '12537.19043', 'Close': '12504.25'}, {'Index': 'NYA', 'Date': '2018-07-03 00:00:00', 'Open': '12542.33008', 'Close': '12494.7002'}, {'Index': 'NYA', 'Date': '2018-07-09 00:00:00', 'Open': '12712.33008', 'Close': '12776.91992'}, {'Index': 'NYA', 'Date': '2018-07-12 00:00:00', 'Open': '12746.71973', 'Close': '12761.45996'}, {'Index': 'NYA', 'Date': '2018-07-13 00:00:00', 'Open': '12744.79981', 'Close': '12769.5'}, {'Index': 'NYA', 'Date': '2018-07-17 00:00:00', 'Open': '12731.48047', 'Close': '12779.21973'}, {'Index': 'NYA', 'Date': '2018-07-23 00:00:00', 'Open': '12788.5', 'Close': '12794.04981'}, {'Index': 'NYA', 'Date': '2018-08-14 00:00:00', 'Open': '12791.9502', 'Close': '12835.30957'}, {'Index': 'NYA', 'Date': '2018-08-15 00:00:00', 'Open': '12752.5', 'Close': '12723.08984'}, {'Index': 'NYA', 'Date': '2018-08-21 00:00:00', 'Open': '12998.04004', 'Close': '12996.75977'}, {'Index': 'NYA', 'Date': '2018-09-04 00:00:00', 'Open': '12976.04981', 'Close': '12969.86035'}, {'Index': 'NYA', 'Date': '2018-09-12 00:00:00', 'Open': '12952.30957', 'Close': '12990.09961'}, {'Index': 'NYA', 'Date': '2018-09-20 00:00:00', 'Open': '13183.66016', 'Close': '13225.11035'}, {'Index': 'NYA', 'Date': '2018-09-25 00:00:00', 'Open': '13203.90039', 'Close': '13160.59961'}, {'Index': 'NYA', 'Date': '2018-09-27 00:00:00', 'Open': '13111.99023', 'Close': '13105.71973'}, {'Index': 'NYA', 'Date': '2018-10-04 00:00:00', 'Open': '13089.23047', 'Close': '13042.29981'}, {'Index': 'NYA', 'Date': '2018-10-08 00:00:00', 'Open': '12955.69043', 'Close': '13000.13965'}, {'Index': 'NYA', 'Date': '2018-10-10 00:00:00', 'Open': '12952.12012', 'Close': '12622.12988'}, {'Index': 'NYA', 'Date': '2018-10-15 00:00:00', 'Open': '12437.74023', 'Close': '12425.67969'}, {'Index': 'NYA', 'Date': '2018-10-16 00:00:00', 'Open': '12425.67969', 'Close': '12645.9502'}, {'Index': 'NYA', 'Date': '2018-10-22 00:00:00', 'Open': '12474.15039', 'Close': '12374.75977'}, {'Index': 'NYA', 'Date': '2018-10-24 00:00:00', 'Open': '12274.37988', 'Close': '11969.74023'}, {'Index': 'NYA', 'Date': '2018-10-29 00:00:00', 'Open': '12084.49023', 'Close': '11942.50977'}, {'Index': 'NYA', 'Date': '2018-11-01 00:00:00', 'Open': '12208.05957', 'Close': '12356.5'}, {'Index': 'NYA', 'Date': '2018-11-05 00:00:00', 'Open': '12381.69043', 'Close': '12424.30957'}, {'Index': 'NYA', 'Date': '2018-11-08 00:00:00', 'Open': '12644.58008', 'Close': '12622.04004'}, {'Index': 'NYA', 'Date': '2018-11-12 00:00:00', 'Open': '12517.73047', 'Close': '12343.50977'}, {'Index': 'NYA', 'Date': '2018-11-14 00:00:00', 'Open': '12398.92969', 'Close': '12275.49023'}, {'Index': 'NYA', 'Date': '2018-11-21 00:00:00', 'Open': '12108.71973', 'Close': '12123.33984'}, {'Index': 'NYA', 'Date': '2018-11-26 00:00:00', 'Open': '12111.2002', 'Close': '12181.59961'}, {'Index': 'NYA', 'Date': '2018-11-28 00:00:00', 'Open': '12225.73047', 'Close': '12417.62988'}, {'Index': 'NYA', 'Date': '2018-12-04 00:00:00', 'Open': '12555.01953', 'Close': '12221.98047'}, {'Index': 'NYA', 'Date': '2018-12-12 00:00:00', 'Open': '12008.58984', 'Close': '11943.29004'}, {'Index': 'NYA', 'Date': '2018-12-14 00:00:00', 'Open': '11845.36035', 'Close': '11755.37988'}, {'Index': 'NYA', 'Date': '2018-12-19 00:00:00', 'Open': '11540.17969', 'Close': '11371.83984'}, {'Index': 'NYA', 'Date': '2018-12-20 00:00:00', 'Open': '11342.94043', 'Close': '11222.79004'}, {'Index': 'NYA', 'Date': '2018-12-31 00:00:00', 'Open': '11338.24023', 'Close': '11374.38965'}]}
+
+exec(code, env_args)

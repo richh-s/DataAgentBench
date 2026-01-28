@@ -1,0 +1,47 @@
+code = """import json
+
+# Access the storage variables directly
+storage = locals()
+
+# Check what we have
+all_repos_44 = storage['var_functions.query_db:44']
+sample_commits_68 = storage['var_functions.query_db:68']
+
+print(f'Type of var_functions.query_db:44: {type(all_repos_44)}')
+print(f'Type of var_functions.query_db:68: {type(sample_commits_68)}')
+
+# Check if they're file paths or lists
+if isinstance(all_repos_44, str):
+    with open(all_repos_44, 'r') as f:
+        shell_apache_repos = json.load(f)
+else:
+    shell_apache_repos = all_repos_44
+
+if isinstance(sample_commits_68, str):
+    with open(sample_commits_68, 'r') as f:
+        commits_repo_list = json.load(f)
+else:
+    commits_repo_list = sample_commits_68
+
+print(f'Shell+Apache repos: {len(shell_apache_repos)}')
+print(f'Sample commits repos: {len(commits_repo_list)}')
+
+shell_apache_set = set([r['repo_name'] for r in shell_apache_repos])
+commits_sample_set = set([r['repo_name'] for r in commits_repo_list])
+
+overlap = shell_apache_set.intersection(commits_sample_set)
+print(f'Overlap: {len(overlap)}')
+print(f'Overlapping repos: {list(overlap)}')
+
+# Check for any common repos
+print('__RESULT__:')
+print(json.dumps({
+    'total_shell_apache': len(shell_apache_set),
+    'sample_commits_repos': len(commits_sample_set),
+    'overlap_count': len(overlap),
+    'overlap_list': list(overlap)
+}))"""
+
+env_args = {'var_functions.query_db:0': 'file_storage/functions.query_db:0.json', 'var_functions.list_db:2': ['commits', 'contents', 'files'], 'var_functions.execute_python:10': {'repository_count': 114972, 'sample_repositories': ['jitsi/jipopro', 'NuGet/json-ld.net', 'virtualcoinclub/common', 'pydev/jmx_exporter', 'eskatos/qi4j-dev-scripts']}, 'var_functions.query_db:12': [{'commit_count': '0'}], 'var_functions.query_db:14': [{'commit_count': '0'}], 'var_functions.query_db:18': [{'Count': '3'}], 'var_functions.query_db:20': 'file_storage/functions.query_db:20.json', 'var_functions.query_db:24': [{'repo_name': 'tensorflow/tensorflow', 'commit_count': '114'}, {'repo_name': 'apple/swift', 'commit_count': '963'}, {'repo_name': 'torvalds/linux', 'commit_count': '13413'}, {'repo_name': 'Microsoft/vscode', 'commit_count': '171'}, {'repo_name': 'facebook/react', 'commit_count': '104'}, {'repo_name': 'twbs/bootstrap', 'commit_count': '251'}], 'var_functions.execute_python:28': {'total_count': 50000, 'first_3': [{'repo_name': 'jitsi/jipopro'}, {'repo_name': 'NuGet/json-ld.net'}, {'repo_name': 'virtualcoinclub/common'}]}, 'var_functions.query_db:30': [{'total_count': '114972'}], 'var_functions.execute_python:32': {'total_repos': 50000, 'num_batches': 500, 'batch1': ['jitsi/jipopro', 'NuGet/json-ld.net', 'virtualcoinclub/common', 'pydev/jmx_exporter', 'eskatos/qi4j-dev-scripts', 'doximity/docker-redis', 'raghavkarol/dotfiles', 'Microsoft/TypeScript', 'romelperez/conky-command', 'NorthernMan54/homebridge-wssensor', 'ivschukin/learning-azure', 'arrawatia/cp-docker-images', 'wolfitem/docker', 'sdgdsffdsfff/ModSecurity', 'frapposelli/govmomi', 'Grimmjowjack/google-services', 'chuangWu/butterknife', 'louwrentius/eztables', 'riddlesio/hack-man-engine', 'DavitTevanyan/word2vec', 'Siphon098/git-sync-batch', 'hitwangyu/apache-common-pool2', 'wshearn/openshift-ansible', 'javasoze/clue', 'hschema/schemaorg', 'simba518/AniEditor', 'abhgupta/kubernetes', 'enovance/puppet-tripleo', 'garana/mod_reslog', 'shiumachi/hbck-analyzer', 'wildfly-swarm/wildfly-swarm-core', 'grmartin/android-vcard', 'allancth/camel', 'wkalt/puppetdb', 'bep/killswitch', 'mark-adams/compose', 'navnorth/LR-Data', 'ShengC/remotely', 'triAGENS/guacamole', 'cavanm/apn-defaults', 'ampproject/amphtml', 'zkrejcov/drools-wb', 'bmistry13/kafka', 'googleapis/java-retail', 'kewalaka/chocolatey-packages', 'AzazelN28/din', 'ZacharyKlein/grails-isomorphic', 'automatecloud/docker-ddc-vagrant', 'Lambda3/docker-vsts-agent', 'darilek/dotvvm', 'DagensNyheter/helios', 'WitchKing-Helkar/rtbkit', 'branic/manageiq', 'dwmw2/luci', 'StartupMakers/ssh-resource', 'saturnism/oauth2util', 'diogomonica/docker', 'plutoshe/taskgraph', 'ftrossbach/intro-to-dcos', 'nao20010128nao/android-build', 'adamleff/knife-vcair', 'carezone/mixpanel-iphone', 'luvit/luvi', 'rsprabery/FIN', 'dugwa/puppet-control', 'liuqijie/wind', 'proximcreation/tad-mobile', 'ekumenlabs/terminus', 'Hitcents/iOS4Unity', 'wanelo-chef/chef-bootstrap', 'choopooly/docker-grafana-graphite', 'tealover/nova', 'coolsvap/kolla', 'mikepenz/Android-Iconics', 'walrusCH/HomeMirror', 'ppletscher/BCFWstruct', 'barakmich/cayley', 'olafura/json_diff_ex', 'jinahya/jpa-metamodels-with-maven-example', 'msoftware/ContentLoadingProgressDialog', 'iQubeLabs/sdp_search_members_node', 'unixunion/vertx-dockermod', 'mtsyganov/react', 'fish-cat/piwebapi-samples', 'xuanduc939/iosched', 'chemouna/frame-gradle-plugin', 'laura-dietz/kba-y2-streameval', 'jarcec/cmd-tools', 'mrcflorian/classbook', 'cherrydocker/minos', 'Qihoo360/phptrace', '43350860/spdylearn', 'gmtahackers/deeplearning', 'is00hcw/jgroups-raft', 'olamy/archiva', 'boundary/zoocreeper', 'ThomasMarcel/gae-tomalcala-flask', 'mheon/docker', 'wowsoso/etcd', 'SourceBackups/DexHunter']}, 'var_functions.query_db:36': [{'unique_repos': '6'}], 'var_functions.query_db:40': 'file_storage/functions.query_db:40.json', 'var_functions.execute_python:42': {'total_repos': 100000, 'num_batches': 500, 'batch_size': 200, 'first_batch_example': ['jitsi/jipopro', 'NuGet/json-ld.net', 'virtualcoinclub/common', 'pydev/jmx_exporter', 'eskatos/qi4j-dev-scripts']}, 'var_functions.query_db:44': 'file_storage/functions.query_db:44.json', 'var_functions.execute_python:45': {'total_repos': 100000, 'batches_count': 500, 'batch_size': 200, 'sample_names': ['jitsi/jipopro', 'NuGet/json-ld.net', 'virtualcoinclub/common', 'pydev/jmx_exporter', 'eskatos/qi4j-dev-scripts']}, 'var_functions.execute_python:48': {'action': 'fetch_remaining_repos', 'count': 14972}, 'var_functions.query_db:50': 'file_storage/functions.query_db:50.json', 'var_functions.execute_python:52': {'total_repositories': 114972, 'batch_size': 200, 'num_batches': 575, 'first_five_repos': ['jitsi/jipopro', 'NuGet/json-ld.net', 'virtualcoinclub/common', 'pydev/jmx_exporter', 'eskatos/qi4j-dev-scripts']}, 'var_functions.query_db:54': [{'commit_count': '0'}], 'var_functions.query_db:56': [{'count_star()': '0'}], 'var_functions.query_db:58': [], 'var_functions.query_db:60': 'file_storage/functions.query_db:60.json', 'var_functions.execute_python:62': 'file_storage/functions.execute_python:62.json', 'var_functions.query_db:64': [{'total': '0'}], 'var_functions.query_db:66': [{'total': '0'}], 'var_functions.query_db:68': [{'repo_name': 'tensorflow/tensorflow'}, {'repo_name': 'facebook/react'}, {'repo_name': 'twbs/bootstrap'}, {'repo_name': 'Microsoft/vscode'}, {'repo_name': 'torvalds/linux'}, {'repo_name': 'apple/swift'}]}
+
+exec(code, env_args)

@@ -1,0 +1,42 @@
+code = """import json
+import pandas as pd
+
+# Load all data
+tracks_file_path = locals()['var_functions.query_db:5']
+sales_file_path = locals()['var_functions.query_db:8']
+
+with open(tracks_file_path, 'r') as f:
+    tracks_data = json.load(f)
+with open(sales_file_path, 'r') as f:
+    sales_data = json.load(f)
+
+sales_df = pd.DataFrame(sales_data)
+tracks_df = pd.DataFrame(tracks_data)
+
+# Convert to proper data types
+sales_df['track_id'] = sales_df['track_id'].astype(str)
+sales_df['revenue_usd'] = pd.to_numeric(sales_df['revenue_usd'], errors='coerce')
+tracks_df['track_id'] = tracks_df['track_id'].astype(str)
+
+# Group by track_id and calculate total revenue
+track_revenue = sales_df.groupby('track_id')['revenue_usd'].sum().reset_index()
+track_revenue = track_revenue.sort_values('revenue_usd', ascending=False)
+
+# Get the top track
+top_track_id = track_revenue.iloc[0]['track_id']
+top_revenue = track_revenue.iloc[0]['revenue_usd']
+
+# Get track info
+top_track = tracks_df[tracks_df['track_id'] == top_track_id]
+
+print("__RESULT__:")
+print(json.dumps({
+    "top_track_id": top_track_id,
+    "top_revenue": top_revenue,
+    "top_track": top_track.to_dict('records')[0] if not top_track.empty else None,
+    "track_type": str(type(top_track_id))
+}))"""
+
+env_args = {'var_functions.list_db:0': ['tracks'], 'var_functions.list_db:2': ['sales'], 'var_functions.query_db:5': 'file_storage/functions.query_db:5.json', 'var_functions.query_db:6': [{'sale_id': '1', 'track_id': '1', 'country': 'Canada', 'store': 'Google Play', 'units_sold': '349', 'revenue_usd': '408.0'}, {'sale_id': '2', 'track_id': '1', 'country': 'Canada', 'store': 'Apple Music', 'units_sold': '122', 'revenue_usd': '137.59'}, {'sale_id': '3', 'track_id': '1', 'country': 'Germany', 'store': 'Apple Music', 'units_sold': '373', 'revenue_usd': '371.57'}, {'sale_id': '4', 'track_id': '1', 'country': 'Germany', 'store': 'Spotify', 'units_sold': '258', 'revenue_usd': '269.49'}, {'sale_id': '5', 'track_id': '2', 'country': 'Germany', 'store': 'Spotify', 'units_sold': '161', 'revenue_usd': '184.74'}], 'var_functions.query_db:8': 'file_storage/functions.query_db:8.json', 'var_functions.execute_python:12': {'tracks_count': 19375, 'sales_count': 58049, 'sample_tracks': [{'track_id': '1', 'title': "Daniel Balavoine - L'enfant aux yeux d'Italie", 'artist': 'None', 'album': 'De vous à elle en passant par moi', 'year': '75'}, {'track_id': '2', 'title': '007', 'artist': '[unknown]', 'album': 'Cantigas de roda (unknown)', 'year': 'None'}, {'track_id': '3', 'title': 'Action PAINTING! - Mustard Gas', 'artist': 'None', 'album': 'There and Back Again Lane', 'year': '95'}], 'sample_sales': [{'sale_id': '1', 'track_id': '1', 'country': 'Canada', 'store': 'Google Play', 'units_sold': '349', 'revenue_usd': '408.0'}, {'sale_id': '2', 'track_id': '1', 'country': 'Canada', 'store': 'Apple Music', 'units_sold': '122', 'revenue_usd': '137.59'}, {'sale_id': '3', 'track_id': '1', 'country': 'Germany', 'store': 'Apple Music', 'units_sold': '373', 'revenue_usd': '371.57'}]}, 'var_functions.execute_python:14': {'top_revenue_tracks': [{'track_id': '3286', 'revenue_usd': '99.98285.25500.21446.99'}, {'track_id': '6756', 'revenue_usd': '99.98117.85419.33212.17428.32'}, {'track_id': '13552', 'revenue_usd': '99.96159.23'}, {'track_id': '4551', 'revenue_usd': '99.89208.7770.92'}, {'track_id': '15755', 'revenue_usd': '99.87208.83120.06393.9'}, {'track_id': '10022', 'revenue_usd': '99.85'}, {'track_id': '15502', 'revenue_usd': '99.84436.174.75476.44'}, {'track_id': '1373', 'revenue_usd': '99.84361.87362.77301.09552.87'}, {'track_id': '16249', 'revenue_usd': '99.83472.81322.78484.78'}, {'track_id': '10110', 'revenue_usd': '99.78199.13450.92123.15'}, {'track_id': '7300', 'revenue_usd': '99.76179.7'}, {'track_id': '10053', 'revenue_usd': '99.73118.18109.72384.47'}, {'track_id': '7929', 'revenue_usd': '99.69'}, {'track_id': '1331', 'revenue_usd': '99.63241.97384.56344.6860.48'}, {'track_id': '467', 'revenue_usd': '99.54342.43242.88402.78525.16'}, {'track_id': '3376', 'revenue_usd': '99.4827.24'}, {'track_id': '15652', 'revenue_usd': '99.47'}, {'track_id': '16972', 'revenue_usd': '99.45281.6132.5712.13'}, {'track_id': '16484', 'revenue_usd': '99.45190.62328.14316.45481.3'}, {'track_id': '8757', 'revenue_usd': '99.45148.2322.69507.17'}], 'top_tracks': [{'track_id': '467', 'title': 'St Louis Blues March (Swing Greats)', 'artist': 'Colin Busby Big Swing Band', 'album': 'Swing Greats', 'year': '1999'}, {'track_id': '1331', 'title': 'The Great and the Good - The Code Is Red... Long Live the Code', 'artist': 'Napalm Death', 'album': 'None', 'year': "'05"}, {'track_id': '1373', 'title': '006-Haste Suraj Ki', 'artist': 'Nadeem-Shravan', 'album': 'Dil Ka Rishta (2005)', 'year': 'None'}, {'track_id': '3286', 'title': 'Jungle Beat', 'artist': 'George Bruns', 'album': 'The Jungle Book', 'year': '1990'}, {'track_id': '3376', 'title': '1001 Doses (Até Você Voltar) (Taito Não Engole Fichas)', 'artist': 'Carbona', 'album': 'Taito Não Engole Fichas', 'year': '2003'}, {'track_id': '4551', 'title': 'Calling of Setnacht: Twofold Triunity (Thaumiel)', 'artist': 'Ofermod', 'album': 'Thaumiel', 'year': '2012'}, {'track_id': '6756', 'title': 'Stab (narrationn)', 'artist': 'Daniel C. Holter & Chris Weerts', 'album': 'Gearbox', 'year': 'None'}, {'track_id': '7300', 'title': 'The Lonesome One - The Trio: Live From Chicago', 'artist': 'Oscar Peterson Trio', 'album': 'None', 'year': "'97"}, {'track_id': '7929', 'title': 'Ham-dyt (Шаманское дерево) (Shizo I.D.)', 'artist': 'Gen-DOS', 'album': 'Shizo IZ.D.', 'year': '2006'}, {'track_id': '8757', 'title': 'Serena - Segnali di umana prseenza', 'artist': 'Nino Buonocore', 'album': 'None', 'year': "'13"}, {'track_id': '10022', 'title': 'One Shots: Snare: One Shots Snares 78-02 (Sony Sound Series: Loops & Samples: On the Jazz Tip)', 'artist': '[unknown]', 'album': 'Sony Sound Series: Loops & Samples: On the Jazz Tip', 'year': 'None'}, {'track_id': '10053', 'title': 'Csak a piknik (Gyere át!)', 'artist': 'Emil.RuleZ!', 'album': 'Gyere át!', 'year': '2012'}, {'track_id': '10110', 'title': 'Soul Corruption (Live! Alone in America)', 'artist': 'GrahamParker', 'album': 'Live! Alone in America', 'year': '1989'}, {'track_id': '13552', 'title': 'Think (Something to Believe In)', 'artist': 'Aretha Franklin', 'album': 'Something to Believe In', 'year': '2002'}, {'track_id': '15502', 'title': "Let's Start Over Again - Safari", 'artist': 'Flat DuoJets', 'album': 'None', 'year': "'93"}, {'track_id': '15652', 'title': 'Ensemble Gilles Binchois - Dominus vobiscum - oremus', 'artist': 'None', 'album': 'Le Manuscrit du Puy / / Les Premières Polyphonies Françaises', 'year': '01'}, {'track_id': '15755', 'title': 'Fire Horse (remix) - Просто любить', 'artist': 'Авраам Руссо', 'album': 'None', 'year': "'03"}, {'track_id': '16249', 'title': '0A4-House of the Rising Sun', 'artist': 'Joan Baez', 'album': 'Joan Baez (1970)', 'year': 'None'}, {'track_id': '16484', 'title': '006-One Step Closer', 'artist': 'Oceans Divide', 'album': 'Oceans Divide EP (2011)', 'year': 'None'}, {'track_id': '16972', 'title': 'Agent Caine - Medicine Man', 'artist': 'None', 'album': 'Chillout Fourever', 'year': '97'}]}, 'var_functions.execute_python:16': {'sales_dtypes': "{'sale_id': dtype('O'), 'track_id': dtype('O'), 'country': dtype('O'), 'store': dtype('O'), 'units_sold': dtype('O'), 'revenue_usd': dtype('O')}", 'revenue_sample': ['408.0', '137.59', '371.57', '269.49', '184.74'], 'revenue_type_sample': ['str', 'str', 'str', 'str', 'str']}}
+
+exec(code, env_args)

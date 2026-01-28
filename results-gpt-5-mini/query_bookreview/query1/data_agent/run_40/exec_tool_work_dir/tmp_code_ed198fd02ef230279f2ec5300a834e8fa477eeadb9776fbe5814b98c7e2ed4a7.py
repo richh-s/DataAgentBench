@@ -1,0 +1,64 @@
+code = """import json
+import pandas as pd
+import re
+
+with open(var_call_caHGGXUt1VLNpELhqCC5y9AH, 'r', encoding='utf-8') as f:
+    books = json.load(f)
+with open(var_call_t0ZBVMIZsMYvShDIaE8Q4iCJ, 'r', encoding='utf-8') as f:
+    reviews = json.load(f)
+
+books_df = pd.DataFrame(books)
+reviews_df = pd.DataFrame(reviews)
+
+# Ensure columns
+books_df = books_df.reindex(columns=['book_id','title','details'])
+
+# map to purchase_id
+books_df['purchase_id'] = books_df['book_id'].astype(str).str.replace('bookid_', 'purchaseid_')
+
+# robust year extraction
+year_pattern = re.compile(r'(17|18|19|20)\d{2}')
+month_year_pattern = re.compile(r'(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2},?\s*(\d{4})', re.IGNORECASE)
+
+def extract_year(s):
+    if not isinstance(s, str):
+        return None
+    m2 = month_year_pattern.search(s)
+    if m2:
+        try:
+            y = int(m2.group(1))
+            return y
+        except:
+            pass
+    m = year_pattern.search(s)
+    if m:
+        return int(m.group(0))
+    return None
+
+books_df['year'] = books_df['details'].apply(extract_year)
+
+# convert to int and drop null years
+books_df = books_df[books_df['year'].notna()].copy()
+if books_df.empty:
+    result = {'decade': None, 'average_rating': None, 'book_count': 0}
+else:
+    books_df['year'] = books_df['year'].astype(int)
+    books_df['decade'] = (books_df['year'] // 10 * 10).astype(int).astype(str) + 's'
+
+    reviews_df['avg_rating'] = pd.to_numeric(reviews_df['avg_rating'], errors='coerce')
+    merged = pd.merge(books_df, reviews_df, on='purchase_id', how='inner')
+
+    grp = merged.groupby('decade').agg(book_count=('purchase_id','nunique'), avg_of_avg=('avg_rating','mean')).reset_index()
+    grp = grp[grp['book_count'] >= 10]
+    if grp.empty:
+        result = {'decade': None, 'average_rating': None, 'book_count': 0}
+    else:
+        best = grp.loc[grp['avg_of_avg'].idxmax()]
+        result = {'decade': best['decade'], 'average_rating': round(float(best['avg_of_avg']),4), 'book_count': int(best['book_count'])}
+
+print('__RESULT__:')
+print(json.dumps(result))"""
+
+env_args = {'var_call_l6tSoV2BcoOcQSiAS5CaRqL9': ['review'], 'var_call_nmmLgFKi9uB6QwSMDZ3nRC9k': ['books_info'], 'var_call_caHGGXUt1VLNpELhqCC5y9AH': 'file_storage/call_caHGGXUt1VLNpELhqCC5y9AH.json', 'var_call_t0ZBVMIZsMYvShDIaE8Q4iCJ': 'file_storage/call_t0ZBVMIZsMYvShDIaE8Q4iCJ.json', 'var_call_37aXB9KdPitRNKEQp4Yyw6V7': {'decade': None, 'average_rating': None, 'book_count': 0}, 'var_call_CHJyeVGFNLbJufFygKn8S690': {'total_books_with_year': 0, 'unique_books_with_year': 0, 'merged_rows': 200, 'merged_unique_books': 200, 'decade_stats': []}, 'var_call_pgJ0S6HM1GDAVVSHg012A2YS': [{'book_id': 'bookid_1', 'details': 'Published by Chatto & Windus, the first edition of this book was released on January 1, 2004. It is written in English and comes in a hardcover format, comprising 196 pages. The book has an ISBN-10 of 0701169850 and an ISBN-13 of 978-0701169855. Weighing 10.1 ounces, its dimensions are 5.39 x 0.71 x 7.48 inches.'}, {'book_id': 'bookid_2', 'details': 'This book, published by Heinemann in its first edition on May 20, 1996, is written in English and is available in paperback format, consisting of 316 pages. It has an ISBN-10 of 0435088688 and an ISBN-13 of 978-0435088682. The item weighs 1.05 pounds and its dimensions are 6.03 x 0.67 x 8.95 inches.'}, {'book_id': 'bookid_3', 'details': 'This book, published by Little, Brown and Company in its first edition on May 8, 2012, is available in English and is bound as a hardcover with a total of 384 pages. It has an ISBN-10 of 9780316185363 and an ISBN-13 of 978-0316185363. The item weighs 1.4 pounds and its dimensions are 6.25 inches in width, 1.55 inches in depth, and 9.55 inches in height.'}, {'book_id': 'bookid_4', 'details': 'This book, published by Scholastic Paperbacks in a reprint edition on October 29, 2013, is written in English and consists of 64 pages. It has an ISBN-10 of 0545425573 and an ISBN-13 of 978-0545425575. The reading age is suitable for children between 7 and 10 years old, and it corresponds to a Lexile measure of 590L. The book is appropriate for students in grades 2 through 5. Weighing 1.92 ounces, its dimensions are 5.25 x 0.2 x 7.5 inches.'}, {'book_id': 'bookid_5', 'details': 'The book was published on May 18, 2014, and is available in English. It has a file size of 1542 KB and allows for unlimited simultaneous device usage. Text-to-speech functionality is enabled, and it supports screen readers, enhancing accessibility for readers. Enhanced typesetting is also enabled, while the X-Ray feature is not available. Word Wise is enabled to assist with comprehension, and sticky notes can be used on Kindle Scribe. The print length of the book is 233 pages.'}, {'book_id': 'bookid_6', 'details': 'This book, published independently on December 30, 2021, is written in English and consists of 24 pages. It has an ISBN 13 of 979-8528537702 and weighs 3.2 ounces. The dimensions of the book are 7 x 0.06 x 9 inches.'}, {'book_id': 'bookid_7', 'details': 'The book, published by Guilford in its second edition in January 2004, is also noted as the 8082nd edition from January 1, 1994. It has a remarkably light item weight of just 0.01 ounces.'}, {'book_id': 'bookid_8', 'details': 'This book, published by Make Community, LLC, in its second edition on September 22, 2015, is available in English and spans 352 pages in paperback format. It has an ISBN of 9781680450262 for the 10-digit version and 978-1680450262 for the 13-digit version. The content is suitable for readers aged 11 to 17 years. The book weighs 2.91 pounds and its dimensions are 8 inches in width, 0.5 inches in thickness, and 10 inches in height.'}, {'book_id': 'bookid_9', 'details': 'This book, published independently on September 25, 2019, is written in English and spans 367 pages. It is available in paperback format and has an ISBN-10 of 1694621731 and an ISBN-13 of 978-1694621733. The item weighs 1.38 pounds and measures 6 x 0.92 x 9 inches.'}, {'book_id': 'bookid_10', 'details': 'This book, published by WallBuilder Press in its first edition on November 8, 2004, is available in English and comprises 51 pages in paperback format. It has an ISBN-10 of 1932225323 and an ISBN-13 of 978-1932225327, with a total item weight of 3.52 ounces.'}, {'book_id': 'bookid_11', 'details': 'Published by Caxton Press on January 1, 1993, this book is available in English and spans 407 pages. It has an ISBN-10 of 0893011673 and an ISBN-13 of 978-0893011673. Weighing 1.51 pounds, the book measures 6.05 inches in width, 1.14 inches in depth, and 9.03 inches in height.'}, {'book_id': 'bookid_12', 'details': 'This book, published by Lisette Marshall on May 29, 2022, is written in English and is available in paperback, comprising 215 pages. It has an ISBN 10 number of 9083256898 and an ISBN 13 number of 978-9083256894. The item weighs 11.4 ounces and has dimensions of 6 x 0.54 x 9 inches.'}, {'book_id': 'bookid_13', 'details': 'The book, published by Central Avenue Publishing on January 24, 2023, is available in English and comes in paperback format, consisting of 144 pages. It has an ISBN-10 number of 1771682760 and an ISBN-13 number of 978-1771682763. The item weighs 5.1 ounces and has dimensions of 5.25 x 0.4 x 8 inches.'}, {'book_id': 'bookid_14', 'details': 'The book, published by Jessica Mathews, LLC on November 13, 2019, is written in English and features a paperback format comprising 26 pages. It has an ISBN-10 of 1087848539 and an ISBN-13 of 978-1087848532. Suitable for readers aged 3 to 8 years, it is appropriate for students in Kindergarten through 3rd grade. The item weighs 3.03 ounces and has dimensions of 8.5 x 0.05 x 11 inches.'}, {'book_id': 'bookid_15', 'details': 'The book is published by Kegan Paul and is a first edition released on November 15, 2000. It is written in English and is available in hardcover, comprising 348 pages. The ISBN-10 for this edition is 0710306911, while the ISBN-13 is 978-0710306913. The item weighs 2.23 pounds and has dimensions of 5.5 x 1.25 x 8.5 inches.'}, {'book_id': 'bookid_16', 'details': 'This book is published by Prentice Hall College Division and is in its third edition, released on January 1, 1997. It is written in English and is available in paperback, consisting of 390 pages. The ISBN-10 for this book is 0130840963, while the ISBN-13 is 978-0130840967. The item weighs 1.3 pounds and has dimensions of 7.01 x 0.67 x 9.17 inches.'}, {'book_id': 'bookid_17', 'details': 'This book, published by Edelsa Grupo Didascalia in a September 1, 1987 edition, is written in Spanish and consists of 44 pages. It has an ISBN-10 number of 8477110190 and an ISBN-13 number of 978-8477110194. The item weighs 2.05 ounces and has dimensions of 5.12 x 0.16 x 7.48 inches.'}, {'book_id': 'bookid_18', 'details': 'The book, published by Gale, Sabin Americana on February 21, 2012, is written in English and is available in paperback format, comprising 26 pages. It has an ISBN-10 of 1275627234 and an ISBN-13 of 978-1275627239. The item weighs 2.4 ounces and has dimensions of 7.44 x 0.05 x 9.69 inches.'}, {'book_id': 'bookid_19', 'details': "The book, published by Foundation Press in its 2013th edition on March 22, 2013, is available in English and spans 355 pages. It has an ISBN-10 number of 1609303687 and an ISBN-13 number of 978-1609303686. Weighing 1.5 pounds, the book's dimensions are 7 inches in width, 0.5 inches in thickness, and 9.75 inches in height."}, {'book_id': 'bookid_20', 'details': 'The book, published by Soho Crime in a revised edition on July 1, 2003, is available in English and has a total print length of 372 pages. It has a file size of 2295 KB and supports various features such as Text to Speech, a screen reader, enhanced typesetting, X-Ray, Word Wise, and sticky notes on Kindle Scribe.'}], 'var_call_sL0WxAM7YCnKdoVGSnlwwC66': [{'book_id': 'bookid_1', 'matches': []}, {'book_id': 'bookid_2', 'matches': []}, {'book_id': 'bookid_3', 'matches': []}, {'book_id': 'bookid_4', 'matches': []}, {'book_id': 'bookid_5', 'matches': []}, {'book_id': 'bookid_6', 'matches': []}, {'book_id': 'bookid_7', 'matches': []}, {'book_id': 'bookid_8', 'matches': []}, {'book_id': 'bookid_9', 'matches': []}, {'book_id': 'bookid_10', 'matches': []}, {'book_id': 'bookid_11', 'matches': []}, {'book_id': 'bookid_12', 'matches': []}, {'book_id': 'bookid_13', 'matches': []}, {'book_id': 'bookid_14', 'matches': []}, {'book_id': 'bookid_15', 'matches': []}, {'book_id': 'bookid_16', 'matches': []}, {'book_id': 'bookid_17', 'matches': []}, {'book_id': 'bookid_18', 'matches': []}, {'book_id': 'bookid_19', 'matches': []}, {'book_id': 'bookid_20', 'matches': []}, {'book_id': 'bookid_21', 'matches': []}, {'book_id': 'bookid_22', 'matches': []}, {'book_id': 'bookid_23', 'matches': []}, {'book_id': 'bookid_24', 'matches': []}, {'book_id': 'bookid_25', 'matches': []}, {'book_id': 'bookid_32', 'matches': []}, {'book_id': 'bookid_26', 'matches': []}, {'book_id': 'bookid_27', 'matches': []}, {'book_id': 'bookid_28', 'matches': []}, {'book_id': 'bookid_29', 'matches': []}, {'book_id': 'bookid_30', 'matches': []}, {'book_id': 'bookid_31', 'matches': []}, {'book_id': 'bookid_33', 'matches': []}, {'book_id': 'bookid_34', 'matches': []}, {'book_id': 'bookid_35', 'matches': []}, {'book_id': 'bookid_36', 'matches': []}, {'book_id': 'bookid_37', 'matches': []}, {'book_id': 'bookid_38', 'matches': []}, {'book_id': 'bookid_56', 'matches': []}, {'book_id': 'bookid_39', 'matches': []}, {'book_id': 'bookid_40', 'matches': []}, {'book_id': 'bookid_41', 'matches': []}, {'book_id': 'bookid_42', 'matches': []}, {'book_id': 'bookid_43', 'matches': []}, {'book_id': 'bookid_62', 'matches': []}, {'book_id': 'bookid_44', 'matches': []}, {'book_id': 'bookid_45', 'matches': []}, {'book_id': 'bookid_46', 'matches': []}, {'book_id': 'bookid_47', 'matches': []}, {'book_id': 'bookid_48', 'matches': []}]}
+
+exec(code, env_args)

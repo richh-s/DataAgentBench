@@ -1,0 +1,70 @@
+code = """import json
+
+# Company names mapping based on descriptions from stockinfo
+company_names = {
+    'APEX': 'Apex Global Brands Inc',
+    'BKYI': 'BIO-key International, Inc',
+    'CBAT': 'CBAK Energy Technology, Inc',
+    'CCCL': 'China Ceramics Co., Ltd',
+    'CORV': 'Correvio Pharma Corp',
+    'CPAH': 'CounterPath Corporation',
+    'DZSI': 'DASAN Zhone Solutions, Inc',
+    'FTFT': 'Future FinTech Group Inc',
+    'FTR': 'Frontier Communications Corporation',
+    'IDEX': 'Ideanomics, Inc',
+    'OPTT': 'Ocean Power Technologies, Inc',
+    'PEIX': 'Pacific Ethanol, Inc',
+    'SES': 'Synthesis Energy Systems, Inc',
+    'SNSS': 'Sunesis Pharmaceuticals, Inc',
+    'SYPR': 'Sypris Solutions, Inc'
+}
+
+# Trading volume data from DuckDB queries
+volume_data = {
+    'APEX': {'avg_volume': 23781.42, 'trading_days': 253},
+    'BKYI': {'avg_volume': 10988.14, 'trading_days': 253},
+    'CBAT': {'avg_volume': 86223.32, 'trading_days': 253},
+    'CCCL': {'avg_volume': 4366.80, 'trading_days': 253},
+    'CORV': {'avg_volume': 145247.83, 'trading_days': 253},
+    'CPAH': {'avg_volume': 375.49, 'trading_days': 253},
+    'DZSI': {'avg_volume': 15578.66, 'trading_days': 253},
+    'FTFT': {'avg_volume': 9.85, 'trading_days': 169},
+    'FTR': {'avg_volume': 254397.63, 'trading_days': 253},
+    'IDEX': {'avg_volume': 10.28, 'trading_days': 253},
+    'OPTT': {'avg_volume': 254.15, 'trading_days': 253},
+    'PEIX': {'avg_volume': 10706.72, 'trading_days': 253},
+    'SES': {'avg_volume': 2390.51, 'trading_days': 253},
+    'SNSS': {'avg_volume': 781.82, 'trading_days': 253},
+    'SYPR': {'avg_volume': 36836.36, 'trading_days': 253}
+}
+
+# Format the results for the final answer
+results = []
+for symbol, name in company_names.items():
+    if symbol in volume_data:
+        data = volume_data[symbol]
+        results.append({
+            'symbol': symbol,
+            'company_name': name,
+            'avg_daily_trading_volume_2008': round(data['avg_volume'], 2),
+            'trading_days_2008': data['trading_days']
+        })
+
+# Sort by symbol
+results = sorted(results, key=lambda x: x['symbol'])
+
+print(f"Found {len(results)} companies with 2008 trading volume")
+print()
+
+# Print in a readable format
+print("Company Name (Symbol): Average Daily Trading Volume 2008")
+print("-" * 60)
+for r in results:
+    print(f"{r['company_name']} ({r['symbol']}): {r['avg_daily_trading_volume_2008']:,}")
+
+print("\n__RESULT__:")
+print(json.dumps(results))"""
+
+env_args = {'var_functions.query_db:0': [{'Symbol': 'AGMH', 'Company Description': 'AGM Group Holdings Inc. specializes in providing financial technology solutions and services, focusing on enhancing efficiency and performance for businesses in the financial sector.', 'Financial Status': 'D', 'Market Category': 'S'}, {'Symbol': 'AMTX', 'Company Description': 'Aemetis, Inc is an advanced renewable fuels and biochemicals company, focused on producing sustainable energy solutions and reducing carbon emissions through innovative technologies.', 'Financial Status': 'D', 'Market Category': 'G'}, {'Symbol': 'APEX', 'Company Description': 'Apex Global Brands Inc. specializes in creating and marketing a diverse portfolio of fashion and lifestyle brands, connecting consumers with trendy and innovative products worldwide.', 'Financial Status': 'D', 'Market Category': 'S'}, {'Symbol': 'BIOC', 'Company Description': 'Biocept, Inc. specializes in developing advanced diagnostic solutions that help detect and analyze cancer cells, driving innovation in personalized medicine and cancer treatment.', 'Financial Status': 'D', 'Market Category': 'S'}, {'Symbol': 'BKYI', 'Company Description': 'BIO-key International, Inc. specializes in advanced biometric solutions, providing secure and convenient identity verification systems for enterprises and consumers alike.', 'Financial Status': 'D', 'Market Category': 'S'}, {'Symbol': 'CBAT', 'Company Description': 'CBAK Energy Technology, Inc. specializes in developing and manufacturing high-performance lithium-ion batteries, playing a pivotal role in powering electric vehicles and renewable energy solutions.', 'Financial Status': 'D', 'Market Category': 'S'}, {'Symbol': 'CCCL', 'Company Description': 'China Ceramics Co., Ltd. specializes in manufacturing high-quality ceramic tiles, catering to both residential and commercial markets with a wide range of designs and finishes.', 'Financial Status': 'D', 'Market Category': 'S'}, {'Symbol': 'CORV', 'Company Description': 'Correvio Pharma Corp., based in Canada, specializes in developing and commercializing innovative cardiovascular therapies to improve patient outcomes.', 'Financial Status': 'D', 'Market Category': 'S'}, {'Symbol': 'CPAH', 'Company Description': 'CounterPath Corporation specializes in developing software solutions that enhance communication by providing seamless VoIP and unified communications applications for businesses and individuals.', 'Financial Status': 'D', 'Market Category': 'S'}, {'Symbol': 'DZSI', 'Company Description': 'DASAN Zhone Solutions, Inc. specializes in providing advanced broadband access solutions, empowering telecommunications networks to deliver faster and more reliable internet services worldwide.', 'Financial Status': 'D', 'Market Category': 'S'}, {'Symbol': 'FAMI', 'Company Description': 'Farmmi, Inc. specializes in the cultivation and distribution of high-quality agricultural products, with a focus on mushrooms and other nutritious foods.', 'Financial Status': 'D', 'Market Category': 'S'}, {'Symbol': 'FTFT', 'Company Description': 'Future FinTech Group Inc. specializes in the development and marketing of blockchain-based products and financial technology solutions, aiming to revolutionize the digital economy with innovative applications.', 'Financial Status': 'D', 'Market Category': 'S'}, {'Symbol': 'FTR', 'Company Description': 'Frontier Communications Corporation provides telecommunications services, including internet, phone, and television solutions, to residential and business customers across the United States.', 'Financial Status': 'D', 'Market Category': 'Q'}, {'Symbol': 'IDEX', 'Company Description': 'Ideanomics, Inc. is at the forefront of transforming the commercial electric vehicle industry, providing comprehensive solutions that drive innovation and sustainability in transportation and energy.', 'Financial Status': 'D', 'Market Category': 'S'}, {'Symbol': 'ISDS', 'Company Description': 'Invesco RAFI Strategic Developed ex-US Small Company ETF offers investors a unique opportunity to access a portfolio of small-cap stocks from developed markets outside the United States, focusing on strategic financial growth and diversification.', 'Financial Status': 'D', 'Market Category': 'G'}, {'Symbol': 'MCEP', 'Company Description': 'Mid-Con Energy Partners, LP specializes in the exploration and production of oil and natural gas, focusing on maximizing energy resources across the United States.', 'Financial Status': 'D', 'Market Category': 'S'}, {'Symbol': 'NXTD', 'Company Description': 'NXT-ID Inc. specializes in developing innovative technology solutions that enhance security and convenience in the fields of healthcare and electronic payments.', 'Financial Status': 'D', 'Market Category': 'S'}, {'Symbol': 'OPTT', 'Company Description': 'Ocean Power Technologies, Inc. harnesses the power of the ocean to develop innovative renewable energy solutions, specializing in wave energy technology.', 'Financial Status': 'D', 'Market Category': 'S'}, {'Symbol': 'PEIX', 'Company Description': 'Pacific Ethanol, Inc. specializes in producing renewable fuels and high-quality alcohol products, contributing to sustainable energy solutions and cleaner alternatives for the transportation sector.', 'Financial Status': 'D', 'Market Category': 'S'}, {'Symbol': 'RBZ', 'Company Description': 'Reebonz Holding Limited is an online luxury marketplace that specializes in offering a curated selection of high-end fashion items and accessories to discerning shoppers worldwide.', 'Financial Status': 'D', 'Market Category': 'G'}, {'Symbol': 'SES', 'Company Description': 'Synthesis Energy Systems, Inc. specializes in transforming low-cost carbon resources into clean energy and valuable chemical products, driving innovation in sustainable energy solutions.', 'Financial Status': 'H', 'Market Category': 'S'}, {'Symbol': 'SNSS', 'Company Description': 'Sunesis Pharmaceuticals, Inc. is dedicated to developing innovative cancer therapies, striving to advance treatments that target the underlying mechanisms of the disease.', 'Financial Status': 'D', 'Market Category': 'S'}, {'Symbol': 'SPI', 'Company Description': 'SPI Energy Co., Ltd. specializes in providing renewable energy solutions, focusing on solar power products and services to drive sustainable energy initiatives globally.', 'Financial Status': 'D', 'Market Category': 'Q'}, {'Symbol': 'SYPR', 'Company Description': 'Sypris Solutions, Inc. specializes in providing engineering and manufacturing services for the aerospace and defense sectors, ensuring high-quality solutions for complex technological challenges.', 'Financial Status': 'D', 'Market Category': 'G'}, {'Symbol': 'VTIQW', 'Company Description': 'VectoIQ Acquisition Corp. is an investment company specializing in identifying and merging with innovative technology and automotive firms to drive growth and transformation in the mobility sector.', 'Financial Status': 'D', 'Market Category': 'S'}], 'var_functions.list_db:2': 'file_storage/functions.list_db:2.json', 'var_functions.list_db:8': 'file_storage/functions.list_db:8.json', 'var_functions.execute_python:10': ['AGMH', 'AMTX', 'APEX', 'BIOC', 'BKYI', 'CBAT', 'CCCL', 'CORV', 'CPAH', 'DZSI', 'FAMI', 'FTFT', 'FTR', 'IDEX', 'ISDS', 'MCEP', 'NXTD', 'OPTT', 'PEIX', 'RBZ', 'SES', 'SNSS', 'SPI', 'SYPR', 'VTIQW'], 'var_functions.query_db:12': [{'count_2008': '0'}], 'var_functions.query_db:14': [{'table_name': 'AGMH'}, {'table_name': 'AMTX'}, {'table_name': 'APEX'}, {'table_name': 'BIOC'}, {'table_name': 'BKYI'}, {'table_name': 'CBAT'}, {'table_name': 'CCCL'}, {'table_name': 'CORV'}, {'table_name': 'CPAH'}, {'table_name': 'DZSI'}, {'table_name': 'FAMI'}, {'table_name': 'FTFT'}, {'table_name': 'FTR'}, {'table_name': 'IDEX'}, {'table_name': 'ISDS'}, {'table_name': 'MCEP'}, {'table_name': 'NXTD'}, {'table_name': 'OPTT'}, {'table_name': 'PEIX'}, {'table_name': 'RBZ'}, {'table_name': 'SES'}, {'table_name': 'SNSS'}, {'table_name': 'SPI'}, {'table_name': 'SYPR'}, {'table_name': 'VTIQW'}], 'var_functions.execute_python:18': {'count': 25, 'symbols': ['AGMH', 'AMTX', 'APEX', 'BIOC', 'BKYI', 'CBAT', 'CCCL', 'CORV', 'CPAH', 'DZSI', 'FAMI', 'FTFT', 'FTR', 'IDEX', 'ISDS', 'MCEP', 'NXTD', 'OPTT', 'PEIX', 'RBZ', 'SES', 'SNSS', 'SPI', 'SYPR', 'VTIQW']}, 'var_functions.query_db:20': [{'avg_volume': 'nan', 'trading_days': '0'}], 'var_functions.query_db:22': [{'symbol': 'AGMH', 'avg_volume': 'nan', 'trading_days': '0'}, {'symbol': 'AMTX', 'avg_volume': 'nan', 'trading_days': '0'}, {'symbol': 'APEX', 'avg_volume': '23781.422924901184', 'trading_days': '253'}, {'symbol': 'BIOC', 'avg_volume': 'nan', 'trading_days': '0'}, {'symbol': 'BKYI', 'avg_volume': '10988.142292490118', 'trading_days': '253'}], 'var_functions.query_db:24': [{"'CBAT'": 'CBAT', 'avg(Volume)': '86223.32015810277', 'count_star()': '253'}, {"'CBAT'": 'CCCL', 'avg(Volume)': '4366.798418972332', 'count_star()': '253'}, {"'CBAT'": 'CORV', 'avg(Volume)': '145247.8260869565', 'count_star()': '253'}, {"'CBAT'": 'CPAH', 'avg(Volume)': '375.49407114624506', 'count_star()': '253'}, {"'CBAT'": 'DZSI', 'avg(Volume)': '15578.656126482214', 'count_star()': '253'}], 'var_functions.execute_python:26': [{'symbol': 'APEX', 'avg_volume': '23781.422924901184', 'trading_days': '253'}, {'symbol': 'BKYI', 'avg_volume': '10988.142292490118', 'trading_days': '253'}, {'symbol': 'CBAT', 'avg_volume': 86223.32015810277, 'trading_days': 253}, {'symbol': 'CCCL', 'avg_volume': 4366.798418972332, 'trading_days': 253}, {'symbol': 'CORV', 'avg_volume': 145247.8260869565, 'trading_days': 253}, {'symbol': 'CPAH', 'avg_volume': 375.49407114624506, 'trading_days': 253}, {'symbol': 'DZSI', 'avg_volume': 15578.656126482214, 'trading_days': 253}], 'var_functions.query_db:28': [{"'FAMI'": 'FAMI', 'avg(Volume)': 'nan', 'count_star()': '0'}, {"'FAMI'": 'FTFT', 'avg(Volume)': '9.845238095238095', 'count_star()': '169'}, {"'FAMI'": 'FTR', 'avg(Volume)': '254397.62845849802', 'count_star()': '253'}, {"'FAMI'": 'IDEX', 'avg(Volume)': '10.276679841897232', 'count_star()': '253'}, {"'FAMI'": 'ISDS', 'avg(Volume)': 'nan', 'count_star()': '0'}], 'var_functions.query_db:30': [{"'MCEP'": 'MCEP', 'avg(Volume)': 'nan', 'count_star()': '0'}, {"'MCEP'": 'NXTD', 'avg(Volume)': 'nan', 'count_star()': '0'}, {"'MCEP'": 'OPTT', 'avg(Volume)': '254.1501976284585', 'count_star()': '253'}, {"'MCEP'": 'PEIX', 'avg(Volume)': '10706.719367588932', 'count_star()': '253'}, {"'MCEP'": 'RBZ', 'avg(Volume)': 'nan', 'count_star()': '0'}], 'var_functions.query_db:32': [{"'SES'": 'SES', 'avg(Volume)': '2390.513833992095', 'count_star()': '253'}, {"'SES'": 'SNSS', 'avg(Volume)': '781.8181818181819', 'count_star()': '253'}, {"'SES'": 'SPI', 'avg(Volume)': 'nan', 'count_star()': '0'}, {"'SES'": 'SYPR', 'avg(Volume)': '36836.36363636364', 'count_star()': '253'}, {"'SES'": 'VTIQW', 'avg(Volume)': 'nan', 'count_star()': '0'}]}
+
+exec(code, env_args)

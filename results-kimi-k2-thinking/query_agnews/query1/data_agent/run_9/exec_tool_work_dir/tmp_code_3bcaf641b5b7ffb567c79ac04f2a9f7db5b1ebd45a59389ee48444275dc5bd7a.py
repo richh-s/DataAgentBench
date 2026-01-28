@@ -1,0 +1,46 @@
+code = """import json
+
+# Load articles data
+file_path = 'file_storage/functions.query_db:10.json'
+with open(file_path, 'r') as f:
+    articles_data = json.load(f)
+
+print('Total articles:', len(articles_data))
+
+# Sports keywords
+sports_keywords = ['sports', 'football', 'soccer', 'basketball', 'baseball', 'tennis', 'golf', 'cricket', 'rugby', 'hockey', 'olympics', 'game', 'team', 'player', 'league', 'season', 'championship', 'match', 'athlete', 'competition', 'stadium', 'goal', 'score', 'world cup', 'nba', 'nfl', 'mlb', 'nhl', 'ncaa', 'coach', 'tournament']
+
+sports_articles = []
+
+# Check each article
+for article in articles_data:
+    title = article.get('title', '').lower()
+    description = article.get('description', '').lower()
+    
+    # Check if it's a sports article
+    is_sports = any(keyword in title or keyword in description for keyword in sports_keywords)
+    
+    if is_sports:
+        desc_length = len(article.get('description', ''))
+        sports_articles.append({
+            'title': article.get('title'),
+            'desc_length': desc_length
+        })
+
+print('Sports articles found:', len(sports_articles))
+
+# Find the article with longest description
+if sports_articles:
+    longest = max(sports_articles, key=lambda x: x['desc_length'])
+    print('Longest title:', longest['title'])
+    print('Length:', longest['desc_length'])
+    result = longest['title']
+else:
+    result = 'No sports articles found'
+
+print('__RESULT__')
+print(json.dumps(result))"""
+
+env_args = {'var_functions.query_db:0': [{'_id': '696969edc7924738c51171a0', 'article_id': '0', 'title': 'Wall St. Bears Claw Back Into the Black (Reuters)', 'description': "Reuters - Short-sellers, Wall Street's dwindling\\band of ultra-cynics, are seeing green again."}, {'_id': '696969edc7924738c51171a1', 'article_id': '1', 'title': 'Carlyle Looks Toward Commercial Aerospace (Reuters)', 'description': 'Reuters - Private investment firm Carlyle Group,\\which has a reputation for making well-timed and occasionally\\controversial plays in the defense industry, has quietly placed\\its bets on another part of the market.'}, {'_id': '696969edc7924738c51171a2', 'article_id': '2', 'title': "Oil and Economy Cloud Stocks' Outlook (Reuters)", 'description': 'Reuters - Soaring crude prices plus worries\\about the economy and the outlook for earnings are expected to\\hang over the stock market next week during the depth of the\\summer doldrums.'}, {'_id': '696969edc7924738c51171a3', 'article_id': '3', 'title': 'Iraq Halts Oil Exports from Main Southern Pipeline (Reuters)', 'description': 'Reuters - Authorities have halted oil export\\flows from the main pipeline in southern Iraq after\\intelligence showed a rebel militia could strike\\infrastructure, an oil official said on Saturday.'}, {'_id': '696969edc7924738c51171a4', 'article_id': '4', 'title': 'Oil prices soar to all-time record, posing new menace to US economy (AFP)', 'description': 'AFP - Tearaway world oil prices, toppling records and straining wallets, present a new economic menace barely three months before the US presidential elections.'}], 'var_functions.query_db:2': 'file_storage/functions.query_db:2.json', 'var_functions.query_db:8': [{'_id': '696969edc7924738c51171a0', 'article_id': '0', 'title': 'Wall St. Bears Claw Back Into the Black (Reuters)', 'description': "Reuters - Short-sellers, Wall Street's dwindling\\band of ultra-cynics, are seeing green again."}, {'_id': '696969edc7924738c51171a1', 'article_id': '1', 'title': 'Carlyle Looks Toward Commercial Aerospace (Reuters)', 'description': 'Reuters - Private investment firm Carlyle Group,\\which has a reputation for making well-timed and occasionally\\controversial plays in the defense industry, has quietly placed\\its bets on another part of the market.'}, {'_id': '696969edc7924738c51171a2', 'article_id': '2', 'title': "Oil and Economy Cloud Stocks' Outlook (Reuters)", 'description': 'Reuters - Soaring crude prices plus worries\\about the economy and the outlook for earnings are expected to\\hang over the stock market next week during the depth of the\\summer doldrums.'}, {'_id': '696969edc7924738c51171a3', 'article_id': '3', 'title': 'Iraq Halts Oil Exports from Main Southern Pipeline (Reuters)', 'description': 'Reuters - Authorities have halted oil export\\flows from the main pipeline in southern Iraq after\\intelligence showed a rebel militia could strike\\infrastructure, an oil official said on Saturday.'}, {'_id': '696969edc7924738c51171a4', 'article_id': '4', 'title': 'Oil prices soar to all-time record, posing new menace to US economy (AFP)', 'description': 'AFP - Tearaway world oil prices, toppling records and straining wallets, present a new economic menace barely three months before the US presidential elections.'}], 'var_functions.query_db:10': 'file_storage/functions.query_db:10.json', 'var_functions.query_db:12': [{'_id': '696969edc7924738c51171a0', 'article_id': '0', 'title': 'Wall St. Bears Claw Back Into the Black (Reuters)', 'description': "Reuters - Short-sellers, Wall Street's dwindling\\band of ultra-cynics, are seeing green again."}, {'_id': '696969edc7924738c51171a1', 'article_id': '1', 'title': 'Carlyle Looks Toward Commercial Aerospace (Reuters)', 'description': 'Reuters - Private investment firm Carlyle Group,\\which has a reputation for making well-timed and occasionally\\controversial plays in the defense industry, has quietly placed\\its bets on another part of the market.'}, {'_id': '696969edc7924738c51171a2', 'article_id': '2', 'title': "Oil and Economy Cloud Stocks' Outlook (Reuters)", 'description': 'Reuters - Soaring crude prices plus worries\\about the economy and the outlook for earnings are expected to\\hang over the stock market next week during the depth of the\\summer doldrums.'}, {'_id': '696969edc7924738c51171a3', 'article_id': '3', 'title': 'Iraq Halts Oil Exports from Main Southern Pipeline (Reuters)', 'description': 'Reuters - Authorities have halted oil export\\flows from the main pipeline in southern Iraq after\\intelligence showed a rebel militia could strike\\infrastructure, an oil official said on Saturday.'}, {'_id': '696969edc7924738c51171a4', 'article_id': '4', 'title': 'Oil prices soar to all-time record, posing new menace to US economy (AFP)', 'description': 'AFP - Tearaway world oil prices, toppling records and straining wallets, present a new economic menace barely three months before the US presidential elections.'}], 'var_functions.execute_python:16': 'file_storage/functions.query_db:10.json', 'var_functions.execute_python:20': 'File loaded successfully'}
+
+exec(code, env_args)

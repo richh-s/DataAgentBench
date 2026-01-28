@@ -1,0 +1,97 @@
+code = """import json
+import re
+
+# Load data from file paths stored in variables
+package_data_path = locals().get('var_functions.query_db:5')
+project_package_data_path = locals().get('var_functions.query_db:6')
+project_info_data_path = locals().get('var_functions.query_db:18')
+
+# Read the JSON files
+with open(package_data_path, 'r') as f:
+    package_data_full = json.load(f)
+
+with open(project_package_data_path, 'r') as f:
+    project_package_data_full = json.load(f)
+
+with open(project_info_data_path, 'r') as f:
+    project_info_data_full = json.load(f)
+
+# Filter: NPM packages with MIT license and release version
+npm_mit_release_packages = []
+for pkg in package_data_full:
+    if pkg.get('System') == 'NPM' and 'MIT' in pkg.get('Licenses', ''):
+        try:
+            version_info_str = pkg.get('VersionInfo', '{}')
+            version_info = json.loads(version_info_str)
+            if version_info.get('IsRelease'):
+                npm_mit_release_packages.append(pkg)
+        except:
+            pass
+
+# Build package lookup by (System, Name, Version)
+package_lookup = {}
+for pkg in npm_mit_release_packages:
+    key = (pkg['System'], pkg['Name'], pkg['Version'])
+    package_lookup[key] = pkg
+
+# Process project_info: extract project name (owner/repo) and fork count
+project_info_lookup = {}
+for proj in project_info_data_full:
+    proj_text = proj['Project_Information']
+    
+    # Extract project name in owner/repo format
+    project_name = None
+    patterns = [
+        r'(?:^|\s|/)([a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+)(?:\s|,|\.|"|\'|,)',
+        r'project\s+([a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+)',
+        r'"([a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+)"'
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, proj_text)
+        if match:
+            project_name = match.group(1).strip().lower()
+            break
+    
+    if not project_name:
+        continue
+    
+    # Extract fork count from project info text
+    fork_match = re.search(r'(\d+)\s+forks?', proj_text, re.IGNORECASE)
+    fork_count = int(fork_match.group(1)) if fork_match else 0
+    
+    project_info_lookup[project_name] = {
+        'project_name': project_name,
+        'forks': fork_count,
+        'raw_info': proj
+    }
+
+# Match NPM packages with GitHub projects
+matched_projects = {}
+for pp in project_package_data_full:
+    if pp.get('System') == 'NPM':
+        key = (pp['System'], pp['Name'], pp['Version'])
+        if key in package_lookup:
+            gh_project = pp.get('ProjectName', '').lower()
+            if gh_project and gh_project in project_info_lookup:
+                if gh_project not in matched_projects or project_info_lookup[gh_project]['forks'] > matched_projects[gh_project]['forks']:
+                    proj_data = project_info_lookup[gh_project]
+                    matched_projects[gh_project] = {
+                        'project': gh_project,
+                        'forks': proj_data['forks'],
+                        'package_name': pp['Name'],
+                        'version': pp['Version']
+                    }
+
+# Sort by fork count and get top 5
+top_5 = sorted(matched_projects.values(), key=lambda x: x['forks'], reverse=True)[:5]
+
+# Format final result
+result = top_5
+
+print('__RESULT__:')
+print(json.dumps(result, indent=2))"""
+
+env_args = {'var_functions.list_db:0': ['packageinfo'], 'var_functions.list_db:2': ['project_info', 'project_packageversion'], 'var_functions.query_db:5': 'file_storage/functions.query_db:5.json', 'var_functions.query_db:6': 'file_storage/functions.query_db:6.json', 'var_functions.query_db:8': [], 'var_functions.query_db:10': [{'Project_Information': 'The project lberrocal/npm-packages-template is hosted on GitHub and currently has 0 open issues, 0 stars, and 0 forks.', 'Licenses': '[]', 'Description': 'Template for npm package library configured to be used with CI/CD', 'Homepage': 'None', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project leaflet/leaflet on GitHub is a popular open-source library that currently has 521 open issues, 38715 stars, and 5782 forks, making it a widely recognized tool in the developer community.', 'Licenses': '[\n  "non-standard"\n]', 'Description': '🍃 JavaScript library for mobile-friendly interactive maps 🇺🇦', 'Homepage': 'https://leafletjs.com', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project leaflet/leaflet.fullscreen on GitHub currently has 29 open issues, 417 stars, and 118 forks, making it a noteworthy contribution to the Leaflet ecosystem.', 'Licenses': '[\n  "ISC"\n]', 'Description': 'A fullscreen control for Leaflet', 'Homepage': 'http://leaflet.github.io/Leaflet.fullscreen/', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project leaflet/leaflet.markercluster is hosted on GitHub and currently has an open issues count of 130, along with a stars count of 3761 and forks count of 988.', 'Licenses': '[\n  "MIT"\n]', 'Description': 'Marker Clustering plugin for Leaflet', 'Homepage': 'None', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project leandrowd/react-responsive-carousel on GitHub has garnered significant attention, with a total of 2,534 stars and 636 forks, while currently having 23 open issues.', 'Licenses': '[\n  "MIT"\n]', 'Description': 'React.js Responsive Carousel (with Swipe)', 'Homepage': 'http://leandrowd.github.io/react-responsive-carousel/', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project is hosted on GitHub under the name learnfrontend-dc/product-cart, and it currently has 2 open issues. It has garnered a total of 11 stars and has been forked 12 times.', 'Licenses': '[]', 'Description': 'None', 'Homepage': 'None', 'OSSFuzz': 'nan'}, {'Project_Information': 'The GitHub project ledgerproject/keypairoom currently has 3 open issues, 3 stars, and 0 forks.', 'Licenses': '[\n  "AGPL-3.0"\n]', 'Description': 'Component to generate and regenerate a keypair, in a deterministic and private way', 'Homepage': 'None', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project leebyron/jasmine-check is hosted on GitHub and currently has 0 open issues, 11 stars, and 3 forks.', 'Licenses': '[]', 'Description': 'Generative property testing for Jasmine', 'Homepage': 'None', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project leebyron/testcheck-js on GitHub has an open issues count of 29, a stars count of 1185, and a forks count of 58, making it a notable repository in the community.', 'Licenses': '[\n  "non-standard"\n]', 'Description': 'Generative testing for JavaScript', 'Homepage': 'http://leebyron.com/testcheck-js', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project leecade/react-native-swiper is hosted on GitHub and has a total of 786 open issues, along with an impressive 10,249 stars and 2,392 forks, making it a popular choice among developers for implementing swiping functionality in React Native applications.', 'Licenses': '[\n  "MIT"\n]', 'Description': 'The best Swiper component for React Native.', 'Homepage': 'None', 'OSSFuzz': 'nan'}], 'var_functions.execute_python:16': {'package_count': 176998, 'project_package_count': 591699, 'project_info_count': 10}, 'var_functions.query_db:18': 'file_storage/functions.query_db:18.json', 'var_functions.execute_python:22': {'package_str_type': "<class 'str'>", 'project_package_str_type': "<class 'str'>", 'project_info_str_type': "<class 'str'>", 'package_is_str': True, 'project_package_is_str': True, 'project_info_is_str': True}, 'var_functions.execute_python:24': {'package_count': 176998, 'project_package_count': 591699, 'project_info_count': 770}, 'var_functions.execute_python:34': [], 'var_functions.execute_python:36': {'total_packages': 176998, 'npm_packages': 176998, 'npm_mit_packages': 176998, 'release_mit_packages': 176998, 'npm_github_mappings': 0, 'projects_with_forks': 670}, 'var_functions.execute_python:38': {'sample_records': [{'System': 'NPM', 'Name': '@dms/io', 'Version': '0.9.0', 'ProjectName': 'dataminingsupply/dms-io'}, {'System': 'NPM', 'Name': '@dvo/fc', 'Version': '0.0.4', 'ProjectName': 'isacvale/fc'}, {'System': 'NPM', 'Name': '@djie/ui', 'Version': '1.0.17', 'ProjectName': 'laihaojie/jie'}, {'System': 'NPM', 'Name': '@djie/ui', 'Version': '1.0.16', 'ProjectName': 'laihaojie/jie'}, {'System': 'NPM', 'Name': '@djie/ws', 'Version': '1.0.8', 'ProjectName': 'laihaojie/jie'}, {'System': 'NPM', 'Name': '@djie/ws', 'Version': '1.0.10', 'ProjectName': 'laihaojie/jie'}, {'System': 'NPM', 'Name': '@djie/ws', 'Version': '1.0.17', 'ProjectName': 'laihaojie/jie'}, {'System': 'NPM', 'Name': '@dlcs/ng', 'Version': '1.0.0', 'ProjectName': 'winup/dlcs-ng'}, {'System': 'NPM', 'Name': '@dms/cli', 'Version': '1.0.1', 'ProjectName': 'dataminingsupply/dms-cli'}, {'System': 'NPM', 'Name': '@dms/cli', 'Version': '1.0.0', 'ProjectName': 'dataminingsupply/dms-cli'}], 'npm_sample_records': [{'System': 'NPM', 'Name': '@dms/io', 'Version': '0.9.0', 'ProjectName': 'dataminingsupply/dms-io'}, {'System': 'NPM', 'Name': '@dvo/fc', 'Version': '0.0.4', 'ProjectName': 'isacvale/fc'}, {'System': 'NPM', 'Name': '@djie/ui', 'Version': '1.0.17', 'ProjectName': 'laihaojie/jie'}, {'System': 'NPM', 'Name': '@djie/ui', 'Version': '1.0.16', 'ProjectName': 'laihaojie/jie'}, {'System': 'NPM', 'Name': '@djie/ws', 'Version': '1.0.8', 'ProjectName': 'laihaojie/jie'}, {'System': 'NPM', 'Name': '@djie/ws', 'Version': '1.0.10', 'ProjectName': 'laihaojie/jie'}, {'System': 'NPM', 'Name': '@djie/ws', 'Version': '1.0.17', 'ProjectName': 'laihaojie/jie'}, {'System': 'NPM', 'Name': '@dlcs/ng', 'Version': '1.0.0', 'ProjectName': 'winup/dlcs-ng'}, {'System': 'NPM', 'Name': '@dms/cli', 'Version': '1.0.1', 'ProjectName': 'dataminingsupply/dms-cli'}, {'System': 'NPM', 'Name': '@dms/cli', 'Version': '1.0.0', 'ProjectName': 'dataminingsupply/dms-cli'}, {'System': 'NPM', 'Name': '@dms/cli', 'Version': '0.8.0', 'ProjectName': 'dataminingsupply/dms-cli'}, {'System': 'NPM', 'Name': '@dms/cli', 'Version': '0.9.3', 'ProjectName': 'dataminingsupply/dms-cli'}, {'System': 'NPM', 'Name': '@dms/cli', 'Version': '0.2.0', 'ProjectName': 'dataminingsupply/dms-cli'}, {'System': 'NPM', 'Name': '@domp/fp', 'Version': '0.0.1', 'ProjectName': 'dom-packages/fp'}, {'System': 'NPM', 'Name': '@domp/is', 'Version': '0.2.0', 'ProjectName': 'lohfu/domp-is'}, {'System': 'NPM', 'Name': '@domp/is', 'Version': '0.1.3', 'ProjectName': 'lohfu/domp-is'}, {'System': 'NPM', 'Name': '@dosy/ws', 'Version': '8.11.1', 'ProjectName': 'dosyago/ws'}, {'System': 'NPM', 'Name': '@dosy/ws', 'Version': '8.11.4', 'ProjectName': 'dosyago/ws'}, {'System': 'NPM', 'Name': '@dot/cdk', 'Version': '2.1.0', 'ProjectName': 'shellscape/dot'}, {'System': 'NPM', 'Name': '@dot/cdk', 'Version': '0.1.0', 'ProjectName': 'shellscape/dot'}]}, 'var_functions.execute_python:40': {'fields': ['System', 'Name', 'Version', 'ProjectName'], 'total_records': 591699, 'npm_records': 591699, 'project_type_counts': {'null': 591699}, 'npm_project_type_counts': {'null': 591699}, 'unique_types': [None]}, 'var_functions.query_db:42': [{'Project_Information': 'The project leandrowd/react-responsive-carousel on GitHub has garnered significant attention, with a total of 2,534 stars and 636 forks, while currently having 23 open issues.', 'Licenses': '[\n  "MIT"\n]', 'Description': 'React.js Responsive Carousel (with Swipe)', 'Homepage': 'http://leandrowd.github.io/react-responsive-carousel/', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project leecade/react-native-swiper is hosted on GitHub and has a total of 786 open issues, along with an impressive 10,249 stars and 2,392 forks, making it a popular choice among developers for implementing swiping functionality in React Native applications.', 'Licenses': '[\n  "MIT"\n]', 'Description': 'The best Swiper component for React Native.', 'Homepage': 'None', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project leoilab/react-native-analytics-segment-io on GitHub currently has 26 open issues, 71 stars, and 36 forks, making it a notable repository for those interested in integrating analytics into React Native applications.', 'Licenses': '[\n  "MIT"\n]', 'Description': 'A React Native module for Segment Analytics', 'Homepage': 'None', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project is a GitHub repository named letrungdo/react-ui-component-lib, which currently has 0 open issues, 4 stars, and 0 forks.', 'Licenses': '[]', 'Description': 'How to build component library with react storybook jest enzyme rollup typescript', 'Homepage': 'https://tđ.vn/how-to-build-component-library-with-react-typescript-rollup', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project liivevideo/react-native-web-webrtc is hosted on GitHub and currently has 2 open issues, 13 stars, and 7 forks.', 'Licenses': '[\n  "MIT"\n]', 'Description': 'A project to support WebRTC for react-native-web', 'Homepage': 'None', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project lonelycpp/react-native-youtube-iframe on GitHub has an open issues count of 79, a stars count of 527, and a forks count of 138, making it a notable resource for developers looking to integrate YouTube functionality into their React Native applications.', 'Licenses': '[\n  "MIT"\n]', 'Description': 'A wrapper of the Youtube-iframe API built for react native.', 'Homepage': 'https://lonelycpp.github.io/react-native-youtube-iframe/', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project lucasferreira/react-native-flash-message on GitHub currently has 18 open issues, 1292 stars, and 154 forks, making it a notable resource in the React Native community.', 'Licenses': '[\n  "MIT"\n]', 'Description': 'React Native flashbar and top notification alert utility', 'Homepage': 'None', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project luehang/react-native-masonry-list on GitHub is a popular repository that currently has 29 open issues, 237 stars, and 57 forks.', 'Licenses': '[\n  "MIT"\n]', 'Description': 'An easy and simple to use React Native component to render a custom high performant masonry layout for images. It uses a smart algorithm to sort the images evenly as possible according to the index position or fill in as soon as the image is fetched. Includes support for both iOS and Android. Free and made possible along with costly maintenance and updates by [Lue Hang](https://www.facebook.com/lue.hang) (the author).', 'Homepage': 'https://luehangs.site/lue_hang/projects/react-native-masonry-list', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project magnusdanielson/aureactwrapper on GitHub currently has 5 open issues, 2 stars, and 1 fork.', 'Licenses': '[\n  "MIT"\n]', 'Description': 'Wraps React components for Aurelia', 'Homepage': 'None', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project malte-wessel/react-custom-scrollbars on GitHub is a popular repository that has garnered 3,161 stars and 595 forks, indicating strong interest and contributions from the community; however, it currently has 219 open issues that may need attention.', 'Licenses': '[\n  "MIT"\n]', 'Description': 'React scrollbars component', 'Homepage': 'http://malte-wessel.github.io/react-custom-scrollbars/', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project is hosted on GITHUB under the name master-atul/react-native-exception-handler, and it currently has an open issues count of 64, along with a stars count of 1530 and forks count of 119.', 'Licenses': '[\n  "MIT"\n]', 'Description': 'A react native module that lets you to register a global error handler that can capture fatal/non fatal uncaught exceptions.', 'Homepage': 'None', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project named mcicheick/dd-react-lib is hosted on GitHub and currently has 0 open issues, 0 stars, and 0 forks.', 'Licenses': '[]', 'Description': 'None', 'Homepage': 'None', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project mobilereality/react-native-select-pro on GitHub is a popular repository with 205 stars and 10 forks, currently having 2 open issues.', 'Licenses': '[\n  "MIT"\n]', 'Description': 'React Native dropdown (select) component developed by Mobile Reality', 'Homepage': 'https://mobilereality.github.io/react-native-select-pro', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project mozilla-services/react-jsonschema-form on GitHub has an open issues count of 274, boasts 13,134 stars, and has 2,137 forks, making it a popular choice for developers looking to work with JSON schema forms.', 'Licenses': '[\n  "Apache-2.0"\n]', 'Description': 'A React component for building Web forms from JSON Schema.', 'Homepage': 'https://rjsf-team.github.io/react-jsonschema-form/', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project named mr-strike/react-native-advance-draggable-view on GitHub currently has 3 open issues, 4 stars, and 3 forks, making it a resource for developers interested in implementing advanced draggable views in React Native applications.', 'Licenses': '[\n  "MIT"\n]', 'Description': 'DraggableView component for React Native. Base from DraggableDrawer', 'Homepage': 'None', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project mr-strike/react-native-advance-image-cropper is hosted on GitHub and currently has 1 open issue, 3 stars, and 16 forks.', 'Licenses': '[\n  "MIT"\n]', 'Description': 'Image cropper for react native using Animated API with custom Footer', 'Homepage': 'None', 'OSSFuzz': 'nan'}, {'Project_Information': 'The GitHub project named ms-dg/create-dg-react currently has 10 open issues, 4 stars, and 0 forks, making it a developing repository in the community.', 'Licenses': '[\n  "MIT"\n]', 'Description': 'Set up a modern web app by running one command.', 'Homepage': 'None', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project on GitHub, named mybabysexy/react-sip-phone, currently has 0 open issues, 0 stars, and 0 forks.', 'Licenses': '[]', 'Description': 'OTF React SIP.JS Phone', 'Homepage': 'None', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project n05ae/react-virtual-scroll-list is hosted on GITHUB and currently has 0 open issues, 0 stars, and 0 forks.', 'Licenses': '[\n  "Apache-2.0"\n]', 'Description': 'Virtual grid for react.', 'Homepage': 'None', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project n0sae/react-virtual-list is hosted on GitHub and currently has 0 open issues, 0 stars, and 0 forks.', 'Licenses': '[]', 'Description': 'None', 'Homepage': 'None', 'OSSFuzz': 'nan'}], 'var_functions.query_db:44': [{'column_name': 'System', 'column_type': 'VARCHAR', 'null': 'YES', 'key': 'None', 'default': 'None', 'extra': 'None'}, {'column_name': 'Name', 'column_type': 'VARCHAR', 'null': 'YES', 'key': 'None', 'default': 'None', 'extra': 'None'}, {'column_name': 'Version', 'column_type': 'VARCHAR', 'null': 'YES', 'key': 'None', 'default': 'None', 'extra': 'None'}, {'column_name': 'ProjectType', 'column_type': 'VARCHAR', 'null': 'YES', 'key': 'None', 'default': 'None', 'extra': 'None'}, {'column_name': 'ProjectName', 'column_type': 'VARCHAR', 'null': 'YES', 'key': 'None', 'default': 'None', 'extra': 'None'}, {'column_name': 'RelationProvenance', 'column_type': 'VARCHAR', 'null': 'YES', 'key': 'None', 'default': 'None', 'extra': 'None'}, {'column_name': 'RelationType', 'column_type': 'VARCHAR', 'null': 'YES', 'key': 'None', 'default': 'None', 'extra': 'None'}]}
+
+exec(code, env_args)

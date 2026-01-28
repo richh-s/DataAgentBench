@@ -1,0 +1,23 @@
+code = """import json
+
+# Get the business names and review counts
+business_names = {item['gmap_id']: item['name'] for item in locals()['var_functions.query_db:10']}
+business_reviews = locals()['var_functions.execute_python:6']
+
+# Find top 3 with names
+top_3 = business_reviews[:3]
+
+result = []
+for business in top_3:
+    gmap_id = business['gmap_id']
+    result.append({
+        'business_name': business_names.get(gmap_id, 'Unknown'),
+        'high_rating_review_count': business['high_rating_count']
+    })
+
+print("__RESULT__:")
+print(json.dumps(result))"""
+
+env_args = {'var_functions.list_db:0': ['review'], 'var_functions.query_db:2': [{'gmap_id': 'gmap_17', 'rating': '5'}, {'gmap_id': 'gmap_17', 'rating': '5'}, {'gmap_id': 'gmap_17', 'rating': '5'}, {'gmap_id': 'gmap_17', 'rating': '5'}, {'gmap_id': 'gmap_29', 'rating': '5'}, {'gmap_id': 'gmap_20', 'rating': '5'}, {'gmap_id': 'gmap_20', 'rating': '5'}, {'gmap_id': 'gmap_20', 'rating': '5'}, {'gmap_id': 'gmap_20', 'rating': '5'}, {'gmap_id': 'gmap_20', 'rating': '5'}, {'gmap_id': 'gmap_20', 'rating': '5'}, {'gmap_id': 'gmap_20', 'rating': '5'}, {'gmap_id': 'gmap_20', 'rating': '5'}, {'gmap_id': 'gmap_16', 'rating': '5'}, {'gmap_id': 'gmap_26', 'rating': '5'}, {'gmap_id': 'gmap_2', 'rating': '5'}, {'gmap_id': 'gmap_2', 'rating': '5'}, {'gmap_id': 'gmap_2', 'rating': '5'}, {'gmap_id': 'gmap_30', 'rating': '5'}, {'gmap_id': 'gmap_53', 'rating': '5'}, {'gmap_id': 'gmap_53', 'rating': '5'}, {'gmap_id': 'gmap_53', 'rating': '5'}, {'gmap_id': 'gmap_53', 'rating': '5'}, {'gmap_id': 'gmap_53', 'rating': '5'}, {'gmap_id': 'gmap_53', 'rating': '5'}, {'gmap_id': 'gmap_53', 'rating': '5'}, {'gmap_id': 'gmap_72', 'rating': '5'}, {'gmap_id': 'gmap_72', 'rating': '5'}, {'gmap_id': 'gmap_72', 'rating': '5'}, {'gmap_id': 'gmap_72', 'rating': '5'}, {'gmap_id': 'gmap_72', 'rating': '5'}, {'gmap_id': 'gmap_63', 'rating': '5'}, {'gmap_id': 'gmap_65', 'rating': '5'}, {'gmap_id': 'gmap_51', 'rating': '5'}, {'gmap_id': 'gmap_59', 'rating': '5'}, {'gmap_id': 'gmap_59', 'rating': '5'}, {'gmap_id': 'gmap_57', 'rating': '5'}, {'gmap_id': 'gmap_57', 'rating': '5'}, {'gmap_id': 'gmap_13', 'rating': '5'}, {'gmap_id': 'gmap_14', 'rating': '5'}, {'gmap_id': 'gmap_3', 'rating': '5'}, {'gmap_id': 'gmap_3', 'rating': '5'}, {'gmap_id': 'gmap_35', 'rating': '5'}, {'gmap_id': 'gmap_35', 'rating': '5'}, {'gmap_id': 'gmap_35', 'rating': '5'}, {'gmap_id': 'gmap_35', 'rating': '5'}, {'gmap_id': 'gmap_35', 'rating': '5'}, {'gmap_id': 'gmap_35', 'rating': '5'}, {'gmap_id': 'gmap_7', 'rating': '5'}, {'gmap_id': 'gmap_7', 'rating': '5'}, {'gmap_id': 'gmap_5', 'rating': '5'}, {'gmap_id': 'gmap_5', 'rating': '5'}, {'gmap_id': 'gmap_34', 'rating': '5'}, {'gmap_id': 'gmap_11', 'rating': '5'}, {'gmap_id': 'gmap_11', 'rating': '5'}, {'gmap_id': 'gmap_11', 'rating': '5'}, {'gmap_id': 'gmap_62', 'rating': '5'}, {'gmap_id': 'gmap_62', 'rating': '5'}, {'gmap_id': 'gmap_62', 'rating': '5'}, {'gmap_id': 'gmap_62', 'rating': '5'}, {'gmap_id': 'gmap_62', 'rating': '5'}, {'gmap_id': 'gmap_58', 'rating': '5'}, {'gmap_id': 'gmap_56', 'rating': '5'}, {'gmap_id': 'gmap_56', 'rating': '5'}, {'gmap_id': 'gmap_56', 'rating': '5'}, {'gmap_id': 'gmap_46', 'rating': '5'}, {'gmap_id': 'gmap_46', 'rating': '5'}, {'gmap_id': 'gmap_46', 'rating': '5'}, {'gmap_id': 'gmap_46', 'rating': '5'}, {'gmap_id': 'gmap_46', 'rating': '5'}, {'gmap_id': 'gmap_47', 'rating': '5'}, {'gmap_id': 'gmap_47', 'rating': '5'}, {'gmap_id': 'gmap_71', 'rating': '5'}, {'gmap_id': 'gmap_69', 'rating': '5'}, {'gmap_id': 'gmap_69', 'rating': '5'}, {'gmap_id': 'gmap_69', 'rating': '5'}, {'gmap_id': 'gmap_64', 'rating': '5'}, {'gmap_id': 'gmap_64', 'rating': '5'}, {'gmap_id': 'gmap_40', 'rating': '5'}, {'gmap_id': 'gmap_40', 'rating': '5'}, {'gmap_id': 'gmap_40', 'rating': '5'}, {'gmap_id': 'gmap_40', 'rating': '5'}, {'gmap_id': 'gmap_40', 'rating': '5'}, {'gmap_id': 'gmap_40', 'rating': '5'}], 'var_functions.execute_python:6': [{'gmap_id': 'gmap_20', 'high_rating_count': 8}, {'gmap_id': 'gmap_53', 'high_rating_count': 7}, {'gmap_id': 'gmap_35', 'high_rating_count': 6}, {'gmap_id': 'gmap_40', 'high_rating_count': 6}, {'gmap_id': 'gmap_72', 'high_rating_count': 5}, {'gmap_id': 'gmap_62', 'high_rating_count': 5}, {'gmap_id': 'gmap_46', 'high_rating_count': 5}, {'gmap_id': 'gmap_17', 'high_rating_count': 4}, {'gmap_id': 'gmap_2', 'high_rating_count': 3}, {'gmap_id': 'gmap_11', 'high_rating_count': 3}], 'var_functions.execute_python:8': ['gmap_20', 'gmap_53', 'gmap_35'], 'var_functions.query_db:10': [{'gmap_id': 'gmap_20', 'name': 'Aurora Massage'}, {'gmap_id': 'gmap_53', 'name': 'The Boochyard @ Local Roots'}, {'gmap_id': 'gmap_35', 'name': 'Encino Dermatology & Laser: Alex Khadavi MD'}]}
+
+exec(code, env_args)

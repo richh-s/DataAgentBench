@@ -1,0 +1,79 @@
+code = """import json
+import re
+
+# Load the complete funding data for all FEMA/emergency projects
+funding_data = locals()['var_functions.query_db:5']
+
+# Extract project names to search for in civic docs
+project_names = [f['Project_Name'] for f in funding_data]
+
+# Load civic docs path and read the file
+civic_docs_path = var_functions.query_db:0
+with open(civic_docs_path, 'r') as f:
+    civic_docs = json.load(f)
+
+# Create a dictionary to store status info
+status_info = {}
+
+# Parse all civic documents to find project status information
+for doc in civic_docs:
+    text = doc.get('text', '')
+    
+    # Look for each project in the documents
+    for project_name in project_names:
+        # Extract base project name without suffix for matching
+        base_name = project_name.split(' (')[0].strip()
+        
+        if base_name in text:
+            # Find the section containing this project
+            lines = text.split('\n')
+            for i, line in enumerate(lines):
+                if base_name in line:
+                    # Look for status indicators in the surrounding lines
+                    context_start = max(0, i-5)
+                    context_end = min(len(lines), i+20)
+                    context = '\n'.join(lines[context_start:context_end])
+                    
+                    # Determine status from context
+                    status = None
+                    if 'completed' in context.lower() or 'construction was completed' in context.lower():
+                        status = 'completed'
+                    elif 'under construction' in context.lower() or 'construction' in context.lower() and 'design' not in context.lower():
+                        status = 'construction'
+                    elif 'design' in context.lower() or 'Complete Design' in context:
+                        status = 'design'
+                    elif 'not started' in context.lower() or 'identified' in context.lower():
+                        status = 'not started'
+                    
+                    if status:
+                        status_info[project_name] = status
+
+# Prepare final results with status information
+final_results = []
+
+for funding in funding_data:
+    project_name = funding['Project_Name']
+    funding_source = funding['Funding_Source']
+    amount = int(funding['Amount'])
+    
+    # Get status from our extracted info or default
+    status = status_info.get(project_name, 'Not specified')
+    
+    # Format the result
+    final_results.append({
+        'Project_Name': project_name,
+        'Funding_Source': funding_source,
+        'Amount': f"${amount:,}",
+        'Status': status,
+        'Type': 'Disaster Recovery'
+    })
+
+# Sort by project name
+final_results = sorted(final_results, key=lambda x: x['Project_Name'])
+
+print('__RESULT__:')
+print(json.dumps(final_results, indent=2))"""
+
+env_args = {'var_functions.query_db:0': 'file_storage/functions.query_db:0.json', 'var_functions.query_db:2': 'file_storage/functions.query_db:2.json', 'var_functions.query_db:5': [{'Funding_ID': '7', 'Project_Name': 'Birdview Avenue Improvements (FEMA/CalOES Project)', 'Funding_Source': 'Research Institution Funding', 'Amount': '14000'}, {'Funding_ID': '22', 'Project_Name': 'Clover Heights Storm Drain (FEMA Project)', 'Funding_Source': 'Local NGO Fund', 'Amount': '21000'}, {'Funding_ID': '25', 'Project_Name': 'Corral Canyon Culvert Repairs (FEMA Project)', 'Funding_Source': 'Municipal Fund', 'Amount': '43000'}, {'Funding_ID': '26', 'Project_Name': 'Corral Canyon Culvert Repairs (FEMA/CalOES Project)', 'Funding_Source': 'Taxpayer Contribution', 'Amount': '15000'}, {'Funding_ID': '28', 'Project_Name': 'Corral Canyon Road Bridge Repairs (FEMA Project)', 'Funding_Source': 'Local Business Support', 'Amount': '25000'}, {'Funding_ID': '29', 'Project_Name': 'Corral Canyon Road Bridge Repairs (FEMA/CalOES Project)', 'Funding_Source': 'Cultural Heritage Grant', 'Amount': '58000'}, {'Funding_ID': '35', 'Project_Name': 'Encinal Canyon Road Drainage Improvements (FEMA/CalOES Project)', 'Funding_Source': 'Private Sponsor', 'Amount': '94000'}, {'Funding_ID': '38', 'Project_Name': 'Guardrail Replacement Citywide (FEMA Project)', 'Funding_Source': 'Impact Investment Fund', 'Amount': '22000'}, {'Funding_ID': '39', 'Project_Name': 'Guardrail Replacement Citywide (FEMA/CalOES Project)', 'Funding_Source': 'Development Bank Loan', 'Amount': '45000'}, {'Funding_ID': '43', 'Project_Name': 'Latigo Canyon Road Culvert Repairs (FEMA Project)', 'Funding_Source': 'Federal Assistance', 'Amount': '36000'}, {'Funding_ID': '44', 'Project_Name': 'Latigo Canyon Road Culvert Repairs (FEMA/CalOES Project)', 'Funding_Source': 'National Foundation Fund', 'Amount': '44000'}, {'Funding_ID': '47', 'Project_Name': 'Latigo Canyon Road Roadway/Retaining Wall Improvements (FEMA Project)', 'Funding_Source': 'Municipal Fund', 'Amount': '91000'}, {'Funding_ID': '48', 'Project_Name': 'Latigo Canyon Road Roadway/Retaining Wall Improvements (FEMA/CalOES Project)', 'Funding_Source': 'Community Fund', 'Amount': '78000'}, {'Funding_ID': '66', 'Project_Name': 'Outdoor Warning Sirens (FEMA Project)', 'Funding_Source': 'Environmental Grant', 'Amount': '27000'}, {'Funding_ID': '67', 'Project_Name': 'Outdoor Warning Sirens (FEMA)', 'Funding_Source': 'State Development Grant', 'Amount': '81000'}, {'Funding_ID': '68', 'Project_Name': 'Outdoor Warning Sirens - Design (FEMA Project)', 'Funding_Source': 'Local Business Support', 'Amount': '43000'}, {'Funding_ID': '69', 'Project_Name': 'Outdoor Warningn Sirens - Design (FEMA Project)', 'Funding_Source': 'Technology Innovation Fund', 'Amount': '84000'}, {'Funding_ID': '82', 'Project_Name': 'Storm Drain Master Plan (FEMA Project)', 'Funding_Source': 'Environmental Grant', 'Amount': '80000'}, {'Funding_ID': '86', 'Project_Name': 'Trancas Canyon Park Planting and Irrigation Repairs (CalJPIA/FEMA Project)', 'Funding_Source': 'Infrastructure Bond', 'Amount': '44000'}, {'Funding_ID': '87', 'Project_Name': 'Trancas Canyon Park Planting and Irrigation Repairs (FEMA/CalOES Project)', 'Funding_Source': 'Infrastructure Bond', 'Amount': '92000'}], 'var_functions.execute_python:8': [{'Project_Name': 'Birdview Avenue Improvements (FEMA/CalOES Project)', 'Funding_Source': 'Research Institution Funding', 'Amount': '$14,000', 'Status': 'Not specified in documents', 'Project_Type': 'disaster'}, {'Project_Name': 'Clover Heights Storm Drain (FEMA Project)', 'Funding_Source': 'Local NGO Fund', 'Amount': '$21,000', 'Status': 'Not specified in documents', 'Project_Type': 'disaster'}, {'Project_Name': 'Corral Canyon Culvert Repairs (FEMA Project)', 'Funding_Source': 'Municipal Fund', 'Amount': '$43,000', 'Status': 'Not specified in documents', 'Project_Type': 'disaster'}, {'Project_Name': 'Corral Canyon Culvert Repairs (FEMA/CalOES Project)', 'Funding_Source': 'Taxpayer Contribution', 'Amount': '$15,000', 'Status': 'Not specified in documents', 'Project_Type': 'disaster'}, {'Project_Name': 'Corral Canyon Road Bridge Repairs (FEMA Project)', 'Funding_Source': 'Local Business Support', 'Amount': '$25,000', 'Status': 'Not specified in documents', 'Project_Type': 'disaster'}, {'Project_Name': 'Corral Canyon Road Bridge Repairs (FEMA/CalOES Project)', 'Funding_Source': 'Cultural Heritage Grant', 'Amount': '$58,000', 'Status': 'Not specified in documents', 'Project_Type': 'disaster'}, {'Project_Name': 'Encinal Canyon Road Drainage Improvements (FEMA/CalOES Project)', 'Funding_Source': 'Private Sponsor', 'Amount': '$94,000', 'Status': 'Not specified in documents', 'Project_Type': 'disaster'}, {'Project_Name': 'Guardrail Replacement Citywide (FEMA Project)', 'Funding_Source': 'Impact Investment Fund', 'Amount': '$22,000', 'Status': 'Not specified in documents', 'Project_Type': 'disaster'}, {'Project_Name': 'Guardrail Replacement Citywide (FEMA/CalOES Project)', 'Funding_Source': 'Development Bank Loan', 'Amount': '$45,000', 'Status': 'Not specified in documents', 'Project_Type': 'disaster'}, {'Project_Name': 'Latigo Canyon Road Culvert Repairs (FEMA Project)', 'Funding_Source': 'Federal Assistance', 'Amount': '$36,000', 'Status': 'Not specified in documents', 'Project_Type': 'disaster'}, {'Project_Name': 'Latigo Canyon Road Culvert Repairs (FEMA/CalOES Project)', 'Funding_Source': 'National Foundation Fund', 'Amount': '$44,000', 'Status': 'Not specified in documents', 'Project_Type': 'disaster'}, {'Project_Name': 'Latigo Canyon Road Roadway/Retaining Wall Improvements (FEMA Project)', 'Funding_Source': 'Municipal Fund', 'Amount': '$91,000', 'Status': 'Not specified in documents', 'Project_Type': 'disaster'}, {'Project_Name': 'Latigo Canyon Road Roadway/Retaining Wall Improvements (FEMA/CalOES Project)', 'Funding_Source': 'Community Fund', 'Amount': '$78,000', 'Status': 'Not specified in documents', 'Project_Type': 'disaster'}, {'Project_Name': 'Outdoor Warning Sirens (FEMA Project)', 'Funding_Source': 'Environmental Grant', 'Amount': '$27,000', 'Status': 'Not specified in documents', 'Project_Type': 'disaster'}, {'Project_Name': 'Outdoor Warning Sirens (FEMA)', 'Funding_Source': 'State Development Grant', 'Amount': '$81,000', 'Status': 'Not specified in documents', 'Project_Type': 'disaster'}, {'Project_Name': 'Outdoor Warning Sirens - Design (FEMA Project)', 'Funding_Source': 'Local Business Support', 'Amount': '$43,000', 'Status': 'Not specified in documents', 'Project_Type': 'disaster'}, {'Project_Name': 'Outdoor Warningn Sirens - Design (FEMA Project)', 'Funding_Source': 'Technology Innovation Fund', 'Amount': '$84,000', 'Status': 'Not specified in documents', 'Project_Type': 'disaster'}, {'Project_Name': 'Storm Drain Master Plan (FEMA Project)', 'Funding_Source': 'Environmental Grant', 'Amount': '$80,000', 'Status': 'Not specified in documents', 'Project_Type': 'disaster'}, {'Project_Name': 'Trancas Canyon Park Planting and Irrigation Repairs (CalJPIA/FEMA Project)', 'Funding_Source': 'Infrastructure Bond', 'Amount': '$44,000', 'Status': 'Not specified in documents', 'Project_Type': 'disaster'}, {'Project_Name': 'Trancas Canyon Park Planting and Irrigation Repairs (FEMA/CalOES Project)', 'Funding_Source': 'Infrastructure Bond', 'Amount': '$92,000', 'Status': 'Not specified in documents', 'Project_Type': 'disaster'}]}
+
+exec(code, env_args)

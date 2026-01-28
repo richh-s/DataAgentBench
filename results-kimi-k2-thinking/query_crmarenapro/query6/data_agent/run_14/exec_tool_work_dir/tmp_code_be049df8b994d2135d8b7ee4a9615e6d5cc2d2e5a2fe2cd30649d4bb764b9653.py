@@ -1,0 +1,48 @@
+code = """import json
+
+# Access the stored results
+quote_line_items = locals()['var_functions.query_db:8']
+products = locals()['var_functions.query_db:18']
+
+# Create a product lookup
+product_name_lookup = {}
+for prod in products:
+    product_id = prod['Id']
+    if product_id.startswith('#'):
+        product_id_clean = product_id[1:]
+    else:
+        product_id_clean = product_id
+    product_name_lookup[product_id_clean] = prod['Name'].strip()
+
+# Check each line item against the knowledge article
+# According to article #ka0Wt000000EnwvIAC, CollabDesign Studio has a limit of 25 units per order
+violations = []
+for item in quote_line_items:
+    product_id = item['Product2Id']
+    if product_id.startswith('#'):
+        product_id_clean = product_id[1:]
+    else:
+        product_id_clean = product_id
+    
+    if product_id_clean in product_name_lookup:
+        product_name = product_name_lookup[product_id_clean]
+        quantity = float(item['Quantity'])
+        
+        # Check if CollabDesign Studio exceeds the 25 unit limit
+        if product_name == 'CollabDesign Studio' and quantity > 25:
+            violations.append({
+                'article_id': '#ka0Wt000000EnwvIAC',
+                'product': product_name,
+                'quoted_quantity': quantity,
+                'allowed_limit': 25
+            })
+
+print('__RESULT__:')
+if violations:
+    print(json.dumps(violations[0]['article_id']))  # Return just the ID
+else:
+    print(json.dumps(None))"""
+
+env_args = {'var_functions.list_db:0': ['Contract', 'Lead', 'Opportunity', 'OpportunityLineItem', 'Quote', 'QuoteLineItem'], 'var_functions.query_db:2': [], 'var_functions.query_db:5': [{'Id': '#0Q0Wt000001WRAzKAO', 'OpportunityId': '006Wt000007BGgXIAW', 'AccountId': '001Wt00000PHVsDIAX', 'ContactId': '#003Wt00000JqyI6IAJ', 'Name': 'NeoGreen EDA Expansion Quote', 'Description': 'Quote for expanding EDA solutions including AI-powered tools to enhance energy system analytics.', 'Status': 'Needs Review', 'CreatedDate': '2021-05-15T10:30:00.000+0000', 'ExpirationDate': '2021-06-15'}], 'var_functions.query_db:6': [], 'var_functions.query_db:8': [{'Id': '0QLWt0000022j3GOAQ', 'QuoteId': '0Q0Wt000001WRAzKAO', 'OpportunityLineItemId': '00kWt000002HUwhIAG', 'Product2Id': '#01tWt000006hV6jIAE', 'PricebookEntryId': '01uWt0000027P8bIAE', 'Quantity': '3.0', 'UnitPrice': '349.99', 'Discount': '0.0', 'TotalPrice': '1049.97'}, {'Id': '0QLWt0000022j81OAA', 'QuoteId': '0Q0Wt000001WRAzKAO', 'OpportunityLineItemId': '00kWt000002HHRkIAO', 'Product2Id': '01tWt000006hV8LIAU', 'PricebookEntryId': '01uWt0000027P8cIAE', 'Quantity': '2.0', 'UnitPrice': '529.99', 'Discount': '0.0', 'TotalPrice': '1059.98'}, {'Id': '0QLWt0000022n8TOAQ', 'QuoteId': '0Q0Wt000001WRAzKAO', 'OpportunityLineItemId': '00kWt000002HQJYIA4', 'Product2Id': '#01tWt000006hPffIAE', 'PricebookEntryId': '01uWt0000027PADIA2', 'Quantity': '4.0', 'UnitPrice': '299.99', 'Discount': '0.0', 'TotalPrice': '1199.96'}, {'Id': '#0QLWt0000022oAvOAI', 'QuoteId': '0Q0Wt000001WRAzKAO', 'OpportunityLineItemId': '00kWt000002HQJZIA4', 'Product2Id': '01tWt000006hVczIAE', 'PricebookEntryId': '01uWt0000027Pi5IAE', 'Quantity': '35.0', 'UnitPrice': '399.99', 'Discount': '15.0', 'TotalPrice': '11899.7025'}], 'var_functions.query_db:10': 'file_storage/functions.query_db:10.json', 'var_functions.query_db:12': 'file_storage/functions.query_db:12.json', 'var_functions.query_db:14': 'file_storage/functions.query_db:14.json', 'var_functions.query_db:16': [{'id': '#ka0Wt000000EnwvIAC', 'title': 'Product Quantity Limits   ', 'summary': 'Product Quantity Limits', 'faq_answer__c': 'In the fast-paced world of technology solutions, having a clear understanding of product purchase limits is crucial for both users and vendors. At TechPulse Solution, we aim to provide our clients with top-tier products while maintaining streamlined and efficient purchasing processes. To this end, we have established product quantity limits for each order to ensure optimal distribution and availability of our offerings. Below is a detailed list of the product quantity limits for each of our key products.\n\n1. **AIOptics Vision** - Customers can purchase up to 20 units per order. Designed for advanced visual analytics, AIOptics Vision empowers businesses with insightful image and video processing capabilities.\n\n2. **CloudLink Designer** - A maximum of 15 units can be ordered at once. This product facilitates seamless networking and connectivity solutions within cloud environments, ideal for optimizing digital architecture.\n\n3. **CollabDesign Studio** - Each order is limited to 25 units. CollabDesign Studio specializes in collaborative workspace solutions, enhancing team productivity and interaction through innovative design features.\n\n4. **CryptGuard Module** - For enhanced data encryption and protection needs, customers can order up to 10 units per purchase. CryptGuard Module provides robust security measures to safeguard sensitive information.\n\n5. **EduFlow Academy** - This educational platform is available for purchase in bundles of up to 5 units per order, perfect for institutions looking to integrate comprehensive e-learning solutions.\n\n6. **SecuManage Pro** - Orders can include up to 30 units. SecuManage Pro offers extensive management tools for cybersecurity operations, enabling businesses to streamline their security protocols effectively.\n\n7. **SecureAnalytics Pro** - Limited to 12 units per order, SecureAnalytics Pro assists in delivering accurate data analysis and reporting within secure environments, supporting informed decision-making.\n\n8. **IntegrGuard Secure** - Users can order up to 8 units. Known for integration security, IntegrGuard Secure is essential for ensuring secure data transfers and connectivity between diverse systems.\n\n9. **CloudInnovate Space** - This dynamic product is available in quantities of up to 18 units per order, designed to spur innovation within cloud technologies through versatile and adaptive solutions.\n\n10. **AI DesignShift** - Clients may order a maximum of 7 units per order. AI DesignShift drives creativity through AI-driven design tools, enabling rapid development of innovative digital solutions.\n\nThese quantity limits have been carefully determined to balance product availability with client needs, ensuring that all customers can access the solutions essential to their operations without undue delay. By adhering to these guidelines, TechPulse Solution maintains its commitment to quality service and customer satisfaction, ensuring our clients always have access to the tools they need to thrive.'}], 'var_functions.query_db:18': [{'Id': '01tWt000006hPffIAE', 'Name': 'DevVision IDE'}, {'Id': '01tWt000006hV6jIAE', 'Name': 'EcoPCB Creator   '}, {'Id': '01tWt000006hV8LIAU', 'Name': 'AI Cirku-Tech'}, {'Id': '01tWt000006hVczIAE', 'Name': 'CollabDesign Studio'}]}
+
+exec(code, env_args)

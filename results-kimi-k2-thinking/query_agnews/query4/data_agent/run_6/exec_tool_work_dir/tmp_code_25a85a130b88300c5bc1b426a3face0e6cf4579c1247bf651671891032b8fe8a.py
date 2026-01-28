@@ -1,0 +1,91 @@
+code = """import json, os
+# Load metadata 2015
+metadata_file = locals()['var_functions.query_db:56']
+with open(metadata_file, 'r') as f:
+    metadata_2015 = json.load(f)
+
+# Build region map and list of IDs
+region_map = {row['article_id']: row['region'] for row in metadata_2015}
+article_ids_2015 = list(region_map.keys())
+
+# Categorization function
+import re
+
+def categorize_article(title, description):
+    text = (title + ' ' + description).lower()
+    
+    # World keywords
+    world_kws = [
+        'war', 'iraq', 'iran', 'afghanistan', 'israel', 'palestin', 'peace', 'terror',
+        'climate', 'global warming', 'treaty', 'summit', 'world', 'international', 'diplom',
+        'ambassador', 'korea', 'russia', 'putin', 'bush', 'obama', 'clinton', 'senate',
+        'syria', 'lebanon', 'egypt', 'libya', 'climate change', 'kyoto', 'united nations',
+        'foreign', 'military', 'pentagon', 'security council', 'europe', 'asia', 'africa',
+        'latin america', 'european union', 'nato', 'opec', 'world bank', 'imf',
+        'genocide', 'human rights', 'embassy', 'conflict', 'post-war', 'anti-war', 'protest',
+        'dead', 'killed', 'attack', 'un ', 'u.n.', 'government', 'election', 'political',
+        'unemployment', 'china', 'india', 'pakistan', 'nuclear', 'diplomat'
+    ]
+    # Sports keywords
+    sports_kws = [
+        'game', 'football', 'soccer', 'basketball', 'baseball', 'hockey', 'tennis',
+        'golf', 'olympic', 'world cup', 'super bowl', 'coach', 'team', 'player',
+        'season', 'quarter', 'score', 'win', 'lost', 'champion', 'tournament',
+        'race', 'marathon', 'run', 'swim', 'coach ', 'olympics', 'fifa', 'nfl',
+        'nba', 'mlb', 'nhl', 'draft', 'medal', 'gold', 'silver', 'bronze'
+    ]
+    # Business keywords
+    business_kws = [
+        'stock', 'market', 'economy', 'wall st', 'wall street', 'profit', 'loss',
+        'company', 'corporate', 'investment', 'investors', 'bond', 'equity', 'share',
+        'index', 'nasdaq', 'dow', 's&p', 'earnings', 'revenue', 'sales', 'quarter',
+        'executive', 'ceo', 'fund', 'bank', 'oil prices', 'oil', 'energy', 'trade',
+        'deficit', 'budget', 'fed ', 'federal reserve', 'inflation', 'unemployment',
+        'job', 'work', 'labor', 'wto', 'commerce', 'business', 'deal', 'acquisition',
+        'merge', 'carlyle', 'google ipo', 'ipo', 'initial public offering'
+    ]
+    # Sci/Tech keywords
+    scitech_kws = [
+        'software', 'internet', 'google', 'microsoft', 'intel', 'apple', 'computer',
+        'chip', 'technology', 'tech', 'science', 'research', 'study', 'university',
+        'scientist', 'satellite', 'space', 'gene', 'dna', 'physics', 'chemistry',
+        'medical', 'health', 'cancer', 'drug', 'clinical', 'treatment', 'digital',
+        'online', 'web', 'browser', 'security', 'virus', 'worm', 'hacker', 'encryption',
+        'broadband', 'wireless', 'mobile', 'phone', 'lcd', 'plasma', 'robot',
+        'artificial intelligence', 'ai', 'quantum', 'laser', 'telecom', 'fiber', 'optics',
+        'semiconductor', 'transistor', 'processor'
+    ]
+    
+    def count_matches(kws):
+        cnt = 0
+        for kw in kws:
+            if kw in text:
+                cnt += 1
+        return cnt
+    
+    w = count_matches(world_kws)
+    s = count_matches(sports_kws)
+    b = count_matches(business_kws)
+    t = count_matches(scitech_kws)
+    
+    # Return category with max matches, prioritize World in ties
+    cats = [('World', w), ('Sports', s), ('Business', b), ('SciTech', t)]
+    cats.sort(key=lambda x: x[1], reverse=True)
+    return cats[0][0]
+
+# Count World articles per region
+world_counts = {}
+# We need to fetch articles content; we have no direct mapping, so we cannot proceed further without article data.
+# Let's at least summarize what we have:
+
+summary = {
+    'total_metadata_2015': len(metadata_2015),
+    'regions': list(set(row['region'] for row in metadata_2015)),
+    'region_counts': {region: sum(1 for r in metadata_2015 if r['region']==region) for region in set(row['region'] for row in metadata_2015)}
+}
+print('__RESULT__:')
+print(json.dumps(summary))"""
+
+env_args = {'var_functions.query_db:0': 'file_storage/functions.query_db:0.json', 'var_functions.execute_python:8': {'count': 6696, 'message': 'Found 6696 articles from 2015'}, 'var_functions.query_db:10': [{'_id': '6969d4ae855c9d59985346e5', 'article_id': '0', 'title': 'Wall St. Bears Claw Back Into the Black (Reuters)', 'description': "Reuters - Short-sellers, Wall Street's dwindling\\band of ultra-cynics, are seeing green again."}, {'_id': '6969d4ae855c9d59985346e6', 'article_id': '1', 'title': 'Carlyle Looks Toward Commercial Aerospace (Reuters)', 'description': 'Reuters - Private investment firm Carlyle Group,\\which has a reputation for making well-timed and occasionally\\controversial plays in the defense industry, has quietly placed\\its bets on another part of the market.'}, {'_id': '6969d4ae855c9d59985346e7', 'article_id': '2', 'title': "Oil and Economy Cloud Stocks' Outlook (Reuters)", 'description': 'Reuters - Soaring crude prices plus worries\\about the economy and the outlook for earnings are expected to\\hang over the stock market next week during the depth of the\\summer doldrums.'}, {'_id': '6969d4ae855c9d59985346e8', 'article_id': '3', 'title': 'Iraq Halts Oil Exports from Main Southern Pipeline (Reuters)', 'description': 'Reuters - Authorities have halted oil export\\flows from the main pipeline in southern Iraq after\\intelligence showed a rebel militia could strike\\infrastructure, an oil official said on Saturday.'}, {'_id': '6969d4ae855c9d59985346e9', 'article_id': '4', 'title': 'Oil prices soar to all-time record, posing new menace to US economy (AFP)', 'description': 'AFP - Tearaway world oil prices, toppling records and straining wallets, present a new economic menace barely three months before the US presidential elections.'}], 'var_functions.execute_python:14': {'total_articles_2015': 6696, 'articles_with_content': 0}, 'var_functions.execute_python:16': {'metadata_sample_ids': ['13', '18', '26', '51', '52'], 'articles_sample_ids': ['0', '1', '2', '3', '4']}, 'var_functions.execute_python:18': {'total_ids': 6696}, 'var_functions.execute_python:20': {'total_2015_articles': 6696, 'unique_article_count': 6696, 'sample_ids': ['55936', '54113', '28308', '58511', '74988', '5031', '59364', '14780', '89973', '48077'], 'region_sample': {'13': 'Europe', '18': 'South America', '26': 'Africa', '51': 'South America', '52': 'Africa'}}, 'var_functions.query_db:22': [], 'var_functions.query_db:24': [{'_id': '6969d4ae855c9d59985346f2', 'article_id': '13', 'title': 'Google IPO Auction Off to Rocky Start', 'description': " WASHINGTON/NEW YORK (Reuters) - The auction for Google  Inc.'s highly anticipated initial public offering got off to a  rocky start on Friday after the Web search company sidestepped  a bullet from U.S. securities regulators."}], 'var_functions.query_db:26': [{'_id': '6969d4ae855c9d59985346e5', 'article_id': '0', 'title': 'Wall St. Bears Claw Back Into the Black (Reuters)', 'description': "Reuters - Short-sellers, Wall Street's dwindling\\band of ultra-cynics, are seeing green again."}, {'_id': '6969d4ae855c9d59985346e6', 'article_id': '1', 'title': 'Carlyle Looks Toward Commercial Aerospace (Reuters)', 'description': 'Reuters - Private investment firm Carlyle Group,\\which has a reputation for making well-timed and occasionally\\controversial plays in the defense industry, has quietly placed\\its bets on another part of the market.'}, {'_id': '6969d4ae855c9d59985346e7', 'article_id': '2', 'title': "Oil and Economy Cloud Stocks' Outlook (Reuters)", 'description': 'Reuters - Soaring crude prices plus worries\\about the economy and the outlook for earnings are expected to\\hang over the stock market next week during the depth of the\\summer doldrums.'}, {'_id': '6969d4ae855c9d59985346e8', 'article_id': '3', 'title': 'Iraq Halts Oil Exports from Main Southern Pipeline (Reuters)', 'description': 'Reuters - Authorities have halted oil export\\flows from the main pipeline in southern Iraq after\\intelligence showed a rebel militia could strike\\infrastructure, an oil official said on Saturday.'}, {'_id': '6969d4ae855c9d59985346e9', 'article_id': '4', 'title': 'Oil prices soar to all-time record, posing new menace to US economy (AFP)', 'description': 'AFP - Tearaway world oil prices, toppling records and straining wallets, present a new economic menace barely three months before the US presidential elections.'}], 'var_functions.execute_python:30': {'metadata_type': "<class 'str'>", 'metadata_is_str': True, 'articles_type': "<class 'list'>", 'articles_is_str': False, 'articles_is_list': True}, 'var_functions.execute_python:32': {'filtered_count': 0}, 'var_functions.execute_python:34': {'total_articles': 5, 'min_id': 0, 'max_id': 4, 'sample_ids': [0, 1, 2, 3, 4]}, 'var_functions.execute_python:36': {'min_id': 13, 'max_id': 127570, 'count': 6696, 'unique_count': 6696}, 'var_functions.execute_python:38': {'collection': 'articles', 'filter': {'article_id': {'$in': ['13', '18', '26', '51', '52']}}}, 'var_functions.query_db:40': [], 'var_functions.query_db:42': [], 'var_functions.execute_python:44': [{'article_id': '0', 'title': 'Wall St. Bears Claw Back Into the Black (Reuters)', 'category': 'Business'}, {'article_id': '1', 'title': 'Carlyle Looks Toward Commercial Aerospace (Reuters)', 'category': 'Business'}, {'article_id': '2', 'title': "Oil and Economy Cloud Stocks' Outlook (Reuters)", 'category': 'Business'}, {'article_id': '3', 'title': 'Iraq Halts Oil Exports from Main Southern Pipeline (Reuters)', 'category': 'SciTech'}, {'article_id': '4', 'title': 'Oil prices soar to all-time record, posing new menace to US economy (AFP)', 'category': 'Business'}], 'var_functions.query_db:46': [], 'var_functions.execute_python:48': {'total_ids': 6696}, 'var_functions.execute_python:50': {'total_ids': 6696, 'first_10': ['13', '18', '26', '51', '52', '67', '70', '74', '86', '97'], 'id_type': "<class 'str'>"}, 'var_functions.execute_python:52': {'total_2015_articles': 6696, 'region_counts': [['Europe', 1357], ['Africa', 1345], ['Asia', 1333], ['South America', 1332], ['North America', 1329]]}, 'var_functions.execute_python:54': {'total_2015_ids': 6696, 'region_map_size': 6696}, 'var_functions.query_db:56': 'file_storage/functions.query_db:56.json', 'var_functions.query_db:58': [], 'var_functions.query_db:60': [], 'var_functions.execute_python:62': {'collection': 'articles', 'filter': {'article_id': {'$in': ['13', '18', '26', '51', '52', '67', '70', '74', '86', '97', '116', '117', '141', '165', '179', '203', '240', '243', '266', '271']}}}, 'var_functions.execute_python:64': {'total_2015_articles': 6696, 'region_counts': [['Europe', 1357], ['Africa', 1345], ['Asia', 1333], ['South America', 1332], ['North America', 1329]]}, 'var_functions.execute_python:66': {'article_ids_sample': ['13', '18', '26', '51', '52', '67', '70', '74', '86', '97', '116', '117', '141', '165', '179', '203', '240', '243', '266', '271'], 'total_ids': 6696}, 'var_functions.query_db:68': [{'_id': '6969d4ae855c9d59985346f2', 'article_id': '13', 'title': 'Google IPO Auction Off to Rocky Start', 'description': " WASHINGTON/NEW YORK (Reuters) - The auction for Google  Inc.'s highly anticipated initial public offering got off to a  rocky start on Friday after the Web search company sidestepped  a bullet from U.S. securities regulators."}], 'var_functions.query_db:70': []}
+
+exec(code, env_args)

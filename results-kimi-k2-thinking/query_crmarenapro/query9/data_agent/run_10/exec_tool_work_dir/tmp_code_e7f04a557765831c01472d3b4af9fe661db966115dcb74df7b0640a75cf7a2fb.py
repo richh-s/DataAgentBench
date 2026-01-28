@@ -1,0 +1,62 @@
+code = """import json
+from datetime import datetime
+
+# Access data from storage using locals()
+cases = locals()['var_functions.query_db:5']
+states = locals()['var_functions.query_db:6']
+
+print('Cases loaded:', len(cases))
+print('States loaded:', len(states))
+
+# Create state lookup map
+state_map = {}
+for acc in states:
+    acc_id = acc['Id']
+    state = acc['ShippingState']
+    state_map[acc_id] = state
+
+# Calculate average closure time per state
+closure_times = {}
+for case in cases:
+    try:
+        # Parse dates
+        created_str = case['createddate'].replace('Z', '+00:00')
+        closed_str = case['closeddate'].replace('Z', '+00:00')
+        created = datetime.fromisoformat(created_str)
+        closed = datetime.fromisoformat(closed_str)
+        hours = (closed - created).total_seconds() / 3600
+        
+        # Clean account ID
+        acc_id = case['accountid']
+        if acc_id.startswith('#'):
+            acc_id = acc_id[1:]
+        
+        # Get state
+        state = state_map.get(acc_id)
+        if state:
+            if state not in closure_times:
+                closure_times[state] = []
+            closure_times[state].append(hours)
+    except Exception as e:
+        continue
+
+# Calculate averages
+averages = {}
+for state, times in closure_times.items():
+    if times:
+        averages[state] = sum(times) / len(times)
+
+# Sort by fastest closure time (lowest hours)
+sorted_states = sorted(averages.items(), key=lambda x: x[1])
+
+# Get top state
+top_state = sorted_states[0][0] if sorted_states else None
+
+print('Top state:', top_state)
+print('Average hours:', averages.get(top_state))
+print('__RESULT__:')
+print(json.dumps({'top_state': top_state}))"""
+
+env_args = {'var_functions.list_db:0': ['Case', 'knowledge__kav', 'issue__c', 'casehistory__c', 'emailmessage', 'livechattranscript'], 'var_functions.query_db:2': [{'id': '500Wt00000DDNYoIAP', 'accountid': '001Wt00000PGZZoIAP', 'createddate': '2023-09-30T11:30:00.000+0000', 'closeddate': '2023-09-30T16:03:45.000+0000', 'status': 'Closed'}, {'id': '500Wt00000DDPIsIAP', 'accountid': '#001Wt00000PGRnYIAX', 'createddate': '2022-08-05T14:30:00.000+0000', 'closeddate': '2022-08-05T14:39:32.000+0000', 'status': 'Closed '}, {'id': '500Wt00000DDPM6IAP', 'accountid': '001Wt00000PGzSaIAL', 'createddate': '2020-09-01T10:30:00.000+0000', 'closeddate': '2020-09-01T14:08:55.000+0000', 'status': 'Closed'}, {'id': '500Wt00000DDPSZIA5', 'accountid': '#001Wt00000PGZZoIAP', 'createddate': '2023-10-02T14:15:00.000+0000', 'closeddate': '2023-10-02T14:45:22.000+0000', 'status': 'Closed'}, {'id': '500Wt00000DDPsPIAX', 'accountid': '#001Wt00000PGHsyIAH', 'createddate': '2023-04-05T17:51:00.000+0000', 'closeddate': '2023-04-06T11:30:54.000+0000', 'status': 'Closed'}, {'id': '500Wt00000DDQRsIAP', 'accountid': '001Wt00000PGzM9IAL', 'createddate': '2023-03-08T06:49:00.000+0000', 'closeddate': '2023-03-08T07:07:30.000+0000', 'status': 'Closed'}, {'id': '500Wt00000DDRVzIAP', 'accountid': '001Wt00000PGzSaIAL', 'createddate': '2020-09-05T09:15:00.000+0000', 'closeddate': '2020-09-05T18:15:21.000+0000', 'status': 'Closed'}, {'id': '#500Wt00000DDTERIA5', 'accountid': '001Wt00000PGzSaIAL', 'createddate': '2022-03-10T09:30:00.000+0000', 'closeddate': '2022-03-13T09:45:27.000+0000', 'status': 'Closed'}, {'id': '500Wt00000DDU5iIAH', 'accountid': '#001Wt00000PHVvRIAX', 'createddate': '2023-10-15T09:15:47.000+0000', 'closeddate': '2023-10-15T14:23:52.000+0000', 'status': 'Closed'}, {'id': '500Wt00000DDYUGIA5', 'accountid': '001Wt00000PHVqdIAH', 'createddate': '2023-10-02T09:15:00.000+0000', 'closeddate': '2023-10-02T09:32:45.000+0000', 'status': 'Closed'}], 'var_functions.query_db:5': [{'id': '#500Wt00000DDTERIA5', 'accountid': '001Wt00000PGzSaIAL', 'createddate': '2022-03-10T09:30:00.000+0000', 'closeddate': '2022-03-13T09:45:27.000+0000', 'status': 'Closed', 'contactid': '003Wt00000JqhcGIAR'}, {'id': '#500Wt00000DDYdwIAH', 'accountid': '001Wt00000PFj4zIAD', 'createddate': '2022-02-03T14:30:00.000+0000', 'closeddate': '2022-02-03T14:46:56.000+0000', 'status': 'Closed', 'contactid': '003Wt00000JqmtfIAB'}, {'id': '#500Wt00000DDYpHIAX', 'accountid': '#001Wt00000PHHXXIA5', 'createddate': '2022-09-05T11:15:00.000+0000', 'closeddate': '2022-09-05T11:42:09.000+0000', 'status': 'Closed', 'contactid': '003Wt00000JqwQ0IAJ'}, {'id': '#500Wt00000DDet1IAD', 'accountid': '001Wt00000PGzSbIAL', 'createddate': '2021-09-07T23:48:00.000+0000', 'closeddate': '2021-09-08T03:11:32.000+0000', 'status': 'Closed', 'contactid': '003Wt00000JqxnSIAR'}, {'id': '500Wt00000DDg1yIAD', 'accountid': '#001Wt00000PHVnNIAX', 'createddate': '2022-02-08T06:22:00.000+0000', 'closeddate': '2022-02-08T06:43:35.000+0000', 'status': 'Closed', 'contactid': '003Wt00000JqnD0IAJ'}, {'id': '500Wt00000DDg1zIAD', 'accountid': '001Wt00000PGdzxIAD', 'createddate': '2022-04-17T14:20:00.000+0000', 'closeddate': '2022-04-17T14:37:58.000+0000', 'status': 'Closed', 'contactid': '#003Wt00000Jqv0zIAB'}, {'id': '500Wt00000DDg8RIAT', 'accountid': '001Wt00000PGZZoIAP', 'createddate': '2022-05-10T11:30:00.000+0000', 'closeddate': '2022-05-10T17:02:48.000+0000', 'status': 'Closed', 'contactid': '003Wt00000JqwOTIAZ'}, {'id': '500Wt00000DDgLLIA1', 'accountid': '#001Wt00000PGZZoIAP', 'createddate': '2022-05-12T14:45:00.000+0000', 'closeddate': '2022-05-12T14:54:10.000+0000', 'status': 'Closed', 'contactid': '003Wt00000JqwOTIAZ'}, {'id': '500Wt00000DDsKuIAL', 'accountid': '#001Wt00000PHVvRIAX', 'createddate': '2022-07-23T07:37:00.000+0000', 'closeddate': '2022-07-23T07:47:37.000+0000', 'status': 'Closed', 'contactid': '003Wt00000JqofNIAR'}, {'id': '500Wt00000DDxVqIAL', 'accountid': '001Wt00000PHVvRIAX', 'createddate': '2021-09-15T09:10:00.000+0000', 'closeddate': '2021-09-15T09:50:35.000+0000', 'status': 'Closed', 'contactid': '#003Wt00000Jqt7DIAR'}, {'id': '500Wt00000DDxZ4IAL', 'accountid': '001Wt00000PGtmwIAD', 'createddate': '2021-06-19T21:19:00.000+0000', 'closeddate': '2021-06-19T21:32:46.000+0000', 'status': 'Closed', 'contactid': '#003Wt00000Jqms3IAB'}, {'id': '#500Wt00000DDzZFIA1', 'accountid': '001Wt00000PGoAaIAL', 'createddate': '2021-07-15T10:30:00.000+0000', 'closeddate': '2021-07-15T13:32:47.000+0000', 'status': 'Closed', 'contactid': '003Wt00000Jqa2sIAB'}, {'id': '500Wt00000DDzarIAD', 'accountid': '#001Wt00000PGoAaIAL', 'createddate': '2021-10-08T08:07:00.000+0000', 'closeddate': '2021-10-08T08:43:11.000+0000', 'status': 'Closed', 'contactid': '003Wt00000Jqa2sIAB'}, {'id': '500Wt00000DDzcTIAT', 'accountid': '001Wt00000PGRnYIAX', 'createddate': '2022-08-01T10:15:00.000+0000', 'closeddate': '2022-08-01T14:45:37.000+0000', 'status': 'Closed', 'contactid': '#003Wt00000JqlkjIAB'}, {'id': '500Wt00000DDzfhIAD', 'accountid': '001Wt00000PGzM9IAL', 'createddate': '2022-03-04T09:45:00.000+0000', 'closeddate': '2022-03-05T10:25:32.000+0000', 'status': 'Closed', 'contactid': '003Wt00000Jqwg6IAB'}, {'id': '500Wt00000DE08jIAD', 'accountid': '001Wt00000PGSwYIAX', 'createddate': '2021-09-16T11:00:00.000+0000', 'closeddate': '2021-09-16T11:14:27.000+0000', 'status': 'Closed', 'contactid': '003Wt00000Jqx99IAB'}, {'id': '#500Wt00000DE0FCIA1', 'accountid': '001Wt00000PHVvRIAX', 'createddate': '2021-09-05T11:15:00.000+0000', 'closeddate': '2021-09-05T11:25:45.000+0000', 'status': 'Closed', 'contactid': '003Wt00000Jqt7DIAR'}, {'id': '500Wt00000DE0IPIA1', 'accountid': '001Wt00000PHVtpIAH', 'createddate': '2022-08-10T09:30:00.000+0000', 'closeddate': '2022-08-10T13:59:01.000+0000', 'status': 'Closed', 'contactid': '003Wt00000JqxkEIAR'}, {'id': '500Wt00000DE0QTIA1', 'accountid': '001Wt00000PFt7TIAT', 'createddate': '2022-02-02T15:30:45.000+0000', 'closeddate': '2022-02-03T10:17:46.000+0000', 'status': 'Closed', 'contactid': '003Wt00000JqpLHIAZ'}, {'id': '500Wt00000DE0S5IAL', 'accountid': '001Wt00000PFt7TIAT', 'createddate': '2022-03-05T11:20:30.000+0000', 'closeddate': '2022-03-05T11:34:08.000+0000', 'status': 'Closed', 'contactid': '003Wt00000JqpLHIAZ'}, {'id': '#500Wt00000DE0ThIAL', 'accountid': '#001Wt00000PGXrLIAX', 'createddate': '2021-10-02T10:30:00.000+0000', 'closeddate': '2021-10-03T13:27:49.000+0000', 'status': 'Closed', 'contactid': '003Wt00000JqtK2IAJ'}, {'id': '500Wt00000DE0YXIA1', 'accountid': '#001Wt00000PGaZDIA1', 'createddate': '2022-02-24T19:20:00.000+0000', 'closeddate': '2022-02-25T04:35:46.000+0000', 'status': 'Closed', 'contactid': '003Wt00000JqpjVIAR'}], 'var_functions.query_db:6': [{'Id': '001Wt00000PFj4zIAD', 'ShippingState': 'FL'}, {'Id': '001Wt00000PFt7TIAT', 'ShippingState': 'CO'}, {'Id': '001Wt00000PGRnYIAX', 'ShippingState': 'IA'}, {'Id': '001Wt00000PGSwYIAX', 'ShippingState': 'IA'}, {'Id': '#001Wt00000PGXrLIAX', 'ShippingState': 'NY'}, {'Id': '001Wt00000PGZZoIAP', 'ShippingState': 'OR'}, {'Id': '001Wt00000PGoAaIAL', 'ShippingState': 'NJ'}, {'Id': '001Wt00000PGtmwIAD', 'ShippingState': 'IL'}, {'Id': '001Wt00000PGzM9IAL', 'ShippingState': 'GA'}, {'Id': '001Wt00000PGzSaIAL', 'ShippingState': 'WA'}, {'Id': '001Wt00000PGzSbIAL', 'ShippingState': 'FL'}, {'Id': '#001Wt00000PHHXXIA5', 'ShippingState': 'TX'}, {'Id': '001Wt00000PHVtpIAH', 'ShippingState': 'TX'}, {'Id': '001Wt00000PHVvRIAX', 'ShippingState': 'TX'}]}
+
+exec(code, env_args)

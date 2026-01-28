@@ -1,0 +1,26 @@
+code = """import json
+path = var_call_3kPlYAHgnNRetHDJlTQYsmM4
+with open(path, 'r', encoding='utf-8') as f:
+    records = json.load(f)
+lines = []
+for r in records:
+    title = r.get('title') or ''
+    author = r.get('author') or ''
+    author_name = author
+    if isinstance(author, str) and author.strip().startswith('{'):
+        try:
+            a = json.loads(author)
+            author_name = a.get('name') or author
+        except Exception:
+            author_name = author
+    book_id = r.get('book_id') or ''
+    # build a simple ASCII-only line
+    line = title + ' - ' + str(author_name) + ' (' + str(book_id) + ')'
+    lines.append(line)
+answer_text = '\n'.join(lines)
+print("__RESULT__:")
+print(json.dumps(answer_text))"""
+
+env_args = {'var_call_KQhoAonEWOKCkMYj2OyCUbt5': ['review'], 'var_call_tragOMZg8AJTGhTXctHV0zYe': 'file_storage/call_tragOMZg8AJTGhTXctHV0zYe.json', 'var_call_59E4WtqJZ7JdzL5qRsFMZLO2': ['books_info'], 'var_call_athQhDCQJCrQdVJJmLYzUisw': 'file_storage/call_athQhDCQJCrQdVJJmLYzUisw.json', 'var_call_3kPlYAHgnNRetHDJlTQYsmM4': 'file_storage/call_3kPlYAHgnNRetHDJlTQYsmM4.json', 'var_call_5Qp118IKrWTngWZmkAWmDkZ4': {'count': 15}}
+
+exec(code, env_args)

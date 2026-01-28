@@ -1,0 +1,58 @@
+code = """import json, re
+path = var_call_HRbzImfiTlPYDcmxv9Hcahb4
+with open(path, 'r', encoding='utf-8') as f:
+    records = json.load(f)
+
+us_states = {"AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"}
+
+state_map = {}
+
+for r in records:
+    bid = r.get('business_id')
+    attrs = r.get('attributes') or {}
+    wifi = attrs.get('WiFi') if isinstance(attrs, dict) else None
+    if wifi is None:
+        continue
+    s = str(wifi).lower()
+    if 'no' in s:
+        continue
+    desc = r.get('description') or ''
+    state = None
+    # try multiple patterns
+    patterns = [r"in [^,]+, ([A-Z]{2})\b", r",\s*([A-Z]{2})[,\.]", r"\b([A-Z]{2})\b"]
+    for p in patterns:
+        m = re.search(p, desc)
+        if m:
+            candidate = m.group(1)
+            if candidate in us_states:
+                state = candidate
+                break
+    if state is None:
+        # try tokens
+        toks = re.findall(r"\b([A-Z]{2})\b", desc)
+        for t in reversed(toks):
+            if t in us_states:
+                state = t
+                break
+    if state is None:
+        continue
+    bref = bid.replace('businessid_', 'businessref_')
+    state_map.setdefault(state, []).append(bref)
+
+# compute counts
+state_counts = {k: len(v) for k,v in state_map.items()}
+# find top state
+if state_counts:
+    top_state = max(state_counts.items(), key=lambda x: x[1])[0]
+    top_business_refs = state_map[top_state]
+else:
+    top_state = None
+    top_business_refs = []
+
+out = {'state_counts': state_counts, 'top_state': top_state, 'top_business_refs': top_business_refs}
+print('__RESULT__:')
+print(json.dumps(out))"""
+
+env_args = {'var_call_FcU8ULKgLTvgq2xHt8RuPo4k': ['checkin', 'business'], 'var_call_HRbzImfiTlPYDcmxv9Hcahb4': 'file_storage/call_HRbzImfiTlPYDcmxv9Hcahb4.json', 'var_call_TYPbttHMnXwKVSgULW5ys9HS': {'business_refs': [], 'biz_state_map': {}, 'state_counts': {}}, 'var_call_Ec6yMrBJ5iyrf5TqFXEghy4Z': {'total': 35, 'wifi_vals_count': 5, 'wifi_vals_examples': [["u'no'", 11], ["u'free'", 18], ["'no'", 2], ["'free'", 3], ["u'paid'", 1]], 'samples': [{'business_id': 'businessid_49', 'WiFi': "u'no'", 'description': 'Located at 6901 Phelps Rd in Goleta, CA, this facility offers a nurturing environment for young learners, providing a range of services in Education, Elementary Schools, Child Care & Day Care, Local Services, Preschools, and Montessori Schools.'}, {'business_id': 'businessid_92', 'WiFi': "u'no'", 'description': 'Located at 690 W Dekalb Pike in King of Prussia, PA, this business offers a diverse range of services and products in the fields of Cosmetics & Beauty Supply, Cosmetic Dentists, Tanning, Teeth Whitening, Beauty & Spas, Dentists, Shopping, Blow Dry/Out Services, Health & Medical, Spray Tanning, and Hair Salons.'}, {'business_id': 'businessid_64', 'WiFi': "u'free'", 'description': 'Located at 12337 Olive Blvd in Creve Coeur, MO, this establishment offers a range of services in Nail Salons, Beauty & Spas.'}, {'business_id': 'businessid_54', 'WiFi': "u'free'", 'description': 'Located at 13151 Race Track Rd in Tampa, FL, this establishment offers a variety of services including Service Stations, Coffee & Tea, Gas Stations, Automotive, Gas Stations, Food, and Convenience Stores.'}, {'business_id': 'businessid_91', 'WiFi': "u'free'", 'description': 'Located at 1625 Baronne St in New Orleans, LA, this vibrant establishment offers a delightful array of options ranging from Food, Shaved Ice, Cajun/Creole, Breakfast & Brunch, Party & Event Planning, Comfort Food, Cafes, Restaurants, to Event Planning & Services, making it a perfect spot for any occasion.'}, {'business_id': 'businessid_93', 'WiFi': "u'free'", 'description': 'Located at 914 Edwardsville Rd in Troy, IL, this vibrant spot offers a diverse menu featuring American (New) cuisine, along with a lively atmosphere perfect for nightlife, bars, restaurants, and sports bars.'}, {'business_id': 'businessid_24', 'WiFi': "u'no'", 'description': 'Located at 4663 Maryland Ave in Saint Louis, MO, this delightful spot offers a tempting selection of treats in the categories of Food, Ice Cream & Frozen Yogurt.'}, {'business_id': 'businessid_26', 'WiFi': "u'free'", 'description': 'Located at 7003 Seminole Blvd in Seminole, FL, this establishment specializes in a variety of offerings, including Fast Food, Restaurants, Coffee & Tea, Food, and Burgers, making it a convenient stop for a quick meal or a refreshing beverage.'}, {'business_id': 'businessid_89', 'WiFi': "u'free'", 'description': 'Located at 540 Shoemaker Rd in King of Prussia, PA, this establishment offers a range of services including Dry Cleaning & Laundry, Laundromat, Local Services, and Laundry Services.'}, {'business_id': 'businessid_32', 'WiFi': "u'no'", 'description': 'Located at 1715 Jefferson Hwy in New Orleans, LA, this lively establishment offers a great atmosphere for enjoying Bars, Dive Bars, Burgers, Nightlife, and Restaurants.'}, {'business_id': 'businessid_97', 'WiFi': "u'free'", 'description': 'Located at 560 Cottman Ave in Cheltenham, PA, this establishment specializes in Body Shops, Automotive services to meet all your vehicle repair needs.'}, {'business_id': 'businessid_27', 'WiFi': "u'no'", 'description': 'Located at 2253 Oddie Blvd in Sparks, NV, this establishment offers a delightful dining experience featuring a diverse menu in the category of Restaurants, Chinese.'}, {'business_id': 'businessid_67', 'WiFi': "u'free'", 'description': 'Located at 1501 W Chester Pike in Havertown, PA, this eatery specializes in Vietnamese, Soup, Restaurants, Noodles, offering a delightful array of flavorful dishes.'}, {'business_id': 'businessid_7', 'WiFi': "u'no'", 'description': 'Located at 170 E Eagles Gate Dr in Eagle, ID, this establishment offers a vibrant experience in the realm of Cinema, Arts & Entertainment.'}, {'business_id': 'businessid_51', 'WiFi': "u'free'", 'description': 'Situated at 3109 N Ola Ave in Tampa, FL, this establishment offers a range of services in the hospitality sector, including Hotels & Travel, Hostels, Bed & Breakfast, Hotels, and Event Planning & Services.'}, {'business_id': 'businessid_5', 'WiFi': "'no'", 'description': 'Located at 10728 124 Street in Edmonton, AB, this inviting spot offers a delightful menu perfect for anyone looking to enjoy a satisfying meal, specializing in Breakfast & Brunch, Restaurants.'}, {'business_id': 'businessid_6', 'WiFi': "'free'", 'description': 'Located at 246 W 1st St in Reno, NV, this vibrant destination offers a delightful mix of Restaurants, Breakfast & Brunch, Bars, Wine Bars, Coffee & Tea, Food, Cafes, Sandwiches, and Nightlife, making it an ideal spot for any meal or occasion.'}, {'business_id': 'businessid_87', 'WiFi': "u'no'", 'description': 'Located at 6416 W Washington St in Indianapolis, IN, this establishment offers a delightful menu featuring Restaurants, Chicken Wings, Fish & Chips, and American (Traditional) cuisine.'}, {'business_id': 'businessid_55', 'WiFi': "u'free'", 'description': 'Located at 1003 4th St N in St. Petersburg, FL, this delightful spot offers a variety of treats including Ice Cream & Frozen Yogurt, Shaved Ice, Food, and Desserts.'}, {'business_id': 'businessid_96', 'WiFi': "u'no'", 'description': 'Located at 3257 Ivanhoe Ave in Saint Louis, MO, this establishment offers a vibrant atmosphere perfect for enjoying a diverse selection of experiences, including Wine Bars, American (New), Cocktail Bars, Restaurants, American (Traditional), Nightlife, and Bars.'}]}, 'var_call_dx0NlxnKDtoh4HJEJb42UUb3': {'state_counts': {}, 'top_state': None, 'top_business_refs': []}, 'var_call_qjJV0EyQQNDm4cedS6BkKpIA': 'file_storage/call_qjJV0EyQQNDm4cedS6BkKpIA.json', 'var_call_rU0iVZLRYRsisjB7zUBmhnzZ': 'file_storage/call_rU0iVZLRYRsisjB7zUBmhnzZ.json'}
+
+exec(code, env_args)

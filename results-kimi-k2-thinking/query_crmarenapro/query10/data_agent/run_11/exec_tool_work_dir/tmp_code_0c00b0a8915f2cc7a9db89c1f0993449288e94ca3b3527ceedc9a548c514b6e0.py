@@ -1,0 +1,88 @@
+code = """import json
+import pandas as pd
+import re
+from datetime import datetime
+
+# Access the query results
+# Get closed cases from past 4 months (from var_functions.query_db:10)
+closed_cases = var_functions.query_db:10
+
+# Path to the case history file (from var_functions.query_db:8)
+case_history_file_path = var_functions.query_db:8
+
+# Load case history data from file (it's a file path string)
+with open(case_history_file_path, 'r') as f:
+    case_history_raw = json.load(f)
+
+# Convert to DataFrame
+cases_df = pd.DataFrame(closed_cases)
+history_df = pd.DataFrame(case_history_raw)
+
+print(f"Closed cases count: {len(cases_df)}")
+print(f"Case history count: {len(history_df)}")
+
+if cases_df.empty:
+    print("No closed cases found in the date range")
+    print('__RESULT__:')
+    print('[]')
+else:
+    # Remove leading # from IDs for consistency
+    cases_df['id_clean'] = cases_df['id'].str.replace('#', '')
+    cases_df['ownerid_clean'] = cases_df['ownerid'].str.replace('#', '')
+    
+    # Filter case history for Owner Assignment events only
+    owner_assignments = history_df[history_df['field__c'] == 'Owner Assignment'].copy()
+    owner_assignments['caseid_clean'] = owner_assignments['caseid__c'].str.replace('#', '')
+    
+    # Count owner assignments per case
+    case_transfer_counts = owner_assignments.groupby('caseid_clean').size().reset_index(name='owner_assignment_count')
+    
+    # Merge with closed cases
+    merged_df = cases_df.merge(case_transfer_counts, left_on='id_clean', right_on='caseid_clean', how='left')
+    merged_df['owner_assignment_count'] = merged_df['owner_assignment_count'].fillna(0).astype(int)
+    
+    # Keep only cases that were NOT transferred (only ONE owner assignment, which is the initial one)
+    non_transferred_cases = merged_df[merged_df['owner_assignment_count'] == 1].copy()
+    
+    print(f"Non-transferred cases count: {len(non_transferred_cases)}")
+    
+    if non_transferred_cases.empty:
+        print("No non-transferred cases found in the date range")
+        print('__RESULT__:')
+        print('[]')
+    else:
+        # Calculate handle time in minutes
+        non_transferred_cases['createddate_parsed'] = pd.to_datetime(non_transferred_cases['createddate'])
+        non_transferred_cases['closeddate_parsed'] = pd.to_datetime(non_transferred_cases['closeddate'])
+        non_transferred_cases['handle_time_minutes'] = (non_transferred_cases['closeddate_parsed'] - non_transferred_cases['createddate_parsed']).dt.total_seconds() / 60
+        
+        # Aggregate by owner: count cases and calculate avg handle time
+        agent_stats = non_transferred_cases.groupby('ownerid_clean').agg(
+            case_count=('id', 'count'),
+            avg_handle_time=('handle_time_minutes', 'mean')
+        ).reset_index()
+        
+        # Filter agents with more than one case
+        qualifying_agents = agent_stats[agent_stats['case_count'] > 1].copy()
+        
+        print(f"Qualifying agents (with >1 case): {len(qualifying_agents)}")
+        
+        if qualifying_agents.empty:
+            print("No agents have processed more than one case")
+            print('__RESULT__:')
+            print('[]')
+        else:
+            # Find agent with lowest average handle time
+            best_agent = qualifying_agents.loc[qualifying_agents['avg_handle_time'].idxmin()]
+            
+            print(f"Best agent ID: {best_agent['ownerid_clean']}")
+            print(f"Cases processed: {best_agent['case_count']}")
+            print(f"Average handle time: {best_agent['avg_handle_time']:.2f} minutes")
+            
+            # Return the result
+            print('__RESULT__:')
+            print(json.dumps(best_agent['ownerid_clean']))"""
+
+env_args = {'var_functions.list_db:0': ['Case', 'knowledge__kav', 'issue__c', 'casehistory__c', 'emailmessage', 'livechattranscript'], 'var_functions.query_db:2': [{'id': '#500Wt00000DDDfwIAH', 'priority': 'Medium', 'subject': 'Feature Update Notifications Lack', 'description': "Without regular update notifications, we are unable to fully utilize CollabCircuit Hub's latest features.", 'status': 'Waiting on Customer', 'contactid': '003Wt00000JqxKSIAZ', 'createddate': '2023-07-02T11:00:00.000+0000', 'closeddate': 'None', 'orderitemid__c': '802Wt00000797r4IAA', 'issueid__c': 'a03Wt00000JqzSfIAJ', 'accountid': '001Wt00000PFttwIAD', 'ownerid': '005Wt000003NJ0DIAW'}, {'id': '500Wt00000DDDtTIAX', 'priority': 'Medium', 'subject': 'Missing Feature Update Alerts', 'description': 'I have noticed that I am not consistently receiving notifications about new feature updates for the SecureFlow Suite, which affects my ability to use the software to its full potential.', 'status': 'Waiting on Customer   ', 'contactid': '003Wt00000Jqp3WIAR', 'createddate': '2020-12-29T08:36:00.000+0000', 'closeddate': 'None', 'orderitemid__c': '802Wt00000798aDIAQ', 'issueid__c': 'a03Wt00000JqzSfIAJ', 'accountid': '001Wt00000PHVkAIAX', 'ownerid': '#005Wt000003NJWTIA4'}, {'id': '500Wt00000DDNYoIAP', 'priority': 'Medium', 'subject': 'Delayed Support Response ', 'description': 'I am experiencing delays in getting timely responses from TechPulse support during busy periods, which is affecting our project timelines.', 'status': 'Closed', 'contactid': '#003Wt00000JqqVtIAJ', 'createddate': '2023-09-30T11:30:00.000+0000', 'closeddate': '2023-09-30T16:03:45.000+0000', 'orderitemid__c': '802Wt00000792tiIAA', 'issueid__c': 'a03Wt00000JqtOtIAJ', 'accountid': '001Wt00000PGZZoIAP', 'ownerid': '005Wt000003NIc3IAG'}, {'id': '500Wt00000DDPIsIAP', 'priority': 'Medium', 'subject': 'AI Feature Malfunction', 'description': 'Some of the AI-powered features in CloudLink Designer are intermittently failing to operate, leading to reduced efficiency and user frustration.', 'status': 'Closed ', 'contactid': '003Wt00000JqlkjIAB', 'createddate': '2022-08-05T14:30:00.000+0000', 'closeddate': '2022-08-05T14:39:32.000+0000', 'orderitemid__c': '802Wt00000797r3IAA', 'issueid__c': 'a03Wt00000JqxVjIAJ', 'accountid': '#001Wt00000PGRnYIAX', 'ownerid': '#005Wt000003NEzqIAG'}, {'id': '500Wt00000DDPM6IAP', 'priority': 'High', 'subject': 'Access Issues with Training Module', 'description': "I am experiencing difficulty accessing the online training modules which are crucial for my team's smooth adoption of the SecureFlow Suite.", 'status': 'Closed', 'contactid': '#003Wt00000Jqv14IAB', 'createddate': '2020-09-01T10:30:00.000+0000', 'closeddate': '2020-09-01T14:08:55.000+0000', 'orderitemid__c': '802Wt00000797r5IAA', 'issueid__c': 'a03Wt00000JqvNUIAZ', 'accountid': '001Wt00000PGzSaIAL', 'ownerid': '005Wt000003NISLIA4'}], 'var_functions.query_db:5': [{'id': 'a04Wt0000052xxEIAQ', 'caseid__c': '500Wt00000DDTEQIA5', 'oldvalue__c': 'None', 'newvalue__c': 'None', 'createddate': '2022-03-02T10:15:00.000+0000', 'field__c': 'Case Creation'}, {'id': 'a04Wt00000531KtIAI', 'caseid__c': '500Wt00000DDzhJIAT', 'oldvalue__c': 'None', 'newvalue__c': 'None', 'createddate': '2023-02-15T14:30:00.000+0000', 'field__c': 'Case Creation'}, {'id': '#a04Wt00000531KuIAI', 'caseid__c': '500Wt00000DDzpNIAT', 'oldvalue__c': 'None', 'newvalue__c': '005Wt000003NINVIA4', 'createddate': '2023-09-07T16:30:00.000+0000', 'field__c': 'Owner Assignment'}, {'id': 'a04Wt00000531KvIAI', 'caseid__c': '500Wt00000DDzsbIAD', 'oldvalue__c': 'None', 'newvalue__c': 'None', 'createddate': '2023-06-30T19:03:08.000+0000', 'field__c': 'Case Closed'}, {'id': 'a04Wt00000531RLIAY', 'caseid__c': '500Wt00000DDfHCIA1', 'oldvalue__c': 'None', 'newvalue__c': '005Wt000003NIXBIA4', 'createddate': '2021-07-23T11:00:00.000+0000', 'field__c': 'Owner Assignment'}, {'id': '#a04Wt00000531RMIAY', 'caseid__c': '500Wt00000DDZ0VIAX', 'oldvalue__c': 'None', 'newvalue__c': '005Wt000003NEtOIAW', 'createddate': '2021-10-15T13:46:00.000+0000', 'field__c': 'Owner Assignment'}, {'id': 'a04Wt00000531UaIAI', 'caseid__c': '500Wt00000DDQoUIAX', 'oldvalue__c': 'None', 'newvalue__c': '005Wt000003NJcwIAG', 'createddate': '2021-09-15T10:00:00.000+0000', 'field__c': 'Owner Assignment'}, {'id': 'a04Wt00000531UbIAI', 'caseid__c': '500Wt00000DDzm9IAD', 'oldvalue__c': 'None', 'newvalue__c': '005Wt000003NJ3RIAW', 'createddate': '2022-03-03T10:00:00.000+0000', 'field__c': 'Owner Assignment'}, {'id': 'a04Wt00000531hSIAQ', 'caseid__c': '500Wt00000DDPsPIAX', 'oldvalue__c': 'None', 'newvalue__c': 'None', 'createddate': '2023-04-06T11:30:54.000+0000', 'field__c': 'Case Closed'}, {'id': 'a04Wt00000531w0IAA', 'caseid__c': '500Wt00000DE00fIAD', 'oldvalue__c': 'None', 'newvalue__c': 'None', 'createddate': '2023-09-05T10:15:00.000+0000', 'field__c': 'Case Creation'}], 'var_functions.query_db:6': [{'id': '#500Wt00000DDDfwIAH', 'createddate': '2023-07-02T11:00:00.000+0000', 'closeddate': 'None', 'ownerid': '005Wt000003NJ0DIAW'}, {'id': '500Wt00000DDNYoIAP', 'createddate': '2023-09-30T11:30:00.000+0000', 'closeddate': '2023-09-30T16:03:45.000+0000', 'ownerid': '005Wt000003NIc3IAG'}, {'id': '500Wt00000DDPSZIA5', 'createddate': '2023-10-02T14:15:00.000+0000', 'closeddate': '2023-10-02T14:45:22.000+0000', 'ownerid': '005Wt000003NJhlIAG'}, {'id': '500Wt00000DDTxbIAH', 'createddate': '2023-08-15T14:30:00.000+0000', 'closeddate': 'None', 'ownerid': '#005Wt000003NIfFIAW'}, {'id': '500Wt00000DDU5iIAH', 'createddate': '2023-10-15T09:15:47.000+0000', 'closeddate': '2023-10-15T14:23:52.000+0000', 'ownerid': '#005Wt000003NDqEIAW'}, {'id': '500Wt00000DDYUGIA5', 'createddate': '2023-10-02T09:15:00.000+0000', 'closeddate': '2023-10-02T09:32:45.000+0000', 'ownerid': '#005Wt000003NJ6gIAG'}, {'id': '#500Wt00000DDZ27IAH', 'createddate': '2023-10-02T10:15:00.000+0000', 'closeddate': 'None', 'ownerid': '005Wt000003NJzVIAW'}, {'id': '500Wt00000DDepmIAD', 'createddate': '2023-07-01T10:30:00.000+0000', 'closeddate': '2023-07-01T19:41:08.000+0000', 'ownerid': '005Wt000003NJufIAG'}, {'id': '#500Wt00000DDfFcIAL', 'createddate': '2023-09-22T08:28:00.000+0000', 'closeddate': '2023-09-22T08:43:27.000+0000', 'ownerid': '005Wt000003NFKpIAO'}, {'id': '#500Wt00000DDfYwIAL', 'createddate': '2024-05-02T09:30:00.000+0000', 'closeddate': 'None', 'ownerid': '005Wt000003NIk5IAG'}, {'id': '500Wt00000DDflsIAD', 'createddate': '2023-06-12T09:45:00.000+0000', 'closeddate': 'None', 'ownerid': '005Wt000003NJppIAG'}, {'id': '500Wt00000DDgLKIA1', 'createddate': '2023-11-03T11:30:00.000+0000', 'closeddate': 'None', 'ownerid': '#005Wt000003NHuUIAW'}, {'id': '500Wt00000DDnt6IAD', 'createddate': '2023-10-16T09:00:00.000+0000', 'closeddate': '2023-10-16T15:22:17.000+0000', 'ownerid': '005Wt000003NIddIAG'}, {'id': '#500Wt00000DDsG2IAL', 'createddate': '2023-10-03T14:34:22.000+0000', 'closeddate': 'None', 'ownerid': '#005Wt000003NI90IAG'}, {'id': '#500Wt00000DDsG3IAL', 'createddate': '2023-08-10T14:20:00.000+0000', 'closeddate': 'None', 'ownerid': '005Wt000003NI5mIAG'}, {'id': '500Wt00000DDxSdIAL', 'createddate': '2024-05-15T14:45:00.000+0000', 'closeddate': 'None', 'ownerid': '005Wt000003NJ6gIAG'}, {'id': '#500Wt00000DDyuwIAD', 'createddate': '2023-10-16T09:15:00.000+0000', 'closeddate': 'None', 'ownerid': '005Wt000003NJGLIA4'}, {'id': '500Wt00000DDyzpIAD', 'createddate': '2023-08-15T14:30:00.000+0000', 'closeddate': '2023-08-15T14:54:02.000+0000', 'ownerid': '005Wt000003NJGLIA4'}, {'id': '500Wt00000DDz6FIAT', 'createddate': '2023-09-03T10:15:00.000+0000', 'closeddate': '2023-09-08T16:25:49.000+0000', 'ownerid': '005Wt000003NJhlIAG'}, {'id': '500Wt00000DDzRBIA1', 'createddate': '2023-09-20T10:15:00.000+0000', 'closeddate': 'None', 'ownerid': '005Wt000003NIc3IAG'}, {'id': '500Wt00000DDzUPIA1', 'createddate': '2023-05-10T14:45:00.000+0000', 'closeddate': '2023-05-10T14:59:42.000+0000', 'ownerid': '005Wt000003NDqDIAW'}, {'id': '500Wt00000DDzW2IAL', 'createddate': '2023-10-05T09:45:00.000+0000', 'closeddate': '2023-10-05T16:02:30.000+0000', 'ownerid': '005Wt000003NIk7IAG'}, {'id': '500Wt00000DDzXdIAL', 'createddate': '2023-06-22T11:00:00.000+0000', 'closeddate': 'None', 'ownerid': '#005Wt000003NJUrIAO'}, {'id': '#500Wt00000DDzZGIA1', 'createddate': '2023-09-06T11:15:00.000+0000', 'closeddate': 'None', 'ownerid': '005Wt000003NJ8HIAW'}, {'id': '500Wt00000DDzZHIA1', 'createddate': '2023-07-02T09:30:00.000+0000', 'closeddate': 'None', 'ownerid': '005Wt000003NDqDIAW'}, {'id': '500Wt00000DDze6IAD', 'createddate': '2023-10-20T10:00:00.000+0000', 'closeddate': 'None', 'ownerid': '005Wt000003NIddIAG'}, {'id': '#500Wt00000DDzivIAD', 'createddate': '2023-06-05T11:15:00.000+0000', 'closeddate': 'None', 'ownerid': '005Wt000003NDqDIAW'}, {'id': '500Wt00000DDzkXIAT', 'createddate': '2023-06-19T14:30:00.000+0000', 'closeddate': 'None', 'ownerid': '#005Wt000003NINVIA4'}, {'id': '500Wt00000DDznlIAD', 'createddate': '2023-09-04T14:20:00.000+0000', 'closeddate': 'None', 'ownerid': '005Wt000003NIwzIAG'}, {'id': '#500Wt00000DDzpNIAT', 'createddate': '2023-09-07T16:30:00.000+0000', 'closeddate': '2023-09-07T16:45:30.000+0000', 'ownerid': '005Wt000003NINVIA4'}, {'id': '500Wt00000DDzr0IAD', 'createddate': '2023-08-01T10:00:00.000+0000', 'closeddate': 'None', 'ownerid': '#005Wt000003NJcvIAG'}, {'id': '500Wt00000DDzsbIAD', 'createddate': '2023-06-30T13:03:00.000+0000', 'closeddate': '2023-06-30T19:03:08.000+0000', 'ownerid': '005Wt000003NJD9IAO'}, {'id': '#500Wt00000DDzscIAD', 'createddate': '2023-05-02T23:55:00.000+0000', 'closeddate': '2023-05-03T00:11:47.000+0000', 'ownerid': '005Wt000003NEtOIAW'}, {'id': '500Wt00000DDzuEIAT', 'createddate': '2023-06-02T09:30:00.000+0000', 'closeddate': '2023-06-02T13:35:12.000+0000', 'ownerid': '005Wt000003NJJaIAO'}, {'id': '500Wt00000DDzz3IAD', 'createddate': '2024-05-02T09:00:00.000+0000', 'closeddate': 'None', 'ownerid': '005Wt000003NFW6IAO'}, {'id': '500Wt00000DE00fIAD', 'createddate': '2023-09-05T10:15:00.000+0000', 'closeddate': 'None', 'ownerid': '005Wt000003NIAcIAO'}, {'id': '#500Wt00000DE02HIAT', 'createddate': '2023-06-03T14:45:00.000+0000', 'closeddate': '2023-06-03T15:21:34.000+0000', 'ownerid': '005Wt000003NIddIAG'}, {'id': '#500Wt00000DE03tIAD', 'createddate': '2023-12-02T11:30:00.000+0000', 'closeddate': '2023-12-02T16:45:51.000+0000', 'ownerid': '005Wt000003NHfzIAG'}, {'id': '500Wt00000DE078IAD', 'createddate': '2023-09-16T15:30:00.000+0000', 'closeddate': '2023-09-16T21:27:33.000+0000', 'ownerid': '005Wt000003NJTFIA4'}, {'id': '500Wt00000DE0BxIAL', 'createddate': '2023-11-02T10:00:00.000+0000', 'closeddate': '2023-11-02T14:10:33.000+0000', 'ownerid': '#005Wt000003NGwpIAG'}, {'id': '500Wt00000DE0ByIAL', 'createddate': '2024-05-05T10:15:30.000+0000', 'closeddate': 'None', 'ownerid': '005Wt000003NGjuIAG'}, {'id': '500Wt00000DE0GnIAL', 'createddate': '2023-09-18T09:45:00.000+0000', 'closeddate': '2023-09-18T09:53:18.000+0000', 'ownerid': '#005Wt000003NF1SIAW'}, {'id': '500Wt00000DE0NGIA1', 'createddate': '2023-09-25T10:30:00.000+0000', 'closeddate': '2023-09-26T12:20:45.000+0000', 'ownerid': '#005Wt000003NHpeIAG'}], 'var_functions.query_db:8': 'file_storage/functions.query_db:8.json', 'var_functions.query_db:10': [{'id': '500Wt00000DDepmIAD', 'createddate': '2023-07-01T10:30:00.000+0000', 'closeddate': '2023-07-01T19:41:08.000+0000', 'ownerid': '005Wt000003NJufIAG'}, {'id': '500Wt00000DDyzpIAD', 'createddate': '2023-08-15T14:30:00.000+0000', 'closeddate': '2023-08-15T14:54:02.000+0000', 'ownerid': '005Wt000003NJGLIA4'}, {'id': '500Wt00000DDzUPIA1', 'createddate': '2023-05-10T14:45:00.000+0000', 'closeddate': '2023-05-10T14:59:42.000+0000', 'ownerid': '005Wt000003NDqDIAW'}, {'id': '500Wt00000DDzsbIAD', 'createddate': '2023-06-30T13:03:00.000+0000', 'closeddate': '2023-06-30T19:03:08.000+0000', 'ownerid': '005Wt000003NJD9IAO'}, {'id': '#500Wt00000DDzscIAD', 'createddate': '2023-05-02T23:55:00.000+0000', 'closeddate': '2023-05-03T00:11:47.000+0000', 'ownerid': '005Wt000003NEtOIAW'}, {'id': '500Wt00000DDzuEIAT', 'createddate': '2023-06-02T09:30:00.000+0000', 'closeddate': '2023-06-02T13:35:12.000+0000', 'ownerid': '005Wt000003NJJaIAO'}, {'id': '#500Wt00000DE02HIAT', 'createddate': '2023-06-03T14:45:00.000+0000', 'closeddate': '2023-06-03T15:21:34.000+0000', 'ownerid': '005Wt000003NIddIAG'}]}
+
+exec(code, env_args)

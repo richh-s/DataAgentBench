@@ -1,0 +1,58 @@
+code = """import json
+# Collect all results keys from the parallel call (they were stored under many keys). We'll list them explicitly based on known pattern above.
+keys = [
+'var_call_Ho8IGvraRzH3stxv4fKhahP2','var_call_JuL8QY6XZ432GXykXoVubHlY','var_call_psyqWYt1Blq1tu9RlbAkBHKv','var_call_9bwinBahl302GCkpQnXfpuaj','var_call_JwuXFnPccaCF3K9ibb9p5BJU',
+'var_call_RJIPckZs1ti7TxTm37e4sHem','var_call_VCVX2p5JUw0O8Ksmoe37cpYH','var_call_8NRIo2wUpytYyxXaVn37Rri7','var_call_wM3W9aRfaBDiX4fA6x2dUidn','var_call_9ff5HH8cRZvtjBcFRZhkwIvv',
+'var_call_lYMOulU0mozJRFVs9MJm2sSE','var_call_k9OgilTROpxjiMB3iylNKHj1','var_call_pWmL9BrsEVGU7WohES7zSJxB','var_call_wA0qlhI8xdc2lSOjFfqwRRcK','var_call_rfqf4RqusWoX6y2l9rSEWgAZ',
+'var_call_FQtvSn0UCL1goB2OTrLKDASI','var_call_e52CcXMiBGurASHcfgsHKKim','var_call_5ronjpf6JVTpGAd1BZmtoAmC','var_call_YoD6su4TtnA57WvMwpxhTTv6','var_call_hZ9faCjZjey6NekzKPprEUPK',
+'var_call_S6u0K6TpFopcNpjk6XYPlMD3','var_call_BQwImFhD8fqZwtp0w3XeRWdj','var_call_hPXeeR37lFPK5drS0Hayr0eh','var_call_d4C4NgZDTEqFMAwCunkDFZPI','var_call_YNKke7WWZ75jUbPZVcI75g12',
+'var_call_gAxO4kAkKIH5AH9Bcm2PFsro','var_call_MIVl6e35DE9v6vtsswR6XqhL','var_call_qb97v5WBB2DjEy6KpC26if4E','var_call_aWSGNTKCzK5wzwy6y2egM6wI','var_call_RLyN9ELClBcZkL3yfKKAzbPi',
+'var_call_nDuoG4nLjctXJadMEMSBeqlY','var_call_OLz3vyXzavzI6SmVtuch6lqa','var_call_ruMTOr3TrW4k2ngQS6ovwdMJ','var_call_sG3qvJseLVN2AULZZUYrCiU9','var_call_54IBoBVS4Fl67JCDf2YjJgBs',
+'var_call_1QXbWMczZxps7JzfwA9QKOxh','var_call_FCHddQboTmlctU1Q2NzBZC9k','var_call_voeiBxkNxaQ0BnyTLDDdtfOq','var_call_qcO11VhFJOtVPSLb7lwDfSOy','var_call_aDA21flCzkJgbgqfRbqSpZnK',
+'var_call_Z3zgoB9V459MP2L5EqM4p9FR','var_call_VgPC77akVhlOaW0K23Rr1VdJ','var_call_vUwKyjaWPm6rZiyEBdSMbFPN','var_call_73ifOmfAqkOo9pKXJBJbkk7F','var_call_4xfGBYL7850eZn67zfZefoWg',
+'var_call_v7M1TJoZt2sOY4XnkxgA8Qai','var_call_oIaoQ6futUi7lr5BC37rSQ44','var_call_wxqeg9SlWMUj772N1soqVfI0','var_call_Gm6Fe08u6ICalQnw7RfEWQRP','var_call_INabami0BuQdsPIWDDs2djS9',
+'var_call_b2uYm4QlgKoY6oy4rI9YcLxt','var_call_AOO79UO8RFZQQlBv6RQfj1Zt','var_call_BbEN6inSADNgMxlrQYUvs12N','var_call_W7Ym3wf6gGRh28qo0fTK4X8j','var_call_BqBzvsEZ2FU1dOiD9tRZhPVB',
+'var_call_8wnIgCuhwoyKAuMamdA9pEtP','var_call_Xcn62ezHLGdD4mzZQr5jZHyk','var_call_Rf7s9YWhyo2bvtTTLnwPhdyd','var_call_eikm24rFSTCEna3fFxR6Wqn8','var_call_uSY0fbFVmmduyXAjkydMImCr',
+'var_call_n1vkOFQfA442OaFURvCZYGo6','var_call_dVBwKmxU855XPkQ0tmTSh1k0','var_call_uycJMQ7WZuN9XVWzmKcevukB','var_call_pc22RHuEUJ1rXcSIjHhNK5Ki','var_call_6wLE8fA29O5d5lJG6xMEqzwr',
+'var_call_TITxe5PI3I5LjgJVftbkFJAZ','var_call_t1qY3nh8o5ZhhtYdjFD7sskd','var_call_LMTjYxkLY3yQkW8WRlyoptft','var_call_ukQeWR6BPbgWdLah0xciZBjc','var_call_msdV8rJoyX0twfEahD5mvs3F',
+'var_call_NzKejcfDFPxEMq0ptsWYS7Nj','var_call_H3O8aEjFL9JNsmARV9A2Cb9h','var_call_oTBjKWcNKPg9ILCiuQSKpJJH','var_call_ea1ofhJYdTjK0D3A5bqkqmZs','var_call_6HH88qDrdgc1ysmUhxlKepHQ',
+'var_call_MMGHJyFOd3qnd92zct7lXahh','var_call_3xA7de9tvQbjDp6UDBJkCEqv','var_call_of1wAA8CS25ajRfdgDvtiWQc','var_call_rZHYtrqIRvmhBgZO6ehQBmjQ','var_call_rAlPJCZDUQqSjCf5gAlIo39x',
+'var_call_Spsz0dT7CCRmhUC9vyn1dBZG','var_call_vQenXrDaxBh4rh19rOJn3mgC','var_call_vQenXrDaxBh4rh19rOJn3mgC','var_call_vQenXrDaxBh4rh19rOJn3mgC','var_call_vQenXrDaxBh4rh19rOJn3mgC'
+]
+
+# Some keys repeated at end due to copy; ensure uniqueness
+keys = list(dict.fromkeys(keys))
+
+results = []
+for k in keys:
+    try:
+        data = json.load(open(k))
+    except Exception:
+        # If not a filepath, might be variable available
+        try:
+            data = globals().get(k)
+        except Exception:
+            data = None
+    if data:
+        # data is a list of one record
+        if isinstance(data, list) and len(data) > 0 and isinstance(data[0], dict):
+            rec = data[0]
+            sym = rec.get('symbol')
+            cnt = float(rec.get('cnt') if rec.get('cnt') is not None else 0)
+            results.append((sym, cnt))
+
+# Sort and pick top 5
+results_sorted = sorted(results, key=lambda x: x[1], reverse=True)
+top5 = results_sorted[:5]
+# Need company names from stockinfo for these symbols
+with open(var_call_zS6ooOlqOTROyoR6BVuOpZjd, 'r') as f:
+    stockinfo = json.load(f)
+sym_to_name = {rec['Symbol']: rec['Company Description'] for rec in stockinfo}
+output = [sym_to_name.get(sym, sym) for sym, cnt in top5]
+
+print('__RESULT__:')
+print(json.dumps(output))"""
+
+env_args = {'var_call_zS6ooOlqOTROyoR6BVuOpZjd': 'file_storage/call_zS6ooOlqOTROyoR6BVuOpZjd.json', 'var_call_VE63NDAtYBpaiHZ8oLi7Rhez': 'file_storage/call_VE63NDAtYBpaiHZ8oLi7Rhez.json', 'var_call_72wbhJ4Q9Egjzl07hLEFc5Fw': ['AGMH', 'ALACU', 'AMHC', 'ANDA', 'APEX', 'BCLI', 'BHAT', 'BIOC', 'BKYI', 'BLFS', 'BOSC', 'BOTJ', 'BWEN', 'CBAT', 'CCCL', 'CDMOP', 'CEMI', 'CFBK', 'CFFA', 'CLRB', 'CORV', 'CPAAU', 'CPAH', 'CUBA', 'CVV', 'DZSI', 'ELSE', 'EXPC', 'EYEG', 'FAMI', 'FNCB', 'FSBW', 'FTFT', 'GDYN', 'GLG', 'GRNVU', 'GTEC', 'HCCOU', 'HNNA', 'HQI', 'HRTX', 'IDEX', 'IGIC', 'IOTS', 'ISNS', 'ITI', 'LACQ', 'MBCN', 'MBNKP', 'MCEP', 'MLND', 'MMAC', 'MNCLU', 'MNPR', 'NVEE', 'NXTD', 'OPOF', 'OPTT', 'ORGO', 'ORSNU', 'OTEL', 'PBFS', 'PBTS', 'PCSB', 'PECK', 'PEIX', 'PFIE', 'PLIN', 'POPE', 'QRHC', 'SES', 'SHSP', 'SNSS', 'SSNT', 'STKS', 'TGLS', 'TMSR', 'VERB', 'VMD', 'VRRM', 'VTIQW', 'VVPR', 'WHLM', 'WHLR', 'XBIOW', 'XPEL'], 'var_call_Ho8IGvraRzH3stxv4fKhahP2': [{'symbol': 'AGMH', 'cnt': '13.0'}], 'var_call_JuL8QY6XZ432GXykXoVubHlY': [{'symbol': 'ALACU', 'cnt': '0.0'}], 'var_call_psyqWYt1Blq1tu9RlbAkBHKv': [{'symbol': 'AMHC', 'cnt': '0.0'}], 'var_call_9bwinBahl302GCkpQnXfpuaj': [{'symbol': 'ANDA', 'cnt': '0.0'}], 'var_call_JwuXFnPccaCF3K9ibb9p5BJU': [{'symbol': 'APEX', 'cnt': '15.0'}], 'var_call_RJIPckZs1ti7TxTm37e4sHem': [{'symbol': 'BCLI', 'cnt': '0.0'}], 'var_call_VCVX2p5JUw0O8Ksmoe37cpYH': [{'symbol': 'BHAT', 'cnt': '10.0'}], 'var_call_8NRIo2wUpytYyxXaVn37Rri7': [{'symbol': 'BIOC', 'cnt': '21.0'}], 'var_call_wM3W9aRfaBDiX4fA6x2dUidn': [{'symbol': 'BKYI', 'cnt': '16.0'}], 'var_call_9ff5HH8cRZvtjBcFRZhkwIvv': [{'symbol': 'BLFS', 'cnt': '0.0'}], 'var_call_lYMOulU0mozJRFVs9MJm2sSE': [{'symbol': 'BOSC', 'cnt': '3.0'}], 'var_call_k9OgilTROpxjiMB3iylNKHj1': [{'symbol': 'BOTJ', 'cnt': '0.0'}], 'var_call_pWmL9BrsEVGU7WohES7zSJxB': [{'symbol': 'BWEN', 'cnt': '5.0'}], 'var_call_wA0qlhI8xdc2lSOjFfqwRRcK': [{'symbol': 'CBAT', 'cnt': '23.0'}], 'var_call_rfqf4RqusWoX6y2l9rSEWgAZ': [{'symbol': 'CCCL', 'cnt': '13.0'}], 'var_call_FQtvSn0UCL1goB2OTrLKDASI': [{'symbol': 'CDMOP', 'cnt': '0.0'}], 'var_call_e52CcXMiBGurASHcfgsHKKim': [{'symbol': 'CEMI', 'cnt': '3.0'}], 'var_call_5ronjpf6JVTpGAd1BZmtoAmC': [{'symbol': 'CFBK', 'cnt': '0.0'}], 'var_call_YoD6su4TtnA57WvMwpxhTTv6': [{'symbol': 'CFFA', 'cnt': '0.0'}], 'var_call_hZ9faCjZjey6NekzKPprEUPK': [{'symbol': 'CLRB', 'cnt': '14.0'}], 'var_call_S6u0K6TpFopcNpjk6XYPlMD3': [{'symbol': 'CORV', 'cnt': '10.0'}], 'var_call_BQwImFhD8fqZwtp0w3XeRWdj': [{'symbol': 'CPAAU', 'cnt': '0.0'}], 'var_call_hPXeeR37lFPK5drS0Hayr0eh': [{'symbol': 'CPAH', 'cnt': '16.0'}], 'var_call_d4C4NgZDTEqFMAwCunkDFZPI': [{'symbol': 'CUBA', 'cnt': '0.0'}], 'var_call_YNKke7WWZ75jUbPZVcI75g12': [{'symbol': 'CVV', 'cnt': '0.0'}], 'var_call_gAxO4kAkKIH5AH9Bcm2PFsro': [{'symbol': 'DZSI', 'cnt': '1.0'}], 'var_call_MIVl6e35DE9v6vtsswR6XqhL': [{'symbol': 'ELSE', 'cnt': '0.0'}], 'var_call_qb97v5WBB2DjEy6KpC26if4E': [{'symbol': 'EXPC', 'cnt': '0.0'}], 'var_call_aWSGNTKCzK5wzwy6y2egM6wI': [{'symbol': 'EYEG', 'cnt': '18.0'}], 'var_call_RLyN9ELClBcZkL3yfKKAzbPi': [{'symbol': 'FAMI', 'cnt': '23.0'}], 'var_call_nDuoG4nLjctXJadMEMSBeqlY': [{'symbol': 'FNCB', 'cnt': '1.0'}], 'var_call_OLz3vyXzavzI6SmVtuch6lqa': [{'symbol': 'FSBW', 'cnt': '0.0'}], 'var_call_ruMTOr3TrW4k2ngQS6ovwdMJ': [{'symbol': 'FTFT', 'cnt': '21.0'}], 'var_call_sG3qvJseLVN2AULZZUYrCiU9': [{'symbol': 'GDYN', 'cnt': '0.0'}], 'var_call_54IBoBVS4Fl67JCDf2YjJgBs': [{'symbol': 'GLG', 'cnt': '42.0'}], 'var_call_1QXbWMczZxps7JzfwA9QKOxh': [{'symbol': 'GRNVU', 'cnt': '0.0'}], 'var_call_FCHddQboTmlctU1Q2NzBZC9k': [{'symbol': 'GTEC', 'cnt': '0.0'}], 'var_call_voeiBxkNxaQ0BnyTLDDdtfOq': [{'symbol': 'HCCOU', 'cnt': '0.0'}], 'var_call_qcO11VhFJOtVPSLb7lwDfSOy': [{'symbol': 'HNNA', 'cnt': '0.0'}], 'var_call_aDA21flCzkJgbgqfRbqSpZnK': [{'symbol': 'HQI', 'cnt': '2.0'}], 'var_call_Z3zgoB9V459MP2L5EqM4p9FR': [{'symbol': 'HRTX', 'cnt': '1.0'}], 'var_call_VgPC77akVhlOaW0K23Rr1VdJ': [{'symbol': 'IDEX', 'cnt': '15.0'}], 'var_call_vUwKyjaWPm6rZiyEBdSMbFPN': [{'symbol': 'IGIC', 'cnt': '0.0'}], 'var_call_73ifOmfAqkOo9pKXJBJbkk7F': [{'symbol': 'IOTS', 'cnt': '1.0'}], 'var_call_4xfGBYL7850eZn67zfZefoWg': [{'symbol': 'ISNS', 'cnt': '0.0'}], 'var_call_v7M1TJoZt2sOY4XnkxgA8Qai': [{'symbol': 'ITI', 'cnt': '0.0'}], 'var_call_oIaoQ6futUi7lr5BC37rSQ44': [{'symbol': 'LACQ', 'cnt': '0.0'}], 'var_call_wxqeg9SlWMUj772N1soqVfI0': [{'symbol': 'MBCN', 'cnt': '0.0'}], 'var_call_Gm6Fe08u6ICalQnw7RfEWQRP': [{'symbol': 'MBNKP', 'cnt': '0.0'}], 'var_call_INabami0BuQdsPIWDDs2djS9': [{'symbol': 'MCEP', 'cnt': '14.0'}], 'var_call_b2uYm4QlgKoY6oy4rI9YcLxt': [{'symbol': 'MLND', 'cnt': '3.0'}], 'var_call_AOO79UO8RFZQQlBv6RQfj1Zt': [{'symbol': 'MMAC', 'cnt': '1.0'}], 'var_call_BbEN6inSADNgMxlrQYUvs12N': [{'symbol': 'MNCLU', 'cnt': '0.0'}], 'var_call_W7Ym3wf6gGRh28qo0fTK4X8j': [{'symbol': 'MNPR', 'cnt': '4.0'}], 'var_call_BqBzvsEZ2FU1dOiD9tRZhPVB': [{'symbol': 'NVEE', 'cnt': '1.0'}], 'var_call_8wnIgCuhwoyKAuMamdA9pEtP': [{'symbol': 'NXTD', 'cnt': '15.0'}], 'var_call_Xcn62ezHLGdD4mzZQr5jZHyk': [{'symbol': 'OPOF', 'cnt': '0.0'}], 'var_call_Rf7s9YWhyo2bvtTTLnwPhdyd': [{'symbol': 'OPTT', 'cnt': '12.0'}], 'var_call_eikm24rFSTCEna3fFxR6Wqn8': [{'symbol': 'ORGO', 'cnt': '15.0'}], 'var_call_uSY0fbFVmmduyXAjkydMImCr': [{'symbol': 'ORSNU', 'cnt': '0.0'}], 'var_call_n1vkOFQfA442OaFURvCZYGo6': [{'symbol': 'OTEL', 'cnt': '1.0'}], 'var_call_dVBwKmxU855XPkQ0tmTSh1k0': [{'symbol': 'PBFS', 'cnt': '0.0'}], 'var_call_uycJMQ7WZuN9XVWzmKcevukB': [{'symbol': 'PBTS', 'cnt': '8.0'}], 'var_call_pc22RHuEUJ1rXcSIjHhNK5Ki': [{'symbol': 'PCSB', 'cnt': '0.0'}], 'var_call_6wLE8fA29O5d5lJG6xMEqzwr': [{'symbol': 'PECK', 'cnt': '19.0'}], 'var_call_TITxe5PI3I5LjgJVftbkFJAZ': [{'symbol': 'PEIX', 'cnt': '12.0'}], 'var_call_t1qY3nh8o5ZhhtYdjFD7sskd': [{'symbol': 'PFIE', 'cnt': '2.0'}], 'var_call_LMTjYxkLY3yQkW8WRlyoptft': [{'symbol': 'PLIN', 'cnt': '1.0'}], 'var_call_ukQeWR6BPbgWdLah0xciZBjc': [{'symbol': 'POPE', 'cnt': '0.0'}], 'var_call_msdV8rJoyX0twfEahD5mvs3F': [{'symbol': 'QRHC', 'cnt': '3.0'}], 'var_call_NzKejcfDFPxEMq0ptsWYS7Nj': [{'symbol': 'SES', 'cnt': '51.0'}], 'var_call_H3O8aEjFL9JNsmARV9A2Cb9h': [{'symbol': 'SHSP', 'cnt': '1.0'}], 'var_call_oTBjKWcNKPg9ILCiuQSKpJJH': [{'symbol': 'SNSS', 'cnt': '32.0'}], 'var_call_ea1ofhJYdTjK0D3A5bqkqmZs': [{'symbol': 'SSNT', 'cnt': '11.0'}], 'var_call_6HH88qDrdgc1ysmUhxlKepHQ': [{'symbol': 'STKS', 'cnt': '0.0'}], 'var_call_MMGHJyFOd3qnd92zct7lXahh': [{'symbol': 'TGLS', 'cnt': '0.0'}], 'var_call_3xA7de9tvQbjDp6UDBJkCEqv': [{'symbol': 'TMSR', 'cnt': '40.0'}], 'var_call_of1wAA8CS25ajRfdgDvtiWQc': [{'symbol': 'VERB', 'cnt': '38.0'}], 'var_call_rZHYtrqIRvmhBgZO6ehQBmjQ': [{'symbol': 'VMD', 'cnt': '1.0'}], 'var_call_KvCfpwW1u4pVRGUghbHAl7Qg': [{'symbol': 'VRRM', 'cnt': '0.0'}], 'var_call_rAlPJCZDUQqSjCf5gAlIo39x': [{'symbol': 'VTIQW', 'cnt': '6.0'}], 'var_call_Spsz0dT7CCRmhUC9vyn1dBZG': [{'symbol': 'VVPR', 'cnt': '14.0'}], 'var_call_vQenXrDaxBh4rh19rOJn3mgC': [{'symbol': 'WHLM', 'cnt': '0.0'}], 'var_call_royX98qs6YzCYP6xwIgICSaf': [{'symbol': 'WHLR', 'cnt': '15.0'}], 'var_call_3KlCTdkdQBd2FmBKjn6BAuZC': [{'symbol': 'XBIOW', 'cnt': '7.0'}], 'var_call_8Z3E5NtppXJNATo2RbuP0vnv': [{'symbol': 'XPEL', 'cnt': '4.0'}]}
+
+exec(code, env_args)

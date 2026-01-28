@@ -1,0 +1,33 @@
+code = """import json
+
+# Load the ratings data
+ratings_file_path = locals()['var_functions.query_db:22']
+print("Loading ratings from file...")
+
+with open(ratings_file_path, 'r') as f:
+    ratings_data = json.load(f)
+
+# Convert ratings to integers and calculate average
+ratings = [int(item['rating']) for item in ratings_data]
+avg_rating = sum(ratings) / len(ratings) if ratings else 0
+
+print("Number of reviews:", len(ratings))
+print("Average rating:", avg_rating)
+print("Rating distribution:")
+for i in range(1, 6):
+    count = ratings.count(i)
+    print(f"{i} stars: {count}")
+
+result = {
+    "state": "PA",
+    "business_count": 9,
+    "total_reviews": len(ratings),
+    "average_rating": round(avg_rating, 2)
+}
+
+print('__RESULT__:')
+print(json.dumps(result))"""
+
+env_args = {'var_functions.list_db:0': ['checkin', 'business'], 'var_functions.query_db:2': [{'_id': '6859a000fe8b31cd7362e2ab', 'business_id': 'businessid_49', 'name': 'Steps to Learning Montessori Preschool', 'review_count': '8', 'is_open': '1', 'attributes': {'BusinessAcceptsCreditCards': 'True', 'WiFi': "u'no'", 'BusinessAcceptsBitcoin': 'False'}, 'hours': {'Monday': '0:0-0:0', 'Tuesday': '8:0-17:0', 'Wednesday': '8:0-17:0', 'Thursday': '8:0-17:0', 'Friday': '8:0-17:0'}, 'description': 'Located at 6901 Phelps Rd in Goleta, CA, this facility offers a nurturing environment for young learners, providing a range of services in Education, Elementary Schools, Child Care & Day Care, Local Services, Preschools, and Montessori Schools.'}, {'_id': '6859a000fe8b31cd7362e2ac', 'business_id': 'businessid_47', 'name': 'Breeze Blow Dry Bar', 'review_count': '81', 'is_open': '0', 'attributes': {'ByAppointmentOnly': 'False', 'BusinessAcceptsCreditCards': 'True', 'GoodForKids': 'True', 'RestaurantsPriceRange2': '2', 'BikeParking': 'False', 'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': True, 'valet': False}"}, 'hours': {'Monday': '7:0-18:0', 'Tuesday': '7:0-18:0', 'Wednesday': '7:0-18:0', 'Thursday': '7:0-18:0', 'Friday': '7:0-19:0', 'Saturday': '8:0-19:0', 'Sunday': '10:0-17:0'}, 'description': 'Located at 9916 Clayton Rd in St. Louis, MO, this establishment offers a wide range of services, including Hair Salons, Beauty & Spas, Hair Stylists, Skin Care, Blow Dry/Out Services, and Makeup Artists.'}, {'_id': '6859a000fe8b31cd7362e2ad', 'business_id': 'businessid_88', 'name': 'Impact Guns', 'review_count': '39', 'is_open': '1', 'attributes': {'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'GoodForKids': 'True', 'BusinessAcceptsCreditCards': 'True', 'ByAppointmentOnly': 'False', 'BikeParking': 'True'}, 'hours': {'Monday': '10:0-19:0', 'Tuesday': '10:0-19:0', 'Wednesday': '10:0-19:0', 'Thursday': '10:0-19:0', 'Friday': '10:0-19:0', 'Saturday': '10:0-19:0'}, 'description': 'Located at 11655 W Executive Dr in Boise, ID, this facility offers enthusiasts a premier destination for Gun/Rifle Ranges, Active Life.'}, {'_id': '6859a000fe8b31cd7362e2af', 'business_id': 'businessid_33', 'name': 'J&Q Nails', 'review_count': '28', 'is_open': '1', 'attributes': {'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'BusinessAcceptsCreditCards': 'True', 'AcceptsInsurance': 'False', 'ByAppointmentOnly': 'False', 'RestaurantsPriceRange2': '2', 'WheelchairAccessible': 'True', 'BikeParking': 'False'}, 'hours': {'Monday': '9:30-19:0', 'Tuesday': '9:30-19:0', 'Wednesday': '9:30-19:0', 'Thursday': '9:30-19:0', 'Friday': '9:30-19:0', 'Saturday': '9:30-17:30'}, 'description': 'Located at 9655 E US Hwy 36, Unit H in Avon, IN, this establishment offers a range of services including Nail Salons, Hair Removal, Beauty & Spas, and Waxing.'}, {'_id': '6859a000fe8b31cd7362e2b0', 'business_id': 'businessid_74', 'name': 'Candy Barrel', 'review_count': '7', 'is_open': '1', 'attributes': {'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'RestaurantsPriceRange2': '4', 'BikeParking': 'False'}, 'hours': 'None', 'description': 'Located at 735 Dodecanese Blvd in Tarpon Springs, FL, this charming establishment offers a delightful selection of treats, making it a must-visit for anyone seeking Candy Stores, Specialty Food, Food.'}], 'var_functions.query_db:4': 'file_storage/functions.query_db:4.json', 'var_functions.execute_python:6': 'file_storage/functions.execute_python:6.json', 'var_functions.execute_python:14': {'state_info': {'MO': ['businessid_64', 'businessid_46'], 'FL': ['businessid_54', 'businessid_26', 'businessid_51', 'businessid_55', 'businessid_20'], 'LA': ['businessid_91'], 'IL': ['businessid_93'], 'PA': ['businessid_89', 'businessid_97', 'businessid_67', 'businessid_77', 'businessid_86', 'businessid_40', 'businessid_44', 'businessid_85', 'businessid_82'], 'NV': ['businessid_6'], 'IN': ['businessid_43', 'businessid_16'], 'ID': ['businessid_25']}, 'top_state': 'PA', 'top_state_count': 9}, 'var_functions.list_db:16': ['review', 'tip', 'user'], 'var_functions.query_db:18': [{'review_id': 'reviewid_1067', 'user_id': 'userid_213', 'business_ref': 'businessref_89', 'rating': '5', 'useful': '2', 'funny': '0', 'cool': '0', 'text': 'Very good service but a little pricey for the services your receive. Clean and sanitary too', 'date': 'June 14, 2021 at 11:39 AM'}, {'review_id': 'reviewid_1988', 'user_id': 'userid_757', 'business_ref': 'businessref_89', 'rating': '5', 'useful': '5', 'funny': '0', 'cool': '1', 'text': 'Awesome place! Excellent service, friendly staff and super cheap. Dropped off 9 lbs of laundry and only paid $10 out the door for complete wash, dry and fold. They even called to tell me I left and important paper in the bottom of my laundry bag! Definitely recommend them.', 'date': '05 Nov 2015, 00:00'}, {'review_id': 'reviewid_111', 'user_id': 'None', 'business_ref': 'businessref_89', 'rating': '5', 'useful': '8', 'funny': '1', 'cool': '2', 'text': "Awesome experience! Our washer broke and the new one isn't coming for about a week. The wash was backing up especially with a baby! I decided to take our 8 loads to the laundromat. Gwen was super sweet and guided me on which machines to use for the weight amount in each load and helped me use the credit card at the kiosk. Easy process! It wasn't that busy at 10am, so I was able to do all my laundry at the same time. The place is incredibly clean. People are nice! What else can you ask for?? Highly recommend!", 'date': '2015-11-13 15:51:00'}], 'var_functions.query_db:20': 'file_storage/functions.query_db:20.json', 'var_functions.query_db:22': 'file_storage/functions.query_db:22.json'}
+
+exec(code, env_args)

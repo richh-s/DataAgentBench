@@ -1,0 +1,64 @@
+code = """import json
+import re
+
+# Load all data files
+packages_file = 'file_storage/functions.query_db:8.json'
+mappings_file = 'file_storage/functions.query_db:10.json'
+project_info_file = 'file_storage/functions.query_db:24.json'
+
+with open(packages_file, 'r') as f:
+    packages = json.load(f)
+
+with open(mappings_file, 'r') as f:
+    mappings = json.load(f)
+
+with open(project_info_file, 'r') as f:
+    project_infos = json.load(f)
+
+# Create a set of package keys (System, Name, Version) for fast lookup
+package_key_set = set()
+for pkg in packages:
+    key = (pkg['System'], pkg['Name'], pkg['Version'])
+    package_key_set.add(key)
+
+# Filter project mappings to only include packages we care about
+matched_projects = []
+for mapping in mappings:
+    key = (mapping['System'], mapping['Name'], mapping['Version'])
+    if key in package_key_set:
+        matched_projects.append(mapping['ProjectName'])
+
+# Get unique project names
+unique_projects = list(set(matched_projects))
+
+# Create a map of project name to fork count from project_info
+project_fork_map = {}
+fork_pattern = r'(\d+) forks'
+
+for proj in project_infos:
+    text = proj['Project_Information']
+    # Extract project name (format: "The project {name} on GitHub")
+    name_match = re.search(r'The project ([^\s]+)', text)
+    if name_match:
+        project_name = name_match.group(1)
+        # Extract fork count
+        fork_match = re.search(fork_pattern, text)
+        if fork_match:
+            forks = int(fork_match.group(1))
+            project_fork_map[project_name] = forks
+
+# Filter to only projects that match our NPM packages and have fork data
+relevant_projects = {}
+for proj_name in unique_projects:
+    if proj_name in project_fork_map:
+        relevant_projects[proj_name] = project_fork_map[proj_name]
+
+# Get top 5 projects by fork count
+top_5 = sorted(relevant_projects.items(), key=lambda x: x[1], reverse=True)[:5]
+
+print('__RESULT__:')
+print(json.dumps(top_5))"""
+
+env_args = {'var_functions.query_db:0': 'file_storage/functions.query_db:0.json', 'var_functions.execute_python:6': 100, 'var_functions.query_db:8': 'file_storage/functions.query_db:8.json', 'var_functions.query_db:10': 'file_storage/functions.query_db:10.json', 'var_functions.execute_python:12': ['functions.query_db:0.json', 'functions.query_db:10.json', 'functions.query_db:8.json'], 'var_functions.execute_python:14': {'packages_with_mit': 176998, 'project_mappings': 597602}, 'var_functions.query_db:16': [{'Project_Information': 'The project lberrocal/npm-packages-template is hosted on GitHub and currently has 0 open issues, 0 stars, and 0 forks.', 'Licenses': '[]', 'Description': 'Template for npm package library configured to be used with CI/CD', 'Homepage': 'None', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project leaflet/leaflet on GitHub is a popular open-source library that currently has 521 open issues, 38715 stars, and 5782 forks, making it a widely recognized tool in the developer community.', 'Licenses': '[\n  "non-standard"\n]', 'Description': '🍃 JavaScript library for mobile-friendly interactive maps 🇺🇦', 'Homepage': 'https://leafletjs.com', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project leaflet/leaflet.fullscreen on GitHub currently has 29 open issues, 417 stars, and 118 forks, making it a noteworthy contribution to the Leaflet ecosystem.', 'Licenses': '[\n  "ISC"\n]', 'Description': 'A fullscreen control for Leaflet', 'Homepage': 'http://leaflet.github.io/Leaflet.fullscreen/', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project leaflet/leaflet.markercluster is hosted on GitHub and currently has an open issues count of 130, along with a stars count of 3761 and forks count of 988.', 'Licenses': '[\n  "MIT"\n]', 'Description': 'Marker Clustering plugin for Leaflet', 'Homepage': 'None', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project leandrowd/react-responsive-carousel on GitHub has garnered significant attention, with a total of 2,534 stars and 636 forks, while currently having 23 open issues.', 'Licenses': '[\n  "MIT"\n]', 'Description': 'React.js Responsive Carousel (with Swipe)', 'Homepage': 'http://leandrowd.github.io/react-responsive-carousel/', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project is hosted on GitHub under the name learnfrontend-dc/product-cart, and it currently has 2 open issues. It has garnered a total of 11 stars and has been forked 12 times.', 'Licenses': '[]', 'Description': 'None', 'Homepage': 'None', 'OSSFuzz': 'nan'}, {'Project_Information': 'The GitHub project ledgerproject/keypairoom currently has 3 open issues, 3 stars, and 0 forks.', 'Licenses': '[\n  "AGPL-3.0"\n]', 'Description': 'Component to generate and regenerate a keypair, in a deterministic and private way', 'Homepage': 'None', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project leebyron/jasmine-check is hosted on GitHub and currently has 0 open issues, 11 stars, and 3 forks.', 'Licenses': '[]', 'Description': 'Generative property testing for Jasmine', 'Homepage': 'None', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project leebyron/testcheck-js on GitHub has an open issues count of 29, a stars count of 1185, and a forks count of 58, making it a notable repository in the community.', 'Licenses': '[\n  "non-standard"\n]', 'Description': 'Generative testing for JavaScript', 'Homepage': 'http://leebyron.com/testcheck-js', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project leecade/react-native-swiper is hosted on GitHub and has a total of 786 open issues, along with an impressive 10,249 stars and 2,392 forks, making it a popular choice among developers for implementing swiping functionality in React Native applications.', 'Licenses': '[\n  "MIT"\n]', 'Description': 'The best Swiper component for React Native.', 'Homepage': 'None', 'OSSFuzz': 'nan'}], 'var_functions.execute_python:18': {'packages_count': 176998, 'mappings_count': 597602, 'project_info_sample': [{'Project_Information': 'The project lberrocal/npm-packages-template is hosted on GitHub and currently has 0 open issues, 0 stars, and 0 forks.', 'Licenses': '[]', 'Description': 'Template for npm package library configured to be used with CI/CD', 'Homepage': 'None', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project leaflet/leaflet on GitHub is a popular open-source library that currently has 521 open issues, 38715 stars, and 5782 forks, making it a widely recognized tool in the developer community.', 'Licenses': '[\n  "non-standard"\n]', 'Description': '🍃 JavaScript library for mobile-friendly interactive maps 🇺🇦', 'Homepage': 'https://leafletjs.com', 'OSSFuzz': 'nan'}]}, 'var_functions.execute_python:20': 'Pattern check completed', 'var_functions.execute_python:22': {'packages_count': 176998, 'mappings_count': 597602}, 'var_functions.query_db:24': 'file_storage/functions.query_db:24.json', 'var_functions.execute_python:26': {'packages_mit_release': 176998, 'project_mappings': 597602, 'project_info_records': 770}, 'var_functions.execute_python:28': {'matched_unique_projects': 5477, 'projects_with_fork_data': 289, 'top_5_projects': [['semantic-org/semantic-ui', 4955], ['react-native-community/react-native-webview', 2962], ['sass/node-sass', 1326], ['mbrn/material-table', 1035], ['ternjs/acorn', 944]]}, 'var_functions.query_db:30': [{'count': '770'}], 'var_functions.query_db:32': 'file_storage/functions.query_db:32.json'}
+
+exec(code, env_args)

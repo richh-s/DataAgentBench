@@ -1,0 +1,18 @@
+code = """import json
+
+# Load the citations data for 2018
+citations_path = var_functions.query_db:0
+with open(citations_path, 'r') as f:
+    citations_2018 = json.load(f)
+
+# Load the paper documents
+paper_docs_path = var_functions.query_db:2
+with open(paper_docs_path, 'r') as f:
+    paper_docs = json.load(f)
+
+print('__RESULT__:')
+print(json.dumps({'citations_2018_count': len(citations_2018), 'paper_docs_count': len(paper_docs)}))"""
+
+env_args = {'var_functions.query_db:0': 'file_storage/functions.query_db:0.json', 'var_functions.query_db:2': 'file_storage/functions.query_db:2.json'}
+
+exec(code, env_args)

@@ -1,0 +1,56 @@
+code = """import json
+import pandas as pd
+
+# Get file paths from storage
+books_file_path = locals()['var_functions.query_db:6']
+reviews_file_path = locals()['var_functions.query_db:14']
+
+# Load books data
+with open(books_file_path, 'r') as f:
+    books_data = json.load(f)
+
+# Load reviews data
+with open(reviews_file_path, 'r') as f:
+    reviews_data = json.load(f)
+
+# Create DataFrames
+books_df = pd.DataFrame(books_data)
+reviews_df = pd.DataFrame(reviews_data)
+
+# Convert rating to numeric
+reviews_df['rating'] = pd.to_numeric(reviews_df['rating'])
+
+# Calculate average rating per purchase_id (book)
+avg_ratings = reviews_df.groupby('purchase_id')['rating'].agg(['mean', 'count']).reset_index()
+avg_ratings.columns = ['purchase_id', 'avg_rating', 'review_count']
+
+# Filter for books with perfect 5.0 average
+perfect_books = avg_ratings[avg_ratings['avg_rating'] == 5.0]
+
+# Map purchase_id to book_id (purchaseid_X -> bookid_X)
+perfect_books['book_id'] = perfect_books['purchase_id'].str.replace('purchaseid_', 'bookid_')
+
+# Merge with books_df to get book details
+merged = pd.merge(perfect_books, books_df, on='book_id', how='inner')
+
+# Filter for Literature & Fiction category
+merged['categories_str'] = merged['categories'].astype(str)
+lit_fiction_books = merged[merged['categories_str'].str.contains('Literature & Fiction', case=False, na=False)]
+
+# Prepare results
+results = []
+for _, row in lit_fiction_books.iterrows():
+    results.append({
+        'title': row['title'],
+        'author': row['author'],
+        'book_id': row['book_id'],
+        'avg_rating': float(row['avg_rating']),
+        'review_count': int(row['review_count'])
+    })
+
+print('__RESULT__:')
+print(json.dumps(results, indent=2))"""
+
+env_args = {'var_functions.list_db:0': ['books_info'], 'var_functions.query_db:2': 'file_storage/functions.query_db:2.json', 'var_functions.list_db:5': ['review'], 'var_functions.query_db:6': 'file_storage/functions.query_db:6.json', 'var_functions.query_db:8': 'file_storage/functions.query_db:8.json', 'var_functions.query_db:10': [{'purchase_id': 'purchaseid_186', 'rating': '4', 'title': 'Ha! On me!  I thought this was a cookbook!'}, {'purchase_id': 'purchaseid_191', 'rating': '4', 'title': 'Four Stars'}, {'purchase_id': 'purchaseid_190', 'rating': '4', 'title': 'A wonderful adventure in France'}, {'purchase_id': 'purchaseid_8', 'rating': '5', 'title': 'Best beginner book.  Been looking for something like this for a long time.'}, {'purchase_id': 'purchaseid_178', 'rating': '4', 'title': 'Referance Guide'}, {'purchase_id': 'purchaseid_186', 'rating': '4', 'title': 'A Good read for Meat Eaters, and Veggie Heads as well'}, {'purchase_id': 'purchaseid_76', 'rating': '5', 'title': 'Greet book'}, {'purchase_id': 'purchaseid_186', 'rating': '4', 'title': 'For anyone except avid non-hunters.'}, {'purchase_id': 'purchaseid_115', 'rating': '5', 'title': 'Highly recommend this book if you love history of Mid Atlantic wrestling...'}, {'purchase_id': 'purchaseid_167', 'rating': '2', 'title': 'Heroine blames others for things & feels her bad behavior is justified'}], 'var_functions.query_db:12': [{'count': '1833'}], 'var_functions.query_db:14': 'file_storage/functions.query_db:14.json'}
+
+exec(code, env_args)

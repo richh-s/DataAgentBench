@@ -1,0 +1,84 @@
+code = """import json
+import re
+
+# Load languages data to identify non-Python repos
+lang_data_key = 'var_functions.query_db:4'
+lang_data = locals()[lang_data_key]
+
+# Handle if it's a file path
+if isinstance(lang_data, str) and lang_data.endswith('.json'):
+    with open(lang_data, 'r') as f:
+        lang_data = json.load(f)
+elif isinstance(lang_data, str):
+    lang_data = json.loads(lang_data)
+
+# Get set of all repo names and non-Python repo names
+non_python_repos = set()
+all_repos = set()
+
+for row in lang_data:
+    repo_name = row['repo_name']
+    all_repos.add(repo_name)
+    lang_desc = row['language_description'].lower()
+    if 'python' not in lang_desc:
+        non_python_repos.add(repo_name)
+
+# Load contents data with README files
+contents_data_key = 'var_functions.query_db:16'
+contents_data = locals()[contents_data_key]
+
+# Handle if it's a file path
+if isinstance(contents_data, str) and contents_data.endswith('.json'):
+    with open(contents_data, 'r') as f:
+        contents_data = json.load(f)
+elif isinstance(contents_data, str):
+    contents_data = json.loads(contents_data)
+
+# Filter README files and analyze
+readme_copyright = {}
+fcopyright = 0
+fnocopyright = 0
+ncopyright = 0
+nnocopyright = 0
+
+for row in contents_data:
+    repo_name = row['sample_repo_name']
+    content = row.get('content', '') or ''
+    
+    # Check if repo doesn't use Python
+    is_non_python = repo_name in non_python_repos
+    
+    # Check for copyright information (case-insensitive)
+    has_copyright = bool(re.search(r'copyright', content, re.IGNORECASE))
+    
+    if is_non_python:
+        ncopyright += 1 if has_copyright else 0
+        nnocopyright += 0 if has_copyright else 1
+    else:
+        fcopyright += 1 if has_copyright else 0
+        fnocopyright += 0 if has_copyright else 1
+    
+    # Store result for this README
+    readme_copyright[repo_name] = {
+        'non_python': is_non_python,
+        'has_copyright': has_copyright
+    }
+
+total_non_python_readmes = ncopyright + nnocopyright
+proportion = ncopyright / total_non_python_readmes if total_non_python_readmes > 0 else 0
+
+print('__RESULT__:')
+print(json.dumps({
+    'total_readmes_analyzed': len(readme_copyright),
+    'non_python_readmes': total_non_python_readmes,
+    'non_python_with_copyright': ncopyright,
+    'non_python_without_copyright': nnocopyright,
+    'python_readmes_with_copyright': fcopyright,
+    'python_readmes_without_copyright': fnocopyright,
+    'proportion': proportion,
+    'proportion_formatted': f'{proportion:.2%}'
+}))"""
+
+env_args = {'var_functions.list_db:0': ['languages', 'repos', 'licenses'], 'var_functions.query_db:2': 'file_storage/functions.query_db:2.json', 'var_functions.query_db:4': 'file_storage/functions.query_db:4.json', 'var_functions.list_db:6': ['commits', 'contents', 'files'], 'var_functions.query_db:11': [{'sample_repo_name': 'rtrouton/rtrouton_scripts', 'sample_path': 'rtrouton_scripts/Casper_Scripts/install_company_canon_printer_drivers/README.md', 'content': "Script for use with Casper's Self Service when deploying Canon printers. Script checks **/Library/Printers/Canon/CUPSPS2/Utilities/Canon CUPS PS Printer Utility.app/Contents/Info.plist** for the **CFBundleVersion** key value. \n\nIf the value returned is less than the version of the current drivers, the print drivers are installed by a Casper policy before the requested printer is set up. \n\nIf the installed drivers are the same version or higher as the print drivers available on the Casper server, this information is logged and the Canon print drivers are not installed.\n\nBlog post that uses this script is available here:\n\n[http://derflounder.wordpress.com/2014/02/06/deploying-canon-print-drivers-with-printer-setups-via-caspers-self-service/](http://derflounder.wordpress.com/2014/02/06/deploying-canon-print-drivers-with-printer-setups-via-caspers-self-service/)"}, {'sample_repo_name': 'DynamoRIO/dynamorio', 'sample_path': 'api/docs/README.md', 'content': 'This directory contains the doxygen source for the DynamoRIO public API\nand usage documentation, found at\n[dynamorio.org](http://dynamorio.org/docs/index.html)\n'}, {'sample_repo_name': 'ninja-ide/ninja-ide', 'sample_path': 'README.md', 'content': '![Travis report](https://travis-ci.org/ninja-ide/ninja-ide.svg?branch=master "Travis-C.I. Testing report")\n\n# Ninja-ide Is Not Just Another IDE.\n**Ninja-IDE** is a cross-platform integrated development environment (IDE) that allows developers to create applications for any purpose making the task of writing software easier and more enjoyable. It\'s also a secret ninja agency but this doesn\'t matter right now.\n![Ninja-IDE logo](http://ninjaide.webfactional.com/static/common/img/ninja-big.png)\n\n\n## Platforms\n- Linux/X11\n- Mac OS X\n- Windows\n- BSD\n\n\n## Ninja contact\n-   [Ninja website](http://ninja-ide.org "http://ninja-ide.org") at ninja-ide.org\n-   [Mailing List](http://groups.google.com/group/ninja-ide/topics "Ninja Google Groups") at Google Groups\n-   [@ninja\\\\_ide](https://twitter.com/ninja_ide "@ninja_ide") at Twitter\n-   [+Ninja-IDE](https://plus.google.com/103973182574871451647 "Ninja-IDE at Google Plus") at Google Plus\n-   [Ninja-IDE](https://kiwiirc.com/client/chat.freenode.net/?nick=Ninja%7C?&theme=cli#ninja-ide "ninja-ide at Freenode.net") at Freenode.net\n\n\n## Requirements\nOn any system you want **Ninja-IDE**, you\'ll need to have this dependencies installed:\n\n-   [Python](http://python.org "Python Homepage") >= 2.7  *(or Python3)*\n-   [PyQt4](http://www.riverbankcomputing.com/software/pyqt/intro "PyQt Homepage") >= 4.8  *(Not Qt5)*\n-   [PyQt4-QScintilla2](http://www.riverbankcomputing.com/software/qscintilla/intro "QScintilla2 Homepage") >= 2.0  *(Not Qt5)*\n-   [PIP](https://pip.pypa.io/en/latest/installing.html "About Installing PIP")  *(Not PIP3)*\n-   [Virtualenv](https://pypi.python.org/pypi/virtualenv "About Installing Virtualenv")\n\n\n## Installing on Mac OS\n```bash\nbrew install qt pyqt sip qscintilla2\n```\n\n\n## Cloning and Running\nYou can clone this repo and simply execute:\n\n```bash\ngit clone git://github.com/ninja-ide/ninja-ide.git\ncd ninja-ide\nsudo pip install -r requirements.txt\npython ninja-ide.py\n```\n\nPiece of cake, huh?\n\n\n## Source Code API Documentation\n- [http://ninja-ide.github.io/ninja-ide](http://ninja-ide.github.io/ninja-ide "Source Code API Documentation")\n\n\n## Videos\n[![Ninja-IDE Videos and Screencasts](http://img.youtube.com/vi/xShpNY5w-64/0.jpg)](https://www.youtube.com/channel/UCPopm5397ozfsS8FOSSOWGQ "Ninja-IDE Videos and Screencasts")\n\n\n## License\n-   **GPLv3+** *(GPLv3 or any other version later published by FSF at your option)*\n'}, {'sample_repo_name': 'sclorg/rhscl-dockerfiles', 'sample_path': 'centos7.mongodb24/examples/replica/README.md', 'content': "# MongoDB Replica Set example\n\n**WARNING: This is only a Proof-Of-Concept example and it is not meant to be used in\nproduction. Use at your own risk.**\n\n## What is a MongoDB replica set?\n\nA cluster of MongoDB servers that implements master-slave replication and automated failover.\nMongoDB’s recommended replication strategy.\n\n## Deployment\n\nTo create a MongoDB replica set in OpenShift v3, you can use the template\nincluded in this repository and create a new deployment right away:\n\n```\n$ oc new-app 2.4/examples/replica/mongodb-clustered.json\n```\n\nSince the provided template uses ephemeral storage, after every redeploy you get\nan empty database, and **all data from a previous deploy is lost**.\n\n## How does it work?\n\n### Service 'mongodb'\n\nThis resource defines a [headless service](http://kubernetes.io/v1.0/docs/user-guide/services.html#headless-services)\nthat serves as an entry point to the replica set. The service endpoints are\nthe pods created by the 'mongodb' DeploymentConfig.\n\nA headless service allows using DNS queries to discover other MongoDB\nendpoints from inside the container, by querying the service name (e.g.: `dig\nmongodb A +short +search`).\n\n### DeploymentConfig 'mongodb'\n\nThis resource defines a [deployment configuration](https://docs.openshift.org/latest/architecture/core_concepts/deployments.html#deployments-and-deployment-configurations) to manage replica set members.\nEach member starts the MongoDB server without replication data. Once it is\nready, it advertises itself to the current replica set PRIMARY, which will then\nadd it to the replica set.\nWhen a member pod is destroyed, it is automatically removed from the replica set.\n\nTo add/remove members to the replica set you can use the `oc scale` command.\nThis will scale the deployment up to 5 pods:\n\n```\n$ oc scale dc mongodb --replicas=5\n```\n\nThe provided template will start three replicas by default.\nMongoDB recommends using an [odd number of replicas](http://docs.mongodb.org/v2.4/tutorial/deploy-replica-set/#overview).\n\n#### Post-deployment hook\n\nThe DeploymentConfig has a post-deployment hook that runs once after every\ndeploy, and is responsible for initializing the replica set, as well as creating\nthe database and users. The hook terminates after the initialization is complete,\na PRIMARY is elected and data is replicated to other members of the replica set.\n\n## Configuration\n\nThere are a few environment variables that can be used to configure the\nreplica set, all of them have default values.\n\n* `MONGODB_REPLICA_NAME` - name of the replica set (default: `rs0`).\n* `MONGODB_SERVICE_NAME` - name of the MongoDB service (default: `mongodb`, used by DNS lookup).\n* `MONGODB_ADMIN_PASSWORD` - password for the `admin` user (roles: 'dbAdminAnyDatabase', 'userAdminAnyDatabase', 'readWriteAnyDatabase', 'clusterAdmin') (default: *generated*).\n* `MONGODB_DATABASE` - name of the database (default: `userdb`)\n* `MONGODB_USER` - the name of the regular MongoDB user (roles: 'readWrite' for `$MONGODB_DATABASE`) (default: *generated*).\n* `MONGODB_PASSWORD` - the regular MongoDB user password (default: *generated*).\n* `MONGODB_KEYFILE_VALUE` - value for '[keyFile](http://docs.mongodb.org/v2.4/tutorial/generate-key-file/)' file that MongoDB members use for authorization internally (default: *generated*).\n\nThe patterns for generated values are defined in the template parameters.\n\n## Teardown\n\nFor deleting all the created resources use:\n\n```\n$ oc delete all --all\n```\n"}, {'sample_repo_name': 'cwilso/midi-synth', 'sample_path': 'README.md', 'content': "# MIDI Synth\n\nThis application is a analog synthesizer simulation built on the [Web Audio API](https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html).  It is very loosely based on the architecture of a [Moog Prodigy](http://www.vintagesynth.com/moog/prodigy.php) synthesizer, although this is a polyphonic synthesizer, and it lacks the oscillator sync and glide effects of the Prodigy.  (AKA: this is not intended to be a replication of the Prodigy, so pleased don't tell me how crappy a reproduction it is! :)\n\nThis uses my [Web MIDI Polyfill](https://github.com/cwilso/WebMIDIAPIShim) to add MIDI support via the [Web MIDI API](http://webaudio.github.io/web-midi-api/) - in fact, I partly wrote this as a test case for the polyfill and the MIDI API itself, so if you have a MIDI keyboard attached, check it out.  The polyfill uses Java to access the MIDI device, so if you're wondering why Java is loading, that's why.  It may take a few seconds for MIDI to become active - the library takes a while to load - but when the ring turns gray (instead of blue), it's ready.  If you have a native implementation of the Web MIDI API in your browser, the polyfill shouldn't load - at the time of this writing, Chrome Stable (from version 43) has the only such implementation. Earlier versions of Chrome (from version 33) can enable Web MIDI via chrome://flags/#enable-web-midi\n\nYou can try it out live at https://webaudiodemos.appspot.com/midi-synth/index.html.\n\nCheck it out, feel free to fork, submit pull requests, etc.\n\n-Chris\n"}], 'var_functions.execute_python:12': {'total_repos': 3325634, 'repos_with_python': 550905, 'repos_without_python': 2774729}, 'var_functions.execute_python:14': {'non_python_repos_count': 2774729, 'first_10_non_python_repos': ['juliandunn/rackspacecloud', 'xMarkusSpringerx/coloranalyzer', 'michaellihs/gitlab', 'vyorkin/xftp', 'airatshigapov/drophunter', 'tombruijn/chef-ruby-install', 'SenseTecnic/stsplatform-lib-ruby', 'procore/site-reliability-scripts', 'tibastral/web_motion', 'Haegin/stately']}, 'var_functions.query_db:16': 'file_storage/functions.query_db:16.json'}
+
+exec(code, env_args)

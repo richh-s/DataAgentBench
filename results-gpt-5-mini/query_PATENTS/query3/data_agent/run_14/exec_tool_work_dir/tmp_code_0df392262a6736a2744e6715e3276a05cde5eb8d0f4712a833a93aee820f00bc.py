@@ -1,0 +1,26 @@
+code = """import json
+fp = var_call_TcfLs4F5bIYb87m9py2HFqX8
+with open(fp, 'r', encoding='utf-8') as f:
+    data = json.load(f)
+results = data.get('results', [])
+assignee_map = {}
+symbols = set()
+for r in results:
+    assignee = r.get('assignee')
+    codes = r.get('primary_codes', []) or []
+    # normalize assignee whitespace
+    assignee = assignee.strip()
+    # dedupe codes
+    unique_codes = sorted(set(codes))
+    if unique_codes:
+        assignee_map[assignee] = unique_codes
+        for c in unique_codes:
+            symbols.add(c)
+symbols = sorted(symbols)
+out = {'assignee_map': assignee_map, 'symbols': symbols}
+print('__RESULT__:')
+print(json.dumps(out))"""
+
+env_args = {'var_call_MuJAaiO2PzoIYGskQYaoTn64': 'file_storage/call_MuJAaiO2PzoIYGskQYaoTn64.json', 'var_call_q57aScl073IRIRJqWMJOS9E9': 'file_storage/call_q57aScl073IRIRJqWMJOS9E9.json', 'var_call_lSeKCaJYvKmAFrQEd6Ri9Oy6': 'file_storage/call_lSeKCaJYvKmAFrQEd6Ri9Oy6.json', 'var_call_TcfLs4F5bIYb87m9py2HFqX8': 'file_storage/call_TcfLs4F5bIYb87m9py2HFqX8.json', 'var_call_F9wKk82Tad1jjQMyJDBF7vOs': ['A01H1/04', 'A01H6/825', 'A01K67/0275', 'A01K67/0278', 'A61B1/0014', 'A61B1/018', 'A61B1/041', 'A61B1/07', 'A61B17/32002', 'A61B5/0066', 'A61B5/0084', 'A61B5/0215', 'A61B5/14532', 'A61B5/1486', 'A61B5/746', 'A61F2/0077', 'A61F2/4611', 'A61F2/86', 'A61K31/4985', 'A61K31/519', 'A61K31/7088', 'A61K31/713', 'A61K35/22', 'A61K35/28', 'A61K35/545', 'A61K38/1793', 'A61K38/1825', 'A61K38/1858', 'A61K38/19', 'A61K39/145', 'A61K39/42', 'A61K47/12', 'A61K47/50', 'A61K47/542', 'A61K48/0066', 'A61K48/0075', 'A61K49/1875', 'A61K8/9794', 'A61K9/0014', 'A61K9/0019', 'A61K9/06', 'A61M1/1656', 'A61M1/287', 'A61M5/172', 'A61N1/36014', 'A61N1/36017', 'A61N1/36031', 'A61N1/36034', 'A61N1/36046', 'A61N1/36071', 'A61N1/37205', 'A61N1/3787', 'A61P25/14', 'A61P35/00', 'B01J19/0046', 'B07C5/3422', 'B23K26/032', 'B23P15/007', 'B29C41/40', 'B32B5/18', 'B82Y20/00', 'C04B38/0009', 'C07D417/14', 'C07D471/04', 'C07D487/04', 'C07F9/005', 'C07K14/195', 'C07K14/395', 'C07K14/405', 'C07K14/47', 'C07K14/7051', 'C07K14/70521', 'C07K14/71', 'C07K14/7151', 'C07K16/00', 'C07K16/1027', 'C07K16/22', 'C07K16/241', 'C07K16/244', 'C07K16/2818', 'C07K16/2896', 'C07K16/40', 'C07K9/00', 'C08G61/02', 'C08G61/126', 'C08J9/0066', 'C09K11/06', 'C09K11/07', 'C10L1/026', 'C12M35/02', 'C12N1/20', 'C12N15/102', 'C12N15/1058', 'C12N15/11', 'C12N15/111', 'C12N15/113', 'C12N15/1137', 'C12N15/63', 'C12N15/64', 'C12N15/74', 'C12N15/8201', 'C12N15/8213', 'C12N15/8278', 'C12N15/86', 'C12N15/87', 'C12N15/907', 'C12N5/068', 'C12N9/0071', 'C12N9/12', 'C12N9/22', 'C12P19/34', 'C12P19/56', 'C12P5/00', 'C12P7/42', 'C12Q1/001', 'C12Q1/68', 'C12Q1/6806', 'C12Q1/6816', 'C12Q1/686', 'C12Q1/6869', 'C12Q1/6883', 'C12Q1/6886', 'C12Q1/689', 'C12Y206/01018', 'C23C14/564', 'C30B11/003', 'C30B25/02', 'C30B25/10', 'C30B25/16', 'D01D5/0069', 'F04B43/14', 'G01B11/2518', 'G01N1/42', 'G01N21/6486', 'G01N21/76', 'G01N21/763', 'G01N27/26', 'G01N27/414', 'G01N27/4145', 'G01N30/88', 'G01N33/0001', 'G01N33/50', 'G01N33/54353', 'G01N33/68', 'G01N33/6845', 'G01N33/6896', 'G01S19/24', 'G01S19/256', 'G01S7/4815', 'G01V1/01', 'G05B1/01', 'G06F16/285', 'G06F17/30598', 'G06F3/03545', 'G06F3/043', 'G06K9/6255', 'G06T7/13', 'G06T7/55', 'G07D7/12', 'G09G3/344', 'G16B20/00', 'G16B20/20', 'G16H40/40', 'G16H50/50', 'H01B1/12', 'H01C7/006', 'H01L21/02389', 'H01L21/0262', 'H01L21/02647', 'H01L31/103', 'H01L33/12', 'H01L33/32', 'H01L33/58', 'H01M10/0585', 'H01M10/44', 'H01M10/48', 'H01M12/06', 'H01M4/13', 'H01M4/131', 'H01M4/134', 'H01M4/38', 'H01M4/5815', 'H01M4/9066', 'H01M50/109', 'H01M6/02', 'H01M6/18', 'H01M8/2425', 'H01S5/2231', 'H01S5/30', 'H04B7/026', 'H04L43/026', 'H04L43/18', 'H05K3/105', 'H10K85/113']}
+
+exec(code, env_args)

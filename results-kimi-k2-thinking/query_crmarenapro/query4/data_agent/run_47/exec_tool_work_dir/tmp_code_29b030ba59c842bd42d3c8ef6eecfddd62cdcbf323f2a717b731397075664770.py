@@ -1,0 +1,14 @@
+code = """import json
+
+# Get order items from the previous query
+order_items_data = locals()['var_functions.query_db:8']
+
+# Get case data from earlier query
+case_data = locals()['var_functions.query_db:5']
+
+print('__RESULT__:')
+print(json.dumps({'order_items': order_items_data, 'cases': case_data}))"""
+
+env_args = {'var_functions.query_db:2': [], 'var_functions.query_db:5': [{'id': '#500Wt00000DDDfwIAH', 'orderitemid__c': '802Wt00000797r4IAA', 'createddate': '2023-07-02T11:00:00.000+0000'}, {'id': '500Wt00000DDDtTIAX', 'orderitemid__c': '802Wt00000798aDIAQ', 'createddate': '2020-12-29T08:36:00.000+0000'}, {'id': '500Wt00000DDNYoIAP', 'orderitemid__c': '802Wt00000792tiIAA', 'createddate': '2023-09-30T11:30:00.000+0000'}, {'id': '500Wt00000DDPIsIAP', 'orderitemid__c': '802Wt00000797r3IAA', 'createddate': '2022-08-05T14:30:00.000+0000'}, {'id': '500Wt00000DDPM6IAP', 'orderitemid__c': '802Wt00000797r5IAA', 'createddate': '2020-09-01T10:30:00.000+0000'}, {'id': '500Wt00000DDPSZIA5', 'orderitemid__c': '802Wt00000792tiIAA', 'createddate': '2023-10-02T14:15:00.000+0000'}, {'id': '500Wt00000DDPZ0IAP', 'orderitemid__c': '802Wt0000078xAFIAY', 'createddate': '2022-04-18T10:30:00.000+0000'}, {'id': '500Wt00000DDPsOIAX', 'orderitemid__c': '802Wt0000079ATyIAM', 'createddate': '2021-07-06T14:30:00.000+0000'}, {'id': '500Wt00000DDPsPIAX', 'orderitemid__c': '802Wt00000794bXIAQ', 'createddate': '2023-04-05T17:51:00.000+0000'}, {'id': '500Wt00000DDQRsIAP', 'orderitemid__c': '802Wt00000796yFIAQ', 'createddate': '2023-03-08T06:49:00.000+0000'}], 'var_functions.list_db:6': ['ProductCategory', 'Product2', 'ProductCategoryProduct', 'Pricebook2', 'PricebookEntry', 'Order', 'OrderItem'], 'var_functions.query_db:8': [{'Id': '#802Wt0000078yuGIAQ', 'Product2Id': '01tWt000006hVJdIAM'}, {'Id': '802Wt00000790mOIAQ', 'Product2Id': '01tWt000006hVJdIAM'}, {'Id': '802Wt00000790zGIAQ', 'Product2Id': '01tWt000006hVJdIAM'}, {'Id': '802Wt00000794F2IAI', 'Product2Id': '01tWt000006hVJdIAM'}, {'Id': '802Wt000007968eIAA', 'Product2Id': '01tWt000006hVJdIAM'}, {'Id': '802Wt00000796bfIAA', 'Product2Id': '01tWt000006hVJdIAM'}, {'Id': '802Wt00000796qFIAQ', 'Product2Id': '01tWt000006hVJdIAM'}, {'Id': '802Wt0000079734IAA', 'Product2Id': '01tWt000006hVJdIAM'}, {'Id': '802Wt00000797W5IAI', 'Product2Id': '01tWt000006hVJdIAM'}, {'Id': '802Wt00000797z7IAA', 'Product2Id': '01tWt000006hVJdIAM'}, {'Id': '802Wt00000798YdIAI', 'Product2Id': '01tWt000006hVJdIAM'}, {'Id': '802Wt00000798okIAA', 'Product2Id': '01tWt000006hVJdIAM'}, {'Id': '802Wt0000079B0EIAU', 'Product2Id': '01tWt000006hVJdIAM'}]}
+
+exec(code, env_args)

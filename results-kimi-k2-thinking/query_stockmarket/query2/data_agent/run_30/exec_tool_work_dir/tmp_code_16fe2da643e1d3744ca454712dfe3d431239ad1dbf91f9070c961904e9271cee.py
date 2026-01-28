@@ -1,0 +1,21 @@
+code = """import json
+
+# Read the file path from the storage variable
+file_path = locals()['var_functions.query_db:0']
+
+# Load the full results
+with open(file_path, 'r') as f:
+    nyse_arca_etfs = json.load(f)
+
+# Extract symbols
+symbols = [etf['Symbol'] for etf in nyse_arca_etfs]
+
+print(f'__RESULT__:')
+print(json.dumps({
+    'message': 'Loaded symbols successfully',
+    'count': len(symbols)
+}))"""
+
+env_args = {'var_functions.query_db:0': 'file_storage/functions.query_db:0.json', 'var_functions.execute_python:2': {'count': 1435, 'symbols': ['AAAU', 'AADR', 'ABEQ', 'ACSG', 'ACWF', 'AFK', 'AFLG', 'AFMC', 'AFSM', 'AFTY']}, 'var_functions.execute_python:5': 'file_storage/functions.execute_python:5.json', 'var_functions.execute_python:6': {'total_symbols': 1435, 'first_20_symbols': ['AAAU', 'AADR', 'ABEQ', 'ACSG', 'ACWF', 'AFK', 'AFLG', 'AFMC', 'AFSM', 'AFTY', 'AGG', 'AGGP', 'AGGY', 'AGQ', 'AGZ', 'AIEQ', 'AIIQ', 'AMLP', 'AMOM', 'AMZA']}, 'var_functions.query_db:8': [], 'var_functions.query_db:10': [{'Date': '2015-01-22', 'Open': '125.06999969482422', 'High': '125.58000183105467', 'Low': '124.1500015258789', 'Close': '125.2300033569336', 'Adj Close': '125.2300033569336', 'Volume': '10518400'}, {'Date': '2015-01-27', 'Open': '123.55999755859376', 'High': '124.63999938964844', 'Low': '123.51000213623048', 'Close': '124.4000015258789', 'Adj Close': '124.4000015258789', 'Volume': '9584800'}, {'Date': '2015-01-21', 'Open': '125.18000030517578', 'High': '125.33999633789062', 'Low': '123.37000274658205', 'Close': '124.2300033569336', 'Adj Close': '124.2300033569336', 'Volume': '11082700'}, {'Date': '2015-01-23', 'Open': '124.43000030517578', 'High': '124.5', 'Low': '123.3499984741211', 'Close': '124.2300033569336', 'Adj Close': '124.2300033569336', 'Volume': '6270900'}, {'Date': '2015-01-20', 'Open': '123.62999725341795', 'High': '124.5999984741211', 'Low': '123.48999786376952', 'Close': '124.1999969482422', 'Adj Close': '124.1999969482422', 'Volume': '14968600'}]}
+
+exec(code, env_args)

@@ -1,0 +1,45 @@
+code = """import json
+
+# Read repository list
+repo_list_file = locals()['var_functions.query_db:0']
+with open(repo_list_file, 'r') as f:
+    repos = json.load(f)
+
+repo_names = [r['repo_name'] for r in repos]
+print(f'Total repositories: {len(repo_names)}')
+
+# Process in batches
+batch_size = 1000
+total_commits = 0
+batch_queries = []
+
+for i in range(0, len(repo_names), batch_size):
+    batch = repo_names[i:i+batch_size]
+    # Create a VALUES clause for this batch
+    values_rows = '),(' .join([f"'{repo.replace("'", "''")}'" for repo in batch])
+    values_clause = f"VALUES ({values_rows})"
+    
+    # Create query for this batch
+    query = f"""
+    SELECT COUNT(*) as count 
+    FROM commits c 
+    JOIN {values_clause} AS repos(repo_name) ON c.repo_name = repos.repo_name 
+    WHERE c.message IS NOT NULL 
+      AND LENGTH(c.message) < 1000 
+      AND NOT (LOWER(c.message) LIKE 'merge%' OR LOWER(c.message) LIKE 'update%' OR LOWER(c.message) LIKE 'test%')
+    """
+    batch_queries.append(query.strip())
+
+print(f'Created {len(batch_queries)} batch queries')
+print(f'First query preview: {batch_queries[0][:200]}...')
+
+print('__RESULT__:')
+print(json.dumps({
+    'total_repos': len(repo_names),
+    'batch_size': batch_size,
+    'num_batches': len(batch_queries)
+}))"""
+
+env_args = {'var_functions.query_db:0': 'file_storage/functions.query_db:0.json', 'var_functions.execute_python:5': 'file_storage/functions.execute_python:5.json', 'var_functions.query_db:6': [{'commit': '78e3f1f01d23c1a0d5828669d35afa2e7951987d', 'tree': '60221a5006aaec5e0a810facb8a223b910f92175', 'parent': '[\n  "1ba8dfd17ead04de18bfca7b68c2a144c8be736a"\n]', 'author': '{\n  "date": 1355788909000000,\n  "email": "85dcca6eaef7f88f8513274f73363a9b5feab3ec@taobao.com",\n  "name": "Tao Ma",\n  "time_sec": 1355788909,\n  "tz_offset": -480\n}', 'committer': '{\n  "date": 1355793319000000,\n  "email": "69652caca27c8b940640ad396ab71f93cacec34f@linux-foundation.org",\n  "name": "Linus Torvalds",\n  "time_sec": 1355793319,\n  "tz_offset": -480\n}', 'subject': 'checkpatch: remove reference to feature-removal-schedule.txt', 'message': 'checkpatch: remove reference to feature-removal-schedule.txt\n\nIn commit 9c0ece069b32 ("Get rid of Documentation/feature-removal.txt"),\nLinus removes feature-removal-schedule.txt from Documentation, but there\nis still some reference to this file.  So remove them.\n\nSigned-off-by: Tao Ma <85dcca6eaef7f88f8513274f73363a9b5feab3ec@taobao.com>\nAcked-by: Andy Whitcroft <b4658fdd7fbd645c2859b0e39d71018f32058d12@canonical.com>\nCc: Joe Perches <16a9a54ddf4259952e3c118c763138e83693d7fd@perches.com>\nSigned-off-by: Andrew Morton <5c1e68b099950c134891f0b6e179498a8ebe9cf9@linux-foundation.org>\nSigned-off-by: Linus Torvalds <69652caca27c8b940640ad396ab71f93cacec34f@linux-foundation.org>\n', 'trailer': '[\n  {\n    "email": "85dcca6eaef7f88f8513274f73363a9b5feab3ec@taobao.com",\n    "key": "Signed-off-by",\n    "value": "Tao Ma <85dcca6eaef7f88f8513274f73363a9b5feab3ec@taobao.com>"\n  },\n  {\n    "email": "b4658fdd7fbd645c2859b0e39d71018f32058d12@canonical.com",\n    "key": "Acked-by",\n    "value": "Andy Whitcroft <b4658fdd7fbd645c2859b0e39d71018f32058d12@canonical.com>"\n  },\n  {\n    "email": "16a9a54ddf4259952e3c118c763138e83693d7fd@perches.com",\n    "key": "Cc",\n    "value": "Joe Perches <16a9a54ddf4259952e3c118c763138e83693d7fd@perches.com>"\n  },\n  {\n    "email": "5c1e68b099950c134891f0b6e179498a8ebe9cf9@linux-foundation.org",\n    "key": "Signed-off-by",\n    "value": "Andrew Morton <5c1e68b099950c134891f0b6e179498a8ebe9cf9@linux-foundation.org>"\n  },\n  {\n    "email": "69652caca27c8b940640ad396ab71f93cacec34f@linux-foundation.org",\n    "key": "Signed-off-by",\n    "value": "Linus Torvalds <69652caca27c8b940640ad396ab71f93cacec34f@linux-foundation.org>"\n  }\n]', 'difference': '[\n  {\n    "new_mode": 33261,\n    "new_path": "scripts/checkpatch.pl",\n    "new_sha1": "d2d5ba17ad6c92788d416dbdfa6d0e967e9437df",\n    "old_mode": 33261,\n    "old_path": "scripts/checkpatch.pl",\n    "old_sha1": "cd251d5f3f1a4fbde8a0858a9ed5483c60936d01"\n  }\n]', 'difference_truncated': 'nan', 'repo_name': 'torvalds/linux', 'encoding': 'None'}, {'commit': '4a4e07c1bdbbc24d905e4c266b92cada9371db5d', 'tree': '50bbab4fdef17e08dd46bddbc67bee7c389dc9d6', 'parent': '[\n  "7fa05c6e46d76378d4403669ba6ea38364f910ac"\n]', 'author': '{\n  "date": 1412893498000000,\n  "email": "88260f35dd98758635dbbf2145383e817a86f01c@huawei.com",\n  "name": "Joseph Qi",\n  "time_sec": 1412893498,\n  "tz_offset": -420\n}', 'committer': '{\n  "date": 1412907947000000,\n  "email": "69652caca27c8b940640ad396ab71f93cacec34f@linux-foundation.org",\n  "name": "Linus Torvalds",\n  "time_sec": 1412907947,\n  "tz_offset": -240\n}', 'subject': 'ocfs2: call o2quo_exit() if malloc failed in o2net_init()', 'message': "ocfs2: call o2quo_exit() if malloc failed in o2net_init()\n\nIn o2net_init, if malloc failed, it directly returns -ENOMEM.  Then\no2quo_exit won't be called in init_o2nm.\n\nSigned-off-by: Joseph Qi <88260f35dd98758635dbbf2145383e817a86f01c@huawei.com>\nReviewed-by: joyce.xue <e513a8cfffdd1761b5c8047b6b6cbe23f11326f2@huawei.com>\nCc: Mark Fasheh <8f0bc92cac940f3e83deb53ced7a1f201bce5732@suse.com>\nCc: Joel Becker <9d3d88cacb47f143c6cf36b9a61c09b528b2c49a@evilplan.org>\nSigned-off-by: Andrew Morton <5c1e68b099950c134891f0b6e179498a8ebe9cf9@linux-foundation.org>\nSigned-off-by: Linus Torvalds <69652caca27c8b940640ad396ab71f93cacec34f@linux-foundation.org>\n", 'trailer': '[\n  {\n    "email": "88260f35dd98758635dbbf2145383e817a86f01c@huawei.com",\n    "key": "Signed-off-by",\n    "value": "Joseph Qi <88260f35dd98758635dbbf2145383e817a86f01c@huawei.com>"\n  },\n  {\n    "email": "e513a8cfffdd1761b5c8047b6b6cbe23f11326f2@huawei.com",\n    "key": "Reviewed-by",\n    "value": "joyce.xue <e513a8cfffdd1761b5c8047b6b6cbe23f11326f2@huawei.com>"\n  },\n  {\n    "email": "8f0bc92cac940f3e83deb53ced7a1f201bce5732@suse.com",\n    "key": "Cc",\n    "value": "Mark Fasheh <8f0bc92cac940f3e83deb53ced7a1f201bce5732@suse.com>"\n  },\n  {\n    "email": "9d3d88cacb47f143c6cf36b9a61c09b528b2c49a@evilplan.org",\n    "key": "Cc",\n    "value": "Joel Becker <9d3d88cacb47f143c6cf36b9a61c09b528b2c49a@evilplan.org>"\n  },\n  {\n    "email": "5c1e68b099950c134891f0b6e179498a8ebe9cf9@linux-foundation.org",\n    "key": "Signed-off-by",\n    "value": "Andrew Morton <5c1e68b099950c134891f0b6e179498a8ebe9cf9@linux-foundation.org>"\n  },\n  {\n    "email": "69652caca27c8b940640ad396ab71f93cacec34f@linux-foundation.org",\n    "key": "Signed-off-by",\n    "value": "Linus Torvalds <69652caca27c8b940640ad396ab71f93cacec34f@linux-foundation.org>"\n  }\n]', 'difference': '[\n  {\n    "new_mode": 33188,\n    "new_path": "fs/ocfs2/cluster/tcp.c",\n    "new_sha1": "56cebba2390c7280b547f8e1c83e156bcd6398e3",\n    "old_mode": 33188,\n    "old_path": "fs/ocfs2/cluster/tcp.c",\n    "old_sha1": "ea34952f9496a6bfaa698165d6b818bd601ebf17"\n  }\n]', 'difference_truncated': 'nan', 'repo_name': 'torvalds/linux', 'encoding': 'None'}], 'var_functions.execute_python:14': "VALUES ('juliandunn/rackspacecloud'), ('rupakg/lorry'), ('Nordstrom/al_agents'), ('fuellab/bootstrap'), ('brint/rax-wordpress-cookbook'), ('rarenerd/train'), ('wallyqs/ruby-nats'), ('dthtvwls/bento'), ('darrenleeweber/aws-ops'), ('yepengxj/binary-buildpack')", 'var_functions.execute_python:22': {'count': 114972, 'where_clause': "repo_name IN ('juliandunn/rackspacecloud','rupakg/lorry','Nordstrom/al_agents','fuellab/bootstrap','brint/rax-wordpress-cookbook','rarenerd/train','wallyqs/ruby-nats','dthtvwls/bento','darrenleeweber/aws-ops','yepengxj/binary-buildpack','EntropyWorks/capistrano-chef-test','fhir-crucible/fhir_client','nirmal070125/vagrant-kubernetes-setup','tomduckering/mock-rpm-builder','jdutton/omnibus-collectd','gbm-bailleul/vagrant-machines','chriscowley/puppetmaster-bootstrap','criteo/cassback','saucelabs/sauce_ruby','secureworks/supermarket-mirror','Team-Aqua/Matrix-Library','xianfengyuan/chef_yum-mysql-community','sequenceiq/openstack-ansible','mirceal/beekeeper','hodchi/samedi','carl-mobsoc/chef-repo','Solinea/docker-redis','Typz/docker-scripts','adarqui/polybooks','lmunro/chef-hybris','phpblogs/staticblog','chef/chefstyle','ojima-h/hive-thrift-cli','wesleykerr/db-performance-test','shchung/ktc-monitor','OpenNebula/addon-kvm-sr-iov','kamaradclimber/mosespa','dingotiles/dingo-postgresql-image-boshrelease','CBitLabs/knife-bs','DubFriend/coreos-kubernetes','biola/chef-vsphere_perl_sdk','philoserf/knife-cloudstack','instantlinux/desviar','inviland/rsyslog','icemobilelab/elasticsearch-cookbook','Ziggeo/ZiggeoRubySdk','kkirsche/Bark','profitbricks/knife-profitbricks','broadinstitute/ohai','jaymzh/grocery-delivery')"}, 'var_functions.execute_python:24': "VALUES ('juliandunn/rackspacecloud'),('rupakg/lorry'),('Nordstrom/al_agents'),('fuellab/bootstrap'),('brint/rax-wordpress-cookbook'),('rarenerd/train'),('wallyqs/ruby-nats'),('dthtvwls/bento'),('darre..."}
+
+exec(code, env_args)

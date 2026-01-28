@@ -1,0 +1,53 @@
+code = """import json
+import pandas as pd
+import re
+
+# Load full books data
+books_file_path = locals()['var_functions.query_db:0']
+with open(books_file_path, 'r') as f:
+    books_data = json.load(f)
+
+# Load full reviews data
+reviews_file_path = locals()['var_functions.query_db:10']
+with open(reviews_file_path, 'r') as f:
+    reviews_data = json.load(f)
+
+# Create DataFrames
+df_books = pd.DataFrame(books_data)
+df_reviews = pd.DataFrame(reviews_data)
+
+# Extract book_id from purchase_id (e.g., purchaseid_186 -> bookid_186)
+df_reviews['book_id'] = df_reviews['purchase_id'].str.replace('purchaseid_', 'bookid_')
+
+# Calculate average rating per book
+# Convert rating to numeric
+df_reviews['rating'] = pd.to_numeric(df_reviews['rating'], errors='coerce')
+book_ratings = df_reviews.groupby('book_id')['rating'].agg(['mean', 'count']).reset_index()
+book_ratings.columns = ['book_id', 'avg_rating', 'review_count']
+
+# Filter books with perfect 5.0 rating
+perfect_books = book_ratings[book_ratings['avg_rating'] == 5.0]
+
+# Filter for English Literature & Fiction books
+# First, filter by category containing 'Literature & Fiction' and details containing 'English'
+lit_fiction_books = df_books[
+    (df_books['categories'].str.contains('Literature & Fiction', na=False)) & 
+    (df_books['details'].str.contains('English', na=False))
+]
+
+# Merge with perfect rating books
+perfect_lit_fiction = pd.merge(
+    perfect_books, 
+    lit_fiction_books[['book_id', 'title', 'categories', 'details']], 
+    on='book_id', 
+    how='inner'
+)
+
+result = perfect_lit_fiction.to_dict('records')
+
+print("__RESULT__:")
+print(json.dumps(result, indent=2))"""
+
+env_args = {'var_functions.query_db:0': 'file_storage/functions.query_db:0.json', 'var_functions.query_db:2': [{'book_id': 'bookid_1', 'title': 'Chaucer'}, {'book_id': 'bookid_9', 'title': 'Reunion: The Children of Lauderdale Park'}, {'book_id': 'bookid_13', 'title': 'Girl Made of Glass'}, {'book_id': 'bookid_30', 'title': 'Sugary Sweets (A Taste of Love Series)'}, {'book_id': 'bookid_36', 'title': 'Therapy Mammals'}, {'book_id': 'bookid_37', 'title': "A Most Dangerous Book: Tacitus's Germania from the Roman Empire to the Third Reich"}, {'book_id': 'bookid_38', 'title': 'The Prophet: With Original 1923 Illustrations by the Author'}, {'book_id': 'bookid_39', 'title': 'The Melancholy Strumpet Master'}, {'book_id': 'bookid_44', 'title': 'Reptilian'}, {'book_id': 'bookid_49', 'title': 'Primeval: A Journal of the Uncanny - Issue #1'}, {'book_id': 'bookid_55', 'title': 'Behind the Wheel (Choose Your Own Adventure #35)(Paperback/Revised)'}, {'book_id': 'bookid_69', 'title': 'Out of Sheer Rage: Wrestling with D. H. Lawrence'}, {'book_id': 'bookid_70', 'title': 'Polly and the Shadow Goblin: Book 2, Mother of Witches'}, {'book_id': 'bookid_74', 'title': 'Child Of The King A Journey of Hope Book 1: Earthly Story With A Heavenly Message'}, {'book_id': 'bookid_77', 'title': 'One September Morning'}, {'book_id': 'bookid_82', 'title': 'Fire Cracker'}, {'book_id': 'bookid_84', 'title': 'Local Honey'}, {'book_id': 'bookid_89', 'title': "I'll Ride For My Hood: A Salty Love Story"}, {'book_id': 'bookid_92', 'title': 'Outage'}, {'book_id': 'bookid_93', 'title': 'Simantov'}, {'book_id': 'bookid_98', 'title': 'Hollywood Confessions: Hollywood Headlines Book #3 (Hollywood Headlines Mysteries)'}, {'book_id': 'bookid_99', 'title': 'Buddy the Soldier Bear'}, {'book_id': 'bookid_101', 'title': 'Knowing When To Die: Uncollected Stories'}, {'book_id': 'bookid_106', 'title': 'Looking for Peyton Place: A Novel'}, {'book_id': 'bookid_109', 'title': 'All the Way to the Gallows'}, {'book_id': 'bookid_111', 'title': 'Can You Buy Me The Wind?'}, {'book_id': 'bookid_122', 'title': 'Childe Harold of Dysna'}, {'book_id': 'bookid_137', 'title': 'Oligarchy'}, {'book_id': 'bookid_142', 'title': 'The Jordan Tracks'}, {'book_id': 'bookid_144', 'title': 'Forged in Blood (Freehold)'}, {'book_id': 'bookid_161', 'title': "Time's Demon: BOOK II OF THE ISLEVALE CYCLE"}, {'book_id': 'bookid_167', 'title': 'Dead Silence'}, {'book_id': 'bookid_171', 'title': 'Exits, Desires, & Slow Fires'}, {'book_id': 'bookid_177', 'title': 'Kennebago Moments'}, {'book_id': 'bookid_179', 'title': 'A Cherry Cola Christmas (A Cherry Cola Book Club Novel)'}, {'book_id': 'bookid_180', 'title': 'The Sludge'}, {'book_id': 'bookid_182', 'title': 'Liza of Lambeth'}, {'book_id': 'bookid_187', 'title': 'Consort (A Dark(ish) Faerie Tale Book 3)'}, {'book_id': 'bookid_188', 'title': "The Vampyre and Other Tales of the Macabre (Oxford World's Classics)"}, {'book_id': 'bookid_195', 'title': 'Something That Feels Like Truth (Switchgrass Books)'}], 'var_functions.list_db:4': ['review'], 'var_functions.execute_python:6': {'total_books': 200, 'lit_fiction_books': 40, 'sample_categories': ['["Books", "Literature & Fiction", "History & Criticism"]', '["Books", "Reference", "Words, Language & Grammar"]', '["Books", "Biographies & Memoirs", "Leaders & Notable People"]'], 'sample_details': ['Published by Chatto & Windus, the first edition of this book was released on January 1, 2004. It is written in English and comes in a hardcover format, comprising 196 pages. The book has an ISBN-10 of 0701169850 and an ISBN-13 of 978-0701169855. Weighing 10.1 ounces, its dimensions are 5.39 x 0.71 x 7.48 inches.', 'This book, published by Heinemann in its first edition on May 20, 1996, is written in English and is available in paperback format, consisting of 316 pages. It has an ISBN-10 of 0435088688 and an ISBN-13 of 978-0435088682. The item weighs 1.05 pounds and its dimensions are 6.03 x 0.67 x 8.95 inches.', 'This book, published by Little, Brown and Company in its first edition on May 8, 2012, is available in English and is bound as a hardcover with a total of 384 pages. It has an ISBN-10 of 9780316185363 and an ISBN-13 of 978-0316185363. The item weighs 1.4 pounds and its dimensions are 6.25 inches in width, 1.55 inches in depth, and 9.55 inches in height.']}, 'var_functions.query_db:10': 'file_storage/functions.query_db:10.json', 'var_functions.execute_python:12': {'total_books': 200, 'total_reviews': 1833, 'sample_book_ids': ['bookid_1', 'bookid_2', 'bookid_3', 'bookid_4', 'bookid_5'], 'sample_purchase_ids': ['purchaseid_186', 'purchaseid_191', 'purchaseid_190', 'purchaseid_8', 'purchaseid_178']}}
+
+exec(code, env_args)

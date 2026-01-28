@@ -1,0 +1,127 @@
+code = """import json
+import pandas as pd
+import math
+import re
+import glob
+import os
+
+# Find the data files
+print("Looking for data files...")
+json_files = glob.glob('outputs/*.json')
+print(f"Found {len(json_files)} JSON files in outputs/")
+
+# Identify the correct files based on content
+igf2_file = None
+clinical_file = None
+
+for file_path in json_files:
+    try:
+        with open(file_path, 'r') as f:
+            data = json.load(f)
+            if len(data) > 0:
+                # Check if it's IGF2 expression data
+                if 'ParticipantBarcode' in data[0] and 'normalized_count' in data[0]:
+                    igf2_file = file_path
+                    print(f"IGF2 expression data: {file_path} ({len(data)} records)")
+                # Check if it's clinical data
+                elif 'Patient_description' in data[0] and 'histological_type' in data[0]:
+                    clinical_file = file_path
+                    print(f"Clinical data: {file_path} ({len(data)} records)")
+    except Exception as e:
+        print(f"Error checking {file_path}: {e}")
+
+if not igf2_file or not clinical_file:
+    print("ERROR: Could not find both required data files")
+    exit()
+
+# Load the data
+print(f"\nLoading data...")
+with open(igf2_file, 'r') as f:
+    igf2_expression = json.load(f)
+
+with open(clinical_file, 'r') as f:
+    lgg_clinical = json.load(f)
+
+print(f"IGF2 records: {len(igf2_expression)}")
+print(f"LGG clinical records: {len(lgg_clinical)}")
+
+# Process IGF2 expression data
+igf2_df = pd.DataFrame(igf2_expression)
+igf2_df['normalized_count'] = pd.to_numeric(igf2_df['normalized_count'])
+igf2_df['log10_expression'] = igf2_df['normalized_count'].apply(lambda x: math.log10(x + 1))
+
+print(f"Processed IGF2 data: {igf2_df.shape}")
+
+# Process clinical data and create barcode to histology mapping
+barcode_to_histology = {}
+skipped_bracketed = 0
+unbracketed = 0
+
+for record in lgg_clinical:
+    hist_type = record['histological_type']
+    
+    # Skip histology annotations enclosed in square brackets
+    if hist_type and '[' in hist_type and ']' in hist_type:
+        skipped_bracketed += 1
+        continue
+    
+    # Extract patient barcode from Patient_description
+    patient_desc = record['Patient_description']
+    barcode_match = re.search(r'(TCGA-\w+-\w+)', patient_desc)
+    if barcode_match:
+        full_barcode = barcode_match.group(1)
+        # TCGA patient barcode is first 12 characters
+        patient_barcode = full_barcode[:12]
+        barcode_to_histology[patient_barcode] = hist_type
+        unbracketed += 1
+
+print(f"Mapped {len(barcode_to_histology)} unique patients")
+print(f"Skipped {skipped_bracketed} bracketed histology records")
+print(f"Included {unbracketed} unbracketed histology records")
+
+# Find matching patients (intersection of expression and clinical data)
+expression_barcodes = set(igf2_df['ParticipantBarcode'].tolist())
+clinical_barcodes = set(barcode_to_histology.keys())
+matching_barcodes = expression_barcodes.intersection(clinical_barcodes)
+
+print(f"\nExpression barcodes: {len(expression_barcodes)}")
+print(f"Clinical barcodes: {len(clinical_barcodes)}")
+print(f"Matching barcodes: {len(matching_barcodes)}")
+
+# Create merged dataset
+merged_data = []
+for _, expr_row in igf2_df.iterrows():
+    barcode = expr_row['ParticipantBarcode']
+    if barcode in matching_barcodes:
+        merged_data.append({
+            'barcode': barcode,
+            'log10_expression': expr_row['log10_expression'],
+            'histological_type': barcode_to_histology[barcode]
+        })
+
+merged_df = pd.DataFrame(merged_data)
+print(f"Merged dataset: {merged_df.shape[0]} records")
+
+# Calculate average log10 expression by histological type
+results = merged_df.groupby('histological_type').agg(
+    average_log10_expression=('log10_expression', 'mean'),
+    sample_count=('log10_expression', 'count')
+).round({'average_log10_expression': 4}).reset_index()
+
+results = results[results['sample_count'] > 0]
+results = results.sort_values('histological_type')
+
+print(f"\nResults by histological type:")
+print(results.to_string(index=False))
+
+# Prepare output dictionary
+output = {}
+for _, row in results.iterrows():
+    output[row['histological_type']] = float(row['average_log10_expression'])
+
+print("\n__RESULT__:")
+print(json.dumps(output, indent=2))"""
+
+env_args = {'var_functions.list_db:0': ['clinical_info'], 'var_functions.query_db:2': [{'column_name': 'Patient_description', 'data_type': 'text'}, {'column_name': 'days_to_birth', 'data_type': 'double precision'}, {'column_name': 'days_to_death', 'data_type': 'text'}, {'column_name': 'days_to_last_followup', 'data_type': 'text'}, {'column_name': 'days_to_initial_pathologic_diagnosis', 'data_type': 'double precision'}, {'column_name': 'age_at_initial_pathologic_diagnosis', 'data_type': 'double precision'}, {'column_name': 'icd_10', 'data_type': 'text'}, {'column_name': 'tissue_retrospective_collection_indicator', 'data_type': 'text'}, {'column_name': 'icd_o_3_histology', 'data_type': 'text'}, {'column_name': 'tissue_prospective_collection_indicator', 'data_type': 'text'}, {'column_name': 'history_of_neoadjuvant_treatment', 'data_type': 'text'}, {'column_name': 'icd_o_3_site', 'data_type': 'text'}, {'column_name': 'tumor_tissue_site', 'data_type': 'text'}, {'column_name': 'new_tumor_event_after_initial_treatment', 'data_type': 'text'}, {'column_name': 'radiation_therapy', 'data_type': 'text'}, {'column_name': 'race', 'data_type': 'text'}, {'column_name': 'prior_dx', 'data_type': 'text'}, {'column_name': 'ethnicity', 'data_type': 'text'}, {'column_name': 'informed_consent_verified', 'data_type': 'text'}, {'column_name': 'person_neoplasm_cancer_status', 'data_type': 'text'}, {'column_name': 'patient_id', 'data_type': 'text'}, {'column_name': 'year_of_initial_pathologic_diagnosis', 'data_type': 'double precision'}, {'column_name': 'histological_type', 'data_type': 'text'}, {'column_name': 'tissue_source_site', 'data_type': 'text'}, {'column_name': 'form_completion_date', 'data_type': 'text'}, {'column_name': 'pathologic_T', 'data_type': 'text'}, {'column_name': 'pathologic_M', 'data_type': 'text'}, {'column_name': 'clinical_M', 'data_type': 'text'}, {'column_name': 'pathologic_N', 'data_type': 'text'}, {'column_name': 'system_version', 'data_type': 'text'}, {'column_name': 'pathologic_stage', 'data_type': 'text'}, {'column_name': 'clinical_stage', 'data_type': 'text'}, {'column_name': 'clinical_T', 'data_type': 'text'}, {'column_name': 'clinical_N', 'data_type': 'text'}, {'column_name': 'extranodal_involvement', 'data_type': 'text'}, {'column_name': 'postoperative_rx_tx', 'data_type': 'text'}, {'column_name': 'primary_therapy_outcome_success', 'data_type': 'text'}, {'column_name': 'lymph_node_examined_count', 'data_type': 'text'}, {'column_name': 'primary_lymph_node_presentation_assessment', 'data_type': 'text'}, {'column_name': 'initial_pathologic_diagnosis_method', 'data_type': 'text'}, {'column_name': 'number_of_lymphnodes_positive_by_he', 'data_type': 'double precision'}, {'column_name': 'eastern_cancer_oncology_group', 'data_type': 'text'}, {'column_name': 'anatomic_neoplasm_subdivision', 'data_type': 'text'}, {'column_name': 'residual_tumor', 'data_type': 'text'}, {'column_name': 'histological_type_other', 'data_type': 'text'}, {'column_name': 'init_pathology_dx_method_other', 'data_type': 'text'}, {'column_name': 'karnofsky_performance_score', 'data_type': 'text'}, {'column_name': 'neoplasm_histologic_grade', 'data_type': 'text'}, {'column_name': 'height', 'data_type': 'double precision'}, {'column_name': 'weight', 'data_type': 'double precision'}, {'column_name': 'number_of_lymphnodes_positive_by_ihc', 'data_type': 'double precision'}, {'column_name': 'tobacco_smoking_history', 'data_type': 'text'}, {'column_name': 'number_pack_years_smoked', 'data_type': 'double precision'}, {'column_name': 'stopped_smoking_year', 'data_type': 'double precision'}, {'column_name': 'performance_status_scale_timing', 'data_type': 'text'}, {'column_name': 'laterality', 'data_type': 'text'}, {'column_name': 'targeted_molecular_therapy', 'data_type': 'text'}, {'column_name': 'year_of_tobacco_smoking_onset', 'data_type': 'double precision'}, {'column_name': 'anatomic_neoplasm_subdivision_other', 'data_type': 'text'}, {'column_name': 'patient_death_reason', 'data_type': 'text'}, {'column_name': 'tumor_tissue_site_other', 'data_type': 'text'}, {'column_name': 'menopause_status', 'data_type': 'text'}, {'column_name': 'margin_status', 'data_type': 'text'}, {'column_name': 'kras_gene_analysis_performed', 'data_type': 'text'}, {'column_name': 'venous_invasion', 'data_type': 'text'}, {'column_name': 'lymphatic_invasion', 'data_type': 'text'}, {'column_name': 'perineural_invasion_present', 'data_type': 'text'}, {'column_name': 'her2_immunohistochemistry_level_result', 'data_type': 'text'}, {'column_name': 'breast_carcinoma_progesterone_receptor_status', 'data_type': 'text'}, {'column_name': 'breast_carcinoma_surgical_procedure_name', 'data_type': 'text'}, {'column_name': 'breast_neoplasm_other_surgical_procedure_descriptive_text', 'data_type': 'text'}, {'column_name': 'axillary_lymph_node_stage_method_type', 'data_type': 'text'}, {'column_name': 'breast_carcinoma_estrogen_receptor_status', 'data_type': 'text'}, {'column_name': 'cytokeratin_immunohistochemistry_staining_method_micrometastasi', 'data_type': 'text'}, {'column_name': 'lab_proc_her2_neu_immunohistochemistry_receptor_status', 'data_type': 'text'}, {'column_name': 'lab_procedure_her2_neu_in_situ_hybrid_outcome_type', 'data_type': 'text'}, {'column_name': 'additional_pharmaceutical_therapy', 'data_type': 'text'}, {'column_name': 'additional_radiation_therapy', 'data_type': 'text'}, {'column_name': 'lymphovascular_invasion_present', 'data_type': 'text'}, {'column_name': 'location_in_lung_parenchyma', 'data_type': 'text'}, {'column_name': 'pulmonary_function_test_performed', 'data_type': 'text'}, {'column_name': 'egfr_mutation_performed', 'data_type': 'text'}, {'column_name': 'diagnosis', 'data_type': 'text'}, {'column_name': 'eml4_alk_translocation_performed', 'data_type': 'text'}, {'column_name': 'days_to_new_tumor_event_after_initial_treatment', 'data_type': 'text'}, {'column_name': 'hemoglobin_result', 'data_type': 'text'}, {'column_name': 'serum_calcium_result', 'data_type': 'text'}, {'column_name': 'platelet_qualitative_result', 'data_type': 'text'}, {'column_name': 'number_of_lymphnodes_positive', 'data_type': 'text'}, {'column_name': 'white_cell_count_result', 'data_type': 'text'}, {'column_name': 'alcohol_history_documented', 'data_type': 'text'}, {'column_name': 'family_history_of_cancer', 'data_type': 'text'}, {'column_name': 'braf_gene_analysis_performed', 'data_type': 'text'}, {'column_name': 'city_of_procurement', 'data_type': 'text'}, {'column_name': 'surgical_approach', 'data_type': 'text'}, {'column_name': 'peritoneal_wash', 'data_type': 'text'}, {'column_name': 'total_pelv_lnr', 'data_type': 'double precision'}, {'column_name': 'total_aor_lnr', 'data_type': 'double precision'}, {'column_name': 'prior_glioma', 'data_type': 'text'}], 'var_functions.list_db:5': ['Mutation_Data', 'RNASeq_Expression'], 'var_functions.query_db:8': [], 'var_functions.query_db:10': [{'diagnosis': 'Lung Adenocarcinoma'}, {'diagnosis': 'Lung Squamous Cell Carcinoma'}], 'var_functions.query_db:12': [], 'var_functions.query_db:14': [], 'var_functions.query_db:16': [{'ParticipantBarcode': 'TCGA-A8-A06O'}, {'ParticipantBarcode': 'TCGA-A8-A06Q'}, {'ParticipantBarcode': 'TCGA-A8-A08B'}, {'ParticipantBarcode': 'TCGA-A8-A08H'}, {'ParticipantBarcode': 'TCGA-A8-A08Z'}, {'ParticipantBarcode': 'TCGA-A8-A09R'}, {'ParticipantBarcode': 'TCGA-AA-3492'}, {'ParticipantBarcode': 'TCGA-AA-3520'}, {'ParticipantBarcode': 'TCGA-AA-3521'}, {'ParticipantBarcode': 'TCGA-AA-3660'}, {'ParticipantBarcode': 'TCGA-AA-3862'}, {'ParticipantBarcode': 'TCGA-AA-3941'}, {'ParticipantBarcode': 'TCGA-AA-3980'}, {'ParticipantBarcode': 'TCGA-AA-A00W'}, {'ParticipantBarcode': 'TCGA-AA-A01K'}, {'ParticipantBarcode': 'TCGA-AA-A01T'}, {'ParticipantBarcode': 'TCGA-AA-A02E'}, {'ParticipantBarcode': 'TCGA-AC-A5XS'}, {'ParticipantBarcode': 'TCGA-AC-A7VC'}, {'ParticipantBarcode': 'TCGA-AC-A8OQ'}], 'var_functions.query_db:18': [{'site_code': 'TCGA-02-0047'}, {'site_code': 'TCGA-02-0055'}, {'site_code': 'TCGA-02-2483'}, {'site_code': 'TCGA-02-2485'}, {'site_code': 'TCGA-02-2486'}, {'site_code': 'TCGA-04-1348'}, {'site_code': 'TCGA-04-1357'}, {'site_code': 'TCGA-04-1362'}, {'site_code': 'TCGA-04-1364'}, {'site_code': 'TCGA-04-1365'}, {'site_code': 'TCGA-04-1514'}, {'site_code': 'TCGA-04-1519'}, {'site_code': 'TCGA-05-4244'}, {'site_code': 'TCGA-05-4249'}, {'site_code': 'TCGA-05-4382'}, {'site_code': 'TCGA-05-4384'}, {'site_code': 'TCGA-05-4389'}, {'site_code': 'TCGA-05-4390'}, {'site_code': 'TCGA-05-4395'}, {'site_code': 'TCGA-05-4396'}, {'site_code': 'TCGA-05-4398'}, {'site_code': 'TCGA-05-4402'}, {'site_code': 'TCGA-05-4403'}, {'site_code': 'TCGA-05-4405'}, {'site_code': 'TCGA-05-4410'}, {'site_code': 'TCGA-05-4415'}, {'site_code': 'TCGA-05-4417'}, {'site_code': 'TCGA-05-4418'}, {'site_code': 'TCGA-05-4420'}, {'site_code': 'TCGA-05-4422'}, {'site_code': 'TCGA-05-4424'}, {'site_code': 'TCGA-05-4425'}, {'site_code': 'TCGA-05-4426'}, {'site_code': 'TCGA-05-4430'}, {'site_code': 'TCGA-05-4432'}, {'site_code': 'TCGA-05-4433'}, {'site_code': 'TCGA-05-5423'}, {'site_code': 'TCGA-05-5425'}, {'site_code': 'TCGA-05-5428'}, {'site_code': 'TCGA-05-5429'}, {'site_code': 'TCGA-05-5715'}, {'site_code': 'TCGA-06-0125'}, {'site_code': 'TCGA-06-0129'}, {'site_code': 'TCGA-06-0130'}, {'site_code': 'TCGA-06-0132'}, {'site_code': 'TCGA-06-0138'}, {'site_code': 'TCGA-06-0141'}, {'site_code': 'TCGA-06-0152'}, {'site_code': 'TCGA-06-0156'}, {'site_code': 'TCGA-06-0157'}, {'site_code': 'TCGA-06-0158'}, {'site_code': 'TCGA-06-0168'}, {'site_code': 'TCGA-06-0171'}, {'site_code': 'TCGA-06-0174'}, {'site_code': 'TCGA-06-0178'}, {'site_code': 'TCGA-06-0184'}, {'site_code': 'TCGA-06-0187'}, {'site_code': 'TCGA-06-0190'}, {'site_code': 'TCGA-06-0210'}, {'site_code': 'TCGA-06-0211'}, {'site_code': 'TCGA-06-0219'}, {'site_code': 'TCGA-06-0221'}, {'site_code': 'TCGA-06-0238'}, {'site_code': 'TCGA-06-0644'}, {'site_code': 'TCGA-06-0645'}, {'site_code': 'TCGA-06-0646'}, {'site_code': 'TCGA-06-0649'}, {'site_code': 'TCGA-06-0675'}, {'site_code': 'TCGA-06-0678'}, {'site_code': 'TCGA-06-0680'}, {'site_code': 'TCGA-06-0681'}, {'site_code': 'TCGA-06-0686'}, {'site_code': 'TCGA-06-0743'}, {'site_code': 'TCGA-06-0744'}, {'site_code': 'TCGA-06-0745'}, {'site_code': 'TCGA-06-0747'}, {'site_code': 'TCGA-06-0749'}, {'site_code': 'TCGA-06-0750'}, {'site_code': 'TCGA-06-0878'}, {'site_code': 'TCGA-06-0882'}, {'site_code': 'TCGA-06-1804'}, {'site_code': 'TCGA-06-2557'}, {'site_code': 'TCGA-06-2558'}, {'site_code': 'TCGA-06-2559'}, {'site_code': 'TCGA-06-2561'}, {'site_code': 'TCGA-06-2562'}, {'site_code': 'TCGA-06-2563'}, {'site_code': 'TCGA-06-2564'}, {'site_code': 'TCGA-06-2565'}, {'site_code': 'TCGA-06-2567'}, {'site_code': 'TCGA-06-2569'}, {'site_code': 'TCGA-06-2570'}, {'site_code': 'TCGA-06-5408'}, {'site_code': 'TCGA-06-5410'}, {'site_code': 'TCGA-06-5411'}, {'site_code': 'TCGA-06-5412'}, {'site_code': 'TCGA-06-5413'}, {'site_code': 'TCGA-06-5414'}, {'site_code': 'TCGA-06-5415'}, {'site_code': 'TCGA-06-5416'}], 'var_functions.query_db:20': [{'total_records': '10761'}], 'var_functions.query_db:22': [{'ParticipantBarcode': 'TCGA-AB-2908', 'SampleBarcode': 'TCGA-AB-2908-03A', 'AliquotBarcode': 'TCGA-AB-2908-03A-01T-0740-13', 'SampleTypeLetterCode': 'TB', 'SampleType': 'Primary Blood Derived Cancer - Peripheral Blood', 'Symbol': 'IGF2', 'Entrez': '3481', 'normalized_count': '167.272646747735'}, {'ParticipantBarcode': 'TCGA-19-5960', 'SampleBarcode': 'TCGA-19-5960-01A', 'AliquotBarcode': 'TCGA-19-5960-01A-11R-1850-01', 'SampleTypeLetterCode': 'TP', 'SampleType': 'Primary solid Tumor', 'Symbol': 'IGF2', 'Entrez': '3481', 'normalized_count': '185.236'}, {'ParticipantBarcode': 'TCGA-21-1071', 'SampleBarcode': 'TCGA-21-1071-01A', 'AliquotBarcode': 'TCGA-21-1071-01A-01R-0692-07', 'SampleTypeLetterCode': 'TP', 'SampleType': 'Primary solid Tumor', 'Symbol': 'IGF2', 'Entrez': '3481', 'normalized_count': '80.6827'}, {'ParticipantBarcode': 'TCGA-30-1862', 'SampleBarcode': 'TCGA-30-1862-01A', 'AliquotBarcode': 'TCGA-30-1862-01A-02R-1568-13', 'SampleTypeLetterCode': 'TP', 'SampleType': 'Primary solid Tumor', 'Symbol': 'IGF2', 'Entrez': '3481', 'normalized_count': '13105.3695494317'}, {'ParticipantBarcode': 'TCGA-66-2795', 'SampleBarcode': 'TCGA-66-2795-01A', 'AliquotBarcode': 'TCGA-66-2795-01A-02R-0980-07', 'SampleTypeLetterCode': 'TP', 'SampleType': 'Primary solid Tumor', 'Symbol': 'IGF2', 'Entrez': '3481', 'normalized_count': '613.474'}, {'ParticipantBarcode': 'TCGA-A8-A082', 'SampleBarcode': 'TCGA-A8-A082-01A', 'AliquotBarcode': 'TCGA-A8-A082-01A-11R-A00Z-07', 'SampleTypeLetterCode': 'TP', 'SampleType': 'Primary solid Tumor', 'Symbol': 'IGF2', 'Entrez': '3481', 'normalized_count': '630.54'}, {'ParticipantBarcode': 'TCGA-B5-A3FA', 'SampleBarcode': 'TCGA-B5-A3FA-01A', 'AliquotBarcode': 'TCGA-B5-A3FA-01A-11R-A19W-07', 'SampleTypeLetterCode': 'TP', 'SampleType': 'Primary solid Tumor', 'Symbol': 'IGF2', 'Entrez': '3481', 'normalized_count': '423.628'}, {'ParticipantBarcode': 'TCGA-BH-A1EX', 'SampleBarcode': 'TCGA-BH-A1EX-01A', 'AliquotBarcode': 'TCGA-BH-A1EX-01A-11R-A13Q-07', 'SampleTypeLetterCode': 'TP', 'SampleType': 'Primary solid Tumor', 'Symbol': 'IGF2', 'Entrez': '3481', 'normalized_count': '1151.13'}, {'ParticipantBarcode': 'TCGA-BT-A20O', 'SampleBarcode': 'TCGA-BT-A20O-01A', 'AliquotBarcode': 'TCGA-BT-A20O-01A-21R-A14Y-07', 'SampleTypeLetterCode': 'TP', 'SampleType': 'Primary solid Tumor', 'Symbol': 'IGF2', 'Entrez': '3481', 'normalized_count': '369.106'}, {'ParticipantBarcode': 'TCGA-CD-5799', 'SampleBarcode': 'TCGA-CD-5799-01A', 'AliquotBarcode': 'TCGA-CD-5799-01A-11R-1602-13', 'SampleTypeLetterCode': 'TP', 'SampleType': 'Primary solid Tumor', 'Symbol': 'IGF2', 'Entrez': '3481', 'normalized_count': '3936.02070028943'}], 'var_functions.query_db:24': [], 'var_functions.query_db:26': [{'diagnosis': 'Lung Adenocarcinoma', 'count': '514'}, {'diagnosis': 'Lung Squamous Cell Carcinoma', 'count': '490'}], 'var_functions.query_db:38': 'file_storage/functions.query_db:38.json', 'var_functions.query_db:40': [], 'var_functions.query_db:42': [{'icd_o_3_site': 'C50.9', 'count': '1079'}, {'icd_o_3_site': 'C64.9', 'count': '871'}, {'icd_o_3_site': 'C71.9', 'count': '646'}, {'icd_o_3_site': 'C56.9', 'count': '579'}, {'icd_o_3_site': 'C34.1', 'count': '553'}, {'icd_o_3_site': 'C54.1', 'count': '551'}, {'icd_o_3_site': 'C73.9', 'count': '505'}, {'icd_o_3_site': 'C61.9', 'count': '495'}, {'icd_o_3_site': 'C71.0', 'count': '437'}, {'icd_o_3_site': 'C22.0', 'count': '376'}, {'icd_o_3_site': 'C34.3', 'count': '351'}, {'icd_o_3_site': 'C53.9', 'count': '300'}, {'icd_o_3_site': 'C67.9', 'count': '237'}, {'icd_o_3_site': 'C16.3', 'count': '156'}, {'icd_o_3_site': 'C74.9', 'count': '145'}, {'icd_o_3_site': 'C25.0', 'count': '140'}, {'icd_o_3_site': 'C62.9', 'count': '134'}, {'icd_o_3_site': 'C02.9', 'count': '129'}, {'icd_o_3_site': 'C15.5', 'count': '122'}, {'icd_o_3_site': 'C32.9', 'count': '118'}, {'icd_o_3_site': 'C48.0', 'count': '116'}, {'icd_o_3_site': 'C16.0', 'count': '112'}, {'icd_o_3_site': 'C18.7', 'count': '107'}, {'icd_o_3_site': 'C18.2', 'count': '102'}, {'icd_o_3_site': 'C16.2', 'count': '101'}, {'icd_o_3_site': 'C18.9', 'count': '100'}, {'icd_o_3_site': 'C77.3', 'count': '96'}, {'icd_o_3_site': 'C74.0', 'count': '93'}, {'icd_o_3_site': 'C38.4', 'count': '86'}, {'icd_o_3_site': 'C37.9', 'count': '85'}, {'icd_o_3_site': 'C20.9', 'count': '84'}, {'icd_o_3_site': 'C18.0', 'count': '83'}, {'icd_o_3_site': 'C49.2', 'count': '74'}, {'icd_o_3_site': 'C19.9', 'count': '73'}, {'icd_o_3_site': 'C14.8', 'count': '69'}, {'icd_o_3_site': 'C69.3', 'count': '67'}, {'icd_o_3_site': 'C67.2', 'count': '65'}, {'icd_o_3_site': 'C34.9', 'count': '57'}, {'icd_o_3_site': 'C04.9', 'count': '54'}, {'icd_o_3_site': 'C77.4', 'count': '54'}, {'icd_o_3_site': 'C16.1', 'count': '53'}, {'icd_o_3_site': 'C44.5', 'count': '53'}, {'icd_o_3_site': 'C67.4', 'count': '50'}, {'icd_o_3_site': 'C55.9', 'count': '47'}, {'icd_o_3_site': 'C44.9', 'count': '43'}, {'icd_o_3_site': 'C77.9', 'count': '43'}, {'icd_o_3_site': 'C09.9', 'count': '42'}, {'icd_o_3_site': 'C15.4', 'count': '42'}, {'icd_o_3_site': 'C38.1', 'count': '38'}, {'icd_o_3_site': 'C34.2', 'count': '37'}], 'var_functions.query_db:48': 'file_storage/functions.query_db:48.json', 'var_functions.query_db:50': 'file_storage/functions.query_db:50.json', 'var_functions.query_db:68': [{'ParticipantBarcode': 'TCGA-EM-A3AQ'}, {'ParticipantBarcode': 'TCGA-EE-A2M5'}, {'ParticipantBarcode': 'TCGA-HC-A632'}, {'ParticipantBarcode': 'TCGA-P4-AAVM'}, {'ParticipantBarcode': 'TCGA-22-A5C4'}, {'ParticipantBarcode': 'TCGA-A2-A259'}, {'ParticipantBarcode': 'TCGA-AR-A0TP'}, {'ParticipantBarcode': 'TCGA-HC-A9TH'}, {'ParticipantBarcode': 'TCGA-E9-A1N8'}, {'ParticipantBarcode': 'TCGA-XU-A931'}, {'ParticipantBarcode': 'TCGA-IG-A51D'}, {'ParticipantBarcode': 'TCGA-55-8092'}, {'ParticipantBarcode': 'TCGA-CR-6472'}, {'ParticipantBarcode': 'TCGA-CV-5436'}, {'ParticipantBarcode': 'TCGA-21-1071'}, {'ParticipantBarcode': 'TCGA-30-1862'}, {'ParticipantBarcode': 'TCGA-66-2795'}, {'ParticipantBarcode': 'TCGA-PA-A5YG'}, {'ParticipantBarcode': 'TCGA-FS-A1ZC'}, {'ParticipantBarcode': 'TCGA-BH-A0BP'}, {'ParticipantBarcode': 'TCGA-HT-7478'}, {'ParticipantBarcode': 'TCGA-75-7030'}, {'ParticipantBarcode': 'TCGA-AG-4021'}, {'ParticipantBarcode': 'TCGA-FE-A235'}, {'ParticipantBarcode': 'TCGA-OR-A5LS'}, {'ParticipantBarcode': 'TCGA-AA-3693'}, {'ParticipantBarcode': 'TCGA-34-7107'}, {'ParticipantBarcode': 'TCGA-CV-7433'}, {'ParticipantBarcode': 'TCGA-DX-A3U8'}, {'ParticipantBarcode': 'TCGA-BP-4326'}, {'ParticipantBarcode': 'TCGA-C5-A2M2'}, {'ParticipantBarcode': 'TCGA-AC-A2FO'}, {'ParticipantBarcode': 'TCGA-BR-6802'}, {'ParticipantBarcode': 'TCGA-AQ-A1H3'}, {'ParticipantBarcode': 'TCGA-EJ-7791'}, {'ParticipantBarcode': 'TCGA-97-7938'}, {'ParticipantBarcode': 'TCGA-AJ-A23O'}, {'ParticipantBarcode': 'TCGA-S7-A7X0'}, {'ParticipantBarcode': 'TCGA-V1-A9OH'}, {'ParticipantBarcode': 'TCGA-EW-A1PB'}, {'ParticipantBarcode': 'TCGA-CN-5364'}, {'ParticipantBarcode': 'TCGA-CV-6953'}, {'ParticipantBarcode': 'TCGA-DU-7007'}, {'ParticipantBarcode': 'TCGA-DU-A7TI'}, {'ParticipantBarcode': 'TCGA-2G-AAGI'}, {'ParticipantBarcode': 'TCGA-86-A4JF'}, {'ParticipantBarcode': 'TCGA-WB-A816'}, {'ParticipantBarcode': 'TCGA-D1-A2G7'}, {'ParticipantBarcode': 'TCGA-C5-A1BM'}, {'ParticipantBarcode': 'TCGA-24-1557'}, {'ParticipantBarcode': 'TCGA-ZX-AA5X'}, {'ParticipantBarcode': 'TCGA-DB-A64V'}, {'ParticipantBarcode': 'TCGA-BT-A20N'}, {'ParticipantBarcode': 'TCGA-FW-A3TU'}, {'ParticipantBarcode': 'TCGA-3G-AB0Q'}, {'ParticipantBarcode': 'TCGA-FF-8062'}, {'ParticipantBarcode': 'TCGA-EJ-A65E'}, {'ParticipantBarcode': 'TCGA-OR-A5J5'}, {'ParticipantBarcode': 'TCGA-D7-6518'}, {'ParticipantBarcode': 'TCGA-DD-AAD5'}, {'ParticipantBarcode': 'TCGA-CJ-4916'}, {'ParticipantBarcode': 'TCGA-CV-5442'}, {'ParticipantBarcode': 'TCGA-DD-AAD1'}, {'ParticipantBarcode': 'TCGA-AB-2935'}, {'ParticipantBarcode': 'TCGA-HT-7860'}, {'ParticipantBarcode': 'TCGA-GN-A26D'}, {'ParticipantBarcode': 'TCGA-DJ-A3UM'}, {'ParticipantBarcode': 'TCGA-G7-6790'}, {'ParticipantBarcode': 'TCGA-B0-4828'}, {'ParticipantBarcode': 'TCGA-WC-A87T'}, {'ParticipantBarcode': 'TCGA-G9-6351'}, {'ParticipantBarcode': 'TCGA-78-7633'}, {'ParticipantBarcode': 'TCGA-X7-A8M0'}, {'ParticipantBarcode': 'TCGA-BA-A6DD'}, {'ParticipantBarcode': 'TCGA-HU-A4GD'}, {'ParticipantBarcode': 'TCGA-C5-A2LS'}, {'ParticipantBarcode': 'TCGA-95-7043'}, {'ParticipantBarcode': 'TCGA-78-7540'}, {'ParticipantBarcode': 'TCGA-EA-A1QT'}, {'ParticipantBarcode': 'TCGA-XQ-A8TA'}, {'ParticipantBarcode': 'TCGA-BJ-A2N9'}, {'ParticipantBarcode': 'TCGA-DK-AA6T'}, {'ParticipantBarcode': 'TCGA-AF-6136'}, {'ParticipantBarcode': 'TCGA-F7-A50J'}, {'ParticipantBarcode': 'TCGA-EJ-7315'}, {'ParticipantBarcode': 'TCGA-DJ-A1QQ'}, {'ParticipantBarcode': 'TCGA-S9-A7J1'}, {'ParticipantBarcode': 'TCGA-XU-AAY1'}, {'ParticipantBarcode': 'TCGA-EL-A3ZR'}, {'ParticipantBarcode': 'TCGA-DI-A1BU'}, {'ParticipantBarcode': 'TCGA-F6-A8O3'}, {'ParticipantBarcode': 'TCGA-66-2767'}, {'ParticipantBarcode': 'TCGA-ED-A7PX'}, {'ParticipantBarcode': 'TCGA-WB-A81H'}, {'ParticipantBarcode': 'TCGA-B6-A402'}, {'ParticipantBarcode': 'TCGA-E2-A3DX'}, {'ParticipantBarcode': 'TCGA-55-8620'}, {'ParticipantBarcode': 'TCGA-94-8035'}, {'ParticipantBarcode': 'TCGA-BH-A0E9'}, {'ParticipantBarcode': 'TCGA-DD-AACG'}], 'var_functions.execute_python:70': {'status': 'check complete'}, 'var_functions.query_db:72': 'file_storage/functions.query_db:72.json', 'var_functions.query_db:82': 'file_storage/functions.query_db:82.json'}
+
+exec(code, env_args)

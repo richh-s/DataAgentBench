@@ -1,0 +1,106 @@
+code = """import json
+import re
+
+# Load all publications
+file_path = str(locals()['var_functions.query_db:24'])
+with open(file_path, 'r') as f:
+    all_publications = json.load(f)
+
+# Load UNIV CALIFORNIA publications
+uc_file_path = str(locals()['var_functions.query_db:16'])
+with open(uc_file_path, 'r') as f:
+    uc_publications = json.load(f)
+
+# Extract UNIV CALIFORNIA publication numbers
+uc_pub_numbers = set()
+uc_pub_to_cpc = {}
+
+for pub in uc_publications:
+    patents_info = pub['Patents_info']
+    pub_num_match = re.search(r'pub\. number ([A-Z]{2}-[A-Z0-9-]+)', patents_info)
+    if pub_num_match:
+        pub_number = pub_num_match.group(1)
+        uc_pub_numbers.add(pub_number)
+        
+        # Store CPC codes (deduplicated)
+        if pub['cpc']:
+            try:
+                cpc_data = json.loads(pub['cpc'])
+                cpc_codes = list(set([item['code'] for item in cpc_data if item.get('code')]))
+                uc_pub_to_cpc[pub_number] = cpc_codes
+            except:
+                uc_pub_to_cpc[pub_number] = []
+        else:
+            uc_pub_to_cpc[pub_number] = []
+
+# Now search through ALL publications for citations to UC patents
+assignee_citations = {}  # {assignee: {uc_pub_number: set(cpc_codes)}}
+citation_matches = []  # For debugging
+
+for pub in all_publications:
+    patents_info = pub['Patents_info']
+    
+    # Skip UNIV CALIFORNIA patents themselves
+    if 'UNIV CALIFORNIA' in patents_info:
+        continue
+    
+    # Extract assignee
+    assignee = 'Unknown'
+    patterns = [
+        r'^(.+?) holds the',
+        r'is owned by (.+?)(?: and|$)',
+        r'is assigned to (.+?)(?: and|$)',
+        r'belongs to (.+?)(?: and|$)',
+        r'is belonging to (.+?)(?: and|$)'
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, patents_info)
+        if match:
+            assignee = match.group(1).strip()
+            break
+    
+    # Parse citations
+    if pub['citation'] and pub['citation'] != '[]':
+        try:
+            citations = json.loads(pub['citation'])
+            for citation in citations:
+                cited_pub_num = citation.get('publication_number', '')
+                if cited_pub_num and cited_pub_num in uc_pub_numbers:
+                    # Found a match!
+                    if assignee not in assignee_citations:
+                        assignee_citations[assignee] = {}
+                    
+                    if cited_pub_num not in assignee_citations[assignee]:
+                        assignee_citations[assignee][cited_pub_num] = set()
+                    
+                    # Add CPC codes from the cited UC patent
+                    cpc_codes = uc_pub_to_cpc.get(cited_pub_num, [])
+                    assignee_citations[assignee][cited_pub_num].update(cpc_codes)
+                    
+                    citation_matches.append({
+                        'assignee': assignee,
+                        'cited_uc_patent': cited_pub_num,
+                        'cpc_codes': cpc_codes
+                    })
+        except Exception as e:
+            continue
+
+# Convert sets to lists for JSON serialization
+assignee_citations_json = {}
+for assignee, uc_pubs in assignee_citations.items():
+    assignee_citations_json[assignee] = {}
+    for uc_pub, cpc_set in uc_pubs.items():
+        assignee_citations_json[assignee][uc_pub] = sorted(list(cpc_set))
+
+print('__RESULT__:')
+print(json.dumps({
+    'total_matching_citations': len(citation_matches),
+    'unique_assignees': len(assignee_citations_json),
+    'assignees_sample': sorted(list(assignee_citations_json.keys())),
+    'citation_matches_sample': citation_matches[:10]
+}))"""
+
+env_args = {'var_functions.list_db:0': ['publicationinfo'], 'var_functions.query_db:2': 'file_storage/functions.query_db:2.json', 'var_functions.query_db:10': 'file_storage/functions.query_db:10.json', 'var_functions.query_db:12': 'file_storage/functions.query_db:12.json', 'var_functions.query_db:14': 'file_storage/functions.query_db:14.json', 'var_functions.query_db:16': 'file_storage/functions.query_db:16.json', 'var_functions.execute_python:20': {'total_records': 169, 'sample_patent': {'Patents_info': 'In US, the application (number US-202117472182-A) is owned by UNIV CALIFORNIA and has pub. number US-2022074631-A1.', 'citation': '[\n  {\n    "application_number": "",\n    "category": "SEA",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-4599677-A",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "SEA",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-2015129765-A1",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "SEA",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "FR-3105380-A1",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "SEA",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-11466906-B2",\n    "type": ""\n  }\n]', 'cpc': '[\n  {\n    "code": "Y02B30/00",\n    "first": false,\n    "inventive": false,\n    "tree": []\n  },\n  {\n    "code": "F25B2321/001",\n    "first": false,\n    "inventive": false,\n    "tree": []\n  },\n  {\n    "code": "F25B21/00",\n    "first": true,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "F28D15/00",\n    "first": false,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "F25B21/00",\n    "first": true,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "F25B2321/001",\n    "first": false,\n    "inventive": false,\n    "tree": []\n  },\n  {\n    "code": "F25B2321/001",\n    "first": false,\n    "inventive": false,\n    "tree": []\n  },\n  {\n    "code": "F28D15/00",\n    "first": false,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "F25B21/00",\n    "first": true,\n    "inventive": true,\n    "tree": []\n  }\n]', 'publication_date': '2022, March 10th'}}, 'var_functions.query_db:22': [{'symbol': 'A01K2227/108', 'titleFull': 'Swine'}, {'symbol': 'A01K2227/105', 'titleFull': 'Murine'}, {'symbol': 'A01K2227/101', 'titleFull': 'Bovine'}, {'symbol': 'A01K2227/107', 'titleFull': 'Rabbit'}, {'symbol': 'A01K2227/103', 'titleFull': 'Ovine'}], 'var_functions.query_db:24': 'file_storage/functions.query_db:24.json', 'var_functions.execute_python:26': {'total_uc_patents': 169, 'uc_pub_numbers_sample': ['US-2006292670-A1', 'US-2019328740-A1', 'US-2023279470-A1', 'AU-2010214112-B2', 'US-2017145219-A1', 'AU-2019275518-B2', 'CN-102067370-B', 'US-6767662-B2', 'AU-2015364602-B2', 'CN-102584712-A']}, 'var_functions.execute_python:28': {'total_citing_assignees': 0, 'citing_assignees_sample': [], 'uc_patents_cited': 59}, 'var_functions.execute_python:30': [{'index': 0, 'patents_info': 'PANASONIC IP MAN CO LTD holds the US patent application (ID US-201916293577-A), with publication num...', 'has_citation': True, 'citation_preview': '[\n  {\n    "application_number": "",\n    "category": "APP",\n    "filing_date": 0,\n    "npl_text": "",...'}, {'index': 1, 'patents_info': 'GLASSNER RUDOLF holds the US patent filing (application no. US-201916355911-A), with publication num...', 'has_citation': True, 'citation_preview': '[\n  {\n    "application_number": "",\n    "category": "APP",\n    "filing_date": 0,\n    "npl_text": "",...'}, {'index': 2, 'patents_info': 'In US, the application (ID US-201916369247-A) is owned by COVESTRO LLC and has publication no. US-11...', 'has_citation': True, 'citation_preview': '[\n  {\n    "application_number": "",\n    "category": "APP",\n    "filing_date": 0,\n    "npl_text": "",...'}, {'index': 3, 'patents_info': 'In US, the patent filing (app. number US-201916369879-A) is assigned to HOMOLOGY MEDICINES INC and h...', 'has_citation': True, 'citation_preview': '[\n  {\n    "application_number": "",\n    "category": "APP",\n    "filing_date": 0,\n    "npl_text": "",...'}, {'index': 4, 'patents_info': 'In US, the patent application (no. US-201916373467-A) is owned by APPLETON GRP LLC and has publicati...', 'has_citation': True, 'citation_preview': '[\n  {\n    "application_number": "",\n    "category": "APP",\n    "filing_date": 0,\n    "npl_text": "",...'}, {'index': 5, 'patents_info': 'MEAD JOHNSON NUTRITION CO holds the US patent application (no. US-201916377667-A), with publication ...', 'has_citation': True, 'citation_preview': '[\n  {\n    "application_number": "",\n    "category": "APP",\n    "filing_date": 0,\n    "npl_text": "",...'}, {'index': 6, 'patents_info': 'WATERS TECHNOLOGIES CORP holds the US application (no. US-201916384272-A), with pub. number US-11169...', 'has_citation': True, 'citation_preview': '[\n  {\n    "application_number": "",\n    "category": "SEA",\n    "filing_date": 0,\n    "npl_text": "",...'}, {'index': 7, 'patents_info': 'The US patent application (no. US-201916389545-A) is assigned to MODERNATX INC and has pub. number U...', 'has_citation': True, 'citation_preview': '[\n  {\n    "application_number": "",\n    "category": "APP",\n    "filing_date": 0,\n    "npl_text": "",...'}, {'index': 8, 'patents_info': 'Patent application (ID US-201916393628-A) from US, owned by YOBS TECH INC, with publication no. US-1...', 'has_citation': True, 'citation_preview': '[\n  {\n    "application_number": "",\n    "category": "SEA",\n    "filing_date": 0,\n    "npl_text": "",...'}, {'index': 9, 'patents_info': 'The US patent filing (application number US-201916395813-A) is owned by HONDA MOTOR CO LTD and has p...', 'has_citation': True, 'citation_preview': '[\n  {\n    "application_number": "",\n    "category": "SEA",\n    "filing_date": 0,\n    "npl_text": "",...'}, {'index': 10, 'patents_info': 'Patent filing (application number US-201916399064-A) from US, held by INTEL CORP, with pub. number U...', 'has_citation': True, 'citation_preview': '[\n  {\n    "application_number": "",\n    "category": "SEA",\n    "filing_date": 0,\n    "npl_text": "",...'}, {'index': 11, 'patents_info': 'UNIV EMORY holds the US patent filing (application no. US-201916400501-A), with pub. number US-11136...', 'has_citation': True, 'citation_preview': '[\n  {\n    "application_number": "",\n    "category": "APP",\n    "filing_date": 0,\n    "npl_text": "",...'}, {'index': 12, 'patents_info': 'In US, the patent filing (application number US-201916412428-A) is belonging to INNOLUX CORP and has...', 'has_citation': True, 'citation_preview': '[\n  {\n    "application_number": "",\n    "category": "SEA",\n    "filing_date": 0,\n    "npl_text": "",...'}, {'index': 13, 'patents_info': 'Application (ID US-201916412740-A) from US, assigned to LEGACY RES AND DEVELOPMENT GROUP LLC, with p...', 'has_citation': True, 'citation_preview': '[\n  {\n    "application_number": "",\n    "category": "APP",\n    "filing_date": 0,\n    "npl_text": "",...'}, {'index': 14, 'patents_info': 'EBAY INC holds the US application (no. US-201916433866-A), with publication number US-11182846-B2.', 'has_citation': True, 'citation_preview': '[\n  {\n    "application_number": "",\n    "category": "SEA",\n    "filing_date": 0,\n    "npl_text": "",...'}, {'index': 15, 'patents_info': 'In US, the application (ID US-201916435109-A) is owned by MAHLE INT GMBH and has pub. number US-1113...', 'has_citation': True, 'citation_preview': '[\n  {\n    "application_number": "",\n    "category": "APP",\n    "filing_date": 0,\n    "npl_text": "",...'}, {'index': 16, 'patents_info': 'The US patent application (number US-201916441420-A) is owned by RLW VIRTUAL SOLUTIONS LLC and has p...', 'has_citation': True, 'citation_preview': '[\n  {\n    "application_number": "",\n    "category": "SEA",\n    "filing_date": 0,\n    "npl_text": "",...'}, {'index': 17, 'patents_info': 'The US application (number US-201916442434-A) is assigned to BHANDARI RAJNEESH and has publication n...', 'has_citation': True, 'citation_preview': '[\n  {\n    "application_number": "",\n    "category": "SEA",\n    "filing_date": 0,\n    "npl_text": "",...'}, {'index': 18, 'patents_info': 'TANDEM DIABETES CARE INC holds the US patent filing (app. number US-201916444452-A), with publicatio...', 'has_citation': True, 'citation_preview': '[\n  {\n    "application_number": "",\n    "category": "APP",\n    "filing_date": 0,\n    "npl_text": "",...'}, {'index': 19, 'patents_info': 'Patent application (number US-201916445265-A) from US, belonging to MURATA MANUFACTURING CO, with pu...', 'has_citation': True, 'citation_preview': '[\n  {\n    "application_number": "",\n    "category": "APP",\n    "filing_date": 0,\n    "npl_text": "",...'}], 'var_functions.execute_python:32': {'total_uc_publications': 59, 'uc_pub_numbers_sample': ['AU-2003297741-A1', 'AU-2007297661-A1', 'AU-2008349842-A1', 'AU-2010214112-B2', 'AU-2015364602-B2', 'AU-2019275518-B2', 'AU-6535890-A', 'CA-2298540-A1', 'CA-2550552-A1', 'CA-2562038-C', 'CN-100339724-C', 'CN-102067370-B', 'CN-102584712-A', 'CN-103189548-A', 'EP-0826155-A4', 'EP-1212462-A1', 'EP-4284234-A1', 'HK-1250569-A1', 'ID-23426-A', 'IL-244029-A0'], 'uc_cpc_sample': {'US-2022074631-A1': ['Y02B30/00', 'F25B2321/001', 'F25B21/00', 'F28D15/00', 'F25B21/00', 'F25B2321/001', 'F25B2321/001', 'F28D15/00', 'F25B21/00'], 'TW-201925402-A': ['C09J11/04', 'C08K3/08', 'C08K2201/001', 'C09J9/02', 'C09D11/52', 'C08K7/00', 'C09D11/322', 'C09J9/02', 'C08K2201/011', 'C09D11/037', 'C08K2003/0806', 'B82Y30/00', 'B82Y30/00', 'C08K2201/011', 'C09J11/04', 'C08K2003/0806', 'C09J2463/00', 'C08K3/042', 'C09D11/52', 'B82Y40/00', 'B82Y40/00', 'C08K3/042', 'C09D11/322', 'C08K7/00', 'C09D11/037', 'C08K2201/001', 'C08K3/08', 'C09J9/02', 'C09D11/037', 'C08K3/042', 'C08K2003/0806', 'C09J11/04', 'C08K2201/011', 'C09D11/322', 'C09D11/52', 'C08K2201/001', 'B82Y40/00'], 'AU-2019275518-B2': ['A61K31/357', 'A61K31/34', 'A61K31/08', 'A61D7/04', 'A61K31/025', 'A61K31/357', 'A61P43/00', 'A61P25/20', 'A61K31/045', 'A61K31/02', 'A61P23/00', 'A61K9/007', 'A61K31/341', 'A61M16/01', 'A61D7/04', 'A61K31/351', 'A61K31/351', 'A61K31/34', 'A61K31/08', 'A61K31/025', 'A61P43/00', 'A61K31/02', 'A61K31/045', 'A61P11/00', 'A61K31/357', 'A61P23/00', 'A61P25/20', 'A61M16/01', 'A61K31/357', 'A61P11/00', 'A61K9/007', 'A61K31/025', 'A61K31/015', 'A61K31/341', 'A61K31/025', 'A61K31/045', 'A61K31/341', 'A61K31/351', 'A61K31/357', 'A61K31/08', 'A61K9/007', 'A61P23/00', 'A61K31/34', 'A61K31/015']}}, 'var_functions.execute_python:34': {'uc_pub_numbers_sample': ['AU-2003297741-A1', 'AU-2007297661-A1', 'AU-2008349842-A1', 'AU-2010214112-B2', 'AU-2015364602-B2', 'AU-2019275518-B2', 'AU-6535890-A', 'CA-2298540-A1', 'CA-2550552-A1', 'CA-2562038-C'], 'citation_samples': [{'index': 0, 'assignee': 'PANASONIC IP MAN CO LTD', 'citation_pub_numbers': ['JP-H01209663-A', 'JP-H0737617-A', 'WO-9744842-A1', 'JP-H09330720-A', 'JP-H10294100-A']}, {'index': 1, 'assignee': 'GLASSNER RUDOLF', 'citation_pub_numbers': ['DE-3533193-A1', 'US-4856371-A', 'US-7322901-B2', 'US-2009017960-A1', 'US-2015330491-A1']}, {'index': 2, 'assignee': 'COVESTRO LLC', 'citation_pub_numbers': ['JP-S53139639-A', 'US-4218543-A', 'US-5391344-A', 'US-6156811-A', 'US-6197242-B1']}, {'index': 3, 'assignee': 'HOMOLOGY MEDICINES INC', 'citation_pub_numbers': ['EP-0126544-A2', 'EP-0161788-A1', 'US-5252479-A', 'US-5474935-A', 'WO-9608560-A1']}, {'index': 4, 'assignee': 'APPLETON GRP LLC', 'citation_pub_numbers': ['US-4051340-A', 'US-4454397-A', 'EP-0809270-A2', 'US-6020801-A', 'US-6396014-B1']}, {'index': 5, 'assignee': 'MEAD JOHNSON NUTRITION CO', 'citation_pub_numbers': ['US-2002150679-A1', 'US-6495344-B1', 'WO-2004012727-A1', 'US-2004132819-A1', 'EP-1599215-A1']}, {'index': 6, 'assignee': 'WATERS TECHNOLOGIES CORP', 'citation_pub_numbers': ['US-4936974-A', 'US-4982097-A', 'US-5376789-A', 'WO-9534089-A1', 'US-2005092917-A1']}, {'index': 7, 'assignee': 'MODERNATX INC', 'citation_pub_numbers': ['US-3906092-A', 'WO-8705326-A1', 'WO-9011092-A1', 'WO-9314778-A1', 'WO-9524485-A2']}, {'index': 8, 'assignee': 'Unknown', 'citation_pub_numbers': ['US-2002045154-A1', 'US-6731307-B1', 'US-2012002848-A1', 'US-8719006-B2', 'US-8837687-B2']}, {'index': 9, 'assignee': 'HONDA MOTOR CO LTD', 'citation_pub_numbers': ['US-2080574-A', 'US-2962121-A', 'US-3013628-A', 'US-3048959-A', 'US-3078650-A']}], 'total_uc_pubs': 59}}
+
+exec(code, env_args)

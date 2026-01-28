@@ -1,0 +1,101 @@
+code = """import json, math
+# Collect all var_call_* variables
+g = globals()
+var_keys = [k for k in g.keys() if k.startswith('var_call_')]
+results = {}
+
+for k in var_keys:
+    val = g[k]
+    # If val is a filename (string ending with .json), load it
+    if isinstance(val, str) and val.endswith('.json'):
+        try:
+            with open(val, 'r') as f:
+                recs = json.load(f)
+        except Exception:
+            # fallback: skip
+            continue
+    else:
+        recs = val
+    # recs may be a list of dicts
+    if isinstance(recs, list):
+        for rec in recs:
+            if isinstance(rec, dict) and 'symbol' in rec:
+                sym = rec.get('symbol')
+                up = rec.get('up')
+                down = rec.get('down')
+                # convert to float if possible
+                def conv(x):
+                    if x is None:
+                        return None
+                    if isinstance(x, (int, float)):
+                        return float(x)
+                    try:
+                        # handle string 'nan'
+                        if isinstance(x, str) and x.lower()=='nan':
+                            return None
+                        return float(x)
+                    except Exception:
+                        return None
+                upn = conv(up)
+                downn = conv(down)
+                results[sym] = {'up': upn, 'down': downn}
+
+# Load company_map from the earlier prepared var_call if present
+company_map = {}
+# find the var that contains 'company_map' key
+for k in var_keys:
+    val = g[k]
+    if isinstance(val, str) and val.endswith('.json'):
+        try:
+            with open(val,'r') as f:
+                recs = json.load(f)
+        except Exception:
+            continue
+    else:
+        recs = val
+    if isinstance(recs, dict) and 'company_map' in recs:
+        company_map = recs['company_map']
+        break
+
+# If not found, also check for the specific var_call key from earlier
+if not company_map and 'var_call_hB51LNj4HBIPXgHh9EP2EY5p' in g:
+    try:
+        company_map = g['var_call_hB51LNj4HBIPXgHh9EP2EY5p']
+        if isinstance(company_map, str) and company_map.endswith('.json'):
+            with open(company_map,'r') as f:
+                company_map = json.load(f)
+        # company_map might be the whole dict with 'symbols' and 'company_map'
+        if isinstance(company_map, dict) and 'company_map' in company_map:
+            company_map = company_map['company_map']
+    except Exception:
+        company_map = {}
+
+# Now filter symbols with up>down (both not None)
+valid = []
+for sym, vals in results.items():
+    up = vals['up']
+    down = vals['down']
+    if up is None or down is None:
+        continue
+    if up > down:
+        valid.append((sym, up, down, up-down))
+
+# Sort by up desc, then by up-down desc
+valid_sorted = sorted(valid, key=lambda x: ( -x[1], -x[3] ))
+
+top5 = valid_sorted[:5]
+# Map to company names
+output_names = []
+for sym, up, down, diff in top5:
+    name = company_map.get(sym)
+    if not name:
+        name = sym
+    output_names.append(name)
+
+# Print result in required format
+print('__RESULT__:')
+print(json.dumps(output_names))"""
+
+env_args = {'var_call_HGxGds5f8SCXsL6NTr9BiGCQ': 'file_storage/call_HGxGds5f8SCXsL6NTr9BiGCQ.json', 'var_call_v1NFBApJOAiRiTEJJ90yq5aL': 'file_storage/call_v1NFBApJOAiRiTEJJ90yq5aL.json', 'var_call_hB51LNj4HBIPXgHh9EP2EY5p': 'file_storage/call_hB51LNj4HBIPXgHh9EP2EY5p.json', 'var_call_LOs7xwMqOGANWKfKtiyXBOHT': [{'symbol': 'AEFC', 'up': 'nan', 'down': 'nan'}], 'var_call_fNzizg2ZCQlRo9iKFdhTXoOo': [{'symbol': 'AIN', 'up': '143.0', 'down': '101.0'}], 'var_call_XqrfEDtLeT8UFYnq4k9Fk2YH': [{'symbol': 'AIV', 'up': '118.0', 'down': '128.0'}], 'var_call_rnmxscfk0jcLvYMy1CoQrzEk': [{'symbol': 'AIZP', 'up': 'nan', 'down': 'nan'}], 'var_call_gDwArBubRmpq6nWnaPJgHz5h': [{'symbol': 'AJRD', 'up': '123.0', 'down': '123.0'}], 'var_call_PZim56zkV5W5wp86GC3iNQAL': [{'symbol': 'AL', 'up': '131.0', 'down': '117.0'}], 'var_call_yRlzTVdT7RVxT3WBDrhbHXf3': [{'symbol': 'AMN', 'up': '134.0', 'down': '111.0'}], 'var_call_Gbf1KBkoZszgcBxquYXkFxys': [{'symbol': 'AMP', 'up': '141.0', 'down': '110.0'}], 'var_call_uNAeonLhWgYqOVFaBTQ0r0JM': [{'symbol': 'AMT', 'up': '128.0', 'down': '123.0'}], 'var_call_xhEgbNZBrdx0rRmFQGBBpv4z': [{'symbol': 'ARD', 'up': '80.0', 'down': '119.0'}], 'var_call_uVqpmsV8uxxMUO1jYQ2GM8Hp': [{'symbol': 'ARGD', 'up': '133.0', 'down': '82.0'}], 'var_call_LIoABssTrpVUmi8YAkSHKgDy': [{'symbol': 'ARLO', 'up': 'nan', 'down': 'nan'}], 'var_call_IR6cdyiK4lVybzSeuAOTJTir': [{'symbol': 'ASG', 'up': '110.0', 'down': '110.0'}], 'var_call_uLKmsc80JDx4XberBhHyrSCk': [{'symbol': 'AVA', 'up': '134.0', 'down': '112.0'}], 'var_call_vwj5i9Jt2ODb5lIIYkBFawXo': [{'symbol': 'BANC', 'up': '108.0', 'down': '119.0'}], 'var_call_MUsI0eXGNEGY26l2HTubIAzF': [{'symbol': 'BBU', 'up': '129.0', 'down': '120.0'}], 'var_call_SgJ90VndQXvi2PnmOg4P9ic4': [{'symbol': 'BBVA', 'up': '126.0', 'down': '104.0'}], 'var_call_CFtXGV3Ex6N1WjwDKjJsmQys': [{'symbol': 'BDXA', 'up': '83.0', 'down': '77.0'}], 'var_call_d3fuIbp4aTcPPXbVa5yjGGig': [{'symbol': 'BKH', 'up': '134.0', 'down': '115.0'}], 'var_call_fbrCotSOtGOiIUuZPM1whkU3': [{'symbol': 'BKT', 'up': '105.0', 'down': '97.0'}], 'var_call_2PR8lvUBzyiOfEDEyufsL6a9': [{'symbol': 'BLD', 'up': '131.0', 'down': '120.0'}], 'var_call_ZDgL90kNYLW7D8cHfJdnjCEk': [{'symbol': 'BNS', 'up': '132.0', 'down': '117.0'}], 'var_call_msdWITS9099EdNy6fX6flYMC': [{'symbol': 'BV', 'up': 'nan', 'down': 'nan'}], 'var_call_bBw4XV6ccvgTMXab1OT1ydcX': [{'symbol': 'BZH', 'up': '127.0', 'down': '123.0'}], 'var_call_SWfgAAQIwVKC4SORZ13X8Y4p': [{'symbol': 'CADE', 'up': '88.0', 'down': '83.0'}], 'var_call_35KPQ58KVnEpIIMKupNTEPpH': [{'symbol': 'CAE', 'up': '122.0', 'down': '117.0'}], 'var_call_eu2PIbFU86U3xaLijN6AJeyP': [{'symbol': 'CAF', 'up': '131.0', 'down': '113.0'}], 'var_call_9LEtTcepMCoefEC6kj3ffEMV': [{'symbol': 'CBT', 'up': '128.0', 'down': '122.0'}], 'var_call_zH6aMouNISIbG5UJR618yLUZ': [{'symbol': 'CCC', 'up': 'nan', 'down': 'nan'}], 'var_call_jYcJjxqUjakDrgyGJUxUhLXE': [{'symbol': 'CCZ', 'up': '17.0', 'down': '10.0'}], 'var_call_eYV9pvYTqXedI9wNFsfFbDGG': [{'symbol': 'CHAP', 'up': '34.0', 'down': '23.0'}], 'var_call_cAvDQhMB247i3E5vZUH69AO6': [{'symbol': 'CIA', 'up': '130.0', 'down': '112.0'}], 'var_call_KmKHYv6iT1529xPlKyc5Xd7W': [{'symbol': 'CMA', 'up': '124.0', 'down': '124.0'}], 'var_call_OrvZzipw5XBHpuZNYVNYC7fq': [{'symbol': 'CMI', 'up': '127.0', 'down': '123.0'}], 'var_call_N3Yw8GmFiNGDQRO3YY3dTNue': [{'symbol': 'CMSA', 'up': 'nan', 'down': 'nan'}], 'var_call_0n75YQpCO7fNTT6C1aiDxg8E': [{'symbol': 'CNK', 'up': '128.0', 'down': '122.0'}], 'var_call_5NRNQQdDUC39PEt2lN1Q80JM': [{'symbol': 'COTY', 'up': '124.0', 'down': '123.0'}], 'var_call_oIpW5nG0hdNALOJnmi51cRZl': [{'symbol': 'CRC', 'up': '121.0', 'down': '128.0'}], 'var_call_t0MGnZkhdDhvGry7RqDm2nC2': [{'symbol': 'CRM', 'up': '137.0', 'down': '113.0'}], 'var_call_1XaNLZd8k2TI6AlrL21SadEW': [{'symbol': 'CRS', 'up': '121.0', 'down': '128.0'}], 'var_call_mO7zerUgj0Qt8TECE8KTESEA': [{'symbol': 'CSL', 'up': '131.0', 'down': '119.0'}], 'var_call_HjDMEgxM2j2K3PR3VHKoiOp2': [{'symbol': 'CTS', 'up': '113.0', 'down': '122.0'}], 'var_call_VLPZJAFCsQTkHtGD96kn9QbN': [{'symbol': 'CUBE', 'up': '133.0', 'down': '113.0'}], 'var_call_sdr7386hFuygfuUHW1MdfSuU': [{'symbol': 'CURO', 'up': '9.0', 'down': '7.0'}], 'var_call_g2BfSdQyKXDo8nqVp4m5D49G': [{'symbol': 'CVIA', 'up': 'nan', 'down': 'nan'}], 'var_call_cNACjTANYOdXtBfwUFaxJcQY': [{'symbol': 'CVX', 'up': '118.0', 'down': '132.0'}], 'var_call_rN19jpwxBPOy6uuw4slXIL9Q': [{'symbol': 'CXH', 'up': '126.0', 'down': '91.0'}], 'var_call_7kdXgpXhCDZw8L61e3dFrm1H': [{'symbol': 'DAC', 'up': '66.0', 'down': '115.0'}], 'var_call_gcFKe2F0xexS8KQtGAkG5RPS': [{'symbol': 'DDS', 'up': '128.0', 'down': '123.0'}], 'var_call_LCcA3n20d0ECrQTVih2LfnZ7': [{'symbol': 'DDT', 'up': '118.0', 'down': '119.0'}], 'var_call_oAKjPxIX510VEIqk7TOsmjq8': [{'symbol': 'DEO', 'up': '131.0', 'down': '120.0'}], 'var_call_LWIQASa4pdVWMjQRxJ3J6FOt': [{'symbol': 'DGX', 'up': '129.0', 'down': '121.0'}], 'var_call_YI8OrtfhDVvOoPXLiB9mRc7m': [{'symbol': 'DMB', 'up': '132.0', 'down': '95.0'}], 'var_call_BGMlSpZOugrIx8D1obc3LyJu': [{'symbol': 'DTQ', 'up': '139.0', 'down': '98.0'}]}
+
+exec(code, env_args)

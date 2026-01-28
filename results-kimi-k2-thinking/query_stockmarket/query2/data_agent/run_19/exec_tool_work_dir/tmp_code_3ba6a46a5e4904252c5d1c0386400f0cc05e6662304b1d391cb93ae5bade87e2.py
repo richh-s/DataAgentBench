@@ -1,0 +1,18 @@
+code = """import json
+import os
+
+# Get NYSE Arca ETF symbols
+nyse_arca_file = locals()['var_functions.execute_python:8']
+with open(nyse_arca_file, 'r') as f:
+    nyse_arca_symbols = json.load(f)
+
+print('__RESULT__:')
+print(json.dumps({
+    'status': 'ready_to_process',
+    'total_symbols': len(nyse_arca_symbols),
+    'first_10_symbols': nyse_arca_symbols[:10]
+}))"""
+
+env_args = {'var_functions.query_db:0': 'file_storage/functions.query_db:0.json', 'var_functions.execute_python:5': {'total_etfs': 1435, 'first_few_symbols': ['AAAU', 'AADR', 'ABEQ', 'ACSG', 'ACWF']}, 'var_functions.list_db:6': 'file_storage/functions.list_db:6.json', 'var_functions.execute_python:8': 'file_storage/functions.execute_python:8.json', 'var_functions.execute_python:10': {'nyse_arca_etf_count': 1435, 'existing_in_stocktrade_count': 1435, 'sample_existing': ['AAAU', 'AADR', 'ABEQ', 'ACSG', 'ACWF', 'AFK', 'AFLG', 'AFMC', 'AFSM', 'AFTY']}, 'var_functions.query_db:12': [], 'var_functions.query_db:14': [{'Date': '2015-07-20', 'Adj Close': '193.3121490478516'}, {'Date': '2015-07-17', 'Adj Close': '193.212158203125'}, {'Date': '2015-05-21', 'Adj Close': '193.1998443603516'}, {'Date': '2015-07-16', 'Adj Close': '193.0484619140625'}, {'Date': '2015-11-03', 'Adj Close': '192.8638153076172'}, {'Date': '2015-05-18', 'Adj Close': '192.83792114257807'}, {'Date': '2015-06-23', 'Adj Close': '192.8120574951172'}, {'Date': '2015-05-19', 'Adj Close': '192.77456665039065'}, {'Date': '2015-05-22', 'Adj Close': '192.73838806152344'}, {'Date': '2015-06-22', 'Adj Close': '192.67564392089844'}], 'var_functions.query_db:16': [{'Date': '2015-01-22', 'Adj Close': '125.2300033569336'}, {'Date': '2015-01-27', 'Adj Close': '124.4000015258789'}, {'Date': '2015-01-21', 'Adj Close': '124.2300033569336'}, {'Date': '2015-01-23', 'Adj Close': '124.2300033569336'}, {'Date': '2015-01-20', 'Adj Close': '124.1999969482422'}, {'Date': '2015-01-30', 'Adj Close': '123.4499969482422'}, {'Date': '2015-01-28', 'Adj Close': '123.41999816894533'}, {'Date': '2015-01-26', 'Adj Close': '122.98999786376952'}, {'Date': '2015-01-16', 'Adj Close': '122.5199966430664'}, {'Date': '2015-02-02', 'Adj Close': '122.41999816894533'}], 'var_functions.query_db:20': [], 'var_functions.query_db:22': [{'cid': '0', 'name': 'Date', 'type': 'VARCHAR', 'notnull': 'False', 'dflt_value': 'None', 'pk': 'False'}, {'cid': '1', 'name': 'Open', 'type': 'DOUBLE', 'notnull': 'False', 'dflt_value': 'None', 'pk': 'False'}, {'cid': '2', 'name': 'High', 'type': 'DOUBLE', 'notnull': 'False', 'dflt_value': 'None', 'pk': 'False'}, {'cid': '3', 'name': 'Low', 'type': 'DOUBLE', 'notnull': 'False', 'dflt_value': 'None', 'pk': 'False'}, {'cid': '4', 'name': 'Close', 'type': 'DOUBLE', 'notnull': 'False', 'dflt_value': 'None', 'pk': 'False'}, {'cid': '5', 'name': 'Adj Close', 'type': 'DOUBLE', 'notnull': 'False', 'dflt_value': 'None', 'pk': 'False'}, {'cid': '6', 'name': 'Volume', 'type': 'BIGINT', 'notnull': 'False', 'dflt_value': 'None', 'pk': 'False'}], 'var_functions.execute_python:24': {'total_symbols': 1435, 'already_checked': 0, 'already_found': 0}, 'var_functions.query_db:26': [{'max_adj_close': '110.42893981933594'}]}
+
+exec(code, env_args)

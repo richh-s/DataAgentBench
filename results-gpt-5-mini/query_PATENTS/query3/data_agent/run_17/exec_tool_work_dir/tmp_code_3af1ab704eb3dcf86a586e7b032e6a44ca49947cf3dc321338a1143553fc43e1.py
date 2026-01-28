@@ -1,0 +1,87 @@
+code = """import json, re
+# Load citing records and Univ California publication numbers
+citing_path = var_call_UB9bFP5TxaTdIWaj7LPnWjic
+with open(citing_path, 'r', encoding='utf-8') as f:
+    citing_recs = json.load(f)
+univ_list = var_call_XSuDjjk7sA0GwVAEhb6Frnaq
+
+def norm(s):
+    return re.sub(r'[^0-9A-Za-z]', '', s).upper()
+univ_map = {norm(p): p for p in univ_list}
+
+matches = []
+for rec in citing_recs:
+    cit_field = rec.get('citation') or ''
+    cited_nums = set()
+    try:
+        cites = json.loads(cit_field)
+        if isinstance(cites, list):
+            for c in cites:
+                if isinstance(c, dict):
+                    pn = c.get('publication_number')
+                    if pn:
+                        cited_nums.add(pn)
+    except Exception:
+        # fallback to regex
+        for m in re.findall(r'[A-Z]{2}-[A-Za-z0-9\-]+', cit_field):
+            cited_nums.add(m)
+    # normalize and check intersection
+    for pn in cited_nums:
+        if norm(pn) in univ_map:
+            # extract assignee from Patents_info
+            pat_info = (rec.get('Patents_info') or '').strip()
+            lower = pat_info.lower()
+            split_idx = None
+            for kw in [' holds ', ' is owned by ', ' is assigned to ', ' assigned to ', ' owns ', ' has the ', ' held by ', ' belonging to ', ' belonging to ']:
+                i = lower.find(kw)
+                if i != -1:
+                    split_idx = i
+                    break
+            if split_idx is not None:
+                assignee = pat_info[:split_idx].strip()
+            else:
+                assignee = pat_info.split(',')[0].strip()
+            if not assignee:
+                assignee = pat_info
+            # skip Univ California
+            if 'UNIV CALIFORNIA' in assignee.upper():
+                continue
+            # determine primary cpc from rec['cpc']
+            primary_cpc = None
+            cpc_field = rec.get('cpc') or ''
+            try:
+                cpcs = json.loads(cpc_field)
+                if isinstance(cpcs, list) and cpcs:
+                    for it in cpcs:
+                        if isinstance(it, dict) and it.get('first'):
+                            primary_cpc = it.get('code')
+                            break
+                    if not primary_cpc and isinstance(cpcs[0], dict):
+                        primary_cpc = cpcs[0].get('code')
+            except Exception:
+                m = re.search(r'[A-Z]{1,4}[0-9A-Z\-/]+', cpc_field)
+                if m:
+                    primary_cpc = m.group(0)
+            matches.append({'assignee': assignee, 'primary_cpc': primary_cpc, 'matched_univ_pub': univ_map[norm(pn)], 'citing_rowid': rec.get('rowid')})
+
+# Aggregate codes per assignee
+assignee_to_codes = {}
+for m in matches:
+    a = m['assignee']
+    code = m['primary_cpc']
+    if not a:
+        continue
+    assignee_to_codes.setdefault(a, set())
+    if code:
+        assignee_to_codes[a].add(code)
+
+assignee_to_codes = {k: sorted(list(v)) for k,v in assignee_to_codes.items()}
+unique_codes = sorted({c for codes in assignee_to_codes.values() for c in codes if c})
+
+output = {'assignee_to_codes': assignee_to_codes, 'unique_codes': unique_codes, 'num_matches': len(matches)}
+print('__RESULT__:')
+print(json.dumps(output))"""
+
+env_args = {'var_call_FYCiQmyJquHDaA3DiPfaYK5x': ['publicationinfo'], 'var_call_mDH52FTLVbIZBVfcBIDocEGU': ['cpc_definition'], 'var_call_ESyf4rKVi5PNp0DQESeG9x1t': 'file_storage/call_ESyf4rKVi5PNp0DQESeG9x1t.json', 'var_call_XSuDjjk7sA0GwVAEhb6Frnaq': ['AU-2003247814-A1', 'AU-2003297741-A1', 'AU-2004253879-A1', 'AU-2005269556-A1', 'AU-2007297661-A1', 'AU-2008349842-A1', 'AU-2010214112-B2', 'AU-2015364602-B2', 'AU-2017356943-A1', 'AU-2019275518-B2', 'AU-2409401-A', 'AU-2898989-A', 'AU-3353000-A', 'AU-5938296-A', 'AU-6535890-A', 'CA-2283629-C', 'CA-2298540-A1', 'CA-2550552-A1', 'CA-2562038-C', 'CA-2718348-C', 'CA-3161617-A1', 'CN-100339724-C', 'CN-101584047-A', 'CN-102067370-B', 'CN-102584712-A', 'CN-103189548-A', 'CN-103687626-A', 'EP-0826155-A4', 'EP-1212462-A1', 'EP-2210307-A4', 'EP-3668487-A4', 'EP-4284234-A1', 'HK-1052178-A1', 'HK-1250569-A1', 'HR-P20201231-T1', 'ID-23426-A', 'IL-244029-A0', 'IL-274176-A', 'JP-2005104983-A', 'JP-2009260386-A', 'JP-2014224156-A', 'JP-S6163700-A', 'KR-20050085437-A', 'KR-20110004413-A', 'KR-20160119166-A', 'KR-20200041324-A', 'MX-2013002850-A', 'PE-20130764-A1', 'PT-2970346-T', 'RO-70061-A', 'TW-201925402-A', 'US-10359432-B2', 'US-10744347-B2', 'US-11014955-B2', 'US-11072681-B2', 'US-11376346-B2', 'US-11421276-B2', 'US-11546022-B2', 'US-11667770-B2', 'US-12025581-B2', 'US-2003112494-A1', 'US-2004115131-A1', 'US-2005234013-A1', 'US-2006051790-A1', 'US-2006292670-A1', 'US-2009031436-A1', 'US-2010025717-A1', 'US-2017087258-A1', 'US-2017145219-A1', 'US-2017281687-A1', 'US-2018243924-A1', 'US-2019169580-A1', 'US-2019209590-A1', 'US-2019328740-A1', 'US-2020025859-A1', 'US-2020283856-A1', 'US-2021000566-A1', 'US-2021002329-A1', 'US-2021039104-A1', 'US-2021101879-A1', 'US-2021181673-A1', 'US-2021282642-A1', 'US-2022018060-A1', 'US-2022074631-A1', 'US-2023155090-A1', 'US-2023171142-A1', 'US-2023279470-A1', 'US-2023321419-A1', 'US-5304932-A', 'US-5547866-A', 'US-6237292-B1', 'US-6750960-B2', 'US-6767662-B2', 'US-6980295-B2', 'US-7052856-B2', 'US-7745569-B2', 'US-9061071-B2', 'WO-2010045542-A3', 'WO-2012158833-A3', 'WO-2012162563-A2', 'WO-2014152660-A1', 'WO-2017136335-A1', 'WO-2017214343-A1', 'WO-2018026404-A3', 'WO-2018067976-A1', 'WO-2019067860-A1', 'WO-2019173834-A1', 'WO-2020055916-A9', 'WO-2021102420-A1', 'WO-2023212447-A2', 'WO-2023225482-A3', 'WO-2023239670-A1', 'WO-2024044766-A3', 'WO-2024112568-A1'], 'var_call_UB9bFP5TxaTdIWaj7LPnWjic': 'file_storage/call_UB9bFP5TxaTdIWaj7LPnWjic.json', 'var_call_9HXWAoqM57zoWcHisVY7fOIj': {'assignee_to_codes': {}, 'unique_codes': []}, 'var_call_VKidit49nygNHLglsMnbwn4Q': ['AT-294301-B', 'AT-305676-B', 'AU-2005314079-B2', 'AU-2006279558-A1', 'AU-4099585-A', 'AU-5531486-A', 'CA-1051802-A', 'CA-1095306-A', 'CA-2031433-A1', 'CA-2046037-A1', 'CA-2465692-A1', 'CA-2473135-A1', 'CA-2525371-A1', 'CA-2525382-A1', 'CA-2582365-A1', 'CA-2617872-A1', 'CA-2636249-A1', 'CA-2700258-A1', 'CA-2921163-A1', 'CA-2938521-A1', 'CH-703014-A2', 'CH-704088-A2', 'CN-101023662-A', 'CN-101031260-A', 'CN-101043923-A', 'CN-101044520-A', 'CN-101044523-A', 'CN-101068060-A', 'CN-101087566-A', 'CN-101123599-A', 'CN-101137913-A', 'CN-101174851-A', 'CN-101185594-A', 'CN-101228094-A', 'CN-101267664-A', 'CN-101273595-A', 'CN-101394263-A', 'CN-101495885-A', 'CN-101583983-A', 'CN-101617538-A', 'CN-101631516-A', 'CN-101638377-A', 'CN-101677406-A', 'CN-101679094-A', 'CN-101713177-A', 'CN-101727693-A', 'CN-101785041-B', 'CN-101805649-A', 'CN-101834760-A', 'CN-101891375-A', 'CN-101909548-A', 'CN-102124603-A', 'CN-102164552-A', 'CN-102183355-A', 'CN-102221446-A', 'CN-102311218-A', 'CN-102356060-A', 'CN-102483500-A', 'CN-102629877-A', 'CN-102645814-A', 'CN-102664687-A', 'CN-102762507-A', 'CN-102792218-A', 'CN-103126513-A', 'CN-103189902-A', 'CN-103267093-A', 'CN-103297831-A', 'CN-103512659-A', 'CN-103620249-A', 'CN-103631513-A', 'CN-103648768-A', 'CN-103700678-A', 'CN-103728808-A', 'CN-103728809-A', 'CN-103928672-A', 'CN-103983606-A', 'CN-104023674-A', 'CN-104023675-A', 'CN-104033550-A', 'CN-104085111-A', 'CN-104101867-A', 'CN-104108213-A', 'CN-104135960-A', 'CN-104137540-A', 'CN-104246578-A', 'CN-104364712-A', 'CN-104488359-A', 'CN-104577261-A', 'CN-104730484-A', 'CN-104810522-A', 'CN-104887389-A', 'CN-104968257-A', 'CN-105022203-A', 'CN-105093475-A', 'CN-105119611-A', 'CN-105164069-A', 'CN-105164070-A', 'CN-105281515-A', 'CN-105377159-A', 'CN-105445188-A', 'CN-105473684-A', 'CN-105491527-A', 'CN-105565113-A', 'CN-105577259-A', 'CN-105637791-A', 'CN-105642900-A', 'CN-105798298-A', 'CN-105827922-A', 'CN-106067939-A', 'CN-106079434-A', 'CN-106168727-A', 'CN-106168802-A', 'CN-106209870-A', 'CN-106414025-A', 'CN-106440656-A', 'CN-106455987-A', 'CN-106506419-A', 'CN-106576372-A', 'CN-106827534-A', 'CN-106946859-A', 'CN-107003789-A', 'CN-107006002-A', 'CN-107053662-A', 'CN-1072184-C', 'CN-107220789-A', 'CN-107312448-A', 'CN-107483932-A', 'CN-107562188-A', 'CN-107622783-A', 'CN-107782374-A', 'CN-107797165-A', 'CN-107867030-A', 'CN-107886847-A', 'CN-108074490-A', 'CN-108337519-A', 'CN-108446873-A', 'CN-108616703-A', 'CN-108623481-A', 'CN-108781033-A', 'CN-108886617-A', 'CN-108900538-A', 'CN-108918081-A', 'CN-108921637-A', 'CN-108978574-A', 'CN-109060298-A', 'CN-109116658-A', 'CN-109360828-A', 'CN-109427985-A', 'CN-109473421-A', 'CN-109521162-A', 'CN-109545934-A', 'CN-109656318-A', 'CN-109755277-A', 'CN-109859788-A', 'CN-109891883-A', 'CN-109942557-A', 'CN-110139235-A', 'CN-110166676-A', 'CN-110903276-A', 'CN-111508976-A', 'CN-111696738-A', 'CN-112310304-A', 'CN-1162926-A', 'CN-1177918-A', 'CN-1221244-A', 'CN-1276049-A', 'CN-1383790-A', 'CN-1519767-A', 'CN-1602826-A', 'CN-1770605-A', 'CN-1819805-A', 'CN-200992793-Y', 'CN-201019980-Y', 'CN-201297072-Y', 'CN-201517687-U', 'CN-202692601-U', 'CN-202724206-U', 'CN-203453143-U', 'CN-203690658-U', 'CN-204515213-U', 'CN-204743697-U', 'CN-205173083-U', 'CN-206228330-U', 'CN-206290497-U', 'CN-206906702-U', 'CN-207701481-U', 'CN-208184315-U', 'CN-209199986-U', 'CN-211044904-U', 'DE-10024483-A1', 'DE-10057849-A1', 'DE-10147229-A1', 'DE-102004006375-A1', 'DE-102004013872-A1', 'DE-102004017115-A1', 'DE-102004019014-A1', 'DE-102004035634-A1', 'DE-102004037254-B3', 'DE-102004040288-B4', 'DE-102004044544-A1'], 'var_call_ILFrd3kZS09JRa3Lw3Peqyat': {'num_matches': 0, 'sample_matches': []}, 'var_call_f6yrpqPXbVCZaYjEsJKCr4Ng': 'file_storage/call_f6yrpqPXbVCZaYjEsJKCr4Ng.json'}
+
+exec(code, env_args)

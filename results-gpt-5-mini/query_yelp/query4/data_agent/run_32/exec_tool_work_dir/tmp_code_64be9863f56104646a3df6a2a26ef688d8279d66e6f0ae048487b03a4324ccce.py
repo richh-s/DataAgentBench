@@ -1,0 +1,58 @@
+code = """import json
+from collections import Counter
+
+# Load the large MongoDB business query result stored in a file path variable
+fp = var_call_LbZM6NfM4hZBsPkYpIDJ4V0m
+with open(fp, 'r', encoding='utf-8') as f:
+    data = json.load(f)
+
+# data is a list of dicts with keys including 'business_id', 'attributes', 'categories' maybe
+# Filter businesses that accept credit cards
+cc_businesses = []
+for b in data:
+    attrs = b.get('attributes')
+    accepts = False
+    if isinstance(attrs, dict):
+        val = attrs.get('BusinessAcceptsCreditCards')
+        if val == 'True':
+            accepts = True
+    # else attrs may be string 'None' or None
+    if accepts:
+        cc_businesses.append(b)
+
+# Count categories. categories may be missing or None. If present, could be a string of comma-separated categories.
+counter = Counter()
+# Also map category to list of business_ids (businessid_...)
+cat_to_bids = {}
+for b in cc_businesses:
+    cats = b.get('categories')
+    if not cats:
+        continue
+    # sometimes categories might be a list; handle both
+    if isinstance(cats, list):
+        cat_list = [c.strip() for c in cats if c]
+    else:
+        # assume string, split by comma
+        cat_list = [c.strip() for c in str(cats).split(',') if c.strip()]
+    # For each category, count this business once
+    for c in cat_list:
+        counter[c] += 1
+        cat_to_bids.setdefault(c, []).append(b.get('business_id'))
+
+# Determine top category by count. If tie, pick the one with highest average alphabetical? We'll pick the max by count then name
+if not counter:
+    result = {"top_category": None, "count": 0, "business_refs": []}
+else:
+    top_category, top_count = sorted(counter.items(), key=lambda x: (-x[1], x[0]))[0]
+    bids = cat_to_bids.get(top_category, [])
+    # Convert businessid_... to businessref_...
+    refs = [b.replace('businessid_', 'businessref_') for b in bids if b]
+    result = {"top_category": top_category, "count": top_count, "business_refs": refs}
+
+import json
+print("__RESULT__:")
+print(json.dumps(result))"""
+
+env_args = {'var_call_BD0HII2UVczUt932MqFNuY7r': [{'_id': '6859a000fe8b31cd7362e2ab', 'business_id': 'businessid_49', 'name': 'Steps to Learning Montessori Preschool', 'review_count': '8', 'attributes': {'BusinessAcceptsCreditCards': 'True', 'WiFi': "u'no'", 'BusinessAcceptsBitcoin': 'False'}}, {'_id': '6859a000fe8b31cd7362e2ac', 'business_id': 'businessid_47', 'name': 'Breeze Blow Dry Bar', 'review_count': '81', 'attributes': {'ByAppointmentOnly': 'False', 'BusinessAcceptsCreditCards': 'True', 'GoodForKids': 'True', 'RestaurantsPriceRange2': '2', 'BikeParking': 'False', 'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': True, 'valet': False}"}}, {'_id': '6859a000fe8b31cd7362e2ad', 'business_id': 'businessid_88', 'name': 'Impact Guns', 'review_count': '39', 'attributes': {'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'GoodForKids': 'True', 'BusinessAcceptsCreditCards': 'True', 'ByAppointmentOnly': 'False', 'BikeParking': 'True'}}, {'_id': '6859a000fe8b31cd7362e2ae', 'business_id': 'businessid_41', 'name': 'Palms Primary Care', 'review_count': '5', 'attributes': 'None'}, {'_id': '6859a000fe8b31cd7362e2af', 'business_id': 'businessid_33', 'name': 'J&Q Nails', 'review_count': '28', 'attributes': {'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'BusinessAcceptsCreditCards': 'True', 'AcceptsInsurance': 'False', 'ByAppointmentOnly': 'False', 'RestaurantsPriceRange2': '2', 'WheelchairAccessible': 'True', 'BikeParking': 'False'}}, {'_id': '6859a000fe8b31cd7362e2b0', 'business_id': 'businessid_74', 'name': 'Candy Barrel', 'review_count': '7', 'attributes': {'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'RestaurantsPriceRange2': '4', 'BikeParking': 'False'}}, {'_id': '6859a000fe8b31cd7362e2b1', 'business_id': 'businessid_92', 'name': 'Luminosity', 'review_count': '39', 'attributes': {'ByAppointmentOnly': 'False', 'BusinessAcceptsCreditCards': 'True', 'BusinessParking': "{'garage': True, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'RestaurantsPriceRange2': '2', 'WheelchairAccessible': 'True', 'BikeParking': 'True', 'NoiseLevel': "u'quiet'", 'WiFi': "u'no'"}}, {'_id': '6859a000fe8b31cd7362e2b2', 'business_id': 'businessid_64', 'name': 'Nail Care Salon', 'review_count': '6', 'attributes': {'BusinessParking': "{'garage': True, 'street': False, 'validated': False, 'lot': True, 'valet': False}", 'ByAppointmentOnly': 'False', 'BusinessAcceptsCreditCards': 'True', 'RestaurantsPriceRange2': '2', 'BikeParking': 'True', 'WiFi': "u'free'"}}, {'_id': '6859a000fe8b31cd7362e2b3', 'business_id': 'businessid_52', 'name': 'Architectural Antiques of Indianapolis', 'review_count': '6', 'attributes': {'ByAppointmentOnly': 'False', 'BusinessAcceptsCreditCards': 'True', 'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'RestaurantsPriceRange2': '2', 'BikeParking': 'True'}}, {'_id': '6859a000fe8b31cd7362e2b4', 'business_id': 'businessid_29', 'name': "Aster's Floral Shop", 'review_count': '25', 'attributes': {'BikeParking': 'True', 'BusinessAcceptsCreditCards': 'True', 'RestaurantsPriceRange2': '2', 'BusinessParking': "{'garage': False, 'street': True, 'validated': False, 'lot': False, 'valet': False}", 'RestaurantsDelivery': 'None'}}], 'var_call_OhtMTwL1sf67BIKWnSAJHV46': [{'_id': '6859a000fe8b31cd7362e2ab', 'business_id': 'businessid_49'}, {'_id': '6859a000fe8b31cd7362e2ac', 'business_id': 'businessid_47'}, {'_id': '6859a000fe8b31cd7362e2ad', 'business_id': 'businessid_88'}, {'_id': '6859a000fe8b31cd7362e2af', 'business_id': 'businessid_33'}, {'_id': '6859a000fe8b31cd7362e2b1', 'business_id': 'businessid_92'}, {'_id': '6859a000fe8b31cd7362e2b2', 'business_id': 'businessid_64'}, {'_id': '6859a000fe8b31cd7362e2b3', 'business_id': 'businessid_52'}, {'_id': '6859a000fe8b31cd7362e2b4', 'business_id': 'businessid_29'}, {'_id': '6859a000fe8b31cd7362e2b5', 'business_id': 'businessid_10'}, {'_id': '6859a000fe8b31cd7362e2b6', 'business_id': 'businessid_61'}, {'_id': '6859a000fe8b31cd7362e2b7', 'business_id': 'businessid_54'}, {'_id': '6859a000fe8b31cd7362e2b8', 'business_id': 'businessid_8'}, {'_id': '6859a000fe8b31cd7362e2ba', 'business_id': 'businessid_91'}, {'_id': '6859a000fe8b31cd7362e2bb', 'business_id': 'businessid_83'}, {'_id': '6859a000fe8b31cd7362e2bc', 'business_id': 'businessid_93'}, {'_id': '6859a000fe8b31cd7362e2be', 'business_id': 'businessid_24'}, {'_id': '6859a000fe8b31cd7362e2bf', 'business_id': 'businessid_95'}, {'_id': '6859a000fe8b31cd7362e2c1', 'business_id': 'businessid_26'}, {'_id': '6859a000fe8b31cd7362e2c2', 'business_id': 'businessid_84'}, {'_id': '6859a000fe8b31cd7362e2c3', 'business_id': 'businessid_89'}, {'_id': '6859a000fe8b31cd7362e2c4', 'business_id': 'businessid_32'}, {'_id': '6859a000fe8b31cd7362e2c7', 'business_id': 'businessid_71'}, {'_id': '6859a000fe8b31cd7362e2c8', 'business_id': 'businessid_97'}, {'_id': '6859a000fe8b31cd7362e2c9', 'business_id': 'businessid_14'}, {'_id': '6859a000fe8b31cd7362e2ca', 'business_id': 'businessid_3'}, {'_id': '6859a000fe8b31cd7362e2ce', 'business_id': 'businessid_27'}, {'_id': '6859a000fe8b31cd7362e2cf', 'business_id': 'businessid_75'}, {'_id': '6859a000fe8b31cd7362e2d1', 'business_id': 'businessid_2'}, {'_id': '6859a000fe8b31cd7362e2d3', 'business_id': 'businessid_48'}, {'_id': '6859a000fe8b31cd7362e2d4', 'business_id': 'businessid_67'}, {'_id': '6859a000fe8b31cd7362e2d7', 'business_id': 'businessid_76'}, {'_id': '6859a000fe8b31cd7362e2d8', 'business_id': 'businessid_100'}, {'_id': '6859a000fe8b31cd7362e2da', 'business_id': 'businessid_63'}, {'_id': '6859a000fe8b31cd7362e2db', 'business_id': 'businessid_45'}, {'_id': '6859a000fe8b31cd7362e2dc', 'business_id': 'businessid_68'}, {'_id': '6859a000fe8b31cd7362e2dd', 'business_id': 'businessid_6'}, {'_id': '6859a000fe8b31cd7362e2de', 'business_id': 'businessid_87'}, {'_id': '6859a000fe8b31cd7362e2e1', 'business_id': 'businessid_66'}, {'_id': '6859a000fe8b31cd7362e2e2', 'business_id': 'businessid_55'}, {'_id': '6859a000fe8b31cd7362e2e3', 'business_id': 'businessid_30'}, {'_id': '6859a000fe8b31cd7362e2e5', 'business_id': 'businessid_15'}, {'_id': '6859a000fe8b31cd7362e2e6', 'business_id': 'businessid_96'}, {'_id': '6859a000fe8b31cd7362e2e7', 'business_id': 'businessid_11'}, {'_id': '6859a000fe8b31cd7362e2e8', 'business_id': 'businessid_73'}, {'_id': '6859a000fe8b31cd7362e2e9', 'business_id': 'businessid_4'}, {'_id': '6859a000fe8b31cd7362e2ea', 'business_id': 'businessid_77'}, {'_id': '6859a000fe8b31cd7362e2eb', 'business_id': 'businessid_18'}, {'_id': '6859a000fe8b31cd7362e2ec', 'business_id': 'businessid_65'}, {'_id': '6859a000fe8b31cd7362e2ed', 'business_id': 'businessid_86'}, {'_id': '6859a000fe8b31cd7362e2ee', 'business_id': 'businessid_53'}, {'_id': '6859a000fe8b31cd7362e2ef', 'business_id': 'businessid_40'}, {'_id': '6859a000fe8b31cd7362e2f0', 'business_id': 'businessid_44'}, {'_id': '6859a000fe8b31cd7362e2f1', 'business_id': 'businessid_43'}, {'_id': '6859a000fe8b31cd7362e2f3', 'business_id': 'businessid_9'}, {'_id': '6859a000fe8b31cd7362e2f4', 'business_id': 'businessid_20'}, {'_id': '6859a000fe8b31cd7362e2f5', 'business_id': 'businessid_37'}, {'_id': '6859a000fe8b31cd7362e2f7', 'business_id': 'businessid_62'}, {'_id': '6859a000fe8b31cd7362e2f8', 'business_id': 'businessid_94'}, {'_id': '6859a000fe8b31cd7362e2fa', 'business_id': 'businessid_90'}, {'_id': '6859a000fe8b31cd7362e2fb', 'business_id': 'businessid_31'}, {'_id': '6859a000fe8b31cd7362e2fc', 'business_id': 'businessid_85'}, {'_id': '6859a000fe8b31cd7362e2fd', 'business_id': 'businessid_25'}, {'_id': '6859a000fe8b31cd7362e2fe', 'business_id': 'businessid_82'}, {'_id': '6859a000fe8b31cd7362e2ff', 'business_id': 'businessid_58'}, {'_id': '6859a000fe8b31cd7362e302', 'business_id': 'businessid_60'}, {'_id': '6859a000fe8b31cd7362e303', 'business_id': 'businessid_21'}, {'_id': '6859a000fe8b31cd7362e304', 'business_id': 'businessid_98'}, {'_id': '6859a000fe8b31cd7362e305', 'business_id': 'businessid_16'}, {'_id': '6859a000fe8b31cd7362e306', 'business_id': 'businessid_46'}, {'_id': '6859a000fe8b31cd7362e307', 'business_id': 'businessid_22'}, {'_id': '6859a000fe8b31cd7362e308', 'business_id': 'businessid_36'}, {'_id': '6859a000fe8b31cd7362e30b', 'business_id': 'businessid_38'}, {'_id': '6859a000fe8b31cd7362e30c', 'business_id': 'businessid_81'}, {'_id': '6859a000fe8b31cd7362e30d', 'business_id': 'businessid_13'}, {'_id': '6859a000fe8b31cd7362e30e', 'business_id': 'businessid_17'}], 'var_call_LbZM6NfM4hZBsPkYpIDJ4V0m': 'file_storage/call_LbZM6NfM4hZBsPkYpIDJ4V0m.json'}
+
+exec(code, env_args)

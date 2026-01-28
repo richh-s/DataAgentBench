@@ -1,0 +1,20 @@
+code = """import json
+
+# Get the Indianapolis businesses
+indianapolis_businesses = [
+    {"business_id": "businessid_52", "name": "Architectural Antiques of Indianapolis"},
+    {"business_id": "businessid_84", "name": "Gamestop"},
+    {"business_id": "businessid_76", "name": "Big Lots"},
+    {"business_id": "businessid_87", "name": "Jordans Fish and Chicken"},
+    {"business_id": "businessid_65", "name": "Pat Flynn's Public House"}
+]
+
+# Convert business_id to business_ref format
+business_refs = [b["business_id"].replace("businessid_", "businessref_") for b in indianapolis_businesses]
+
+print('__RESULT__:')
+print(json.dumps(business_refs))"""
+
+env_args = {'var_functions.query_db:0': [], 'var_functions.query_db:2': [{'business_id': 'businessid_52', 'name': 'Architectural Antiques of Indianapolis', 'description': 'Located at 5000 W 96th St in Indianapolis, IN, this establishment offers a diverse selection of Antiques, Shopping, Home Services, and Lighting Fixtures & Equipment for all your home and decorative needs.'}, {'business_id': 'businessid_84', 'name': 'Gamestop', 'description': 'Located at 5816 Crawfordsville Rd in Indianapolis, IN, this store offers a diverse selection of products in categories such as Books, Mags, Music & Video, Video Game Stores, Videos & Video Game Rental, Electronics, Shopping, and Hobby Shops.'}, {'business_id': 'businessid_76', 'name': 'Big Lots', 'description': 'Located at 8401 Michigan Rd in Indianapolis, IN, this shopping destination offers a diverse range of products across various categories, including Fashion, Department Stores, Furniture Stores, Shopping, Home Decor, Home & Garden, and Discount Store.'}, {'business_id': 'businessid_87', 'name': 'Jordans Fish and Chicken', 'description': 'Located at 6416 W Washington St in Indianapolis, IN, this establishment offers a delightful menu featuring Restaurants, Chicken Wings, Fish & Chips, and American (Traditional) cuisine.'}, {'business_id': 'businessid_65', 'name': "Pat Flynn's Public House", 'description': 'Located at 5198 Allisonville Rd in Indianapolis, IN, this venue offers a vibrant atmosphere perfect for enjoying Irish, Bars, Restaurants, Pubs, Nightlife.'}]}
+
+exec(code, env_args)

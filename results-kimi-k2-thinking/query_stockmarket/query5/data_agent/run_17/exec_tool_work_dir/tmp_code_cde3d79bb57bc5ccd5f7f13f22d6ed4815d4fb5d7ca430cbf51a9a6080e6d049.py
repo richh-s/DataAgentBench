@@ -1,0 +1,46 @@
+code = """import json
+
+# Load AGMH 2019 data for testing
+agmh_data = locals()['var_functions.query_db:30']
+
+if isinstance(agmh_data, str) and agmh_data.endswith('.json'):
+    with open(agmh_data, 'r') as f:
+        agmh_trades = json.load(f)
+else:
+    agmh_trades = agmh_data
+
+# Count days where intraday range exceeds 20% of low price
+high_vol_days = 0
+high_vol_examples = []
+
+for day in agmh_trades:
+    high = float(day['High'])
+    low = float(day['Low'])
+    
+    if low == 0:
+        continue
+    
+    intraday_range = ((high - low) / low) * 100
+    
+    if intraday_range > 20:
+        high_vol_days += 1
+        if len(high_vol_examples) < 3:
+            high_vol_examples.append({
+                'date': day['Date'],
+                'high': high,
+                'low': low,
+                'range_percent': intraday_range
+            })
+
+print("__RESULT__:")
+print(json.dumps({
+    "symbol": "AGMH",
+    "total_days_2019": len(agmh_trades),
+    "high_vol_days": high_vol_days,
+    "percentage_high_vol": (high_vol_days / len(agmh_trades) * 100) if len(agmh_trades) > 0 else 0,
+    "examples": high_vol_examples
+}))"""
+
+env_args = {'var_functions.list_db:0': ['stockinfo'], 'var_functions.query_db:4': [{'Nasdaq Traded': 'Y', 'Symbol': 'AAAU', 'Listing Exchange': 'P', 'Market Category': 'Not applicable or not NASDAQ-listed', 'ETF': 'Y', 'Round Lot Size': '100.0', 'Test Issue': 'N', 'Financial Status': 'None', 'NextShares': 'N', 'Company Description': 'Perth Mint Physical Gold ETF offers investors an opportunity to buy shares backed by physical gold, providing a secure and tangible way to invest in precious metals.'}], 'var_functions.query_db:6': 'file_storage/functions.query_db:6.json', 'var_functions.list_db:8': 'file_storage/functions.list_db:8.json', 'var_functions.execute_python:12': {'count': 86, 'sample': [{'Symbol': 'AGMH', 'Company Description': 'AGM Group Holdings Inc. specializes in providing financial technology solutions and services, focusing on enhancing efficiency and performance for businesses in the financial sector.'}, {'Symbol': 'ALACU', 'Company Description': 'Alberton Acquisition Corporation is a special purpose acquisition company focused on merging with or acquiring promising businesses to bring them public and enhance their growth potential.'}, {'Symbol': 'AMHC', 'Company Description': 'Amplitude Healthcare Acquisition Corporation is a special purpose acquisition company focused on identifying and merging with promising healthcare businesses to accelerate their growth and innovation.'}], 'symbols': ['AGMH', 'ALACU', 'AMHC', 'ANDA', 'APEX', 'BCLI', 'BHAT', 'BIOC', 'BKYI', 'BLFS']}, 'var_functions.execute_python:14': {'symbol_mapping': {'AGMH': 'AGM Group Holdings Inc.', 'ALACU': 'Alberton Acquisition Corporation', 'AMHC': 'Amplitude Healthcare Acquisition Corporation', 'ANDA': 'Andina Acquisition Corp. III', 'APEX': 'Apex Global Brands Inc.', 'BCLI': 'Brainstorm Cell Therapeutics Inc. is pioneering advancements in regenerative medicine', 'BHAT': 'Blue Hat Interactive Entertainment Technology', 'BIOC': 'Biocept', 'BKYI': 'BIO-key International', 'BLFS': 'BioLife Solutions', 'BOSC': 'B.O.S. Better Online Solutions', 'BOTJ': 'Bank of the James Financial Group', 'BWEN': 'Broadwind Energy', 'CBAT': 'CBAK Energy Technology', 'CCCL': 'China Ceramics Co.', 'CDMOP': 'Avid Bioservices', 'CEMI': 'Chembio Diagnostics', 'CFBK': 'Central Federal Corporation', 'CFFA': 'CF Finance Acquisition Corp.', 'CLRB': 'Cellectar Biosciences', 'CORV': 'Correvio Pharma Corp.', 'CPAAU': 'Conyers Park II Acquisition Corp.', 'CPAH': 'CounterPath Corporation', 'CUBA': 'The Herzfeld Caribbean Basin Fund', 'CVV': 'CVD Equipment Corporation', 'DZSI': 'DASAN Zhone Solutions', 'ELSE': 'Electro-Sensors', 'EXPC': 'Experience Investment Corp.', 'EYEG': 'Eyegate Pharmaceuticals', 'FAMI': 'Farmmi', 'FNCB': 'FNCB Bancorp Inc.', 'FSBW': 'FS Bancorp', 'FTFT': 'Future FinTech Group Inc.', 'GDYN': 'Grid Dynamics Holdings', 'GLG': 'TD Holdings', 'GRNVU': 'GreenVision Acquisition Corp', 'GTEC': 'Greenland Technologies Holding Corporation', 'HCCOU': 'Healthcare Merger Corp.', 'HNNA': 'Hennessy Advisors', 'HQI': 'HireQuest', 'HRTX': 'Heron Therapeutics', 'IDEX': 'Ideanomics', 'IGIC': 'International General Insurance Holdings Ltd.', 'IOTS': 'Adesto Technologies Corporation', 'ISNS': 'Image Sensing Systems', 'ITI': 'Iteris', 'LACQ': 'Leisure Acquisition Corp.', 'MBCN': 'Middlefield Banc Corp.', 'MBNKP': 'Medallion Bank offers specialized financial services', 'MCEP': 'Mid-Con Energy Partners', 'MLND': 'Millendo Therapeutics', 'MMAC': 'MMA Capital Holdings', 'MNCLU': 'Monocle Acquisition Corporation', 'MNPR': 'Monopar Therapeutics Inc. is dedicated to developing innovative treatments for life-threatening diseases', 'NVEE': 'NV5 Global', 'NXTD': 'NXT-ID Inc.', 'OPOF': 'Old Point Financial Corporation', 'OPTT': 'Ocean Power Technologies', 'ORGO': 'Organogenesis Holdings Inc.', 'ORSNU': 'Orisun Acquisition Corp.', 'OTEL': 'Otelco Inc.', 'PBFS': 'Pioneer Bancorp', 'PBTS': 'Powerbridge Technologies Co.', 'PCSB': 'PCSB Financial Corporation', 'PECK': 'The Peck Company Holdings', 'PEIX': 'Pacific Ethanol', 'PFIE': 'Profire Energy', 'PLIN': 'China Xiangtai Food Co.', 'POPE': 'Pope Resources - Limited Partnership is dedicated to managing timberland and real estate', 'QRHC': 'Quest Resource Holding Corporation', 'SES': 'Synthesis Energy Systems', 'SHSP': 'SharpSpring', 'SNSS': 'Sunesis Pharmaceuticals', 'SSNT': 'SilverSun Technologies', 'STKS': 'The ONE Group Hospitality', 'TGLS': 'Tecnoglass Inc.', 'TMSR': 'TMSR Holding Company Limited engages in the development and distribution of advanced industrial materials', 'VERB': 'Verb Technology Company', 'VMD': 'Viemed Healthcare', 'VRRM': 'Verra Mobility Corporation', 'VTIQW': 'VectoIQ Acquisition Corp.', 'VVPR': 'VivoPower International PLC', 'WHLM': 'Wilhelmina International', 'WHLR': 'Wheeler Real Estate Investment Trust', 'XBIOW': 'Xenetic Biosciences', 'XPEL': 'XPEL'}, 'count': 86}, 'var_functions.execute_python:16': {'sample': {'AGMH': 'AGM Group Holdings Inc.', 'ALACU': 'Alberton Acquisition Corporation', 'AMHC': 'Amplitude Healthcare Acquisition Corporation', 'ANDA': 'Andina Acquisition Corp. III', 'APEX': 'Apex Global Brands Inc.'}, 'total': 86}, 'var_functions.list_db:18': 'file_storage/functions.list_db:18.json', 'var_functions.execute_python:20': {'nasdaq_cap_count': 86, 'available_in_trade_db': 86, 'first_10_available': ['VRRM', 'CCCL', 'CFFA', 'BCLI', 'ORSNU', 'GRNVU', 'TMSR', 'ORGO', 'MMAC', 'GDYN']}, 'var_functions.query_db:22': [{'Date': '2019-01-02', 'Open': '30.75200080871582', 'High': '30.75200080871582', 'Low': '30.75200080871582', 'Close': '30.75200080871582', 'Adj Close': '30.75200080871582', 'Volume': '400'}, {'Date': '2019-01-03', 'Open': '27.299999237060547', 'High': '27.31999969482422', 'Low': '27.299999237060547', 'Close': '27.31999969482422', 'Adj Close': '27.31999969482422', 'Volume': '400'}, {'Date': '2019-01-04', 'Open': '27.31999969482422', 'High': '27.31999969482422', 'Low': '27.31999969482422', 'Close': '27.31999969482422', 'Adj Close': '27.31999969482422', 'Volume': '100'}, {'Date': '2019-01-07', 'Open': '28.899999618530277', 'High': '28.899999618530277', 'Low': '28.899999618530277', 'Close': '28.899999618530277', 'Adj Close': '28.899999618530277', 'Volume': '400'}, {'Date': '2019-01-08', 'Open': '28.899999618530277', 'High': '28.899999618530277', 'Low': '28.899999618530277', 'Close': '28.899999618530277', 'Adj Close': '28.899999618530277', 'Volume': '100'}], 'var_functions.execute_python:24': {'message': 'Ready to process stocks', 'stocks_count': 86, 'symbols': ['AGMH', 'ALACU', 'AMHC', 'ANDA', 'APEX']}, 'var_functions.execute_python:26': {'queries_to_run': 86, 'sample_queries': [{'symbol': 'AGMH', 'query': 'SELECT Symbol, Date, High, Low FROM "AGMH" WHERE Date >= "2019-01-01" AND Date <= "2019-12-31"'}, {'symbol': 'ALACU', 'query': 'SELECT Symbol, Date, High, Low FROM "ALACU" WHERE Date >= "2019-01-01" AND Date <= "2019-12-31"'}]}, 'var_functions.query_db:30': 'file_storage/functions.query_db:30.json'}
+
+exec(code, env_args)

@@ -1,0 +1,50 @@
+code = """import json
+
+# Load civic docs from file path stored in var_call_bnz5n8E8p3dgBfZPrwv4WgyV
+path = var_call_bnz5n8E8p3dgBfZPrwv4WgyV
+with open(path, 'r', encoding='utf-8') as f:
+    docs = json.load(f)
+
+# Funding records are available directly
+funds = var_call_ngcL3cCcyK358ulmSRtuX0bf
+
+results = []
+
+for fr in funds:
+    pname = fr.get('Project_Name', '')
+    pname_low = pname.lower()
+    status = None
+    # search in civic docs for the project name or core name without parenthesis suffix
+    core_name = pname_low
+    # remove parenthetical suffixes for matching
+    if '(' in core_name:
+        core_name = core_name.split('(')[0].strip()
+    for doc in docs:
+        txt = doc.get('text','').lower()
+        if core_name and core_name in txt:
+            idx = txt.find(core_name)
+            start = max(0, idx-300)
+            window = txt[start: idx+300]
+            if 'not started' in window or ('identified' in window and 'project' in window):
+                status = 'not started'
+            elif 'complete design' in window or 'final design' in window or 'finalize the design' in window or 'preliminary design' in window or 'design' in window:
+                status = 'design'
+            if 'construction was completed' in window or 'complete construction' in window or 'construction was completed' in window or 'completed' in window:
+                status = 'completed'
+            # prefer completed if both
+            if 'completed' in window:
+                status = 'completed'
+            break
+    results.append({
+        'Project_Name': fr.get('Project_Name'),
+        'Funding_Source': fr.get('Funding_Source'),
+        'Amount': int(fr.get('Amount')) if fr.get('Amount') not in (None, '') else None,
+        'Status': status
+    })
+
+print("__RESULT__:")
+print(json.dumps(results))"""
+
+env_args = {'var_call_bnz5n8E8p3dgBfZPrwv4WgyV': 'file_storage/call_bnz5n8E8p3dgBfZPrwv4WgyV.json', 'var_call_UQN1ijg7ExHWN7RexusmOlWb': ['Funding'], 'var_call_UkuHZ1KQpCqIkMUWYs5a4J5c': 'file_storage/call_UkuHZ1KQpCqIkMUWYs5a4J5c.json', 'var_call_ngcL3cCcyK358ulmSRtuX0bf': [{'Funding_ID': '7', 'Project_Name': 'Birdview Avenue Improvements (FEMA/CalOES Project)', 'Funding_Source': 'Research Institution Funding', 'Amount': '14000'}, {'Funding_ID': '22', 'Project_Name': 'Clover Heights Storm Drain (FEMA Project)', 'Funding_Source': 'Local NGO Fund', 'Amount': '21000'}, {'Funding_ID': '25', 'Project_Name': 'Corral Canyon Culvert Repairs (FEMA Project)', 'Funding_Source': 'Municipal Fund', 'Amount': '43000'}, {'Funding_ID': '26', 'Project_Name': 'Corral Canyon Culvert Repairs (FEMA/CalOES Project)', 'Funding_Source': 'Taxpayer Contribution', 'Amount': '15000'}, {'Funding_ID': '28', 'Project_Name': 'Corral Canyon Road Bridge Repairs (FEMA Project)', 'Funding_Source': 'Local Business Support', 'Amount': '25000'}, {'Funding_ID': '29', 'Project_Name': 'Corral Canyon Road Bridge Repairs (FEMA/CalOES Project)', 'Funding_Source': 'Cultural Heritage Grant', 'Amount': '58000'}, {'Funding_ID': '35', 'Project_Name': 'Encinal Canyon Road Drainage Improvements (FEMA/CalOES Project)', 'Funding_Source': 'Private Sponsor', 'Amount': '94000'}, {'Funding_ID': '38', 'Project_Name': 'Guardrail Replacement Citywide (FEMA Project)', 'Funding_Source': 'Impact Investment Fund', 'Amount': '22000'}, {'Funding_ID': '39', 'Project_Name': 'Guardrail Replacement Citywide (FEMA/CalOES Project)', 'Funding_Source': 'Development Bank Loan', 'Amount': '45000'}, {'Funding_ID': '43', 'Project_Name': 'Latigo Canyon Road Culvert Repairs (FEMA Project)', 'Funding_Source': 'Federal Assistance', 'Amount': '36000'}, {'Funding_ID': '44', 'Project_Name': 'Latigo Canyon Road Culvert Repairs (FEMA/CalOES Project)', 'Funding_Source': 'National Foundation Fund', 'Amount': '44000'}, {'Funding_ID': '47', 'Project_Name': 'Latigo Canyon Road Roadway/Retaining Wall Improvements (FEMA Project)', 'Funding_Source': 'Municipal Fund', 'Amount': '91000'}, {'Funding_ID': '48', 'Project_Name': 'Latigo Canyon Road Roadway/Retaining Wall Improvements (FEMA/CalOES Project)', 'Funding_Source': 'Community Fund', 'Amount': '78000'}, {'Funding_ID': '66', 'Project_Name': 'Outdoor Warning Sirens (FEMA Project)', 'Funding_Source': 'Environmental Grant', 'Amount': '27000'}, {'Funding_ID': '67', 'Project_Name': 'Outdoor Warning Sirens (FEMA)', 'Funding_Source': 'State Development Grant', 'Amount': '81000'}, {'Funding_ID': '68', 'Project_Name': 'Outdoor Warning Sirens - Design (FEMA Project)', 'Funding_Source': 'Local Business Support', 'Amount': '43000'}, {'Funding_ID': '69', 'Project_Name': 'Outdoor Warningn Sirens - Design (FEMA Project)', 'Funding_Source': 'Technology Innovation Fund', 'Amount': '84000'}, {'Funding_ID': '82', 'Project_Name': 'Storm Drain Master Plan (FEMA Project)', 'Funding_Source': 'Environmental Grant', 'Amount': '80000'}, {'Funding_ID': '86', 'Project_Name': 'Trancas Canyon Park Planting and Irrigation Repairs (CalJPIA/FEMA Project)', 'Funding_Source': 'Infrastructure Bond', 'Amount': '44000'}, {'Funding_ID': '87', 'Project_Name': 'Trancas Canyon Park Planting and Irrigation Repairs (FEMA/CalOES Project)', 'Funding_Source': 'Infrastructure Bond', 'Amount': '92000'}]}
+
+exec(code, env_args)

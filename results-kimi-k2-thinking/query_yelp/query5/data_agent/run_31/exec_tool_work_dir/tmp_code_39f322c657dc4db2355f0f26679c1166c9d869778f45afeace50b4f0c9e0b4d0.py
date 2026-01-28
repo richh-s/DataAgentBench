@@ -1,0 +1,93 @@
+code = """import re
+import json
+
+# Let's test with the actual data from preview
+businesses = [
+    {
+        "business_id": "businessid_64",
+        "attributes": {"WiFi": "u'free'"},
+        "description": "Located at 12337 Olive Blvd in Creve Coeur, MO"
+    },
+    {
+        "business_id": "businessid_54",
+        "attributes": {"WiFi": "u'free'"},
+        "description": "Located at 13151 Race Track Rd in Tampa, FL"
+    },
+    {
+        "business_id": "businessid_91",
+        "attributes": {"WiFi": "u'free'"},
+        "description": "Located at 1625 Baronne St in New Orleans, LA"
+    }
+]
+
+# US state postal abbreviations
+us_states = {
+    'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 
+    'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 
+    'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 
+    'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 
+    'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY', 'DC'
+}
+
+# Function to extract state from description
+def extract_state(description):
+    if not description or not isinstance(description, str):
+        return None
+    
+    # Look for patterns that match state codes
+    patterns = [
+        r'in [^,]+,\s*([A-Z]{2})\b',  # "in Creve Coeur, MO"
+        r'located at[^,]+,\s*([A-Z]{2})\b',  # "located at 123 Main St, CA"
+        r'located in[^,]+,\s*([A-Z]{2})\b',  # "located in Philadelphia, PA"
+        r'\b([A-Z]{2})[,\s]\d{5}\b',  # "CA 12345" or "CA, 12345"
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, description, re.IGNORECASE)
+        if match:
+            state = match.group(1).upper()
+            if state in us_states:
+                return state
+    
+    return None
+
+# Test the extraction
+test_businesses = []
+wifi_other_count = 0
+
+for business in businesses:
+    wifi_value = business['attributes'].get('WiFi')
+    wifi_str = str(wifi_value).lower()
+    
+    if wifi_str not in ["u'no'", "'no'", '"no"', 'no']:
+        wifi_other_count += 1
+        description = business.get('description', '')
+        state = extract_state(description)
+        if state:
+            test_businesses.append({
+                'business_id': business['business_id'],
+                'state': state,
+                'wifi_value': wifi_value
+            })
+        
+        print(f"ID: {business['business_id']}")
+        print(f"  WiFi: {wifi_value}")
+        print(f"  Description: {description}")
+        print(f"  Extracted state: {state}")
+        print()
+
+print(f"Businesses with WiFi != 'no': {wifi_other_count}")
+print(f"Successfully extracted state: {len(test_businesses)}")
+print(f"Results: {test_businesses}")
+
+result = {
+    'test_businesses': test_businesses,
+    'wifi_other_count': wifi_other_count
+}
+
+print('__RESULT__:')
+print(json.dumps(result))"""
+
+env_args = {'var_functions.list_db:0': ['business', 'checkin'], 'var_functions.query_db:2': [{'_id': '6859a000fe8b31cd7362e2ab', 'business_id': 'businessid_49', 'attributes': {'BusinessAcceptsCreditCards': 'True', 'WiFi': "u'no'", 'BusinessAcceptsBitcoin': 'False'}, 'description': 'Located at 6901 Phelps Rd in Goleta, CA, this facility offers a nurturing environment for young learners, providing a range of services in Education, Elementary Schools, Child Care & Day Care, Local Services, Preschools, and Montessori Schools.'}, {'_id': '6859a000fe8b31cd7362e2ac', 'business_id': 'businessid_47', 'attributes': {'ByAppointmentOnly': 'False', 'BusinessAcceptsCreditCards': 'True', 'GoodForKids': 'True', 'RestaurantsPriceRange2': '2', 'BikeParking': 'False', 'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': True, 'valet': False}"}, 'description': 'Located at 9916 Clayton Rd in St. Louis, MO, this establishment offers a wide range of services, including Hair Salons, Beauty & Spas, Hair Stylists, Skin Care, Blow Dry/Out Services, and Makeup Artists.'}, {'_id': '6859a000fe8b31cd7362e2ad', 'business_id': 'businessid_88', 'attributes': {'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'GoodForKids': 'True', 'BusinessAcceptsCreditCards': 'True', 'ByAppointmentOnly': 'False', 'BikeParking': 'True'}, 'description': 'Located at 11655 W Executive Dr in Boise, ID, this facility offers enthusiasts a premier destination for Gun/Rifle Ranges, Active Life.'}, {'_id': '6859a000fe8b31cd7362e2ae', 'business_id': 'businessid_41', 'attributes': 'None', 'description': 'Located at 1615 Pasadena Ave S, Ste 430 in Saint Petersburg, FL, this facility offers a range of services in Internal Medicine, Doctors, Health & Medical.'}, {'_id': '6859a000fe8b31cd7362e2af', 'business_id': 'businessid_33', 'attributes': {'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'BusinessAcceptsCreditCards': 'True', 'AcceptsInsurance': 'False', 'ByAppointmentOnly': 'False', 'RestaurantsPriceRange2': '2', 'WheelchairAccessible': 'True', 'BikeParking': 'False'}, 'description': 'Located at 9655 E US Hwy 36, Unit H in Avon, IN, this establishment offers a range of services including Nail Salons, Hair Removal, Beauty & Spas, and Waxing.'}, {'_id': '6859a000fe8b31cd7362e2b0', 'business_id': 'businessid_74', 'attributes': {'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'RestaurantsPriceRange2': '4', 'BikeParking': 'False'}, 'description': 'Located at 735 Dodecanese Blvd in Tarpon Springs, FL, this charming establishment offers a delightful selection of treats, making it a must-visit for anyone seeking Candy Stores, Specialty Food, Food.'}, {'_id': '6859a000fe8b31cd7362e2b1', 'business_id': 'businessid_92', 'attributes': {'ByAppointmentOnly': 'False', 'BusinessAcceptsCreditCards': 'True', 'BusinessParking': "{'garage': True, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'RestaurantsPriceRange2': '2', 'WheelchairAccessible': 'True', 'BikeParking': 'True', 'NoiseLevel': "u'quiet'", 'WiFi': "u'no'"}, 'description': 'Located at 690 W Dekalb Pike in King of Prussia, PA, this business offers a diverse range of services and products in the fields of Cosmetics & Beauty Supply, Cosmetic Dentists, Tanning, Teeth Whitening, Beauty & Spas, Dentists, Shopping, Blow Dry/Out Services, Health & Medical, Spray Tanning, and Hair Salons.'}, {'_id': '6859a000fe8b31cd7362e2b2', 'business_id': 'businessid_64', 'attributes': {'BusinessParking': "{'garage': True, 'street': False, 'validated': False, 'lot': True, 'valet': False}", 'ByAppointmentOnly': 'False', 'BusinessAcceptsCreditCards': 'True', 'RestaurantsPriceRange2': '2', 'BikeParking': 'True', 'WiFi': "u'free'"}, 'description': 'Located at 12337 Olive Blvd in Creve Coeur, MO, this establishment offers a range of services in Nail Salons, Beauty & Spas.'}, {'_id': '6859a000fe8b31cd7362e2b3', 'business_id': 'businessid_52', 'attributes': {'ByAppointmentOnly': 'False', 'BusinessAcceptsCreditCards': 'True', 'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'RestaurantsPriceRange2': '2', 'BikeParking': 'True'}, 'description': 'Located at 5000 W 96th St in Indianapolis, IN, this establishment offers a diverse selection of Antiques, Shopping, Home Services, and Lighting Fixtures & Equipment for all your home and decorative needs.'}, {'_id': '6859a000fe8b31cd7362e2b4', 'business_id': 'businessid_29', 'attributes': {'BikeParking': 'True', 'BusinessAcceptsCreditCards': 'True', 'RestaurantsPriceRange2': '2', 'BusinessParking': "{'garage': False, 'street': True, 'validated': False, 'lot': False, 'valet': False}", 'RestaurantsDelivery': 'None'}, 'description': 'Located at 41 Haddon Ave in Collingswood, NJ, this versatile establishment offers a range of services including Wedding Planning, Flowers & Gifts, Event Planning & Services, Financial Services, Shopping, and Florists.'}], 'var_functions.query_db:5': 'file_storage/functions.query_db:5.json', 'var_functions.query_db:6': [{'review_id': 'reviewid_135', 'business_ref': 'businessref_34', 'rating': '2'}, {'review_id': 'reviewid_1067', 'business_ref': 'businessref_89', 'rating': '5'}, {'review_id': 'reviewid_871', 'business_ref': 'businessref_82', 'rating': '4'}, {'review_id': 'reviewid_314', 'business_ref': 'businessref_66', 'rating': '2'}, {'review_id': 'reviewid_487', 'business_ref': 'businessref_95', 'rating': '1'}], 'var_functions.query_db:8': 'file_storage/functions.query_db:8.json', 'var_functions.execute_python:12': {'wifi_businesses': [{'business_id': 'businessid_64', 'state': 'MO'}, {'business_id': 'businessid_54', 'state': 'FL'}, {'business_id': 'businessid_91', 'state': 'LA'}, {'business_id': 'businessid_93', 'state': 'IL'}, {'business_id': 'businessid_26', 'state': 'FL'}, {'business_id': 'businessid_89', 'state': 'PA'}, {'business_id': 'businessid_97', 'state': 'PA'}, {'business_id': 'businessid_67', 'state': 'PA'}, {'business_id': 'businessid_51', 'state': 'FL'}, {'business_id': 'businessid_5', 'state': 'AB'}, {'business_id': 'businessid_6', 'state': 'NV'}, {'business_id': 'businessid_55', 'state': 'FL'}, {'business_id': 'businessid_77', 'state': 'PA'}, {'business_id': 'businessid_86', 'state': 'PA'}, {'business_id': 'businessid_40', 'state': 'PA'}, {'business_id': 'businessid_44', 'state': 'PA'}, {'business_id': 'businessid_43', 'state': 'IN'}, {'business_id': 'businessid_20', 'state': 'FL'}, {'business_id': 'businessid_85', 'state': 'PA'}, {'business_id': 'businessid_25', 'state': 'ID'}, {'business_id': 'businessid_82', 'state': 'PA'}, {'business_id': 'businessid_12', 'state': 'AB'}, {'business_id': 'businessid_16', 'state': 'IN'}, {'business_id': 'businessid_46', 'state': 'MO'}], 'state_counts': {'MO': 2, 'FL': 5, 'LA': 1, 'IL': 1, 'PA': 9, 'AB': 2, 'NV': 1, 'IN': 2, 'ID': 1}, 'top_state': 'PA', 'top_state_count': 9}, 'var_functions.query_db:14': 'file_storage/functions.query_db:14.json', 'var_functions.execute_python:16': {'wifi_businesses_count': 21, 'state_counts': {'MO': 2, 'FL': 5, 'LA': 1, 'IL': 1, 'PA': 8, 'NV': 1, 'IN': 2, 'ID': 1}, 'top_state': 'PA', 'top_state_count': 8, 'top_state_business_ids': ['businessid_89', 'businessid_97', 'businessid_67', 'businessid_77', 'businessid_86', 'businessid_40', 'businessid_44', 'businessid_82']}, 'var_functions.query_db:18': 'file_storage/functions.query_db:18.json', 'var_functions.query_db:20': 'file_storage/functions.query_db:20.json', 'var_functions.execute_python:24': {'wifi_businesses_count': 0, 'state_counts': {}, 'top_state': None, 'top_state_count': 0, 'top_state_business_ids_len': 0, 'top_state_business_refs': []}, 'var_functions.query_db:26': 'file_storage/functions.query_db:26.json', 'var_functions.query_db:30': 'file_storage/functions.query_db:30.json', 'var_functions.execute_python:32': {'wifi_businesses_with_state': 0, 'state_counts': {}, 'top_state': None, 'top_state_count': 0, 'top_state_business_refs': []}, 'var_functions.query_db:34': 'file_storage/functions.query_db:34.json', 'var_functions.execute_python:38': {'wifi_businesses_count': 0, 'state_counts': {}, 'top_state': None, 'top_state_count': 0, 'top_state_business_refs': []}}
+
+exec(code, env_args)

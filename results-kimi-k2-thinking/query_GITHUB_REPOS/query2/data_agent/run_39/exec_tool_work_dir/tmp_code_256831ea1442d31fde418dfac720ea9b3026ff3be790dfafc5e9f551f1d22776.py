@@ -1,0 +1,35 @@
+code = """import json
+
+# Check what variables are available
+all_vars = locals()
+keys = [k for k in all_vars.keys() if 'var_functions' in k]
+print("Available var_functions keys:", keys)
+
+# Try to get the swift repos data
+swift_key = 'var_functions.query_db:8'
+if swift_key in all_vars:
+    swift_data = all_vars[swift_key]
+    print("Type of swift data:", type(swift_data))
+    
+    # If it's a string, it's a file path
+    if isinstance(swift_data, str):
+        print("File path:", swift_data)
+        with open(swift_data, 'r') as f:
+            swift_repos = json.load(f)
+    else:
+        # It's the data directly
+        swift_repos = swift_data
+    
+    repo_names = [repo['repo_name'] for repo in swift_repos]
+    print(f"Total Swift repos: {len(repo_names)}")
+    print("First 5:", repo_names[:5])
+    
+    result = {'repo_names': repo_names, 'count': len(repo_names)}
+    print('__RESULT__:')
+    print(json.dumps(result))
+else:
+    print("Swift key not found", swift_key)"""
+
+env_args = {'var_functions.list_db:0': ['languages', 'repos', 'licenses'], 'var_functions.query_db:2': [{'repo_name': 'juliandunn/rackspacecloud', 'language_description': 'The codebase includes: Ruby (22,438 bytes), Shell (465 bytes).'}, {'repo_name': 'xMarkusSpringerx/coloranalyzer', 'language_description': 'This repository is mainly written in Ruby (1,897 bytes), with additional code in Shell (115 bytes).'}, {'repo_name': 'michaellihs/gitlab', 'language_description': 'The codebase includes: Ruby (162,002 bytes), Shell (168 bytes).'}, {'repo_name': 'vyorkin/xftp', 'language_description': 'The majority of the code is in Ruby (25,709 bytes), followed by Shell (115 bytes).'}, {'repo_name': 'airatshigapov/drophunter', 'language_description': 'The majority of the code is in Ruby (4,198 bytes), followed by Shell (115 bytes).'}, {'repo_name': 'tombruijn/chef-ruby-install', 'language_description': 'While most of the project is built in Ruby (10,174 bytes), it also incorporates Shell (716 bytes).'}, {'repo_name': 'SenseTecnic/stsplatform-lib-ruby', 'language_description': 'While most of the project is built in Ruby (17,195 bytes), it also incorporates Shell (115 bytes).'}, {'repo_name': 'procore/site-reliability-scripts', 'language_description': 'The majority of the code is in Ruby (12,891 bytes), followed by Shell (2,343 bytes).'}, {'repo_name': 'tibastral/web_motion', 'language_description': 'The majority of the code is in Ruby (5,324 bytes), followed by Shell (115 bytes).'}, {'repo_name': 'Haegin/stately', 'language_description': 'The codebase includes: Ruby (8,171 bytes), Shell (131 bytes).'}], 'var_functions.list_db:5': ['commits', 'contents', 'files'], 'var_functions.query_db:6': [{'repo_name': 'e-Sixt/Swen', 'language_description': 'This repository is mainly written in Swift (16,364 bytes), with additional code in Ruby (7,243 bytes), Shell (94 bytes).'}, {'repo_name': 'ApplauseOSS/Swifjection', 'language_description': 'The codebase includes: Swift (109,540 bytes), Ruby (3,068 bytes), Shell (762 bytes).'}, {'repo_name': 'vizifit/GenericPasswordRow', 'language_description': 'The codebase includes: Swift (18,238 bytes), Ruby (716 bytes), Shell (211 bytes).'}, {'repo_name': 'cxy921126/SoftSwift', 'language_description': 'The majority of the code is in Swift (1,723,695 bytes), followed by Shell (17,716 bytes), Ruby (297 bytes).'}, {'repo_name': 'cwwise/CWWeChat', 'language_description': 'While most of the project is built in Swift (585,714 bytes), it also incorporates Ruby (3,447 bytes), Shell (190 bytes).'}, {'repo_name': 'Apemb/Compass', 'language_description': 'The codebase includes: Swift (33,632 bytes), Shell (711 bytes), Ruby (434 bytes).'}, {'repo_name': 'toggl/superday', 'language_description': 'The majority of the code is in Swift (747,765 bytes), followed by Ruby (3,949 bytes), Shell (393 bytes).'}, {'repo_name': 'malcommac/SwiftDate', 'language_description': 'While most of the project is built in Swift (419,579 bytes), it also incorporates Ruby (767 bytes), Shell (169 bytes).'}, {'repo_name': 'chronotruck/CTKFlagPhoneNumber', 'language_description': 'While most of the project is built in Swift (87,439 bytes), it also incorporates Ruby (2,165 bytes), Shell (65 bytes).'}, {'repo_name': 'zendobk/SwiftUtils', 'language_description': 'While most of the project is built in Swift (71,711 bytes), it also incorporates Shell (3,156 bytes), Ruby (3,009 bytes).'}, {'repo_name': 'binarylevel/Riseset', 'language_description': 'The codebase includes: Swift (55,000 bytes), Ruby (533 bytes), Shell (193 bytes).'}, {'repo_name': 'Raizlabs/Anchorage', 'language_description': 'This repository is mainly written in Swift (99,834 bytes), with additional code in Ruby (6,219 bytes), Shell (5,846 bytes).'}, {'repo_name': 'mweibel/esrscan', 'language_description': 'While most of the project is built in Swift (46,819 bytes), it also incorporates Ruby (761 bytes), Shell (102 bytes).'}, {'repo_name': 'magmajo/nmagma-ios', 'language_description': 'The codebase includes: Swift (8,672 bytes), Ruby (6,468 bytes), Shell (1,308 bytes).'}, {'repo_name': 'elpassion/el-space-ios', 'language_description': 'While most of the project is built in Swift (366,580 bytes), it also incorporates Ruby (11,529 bytes), Shell (132 bytes).'}, {'repo_name': 'steveholt55/BLJGameButton', 'language_description': 'While most of the project is built in Swift (6,873 bytes), it also incorporates Ruby (577 bytes), Shell (28 bytes).'}, {'repo_name': 'truemetal/vapor-2-heroku-auth-template', 'language_description': 'This repository is mainly written in Swift (11,040 bytes), with additional code in Ruby (880 bytes), Shell (304 bytes).'}, {'repo_name': 'DenHeadless/DTCollectionViewManager', 'language_description': 'The codebase includes: Swift (264,900 bytes), Ruby (9,909 bytes), Shell (724 bytes).'}, {'repo_name': 'fizx/jane', 'language_description': 'The codebase includes: Swift (36,767 bytes), Ruby (6,457 bytes), Shell (1,823 bytes).'}, {'repo_name': 'ostatnicky/kancional-ios', 'language_description': 'While most of the project is built in Swift (147,485 bytes), it also incorporates Ruby (422 bytes), Shell (74 bytes).'}], 'var_functions.query_db:8': 'file_storage/functions.query_db:8.json', 'var_functions.execute_python:12': 'file_storage/functions.execute_python:12.json'}
+
+exec(code, env_args)

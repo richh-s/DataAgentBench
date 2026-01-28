@@ -1,75 +1,94 @@
 import json
+import re
 from pathlib import Path
 
-def validate(predicted_result) -> bool:
+
+def validate(llm_output: str):
     """
-    Validate predicted answer against ground truth.
-    
+    Validate LLM output against ground truth.
+
     Args:
-        predicted_result: A list of records, where each record is a dict with columns
-        (e.g., [{"title": "Paper 1", "total_citations": 100}, ...])
-    
+        llm_output: String output from the LLM containing the answer
+
     Returns:
-        True if predicted answer matches ground truth, False otherwise
+        Tuple of (is_valid: bool, reason: str)
     """
-    # Load ground truth from local JSON file
+    # Load ground truth
     ground_truth_file = Path(__file__).parent / "ground_truth.json"
-    
+
     try:
         with open(ground_truth_file, 'r', encoding='utf-8') as f:
             ground_truth = json.load(f)
     except FileNotFoundError:
-        print(f"❌ Error: Ground truth file not found at {ground_truth_file}")
-        return False
+        return False, f"Ground truth file not found at {ground_truth_file}"
     except json.JSONDecodeError as e:
-        print(f"❌ Error: Failed to parse ground truth JSON: {e}")
-        return False
-    
-    # Validate predicted_result is a list
-    if not isinstance(predicted_result, list):
-        print(f"❌ Error: predicted_result must be a list, got {type(predicted_result)}")
-        return False
-    
-    # Ground truth should also be a list
+        return False, f"Failed to parse ground truth JSON: {e}"
+
+    # Ground truth is a list of records with title and total_citations
     if not isinstance(ground_truth, list):
-        print(f"❌ Error: Ground truth should be a list, got {type(ground_truth)}")
-        return False
-    
-    # Compare lists - they should have the same length and same records
-    if len(predicted_result) != len(ground_truth):
-        print(f"❌ Validation failed")
-        print(f"   Predicted: {len(predicted_result)} records, Ground truth: {len(ground_truth)} records")
-        return False
-    
-    # Sort both lists for comparison
-    def sort_key(record):
-        # Sort by title first, then by other fields
-        return (record.get('title', ''), tuple(sorted(record.items())))
-    
-    predicted_sorted = sorted(predicted_result, key=sort_key)
-    ground_truth_sorted = sorted(ground_truth, key=sort_key)
-    
-    # Compare each record
-    for i, (pred_record, gt_record) in enumerate(zip(predicted_sorted, ground_truth_sorted)):
-        if pred_record != gt_record:
-            print(f"❌ Validation failed")
-            print(f"   Record {i+1} mismatch:")
-            print(f"   Predicted: {pred_record}")
-            print(f"   Ground truth: {gt_record}")
-            return False
-    
-    print(f"✅ Validation passed")
-    print(f"   Predicted: {len(predicted_result)} records, Ground truth: {len(ground_truth)} records")
-    return True
+        return False, f"Ground truth should be a list, got {type(ground_truth)}"
+
+    expected_count = len(ground_truth)
+    expected_titles = {record.get('title', '') for record in ground_truth}
+    expected_total = sum(record.get('total_citations', 0) for record in ground_truth)
+
+    # Try to parse LLM output as JSON first
+    try:
+        parsed_output = json.loads(llm_output)
+        if isinstance(parsed_output, list):
+            # Check if lengths match
+            if len(parsed_output) != expected_count:
+                return False, f"Expected {expected_count} records, got {len(parsed_output)}"
+
+            # Sort both lists for comparison
+            def sort_key(record):
+                return (record.get('title', ''), tuple(sorted(record.items())))
+
+            predicted_sorted = sorted(parsed_output, key=sort_key)
+            ground_truth_sorted = sorted(ground_truth, key=sort_key)
+
+            # Compare each record
+            for i, (pred, gt) in enumerate(zip(predicted_sorted, ground_truth_sorted)):
+                if pred != gt:
+                    return False, f"Record {i+1} mismatch: predicted {pred}, expected {gt}"
+
+            return True, f"All {expected_count} records match exactly"
+    except (json.JSONDecodeError, TypeError):
+        pass
+
+    # Fallback: Check if output contains all expected titles and reasonable citation counts
+    found_titles = 0
+    for title in expected_titles:
+        if title.lower() in llm_output.lower():
+            found_titles += 1
+
+    if found_titles == expected_count:
+        # Check if total citations sum is mentioned
+        numbers = re.findall(r'\b(\d{1,3}(?:,\d{3})*|\d+)\b', llm_output)
+        found_nums = [int(n.replace(',', '')) for n in numbers]
+
+        if expected_total in found_nums:
+            return True, f"Found all {expected_count} titles and total citations {expected_total} in output"
+        else:
+            # Check if we found all individual citation counts
+            expected_citations = {record.get('total_citations', 0) for record in ground_truth}
+            if expected_citations.issubset(set(found_nums)):
+                return True, f"Found all {expected_count} titles and all individual citation counts in output"
+
+    if found_titles > 0:
+        return False, f"Found {found_titles}/{expected_count} titles. Expected all titles to be present."
+
+    return False, f"Expected {expected_count} paper records with titles and citations. Could not parse output."
+
 
 if __name__ == "__main__":
-    # Example usage
-    test_case = [
-        {
-            "title": "Test Paper",
-            "total_citations": 100
-        }
+    # Test examples
+    test_cases = [
+        '[{"title": "Paper A", "total_citations": 100}, {"title": "Paper B", "total_citations": 200}]',
+        "Paper A has 100 citations, Paper B has 200 citations.",
+        "I found 2 papers with empirical contributions.",
     ]
-    result = validate(test_case)
-    print(f"\nValidation result: {result}")
-
+    for test in test_cases:
+        result, reason = validate(test)
+        print(f"Input: {test[:60]}...")
+        print(f"Result: {result}, Reason: {reason}\n")

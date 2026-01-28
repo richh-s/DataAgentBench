@@ -1,0 +1,38 @@
+code = """import json
+# Load order item ids from previous execute_python result
+order_item_ids = var_call_ZiJmBxXBUMtgtYduh09kcWRB
+cases = var_call_fmHGrfo0zGEj5e68hbCT63LK
+# Normalize function
+def norm(s):
+    if s is None:
+        return None
+    return str(s).strip().lstrip('#').strip()
+order_set = set(norm(x) for x in order_item_ids)
+# Find matching cases
+matches = []
+for c in cases:
+    oid = norm(c.get('orderitemid__c'))
+    if oid in order_set:
+        matches.append(c)
+# Count issueid__c
+from collections import Counter
+cnt = Counter()
+for m in matches:
+    iid = norm(m.get('issueid__c'))
+    if iid:
+        cnt[iid] += 1
+# Determine most common
+most_common = cnt.most_common()
+result = None
+if most_common:
+    top_count = most_common[0][1]
+    # If tie, select lexicographically smallest id
+    top_ids = sorted([iid for iid, c in most_common if c==top_count])
+    result = top_ids[0]
+# Print JSON serializable string
+print("__RESULT__:")
+print(json.dumps(result))"""
+
+env_args = {'var_call_VrL9J6J1ZkUp2Ddps0l13pWS': [], 'var_call_xKPQIIpQM8CMKRr2R8YkQEAB': [], 'var_call_0jixH7usbE2pPs3Fk8S93l9M': [{'id': 'a03Wt00000JqhItIAJ', 'name': 'Software Installation Error'}, {'id': '#a03Wt00000JqmLvIAJ', 'name': 'Billing Discrepancy'}, {'id': 'a03Wt00000JqmX6IAJ', 'name': 'Customizability Limitation   '}, {'id': 'a03Wt00000JqnHwIAJ', 'name': 'User Interface Bug'}, {'id': '#a03Wt00000JqtOtIAJ', 'name': 'Support Response Delay'}, {'id': 'a03Wt00000JqvLsIAJ', 'name': 'License Renewal Confusion'}, {'id': '#a03Wt00000JqvNUIAZ', 'name': 'Training Module Access   '}, {'id': 'a03Wt00000JqvvOIAR', 'name': 'Data Loss Incident'}, {'id': '#a03Wt00000JqxVjIAJ', 'name': 'AI Feature Malfunction'}, {'id': '#a03Wt00000JqxtvIAB', 'name': 'Scalability Issue'}, {'id': 'a03Wt00000JqzKcIAJ', 'name': 'Data Integration Error'}, {'id': 'a03Wt00000JqzPSIAZ', 'name': 'Security Compliance Query'}, {'id': 'a03Wt00000JqzR3IAJ', 'name': 'Workflow Integration Lag'}, {'id': 'a03Wt00000JqzSfIAJ', 'name': 'Feature Update Notification'}, {'id': '#a03Wt00000JqzUHIAZ', 'name': 'ROI Assessment Discrepancy'}], 'var_call_m2ZKEuSeEOq1ywr528HuNQ9y': [], 'var_call_GwD7geH1LW9bQUli1wd5d5pM': 'file_storage/call_GwD7geH1LW9bQUli1wd5d5pM.json', 'var_call_ZiJmBxXBUMtgtYduh09kcWRB': ['#802Wt00000790WEIAY', '#802Wt0000079315IAA', '#802Wt00000794JmIAI', '#802Wt00000794YFIAY', '#802Wt00000794bXIAQ', '#802Wt00000795PSIAY', '#802Wt00000796IIIAY', '#802Wt00000796N7IAI', '#802Wt00000796dIIAQ', '#802Wt00000796jiIAA', '#802Wt00000797O5IAI', '#802Wt00000797axIAA', '#802Wt00000797mDIAQ', '#802Wt00000797nqIAA', '#802Wt00000797pSIAQ', '#802Wt000007983xIAA', '#802Wt00000798NMIAY', '#802Wt00000798S9IAI', '#802Wt00000798nBIAQ', '#802Wt00000799JPIAY', '#802Wt00000799b7IAA', '#802Wt00000799fxIAA', '#802Wt0000079A0wIAE', '#802Wt0000079AfJIAU', '802Wt0000078wz5IAA', '802Wt0000078xAAIAY', '802Wt0000078yXgIAI', '802Wt0000078yXiIAI', '802Wt0000078ypSIAQ', '802Wt000007906mIAA', '802Wt00000792gDIAQ', '802Wt00000792zTIAQ', '802Wt00000793sTIAQ', '802Wt00000794F3IAI', '802Wt00000794F4IAI', '802Wt00000794YJIAY', '802Wt00000794bTIAQ', '802Wt000007959OIAQ', '802Wt000007959PIAQ', '802Wt00000795UKIAY', '802Wt00000795akIAA', '802Wt00000795ywIAA', '802Wt000007962JIAQ', '802Wt000007968hIAA', '802Wt000007968iIAA', '802Wt00000796F5IAI', '802Wt00000796NAIAY', '802Wt00000796RzIAI', '802Wt00000796S0IAI', '802Wt00000796S1IAI', '802Wt00000796VDIAY', '802Wt00000796YPIAY', '802Wt00000796YQIAY', '802Wt00000796a1IAA', '802Wt00000796dFIAQ', '802Wt00000796lKIAQ', '802Wt00000796myIAA', '802Wt00000796n0IAA', '802Wt00000796oaIAA', '802Wt00000796rlIAA', '802Wt00000796tTIAQ', '802Wt00000796v0IAA', '802Wt00000796wbIAA', '802Wt00000796wcIAA', '802Wt000007979WIAQ', '802Wt00000797FxIAI', '802Wt00000797MQIAY', '802Wt00000797RGIAY', '802Wt00000797SsIAI', '802Wt00000797e9IAA', '802Wt00000797hNIAQ', '802Wt00000797j0IAA', '802Wt00000797nsIAA', '802Wt00000797sfIAA', '802Wt00000797z8IAA', '802Wt000007982LIAQ', '802Wt000007987CIAQ', '802Wt00000798IUIAY', '802Wt00000798IVIAY', '802Wt00000798NKIAY', '802Wt00000798iIIAQ', '802Wt00000798rxIAA', '802Wt00000798wpIAA', '802Wt000007991dIAA', '802Wt0000079987IAA', '802Wt00000799EZIAY', '802Wt00000799EaIAI', '802Wt00000799HoIAI', '802Wt00000799T3IAI', '802Wt00000799ckIAA', '802Wt00000799srIAA', '802Wt00000799w5IAA', '802Wt0000079A2aIAE', '802Wt0000079A49IAE', '802Wt0000079A7NIAU', '802Wt0000079AU1IAM', '802Wt0000079AgrIAE', '802Wt0000079AqXIAU', '802Wt0000079As9IAE'], 'var_call_ZYM6wf35EUzIrCLoOWlexrow': [], 'var_call_dqGHmqAgXxzIkyZqYCn48IAW': [{'id': '#500Wt00000DDYpHIAX', 'issueid__c': 'a03Wt00000JqmX6IAJ', 'accountid': '#001Wt00000PHHXXIA5', 'createddate': '2022-09-05T11:15:00.000+0000'}, {'id': '#500Wt00000DDZtKIAX', 'issueid__c': 'a03Wt00000JqzPSIAZ', 'accountid': '001Wt00000PFj4zIAD', 'createddate': '2023-01-04T08:47:00.000+0000'}, {'id': '500Wt00000DDfx8IAD', 'issueid__c': 'a03Wt00000JqvNUIAZ', 'accountid': '001Wt00000PGdBuIAL', 'createddate': '2023-01-03T10:15:00.000+0000'}, {'id': '500Wt00000DDg20IAD', 'issueid__c': 'a03Wt00000JqhItIAJ', 'accountid': '#001Wt00000PHRTfIAP', 'createddate': '2022-12-01T10:00:00.000+0000'}, {'id': '500Wt00000DDxScIAL', 'issueid__c': 'a03Wt00000JqnHwIAJ', 'accountid': '001Wt00000PGtdJIAT', 'createddate': '2022-10-01T14:45:00.000+0000'}, {'id': '500Wt00000DDxduIAD', 'issueid__c': 'a03Wt00000JqnHwIAJ', 'accountid': '001Wt00000PGtdJIAT', 'createddate': '2022-09-16T09:30:00.000+0000'}, {'id': '#500Wt00000DDyznIAD', 'issueid__c': 'a03Wt00000JqxtvIAB', 'accountid': '001Wt00000PGaZCIA1', 'createddate': '2022-09-22T19:28:00.000+0000'}, {'id': '#500Wt00000DDzJ8IAL', 'issueid__c': 'a03Wt00000JqmX6IAJ', 'accountid': '001Wt00000PHHXXIA5', 'createddate': '2022-09-03T15:30:00.000+0000'}, {'id': '#500Wt00000DDzXeIAL', 'issueid__c': 'a03Wt00000JqnHwIAJ', 'accountid': '001Wt00000PHVtpIAH', 'createddate': '2022-09-05T14:45:00.000+0000'}, {'id': '500Wt00000DE0K1IAL', 'issueid__c': 'a03Wt00000JqnHwIAJ', 'accountid': '001Wt00000PHVtpIAH', 'createddate': '2022-10-15T11:00:00.000+0000'}], 'var_call_fmHGrfo0zGEj5e68hbCT63LK': [{'id': '#500Wt00000DDYpHIAX', 'orderitemid__c': '802Wt00000790mNIAQ', 'issueid__c': 'a03Wt00000JqmX6IAJ', 'createddate': '2022-09-05T11:15:00.000+0000'}, {'id': '#500Wt00000DDZtKIAX', 'orderitemid__c': '802Wt00000799mPIAQ', 'issueid__c': 'a03Wt00000JqzPSIAZ', 'createddate': '2023-01-04T08:47:00.000+0000'}, {'id': '500Wt00000DDfx8IAD', 'orderitemid__c': '802Wt00000798K5IAI', 'issueid__c': 'a03Wt00000JqvNUIAZ', 'createddate': '2023-01-03T10:15:00.000+0000'}, {'id': '500Wt00000DDg20IAD', 'orderitemid__c': '802Wt00000793bTIAQ', 'issueid__c': 'a03Wt00000JqhItIAJ', 'createddate': '2022-12-01T10:00:00.000+0000'}, {'id': '500Wt00000DDxScIAL', 'orderitemid__c': '802Wt00000790WEIAY', 'issueid__c': 'a03Wt00000JqnHwIAJ', 'createddate': '2022-10-01T14:45:00.000+0000'}, {'id': '500Wt00000DDxduIAD', 'orderitemid__c': '802Wt00000790WEIAY', 'issueid__c': 'a03Wt00000JqnHwIAJ', 'createddate': '2022-09-16T09:30:00.000+0000'}, {'id': '#500Wt00000DDyznIAD', 'orderitemid__c': '802Wt000007928FIAQ', 'issueid__c': 'a03Wt00000JqxtvIAB', 'createddate': '2022-09-22T19:28:00.000+0000'}, {'id': '#500Wt00000DDzJ8IAL', 'orderitemid__c': '802Wt0000079A4AIAU', 'issueid__c': 'a03Wt00000JqmX6IAJ', 'createddate': '2022-09-03T15:30:00.000+0000'}, {'id': '#500Wt00000DDzXeIAL', 'orderitemid__c': '802Wt00000798olIAA', 'issueid__c': 'a03Wt00000JqnHwIAJ', 'createddate': '2022-09-05T14:45:00.000+0000'}, {'id': '500Wt00000DE0K1IAL', 'orderitemid__c': '802Wt00000798olIAA', 'issueid__c': 'a03Wt00000JqnHwIAJ', 'createddate': '2022-10-15T11:00:00.000+0000'}]}
+
+exec(code, env_args)

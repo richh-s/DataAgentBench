@@ -1,0 +1,94 @@
+code = """import json
+
+# Load the closed cases data from the file
+closed_cases_file = var_functions.query_db:6
+with open(closed_cases_file, 'r') as f:
+    closed_cases = json.load(f)
+
+# Query all accounts from core_crm
+import sqlite3
+
+# Connect to core_crm SQLite database
+conn = sqlite3.connect('core_crm.db')
+cursor = conn.cursor()
+
+cursor.execute("SELECT Id, ShippingState FROM Account")
+accounts = cursor.fetchall()
+
+# Close connection
+conn.close()
+
+# Convert to dictionary for easy lookup
+account_states = {str(row[0]): row[1] for row in accounts}
+
+# Process closed cases
+from datetime import datetime
+
+# Today's date as per the query
+TODAY_DATE = datetime(2022, 10, 26)
+
+processed_cases = []
+for case in closed_cases:
+    try:
+        # Parse dates
+        created = datetime.fromisoformat(case['createddate'].replace('Z', '+00:00'))
+        closed = datetime.fromisoformat(case['closeddate'].replace('Z', '+00:00'))
+        
+        # Calculate closure time in hours
+        closure_hours = (closed - created).total_seconds() / 3600
+        
+        # Get account ID with or without #
+        account_id = case['accountid']
+        if account_id and account_id.startswith('#'):
+            account_id = account_id[1:]
+        
+        # Get state
+        state = account_states.get(account_id, None)
+        
+        processed_cases.append({
+            'case_id': case['id'],
+            'account_id': account_id,
+            'state': state,
+            'created': created,
+            'closed': closed,
+            'closure_hours': closure_hours
+        })
+    except Exception as e:
+        continue
+
+# Filter for past 6 quarters (approximately 18 months)
+# 6 quarters = 6 x 3 months = 18 months
+from dateutil.relativedelta import relativedelta
+cutoff_date = TODAY_DATE - relativedelta(months=18)
+
+filtered_cases = [case for case in processed_cases if case['created'] >= cutoff_date and case['state']]
+
+# Group by state and calculate average closure time
+from collections import defaultdict
+state_closure_times = defaultdict(list)
+
+for case in filtered_cases:
+    state_closure_times[case['state']].append(case['closure_hours'])
+
+# Calculate average closure time per state
+state_avg_closure = {}
+for state, times in state_closure_times.items():
+    state_avg_closure[state] = sum(times) / len(times)
+
+# Sort by average closure time (quickest first)
+sorted_states = sorted(state_avg_closure.items(), key=lambda x: x[1])
+
+# Get top state
+top_state = sorted_states[0] if sorted_states else None
+
+print('__RESULT__:')
+print(json.dumps({
+    'top_state': top_state[0] if top_state else None,
+    'avg_closure_hours': top_state[1] if top_state else None,
+    'total_cases': len(filtered_cases),
+    'state_count': len(state_avg_closure)
+}))"""
+
+env_args = {'var_functions.query_db:0': [{'id': '#500Wt00000DDDfwIAH', 'priority': 'Medium', 'subject': 'Feature Update Notifications Lack', 'description': "Without regular update notifications, we are unable to fully utilize CollabCircuit Hub's latest features.", 'status': 'Waiting on Customer', 'contactid': '003Wt00000JqxKSIAZ', 'createddate': '2023-07-02T11:00:00.000+0000', 'closeddate': 'None', 'orderitemid__c': '802Wt00000797r4IAA', 'issueid__c': 'a03Wt00000JqzSfIAJ', 'accountid': '001Wt00000PFttwIAD', 'ownerid': '005Wt000003NJ0DIAW'}, {'id': '500Wt00000DDDtTIAX', 'priority': 'Medium', 'subject': 'Missing Feature Update Alerts', 'description': 'I have noticed that I am not consistently receiving notifications about new feature updates for the SecureFlow Suite, which affects my ability to use the software to its full potential.', 'status': 'Waiting on Customer   ', 'contactid': '003Wt00000Jqp3WIAR', 'createddate': '2020-12-29T08:36:00.000+0000', 'closeddate': 'None', 'orderitemid__c': '802Wt00000798aDIAQ', 'issueid__c': 'a03Wt00000JqzSfIAJ', 'accountid': '001Wt00000PHVkAIAX', 'ownerid': '#005Wt000003NJWTIA4'}, {'id': '500Wt00000DDNYoIAP', 'priority': 'Medium', 'subject': 'Delayed Support Response ', 'description': 'I am experiencing delays in getting timely responses from TechPulse support during busy periods, which is affecting our project timelines.', 'status': 'Closed', 'contactid': '#003Wt00000JqqVtIAJ', 'createddate': '2023-09-30T11:30:00.000+0000', 'closeddate': '2023-09-30T16:03:45.000+0000', 'orderitemid__c': '802Wt00000792tiIAA', 'issueid__c': 'a03Wt00000JqtOtIAJ', 'accountid': '001Wt00000PGZZoIAP', 'ownerid': '005Wt000003NIc3IAG'}, {'id': '500Wt00000DDPIsIAP', 'priority': 'Medium', 'subject': 'AI Feature Malfunction', 'description': 'Some of the AI-powered features in CloudLink Designer are intermittently failing to operate, leading to reduced efficiency and user frustration.', 'status': 'Closed ', 'contactid': '003Wt00000JqlkjIAB', 'createddate': '2022-08-05T14:30:00.000+0000', 'closeddate': '2022-08-05T14:39:32.000+0000', 'orderitemid__c': '802Wt00000797r3IAA', 'issueid__c': 'a03Wt00000JqxVjIAJ', 'accountid': '#001Wt00000PGRnYIAX', 'ownerid': '#005Wt000003NEzqIAG'}, {'id': '500Wt00000DDPM6IAP', 'priority': 'High', 'subject': 'Access Issues with Training Module', 'description': "I am experiencing difficulty accessing the online training modules which are crucial for my team's smooth adoption of the SecureFlow Suite.", 'status': 'Closed', 'contactid': '#003Wt00000Jqv14IAB', 'createddate': '2020-09-01T10:30:00.000+0000', 'closeddate': '2020-09-01T14:08:55.000+0000', 'orderitemid__c': '802Wt00000797r5IAA', 'issueid__c': 'a03Wt00000JqvNUIAZ', 'accountid': '001Wt00000PGzSaIAL', 'ownerid': '005Wt000003NISLIA4'}], 'var_functions.query_db:2': [{'Id': '001Wt00000PFj4zIAD', 'Name': 'NaviCorp Tech ', 'Phone': '000-111-2222', 'Industry': 'Navigation Technology', 'Description': 'NaviCorp Tech excels in developing advanced navigation technologies, with a focus on precision and power efficiency. Utilizing CircuitAI Innovator alongside OptiPower Manager, they deliver solutions that redefine navigation systems, enhancing accuracy and operational excellence.', 'NumberOfEmployees': '800.0', 'ShippingState': 'FL'}, {'Id': '001Wt00000PFj50IAD', 'Name': 'FusionTech Systems', 'Phone': '333-987-6543', 'Industry': 'Technology Manufacturing', 'Description': 'FusionTech Systems stands out in technology manufacturing by integrating AI and cloud-based solutions. With products like AI Cirku-Tech and CloudLink Designer, they commit to providing innovative manufacturing processes. Their dedication to tech-driven manufacturing ensures high-quality, reliable outputs.', 'NumberOfEmployees': '760.0', 'ShippingState': 'TX'}, {'Id': '#001Wt00000PFluoIAD', 'Name': 'BlueSky Aerospace', 'Phone': '839-393-9393', 'Industry': 'Aerospace Engineering', 'Description': "BlueSky Aerospace excels in aerospace engineering through innovative simulation and circuit design tools. With QuantumPCB Modeler and SimuFlow Xtreme, they develop precise and advanced aerospace components. Their continuous pursuit of innovation drives aerospace technology's evolution.", 'NumberOfEmployees': '980.0', 'ShippingState': 'AZ'}, {'Id': '#001Wt00000PFlupIAD', 'Name': 'NeuralWave Technologies', 'Phone': '444-333-4444', 'Industry': 'Artificial Intelligence', 'Description': 'NeuralWave Technologies leads advancements in AI-driven solutions for various applications. Using products like AI Cirku-Tech and Workflow Genius, they optimize design processes and enhance power management in AI systems. Focused on innovation, they continue to push the boundaries of artificial intelligence capabilities.', 'NumberOfEmployees': '950.0', 'ShippingState': 'CA'}, {'Id': '001Wt00000PFrk1IAD', 'Name': 'SkyNet Technologies', 'Phone': '111-222-3334', 'Industry': 'Drones & Aviation', 'Description': 'SkyNet Technologies pioneers in drone development and aviation technology, combining precision design with advanced cloud capabilities. Through QuantumPCB Modeler and CloudLink Designer, they produce innovative and efficient aviation systems. Their contributions set standards in the modernization of aerial technology.', 'NumberOfEmployees': '700.0', 'ShippingState': 'MO'}], 'var_functions.query_db:6': 'file_storage/functions.query_db:6.json'}
+
+exec(code, env_args)

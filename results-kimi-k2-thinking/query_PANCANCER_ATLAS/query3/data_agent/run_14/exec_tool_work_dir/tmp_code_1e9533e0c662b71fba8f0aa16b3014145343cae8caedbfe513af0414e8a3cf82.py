@@ -1,0 +1,74 @@
+code = """import json
+import re
+import pandas as pd
+from scipy.stats import chi2_contingency
+
+# Load data
+clinical_var = globals()['var_functions.query_db:34']
+if isinstance(clinical_var, str):
+    with open(clinical_var, 'r') as f:
+        clinical_data = json.load(f)
+else:
+    clinical_data = clinical_var
+
+mutation_var = globals()['var_functions.query_db:30']
+if isinstance(mutation_var, str):
+    with open(mutation_var, 'r') as f:
+        mutation_data = json.load(f)
+else:
+    mutation_data = mutation_var
+
+# Process data
+df_clinical = pd.DataFrame(clinical_data)
+df_mutations = pd.DataFrame(mutation_data)
+
+def extract_patient_id(desc):
+    match = re.search(r'TCGA-[A-Z0-9]+-[A-Z0-9]+', desc)
+    return match.group(0) if match else None
+
+df_clinical['Patient_ID'] = df_clinical['Patient_description'].apply(extract_patient_id)
+df_clinical_female = df_clinical[df_clinical['Patient_description'].str.contains('FEMALE', case=False)].copy()
+df_clinical_filtered = df_clinical_female[
+    (df_clinical_female['histological_type'].notna()) &
+    (df_clinical_female['histological_type'] != 'None') &
+    (df_clinical_female['histological_type'] != '')
+].copy()
+
+reliable_mutations = df_mutations[df_mutations['FILTER'] == 'PASS']
+cdh1_mutated_patients = set(reliable_mutations['ParticipantBarcode'].unique())
+df_clinical_filtered['CDH1_Mutated'] = df_clinical_filtered['Patient_ID'].isin(cdh1_mutated_patients)
+
+# Create contingency table
+hist_types = df_clinical_filtered['histological_type'].value_counts()
+contingency_data = []
+for hist_type, total_count in hist_types.items():
+    if total_count <= 10:
+        continue
+    subset = df_clinical_filtered[df_clinical_filtered['histological_type'] == hist_type]
+    mutated = subset['CDH1_Mutated'].sum()
+    not_mutated = len(subset) - mutated
+    contingency_data.append([mutated, not_mutated])
+
+# Calculate chi-square if we have enough data
+if len(contingency_data) > 1:
+    contingency_table = pd.DataFrame(contingency_data)
+    chi2, p_value, dof, expected = chi2_contingency(contingency_table)
+    
+    result = {
+        'chi_square_statistic': float(chi2),
+        'p_value': float(p_value),
+        'degrees_of_freedom': int(dof),
+        'histological_types_included': len(contingency_data)
+    }
+else:
+    result = {
+        'error': 'Not enough histological types with sufficient sample size',
+        'histological_types_found': len(contingency_data)
+    }
+
+print('__RESULT__:')
+print(json.dumps(result))"""
+
+env_args = {'var_functions.list_db:2': ['clinical_info'], 'var_functions.query_db:5': 'file_storage/functions.query_db:5.json', 'var_functions.query_db:16': [{'ParticipantBarcode': 'TCGA-A8-A091', 'Tumor_SampleBarcode': 'TCGA-A8-A091-01A', 'Tumor_AliquotBarcode': 'TCGA-A8-A091-01A-11W-A019-09', 'Normal_SampleBarcode': 'TCGA-A8-A091-10A', 'Normal_AliquotBarcode': 'TCGA-A8-A091-10A-01W-A021-09', 'Normal_SampleTypeLetterCode': 'NB', 'Hugo_Symbol': 'CDH1', 'HGVSp_Short': 'p.E243K', 'Variant_Classification': 'Missense_Mutation', 'HGVSc': 'c.727G>A', 'CENTERS': 'MUTECT|RADIA|SOMATICSNIPER|MUSE|VARSCANS', 'FILTER': 'wga'}, {'ParticipantBarcode': 'TCGA-A8-A0A1', 'Tumor_SampleBarcode': 'TCGA-A8-A0A1-01A', 'Tumor_AliquotBarcode': 'TCGA-A8-A0A1-01A-11W-A019-09', 'Normal_SampleBarcode': 'TCGA-A8-A0A1-10A', 'Normal_AliquotBarcode': 'TCGA-A8-A0A1-10A-01W-A021-09', 'Normal_SampleTypeLetterCode': 'NB', 'Hugo_Symbol': 'CDH1', 'HGVSp_Short': 'p.Q307Hfs*2', 'Variant_Classification': 'Frame_Shift_Del', 'HGVSc': 'c.921_955delAGATCCTGAGCTCCCTGACAAAAATATGTTCACCA', 'CENTERS': 'INDELOCATOR*|VARSCANI*|PINDEL', 'FILTER': 'wga'}, {'ParticipantBarcode': 'TCGA-A8-A0A9', 'Tumor_SampleBarcode': 'TCGA-A8-A0A9-01A', 'Tumor_AliquotBarcode': 'TCGA-A8-A0A9-01A-11W-A019-09', 'Normal_SampleBarcode': 'TCGA-A8-A0A9-10A', 'Normal_AliquotBarcode': 'TCGA-A8-A0A9-10A-01W-A021-09', 'Normal_SampleTypeLetterCode': 'NB', 'Hugo_Symbol': 'CDH1', 'HGVSp_Short': 'p.Q503*', 'Variant_Classification': 'Nonsense_Mutation', 'HGVSc': 'c.1507C>T', 'CENTERS': 'SOMATICSNIPER|RADIA|MUTECT|MUSE|VARSCANS', 'FILTER': 'wga'}, {'ParticipantBarcode': 'TCGA-AA-3821', 'Tumor_SampleBarcode': 'TCGA-AA-3821-01A', 'Tumor_AliquotBarcode': 'TCGA-AA-3821-01A-01W-0995-10', 'Normal_SampleBarcode': 'TCGA-AA-3821-10A', 'Normal_AliquotBarcode': 'TCGA-AA-3821-10A-01W-0995-10', 'Normal_SampleTypeLetterCode': 'NB', 'Hugo_Symbol': 'CDH1', 'HGVSp_Short': 'p.V365I', 'Variant_Classification': 'Missense_Mutation', 'HGVSc': 'c.1093G>A', 'CENTERS': 'SOMATICSNIPER|RADIA|MUTECT|MUSE|VARSCANS', 'FILTER': 'wga'}, {'ParticipantBarcode': 'TCGA-A2-A0YL', 'Tumor_SampleBarcode': 'TCGA-A2-A0YL-01A', 'Tumor_AliquotBarcode': 'TCGA-A2-A0YL-01A-21D-A10G-09', 'Normal_SampleBarcode': 'TCGA-A2-A0YL-10A', 'Normal_AliquotBarcode': 'TCGA-A2-A0YL-10A-01D-A10G-09', 'Normal_SampleTypeLetterCode': 'NB', 'Hugo_Symbol': 'CDH1', 'HGVSp_Short': 'p.T364Hfs*4', 'Variant_Classification': 'Frame_Shift_Del', 'HGVSc': 'c.1090_1100delACAGTCACTGA', 'CENTERS': 'INDELOCATOR*|PINDEL', 'FILTER': 'PASS'}], 'var_functions.query_db:18': [], 'var_functions.query_db:20': [{'column_name': 'Patient_description'}, {'column_name': 'days_to_birth'}, {'column_name': 'days_to_death'}, {'column_name': 'days_to_last_followup'}, {'column_name': 'days_to_initial_pathologic_diagnosis'}, {'column_name': 'age_at_initial_pathologic_diagnosis'}, {'column_name': 'icd_10'}, {'column_name': 'tissue_retrospective_collection_indicator'}, {'column_name': 'icd_o_3_histology'}, {'column_name': 'tissue_prospective_collection_indicator'}, {'column_name': 'history_of_neoadjuvant_treatment'}, {'column_name': 'icd_o_3_site'}, {'column_name': 'tumor_tissue_site'}, {'column_name': 'new_tumor_event_after_initial_treatment'}, {'column_name': 'radiation_therapy'}, {'column_name': 'race'}, {'column_name': 'prior_dx'}, {'column_name': 'ethnicity'}, {'column_name': 'informed_consent_verified'}, {'column_name': 'person_neoplasm_cancer_status'}], 'var_functions.query_db:22': [], 'var_functions.query_db:24': [{'ParticipantBarcode': 'TCGA-A8-A06R'}, {'ParticipantBarcode': 'TCGA-A2-A0D4'}, {'ParticipantBarcode': 'TCGA-A2-A0EM'}, {'ParticipantBarcode': 'TCGA-A8-A07L'}, {'ParticipantBarcode': 'TCGA-A8-A093'}, {'ParticipantBarcode': 'TCGA-A8-A095'}, {'ParticipantBarcode': 'TCGA-A2-A04R'}, {'ParticipantBarcode': 'TCGA-A2-A0D3'}, {'ParticipantBarcode': 'TCGA-A2-A0SY'}, {'ParticipantBarcode': 'TCGA-A2-A1G0'}, {'ParticipantBarcode': 'TCGA-A2-A3KD'}, {'ParticipantBarcode': 'TCGA-A2-A0CR'}, {'ParticipantBarcode': 'TCGA-A2-A04P'}, {'ParticipantBarcode': 'TCGA-A2-A04Q'}, {'ParticipantBarcode': 'TCGA-A2-A04V'}, {'ParticipantBarcode': 'TCGA-A2-A0CP'}, {'ParticipantBarcode': 'TCGA-A2-A0EV'}, {'ParticipantBarcode': 'TCGA-A8-A06U'}, {'ParticipantBarcode': 'TCGA-A8-A06X'}, {'ParticipantBarcode': 'TCGA-A8-A07B'}], 'var_functions.query_db:26': [{'ParticipantBarcode': 'TCGA-BL-A5ZZ'}, {'ParticipantBarcode': 'TCGA-BL-A3JM'}], 'var_functions.query_db:28': 'file_storage/functions.query_db:28.json', 'var_functions.query_db:30': [{'ParticipantBarcode': 'TCGA-A8-A091', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Missense_Mutation', 'FILTER': 'wga'}, {'ParticipantBarcode': 'TCGA-A8-A0A1', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Frame_Shift_Del', 'FILTER': 'wga'}, {'ParticipantBarcode': 'TCGA-A8-A0A9', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Nonsense_Mutation', 'FILTER': 'wga'}, {'ParticipantBarcode': 'TCGA-AA-3821', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Missense_Mutation', 'FILTER': 'wga'}, {'ParticipantBarcode': 'TCGA-A2-A0YL', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Frame_Shift_Del', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-AR-A1AT', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Frame_Shift_Del', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-BS-A0U8', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Missense_Mutation', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-D8-A27G', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Frame_Shift_Ins', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-E6-A1LX', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Missense_Mutation', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-EJ-7782', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Missense_Mutation', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-FI-A2D5', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Missense_Mutation', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-G4-6628', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Missense_Mutation', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-GI-A2C8', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Missense_Mutation', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-VQ-A8PX', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Missense_Mutation', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-X6-A8C2', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Missense_Mutation', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-EE-A2GO', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Splice_Site', 'FILTER': 'oxog'}, {'ParticipantBarcode': 'TCGA-13-0889', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Frame_Shift_Ins', 'FILTER': 'wga'}, {'ParticipantBarcode': 'TCGA-A8-A0A6', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Splice_Site', 'FILTER': 'wga'}, {'ParticipantBarcode': 'TCGA-AA-A02K', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Missense_Mutation', 'FILTER': 'wga'}, {'ParticipantBarcode': 'TCGA-AG-3892', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Nonsense_Mutation', 'FILTER': 'wga'}, {'ParticipantBarcode': 'TCGA-63-A5MM', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Missense_Mutation', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-A2-A0YK', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Nonsense_Mutation', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-A7-A4SC', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Frame_Shift_Del', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-AC-A3QQ', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Nonsense_Mutation', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-AR-A1AL', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Frame_Shift_Del', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-BR-8370', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Missense_Mutation', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-CV-6937', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Missense_Mutation', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-DD-A4NK', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Missense_Mutation', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-EW-A1IZ', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Splice_Site', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-FP-A8CX', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Missense_Mutation', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-G4-6586', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Frame_Shift_Del', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-GC-A3I6', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Missense_Mutation', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-OD-A75X', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Frame_Shift_Ins', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-A8-A09Z', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Frame_Shift_Ins', 'FILTER': 'wga'}, {'ParticipantBarcode': 'TCGA-A8-A0A2', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'In_Frame_Del', 'FILTER': 'wga'}, {'ParticipantBarcode': 'TCGA-55-A4DF', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Missense_Mutation', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-5L-AAT0', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Nonsense_Mutation', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-77-A5G1', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Missense_Mutation', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-A2-A0T4', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Frame_Shift_Ins', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-A5-A1OF', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Missense_Mutation', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-AX-A06L', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Missense_Mutation', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-B6-A0RQ', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Nonsense_Mutation', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-BH-A18F', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Frame_Shift_Ins', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-BH-A209', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Nonsense_Mutation', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-BR-4188', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Missense_Mutation', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-BR-4279', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Missense_Mutation', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-BR-A44T', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Missense_Mutation', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-BS-A0TE', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Missense_Mutation', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-C8-A274', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Frame_Shift_Ins', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-D1-A103', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Missense_Mutation', 'FILTER': 'PASS'}], 'var_functions.query_db:32': 'file_storage/functions.query_db:32.json', 'var_functions.query_db:34': 'file_storage/functions.query_db:34.json', 'var_functions.execute_python:40': {'clinical_brca_count': 1087, 'cdh1_mutations_count': 50}}
+
+exec(code, env_args)

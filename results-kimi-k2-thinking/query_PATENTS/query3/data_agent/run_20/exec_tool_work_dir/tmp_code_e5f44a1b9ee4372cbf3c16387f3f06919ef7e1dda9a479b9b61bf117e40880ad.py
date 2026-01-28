@@ -1,0 +1,90 @@
+code = """import json
+
+# Load the actual results from the citation search
+citation_results_path = locals()['var_functions.query_db:44']
+if isinstance(citation_results_path, str):
+    with open(citation_results_path, 'r') as f:
+        citation_results = json.load(f)
+else:
+    citation_results = citation_results_path
+
+print(f"Found {len(citation_results)} patents with citations containing 'US-6247'")
+print("\nFirst 5 results:")
+for i, patent in enumerate(citation_results[:5], 1):
+    print(f"\n{i}. Patents_info: {patent['Patents_info']}")
+    
+# Extract assignee names and CPC codes
+assignees = []
+cpc_codes = []
+
+for patent in citation_results:
+    patents_info = patent['Patents_info']
+    
+    # Extract assignee name (text before 'holds' or 'is owned by' etc.)
+    assignee = ""
+    if ' is owned by ' in patents_info:
+        start = patents_info.find(' is owned by ') + len(' is owned by ')
+        rest = patents_info[start:]
+        # Get text until next space or comma
+        if ' and ' in rest:
+            assignee = rest.split(' and ')[0]
+        elif ',' in rest:
+            assignee = rest.split(',')[0]
+        else:
+            assignee = rest.split(' ')[0]
+    elif ' is held by ' in patents_info:
+        start = patents_info.find(' is held by ') + len(' is held by ')
+        rest = patents_info[start:]
+        if ' and ' in rest:
+            assignee = rest.split(' and ')[0]
+        elif ',' in rest:
+            assignee = rest.split(',')[0]
+        else:
+            assignee = rest.split(' ')[0]
+    elif ' from US, owned by ' in patents_info:
+        start = patents_info.find(' from US, owned by ') + len(' from US, owned by ')
+        rest = patents_info[start:]
+        if ',' in rest:
+            assignee = rest.split(',')[0]
+        elif ' with ' in rest:
+            assignee = rest.split(' with ')[0]
+        else:
+            assignee = rest.strip()
+    
+    if assignee:
+        assignees.append(assignee.strip())
+    
+    # Extract CPC codes
+    if 'cpc' in patent and patent['cpc']:
+        cpc_list = json.loads(patent['cpc'])
+        codes = [item['code'] for item in cpc_list]
+        cpc_codes.extend(codes)
+
+unique_assignees = list(set(assignees))
+unique_cpc = list(set(cpc_codes))
+
+print(f"\n\nFound {len(unique_assignees)} unique assignees:")
+for i, assignee in enumerate(sorted(unique_assignees)[:20], 1):
+    print(f"  {i}. {assignee}")
+
+if len(unique_assignees) > 20:
+    print(f"  ... and {len(unique_assignees) - 20} more")
+
+print(f"\nFound {len(unique_cpc)} unique CPC codes (sampling 20):")
+for i, code in enumerate(sorted(unique_cpc)[:20], 1):
+    print(f"  {i}. {code}")
+
+result = {
+    'total_patents': len(citation_results),
+    'assignee_count': len(unique_assignees),
+    'cpc_count': len(unique_cpc),
+    'sample_assignees': unique_assignees[:10],
+    'sample_cpc_codes': unique_cpc[:10]
+}
+
+print('__RESULT__:')
+print(json.dumps(result))"""
+
+env_args = {'var_functions.query_db:0': 'file_storage/functions.query_db:0.json', 'var_functions.query_db:4': 'file_storage/functions.query_db:4.json', 'var_functions.execute_python:8': 'file_storage/functions.execute_python:8.json', 'var_functions.query_db:10': [], 'var_functions.query_db:12': 'file_storage/functions.query_db:12.json', 'var_functions.execute_python:14': {'publication_numbers': ['US-2022074631-A1', 'TW-201925402-A', 'US-11421276-B2', 'AU-2019275518-B2', 'JP-S6163700-A', 'US-2017281687-A1', 'AU-2003247814-A1', 'AU-2017356943-A1', 'US-6237292-B1', 'US-7745569-B2', 'US-11072681-B2', 'US-9061071-B2', 'KR-20050085437-A', 'KR-20160119166-A', 'EP-0826155-A4', 'US-2019169580-A1', 'US-2020283856-A1', 'AU-2898989-A', 'RO-70061-A', 'WO-2017136335-A1', 'WO-2021102420-A1', 'WO-2012162563-A2', 'US-11376346-B2', 'CN-100339724-C', 'US-2009031436-A1', 'AU-2005269556-A1', 'WO-2019173834-A1', 'US-2017145219-A1', 'US-2021002329-A1', 'KR-20200041324-A', 'CN-103189548-A', 'CA-2298540-A1', 'JP-2005104983-A', 'US-2021000566-A1', 'US-2006051790-A1', 'PT-2970346-T', 'US-2023171142-A1', 'WO-2018026404-A3', 'US-2006292670-A1', 'US-2021101879-A1', 'US-2023321419-A1', 'AU-2003297741-A1', 'WO-2017214343-A1', 'US-2021282642-A1', 'US-2019209590-A1', 'US-10359432-B2', 'US-11667770-B2', 'CA-3161617-A1', 'JP-2009260386-A', 'CA-2562038-C', 'US-7052856-B2', 'US-6750960-B2', 'EP-2210307-A4', 'US-2020025859-A1', 'US-2021039104-A1', 'EP-1212462-A1', 'WO-2014152660-A1', 'US-5547866-A', 'US-2023279470-A1', 'AU-2008349842-A1', 'EP-4284234-A1', 'WO-2018067976-A1', 'WO-2020055916-A9', 'US-6767662-B2', 'US-2021181673-A1', 'WO-2023212447-A2', 'US-6980295-B2', 'AU-2015364602-B2', 'US-2003112494-A1', 'IL-274176-A', 'JP-2014224156-A', 'IL-244029-A0', 'US-2004115131-A1', 'US-2005234013-A1', 'CN-101584047-A', 'AU-2010214112-B2', 'MX-2013002850-A', 'US-2019328740-A1', 'US-2022018060-A1', 'WO-2023225482-A3', 'WO-2024044766-A3', 'AU-2007297661-A1', 'WO-2019067860-A1', 'WO-2024112568-A1', 'CA-2550552-A1', 'PE-20130764-A1', 'US-11014955-B2', 'KR-20110004413-A', 'CN-102584712-A', 'CN-103687626-A', 'CN-102067370-B', 'CA-2718348-C', 'US-11546022-B2', 'HK-1052178-A1', 'US-12025581-B2', 'US-2023155090-A1', 'WO-2010045542-A3', 'EP-3668487-A4', 'CA-2283629-C', 'HK-1250569-A1', 'AU-2004253879-A1', 'WO-2023239670-A1', 'WO-2012158833-A3', 'US-10744347-B2', 'HR-P20201231-T1', 'AU-2409401-A', 'ID-23426-A', 'US-5304932-A', 'AU-3353000-A', 'AU-5938296-A', 'US-2010025717-A1', 'US-2017087258-A1', 'US-2018243924-A1', 'AU-6535890-A'], 'count': 114}, 'var_functions.query_db:16': [], 'var_functions.query_db:20': [], 'var_functions.query_db:22': [], 'var_functions.query_db:24': 'file_storage/functions.query_db:24.json', 'var_functions.query_db:26': [{'Patents_info': 'PANASONIC IP MAN CO LTD holds the US patent application (ID US-201916293577-A), with publication number US-11081687-B2.'}, {'Patents_info': 'GLASSNER RUDOLF holds the US patent filing (application no. US-201916355911-A), with publication number US-10794458-B2.'}, {'Patents_info': 'In US, the application (ID US-201916369247-A) is owned by COVESTRO LLC and has publication no. US-11124615-B2.'}, {'Patents_info': 'In US, the patent filing (app. number US-201916369879-A) is assigned to HOMOLOGY MEDICINES INC and has pub. number US-10610606-B2.'}, {'Patents_info': 'In US, the patent application (no. US-201916373467-A) is owned by APPLETON GRP LLC and has publication number US-10957507-B2.'}], 'var_functions.query_db:30': [{'symbol': 'C12Q1/6883', 'titleFull': 'Nucleic acid products used in the analysis of nucleic acids, e.g. primers or probes for diseases caused by alterations of genetic material'}, {'symbol': 'F28D15/00', 'titleFull': 'Heat-exchange apparatus with the intermediate heat-transfer medium in closed tubes passing into or through the conduit walls ; Heat-exchange apparatus employing intermediate heat-transfer medium or bodies'}, {'symbol': 'F25B21/00', 'titleFull': 'Machines, plants or systems, using electric or magnetic effects'}], 'var_functions.query_db:34': [], 'var_functions.query_db:36': 'file_storage/functions.query_db:36.json', 'var_functions.query_db:38': 'file_storage/functions.query_db:38.json', 'var_functions.execute_python:40': {'sample_publications': ['US-2022074631-A1', 'TW-201925402-A', 'US-11421276-B2', 'AU-2019275518-B2', 'JP-S6163700-A', 'US-2017281687-A1', 'AU-2003247814-A1', 'AU-2017356943-A1', 'US-6237292-B1', 'US-7745569-B2']}, 'var_functions.query_db:42': [{'Patents_info': 'In US, the application (ID US-202117502422-A) is belonging to APPLE INC and has publication no. US-2022110100-A1.', 'cpc': '[\n  {\n    "code": "H04W72/23",\n    "first": true,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "H04L25/0204",\n    "first": true,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "H04L5/0053",\n    "first": false,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "H04W76/11",\n    "first": false,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "H04W76/27",\n    "first": false,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "H04L5/00",\n    "first": false,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "H04L5/001",\n    "first": false,\n    "inventive": false,\n    "tree": []\n  },\n  {\n    "code": "H04L5/001",\n    "first": false,\n    "inventive": false,\n    "tree": []\n  },\n  {\n    "code": "H04W24/08",\n    "first": false,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "H04W48/16",\n    "first": false,\n    "inventive": false,\n    "tree": []\n  },\n  {\n    "code": "H04W48/16",\n    "first": false,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "H04W24/08",\n    "first": false,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "H04W72/042",\n    "first": true,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "H04W76/11",\n    "first": false,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "H04W48/16",\n    "first": false,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "H04L5/00",\n    "first": false,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "H04W76/27",\n    "first": false,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "H04L5/001",\n    "first": false,\n    "inventive": false,\n    "tree": []\n  }\n]'}], 'var_functions.query_db:44': 'file_storage/functions.query_db:44.json'}
+
+exec(code, env_args)

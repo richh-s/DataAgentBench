@@ -1,0 +1,52 @@
+code = """# Let's analyze the stocks in batches to find those with more up days than down days
+import json
+import os
+
+# Load the stock data structure
+var_key = 'var_functions.execute_python:30'
+stock_data = locals()[var_key]
+
+if isinstance(stock_data, str) and os.path.exists(stock_data):
+    with open(stock_data, 'r') as f:
+        data = json.load(f)
+else:
+    data = stock_data
+
+symbols = data['symbols']
+stock_info_dict = data['stock_info']
+
+# We'll check the stocks and store results
+candidates = []
+
+for i, symbol in enumerate(symbols):
+    try:
+        # Query this stock's 2017 data
+        query = f"""SELECT 
+                COUNT(CASE WHEN Close > Open THEN 1 END) as up_days,
+                COUNT(CASE WHEN Close < Open THEN 1 END) as down_days
+                FROM \"{symbol}\" 
+                WHERE Date >= '2017-01-01' AND Date <= '2017-12-31';"""
+        
+        # For this example, we'll just store the query info for the first few
+        # In practice, we'd run the query
+        if i < 0:  # We'll do this iteratively
+            pass
+    except:
+        continue
+
+print(f"Total symbols to check: {len(symbols)}")
+print("We need to systematically query each one for 2017 data")
+
+# For now, let's just output the structure
+result = json.dumps({
+    'message': 'setup complete',
+    'total_symbols': len(symbols),
+    'first_10': symbols[:10]
+})
+
+print("__RESULT__:")
+print(result)"""
+
+env_args = {'var_functions.list_db:0': ['stockinfo'], 'var_functions.list_db:2': 'file_storage/functions.list_db:2.json', 'var_functions.query_db:5': [{'Nasdaq Traded': 'Y', 'Symbol': 'AAAU', 'Listing Exchange': 'P', 'Market Category': 'Not applicable or not NASDAQ-listed', 'ETF': 'Y', 'Round Lot Size': '100.0', 'Test Issue': 'N', 'Financial Status': 'None', 'NextShares': 'N', 'Company Description': 'Perth Mint Physical Gold ETF offers investors an opportunity to buy shares backed by physical gold, providing a secure and tangible way to invest in precious metals.'}, {'Nasdaq Traded': 'Y', 'Symbol': 'AADR', 'Listing Exchange': 'P', 'Market Category': 'Not applicable or not NASDAQ-listed', 'ETF': 'Y', 'Round Lot Size': '100.0', 'Test Issue': 'N', 'Financial Status': 'None', 'NextShares': 'N', 'Company Description': "AdvisorShares Dorsey Wright ADR ETF offers investors a dynamic way to access international markets through a diverse portfolio of American Depositary Receipts, leveraging the expertise of Dorsey Wright's investment strategies."}, {'Nasdaq Traded': 'Y', 'Symbol': 'AAME', 'Listing Exchange': 'Q', 'Market Category': 'G', 'ETF': 'N', 'Round Lot Size': '100.0', 'Test Issue': 'N', 'Financial Status': 'N', 'NextShares': 'N', 'Company Description': 'Atlantic American Corporation provides a range of insurance products, specializing in life, health, and property insurance to meet diverse customer needs.'}, {'Nasdaq Traded': 'Y', 'Symbol': 'AAWW', 'Listing Exchange': 'Q', 'Market Category': 'Q', 'ETF': 'N', 'Round Lot Size': '100.0', 'Test Issue': 'N', 'Financial Status': 'N', 'NextShares': 'N', 'Company Description': 'Atlas Air Worldwide Holdings specializes in providing air cargo and passenger charter services, playing a crucial role in global logistics and transportation.'}, {'Nasdaq Traded': 'Y', 'Symbol': 'AAXJ', 'Listing Exchange': 'Q', 'Market Category': 'G', 'ETF': 'Y', 'Round Lot Size': '100.0', 'Test Issue': 'N', 'Financial Status': 'N', 'NextShares': 'N', 'Company Description': 'iShares MSCI All Country Asia ex Japan Index Fund offers investors a unique opportunity to gain exposure to a diverse portfolio of companies across Asia, excluding Japan, through a well-managed exchange-traded fund.'}, {'Nasdaq Traded': 'Y', 'Symbol': 'ABEQ', 'Listing Exchange': 'P', 'Market Category': 'Not applicable or not NASDAQ-listed', 'ETF': 'Y', 'Round Lot Size': '100.0', 'Test Issue': 'N', 'Financial Status': 'None', 'NextShares': 'N', 'Company Description': 'Absolute Core Strategy ETF is an investment fund designed to offer a diversified portfolio, focusing on strategic asset allocation to optimize returns for investors.'}, {'Nasdaq Traded': 'Y', 'Symbol': 'ABMD', 'Listing Exchange': 'Q', 'Market Category': 'Q', 'ETF': 'N', 'Round Lot Size': '100.0', 'Test Issue': 'N', 'Financial Status': 'N', 'NextShares': 'N', 'Company Description': 'ABIOMED, Inc. specializes in developing advanced heart pumps to assist patients with severe cardiac conditions, playing a crucial role in modern cardiovascular care.'}, {'Nasdaq Traded': 'Y', 'Symbol': 'ACAD', 'Listing Exchange': 'Q', 'Market Category': 'Q', 'ETF': 'N', 'Round Lot Size': '100.0', 'Test Issue': 'N', 'Financial Status': 'N', 'NextShares': 'N', 'Company Description': "ACADIA Pharmaceuticals Inc. is dedicated to developing treatments that improve the lives of patients with central nervous system disorders, focusing on innovative solutions for conditions like Parkinson's disease and schizophrenia."}, {'Nasdaq Traded': 'Y', 'Symbol': 'ACES', 'Listing Exchange': 'Z', 'Market Category': 'Not applicable or not NASDAQ-listed', 'ETF': 'Y', 'Round Lot Size': '100.0', 'Test Issue': 'N', 'Financial Status': 'None', 'NextShares': 'N', 'Company Description': 'ALPS Clean Energy ETF provides investors with access to a diverse portfolio of companies focused on renewable energy solutions, supporting the transition to a cleaner and more sustainable future.'}, {'Nasdaq Traded': 'Y', 'Symbol': 'ACIO', 'Listing Exchange': 'Z', 'Market Category': 'Not applicable or not NASDAQ-listed', 'ETF': 'Y', 'Round Lot Size': '100.0', 'Test Issue': 'N', 'Financial Status': 'None', 'NextShares': 'N', 'Company Description': 'ETF Series Solutions Aptus Collared Income Opportunity ETF specializes in providing investors with a strategic approach to generating income through a unique blend of options strategies and equity investments, aimed at minimizing risk while maximizing potential returns.'}], 'var_functions.query_db:6': 'file_storage/functions.query_db:6.json', 'var_functions.query_db:8': 'file_storage/functions.query_db:8.json', 'var_functions.list_db:16': ['stockinfo'], 'var_functions.query_db:18': 'file_storage/functions.query_db:18.json', 'var_functions.query_db:22': [{'Symbol': 'AEFC'}, {'Symbol': 'AIN'}, {'Symbol': 'AIV'}, {'Symbol': 'AIZP'}, {'Symbol': 'AJRD'}, {'Symbol': 'AL'}, {'Symbol': 'AMN'}, {'Symbol': 'AMP'}, {'Symbol': 'AMT'}, {'Symbol': 'ARD'}, {'Symbol': 'ARGD'}, {'Symbol': 'ARLO'}, {'Symbol': 'ASG'}, {'Symbol': 'AVA'}, {'Symbol': 'BANC'}, {'Symbol': 'BBU'}, {'Symbol': 'BBVA'}, {'Symbol': 'BDXA'}, {'Symbol': 'BKH'}, {'Symbol': 'BKT'}, {'Symbol': 'BLD'}, {'Symbol': 'BNS'}, {'Symbol': 'BV'}, {'Symbol': 'BZH'}, {'Symbol': 'CADE'}, {'Symbol': 'CAE'}, {'Symbol': 'CAF'}, {'Symbol': 'CBT'}, {'Symbol': 'CCC'}, {'Symbol': 'CCZ'}], 'var_functions.query_db:24': 'file_storage/functions.query_db:24.json', 'var_functions.execute_python:26': {'count': 234, 'symbols': ['AEFC', 'AIN', 'AIV', 'AIZP', 'AJRD', 'AL', 'AMN', 'AMP', 'AMT', 'ARD', 'ARGD', 'ARLO', 'ASG', 'AVA', 'BANC', 'BBU', 'BBVA', 'BDXA', 'BKH', 'BKT', 'BLD', 'BNS', 'BV', 'BZH', 'CADE', 'CAE', 'CAF', 'CBT', 'CCC', 'CCZ', 'CHAP', 'CIA', 'CMA', 'CMI', 'CMSA', 'CNK', 'COTY', 'CRC', 'CRM', 'CRS', 'CSL', 'CTS', 'CUBE', 'CURO', 'CVIA', 'CVX', 'CXH', 'DAC', 'DDS', 'DDT']}, 'var_functions.query_db:28': [{'Date': '2017-01-03', 'Open': '69.29000091552734', 'High': '70.86000061035156', 'Low': '69.0', 'Close': '70.54000091552734', 'Adj Close': '70.54000091552734', 'Volume': '8112200'}, {'Date': '2017-01-04', 'Open': '71.08000183105469', 'High': '73.06999969482422', 'Low': '70.76000213623047', 'Close': '72.80000305175781', 'Adj Close': '72.80000305175781', 'Volume': '9289500'}, {'Date': '2017-01-05', 'Open': '72.80999755859375', 'High': '73.66000366210938', 'Low': '72.52999877929688', 'Close': '72.79000091552734', 'Adj Close': '72.79000091552734', 'Volume': '4695600'}, {'Date': '2017-01-06', 'Open': '72.88999938964844', 'High': '74.12999725341797', 'Low': '72.55000305175781', 'Close': '73.80000305175781', 'Adj Close': '73.80000305175781', 'Volume': '4466100'}, {'Date': '2017-01-09', 'Open': '74.05000305175781', 'High': '74.44000244140625', 'Low': '73.51000213623047', 'Close': '73.95999908447266', 'Adj Close': '73.95999908447266', 'Volume': '3933100'}, {'Date': '2017-01-10', 'Open': '74.12000274658203', 'High': '74.30000305175781', 'Low': '73.44000244140625', 'Close': '73.9800033569336', 'Adj Close': '73.9800033569336', 'Volume': '3994800'}, {'Date': '2017-01-11', 'Open': '74.2699966430664', 'High': '76.08000183105469', 'Low': '74.05999755859375', 'Close': '75.7699966430664', 'Adj Close': '75.7699966430664', 'Volume': '7591300'}, {'Date': '2017-01-12', 'Open': '75.16999816894531', 'High': '75.75', 'Low': '74.0', 'Close': '75.20999908447266', 'Adj Close': '75.20999908447266', 'Volume': '4681700'}, {'Date': '2017-01-13', 'Open': '74.83999633789062', 'High': '75.77999877929688', 'Low': '74.69999694824219', 'Close': '75.63999938964844', 'Adj Close': '75.63999938964844', 'Volume': '3690000'}, {'Date': '2017-01-17', 'Open': '75.30000305175781', 'High': '75.30000305175781', 'Low': '74.37000274658203', 'Close': '75.0199966430664', 'Adj Close': '75.0199966430664', 'Volume': '3152500'}], 'var_functions.execute_python:30': 'file_storage/functions.execute_python:30.json', 'var_functions.query_db:32': [{'total_days': '251', 'up_days': '137', 'down_days': '113'}], 'var_functions.query_db:34': [{'total_days': '251', 'up_days': '118', 'down_days': '128'}]}
+
+exec(code, env_args)

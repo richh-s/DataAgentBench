@@ -1,0 +1,39 @@
+code = """import json
+import os
+
+# Load ticker data
+all_tickers_path = globals()['var_functions.list_db:0']
+nyse_records_path = globals()['var_functions.query_db:62']
+
+with open(all_tickers_path) as f:
+    all_tickers = json.load(f)
+
+with open(nyse_records_path) as f:
+    nyse_records = json.load(f)
+
+# Map ticker to company name
+name_map = {r['Symbol']: r.get('Company Description', r['Symbol']) for r in nyse_records}
+valid_tickers = [t for t in all_tickers if t in name_map]
+
+# Build the complete query string
+union_parts = []
+for ticker in valid_tickers:
+    # Handle special characters
+    if not ticker.isalnum():
+        table_name = f'"{ticker}"'
+    else:
+        table_name = ticker
+    
+    part = f"SELECT '{ticker}' as s, SUM(CASE WHEN Close > Open THEN 1 ELSE 0 END) as u, SUM(CASE WHEN Close < Open THEN 1 ELSE 0 END) as d FROM {table_name} WHERE Date >= '2017-01-01' AND Date <= '2017-12-31'"
+    union_parts.append(part)
+
+union_query = " UNION ALL ".join(union_parts)
+final_query = f"WITH stats AS ({union_query}) SELECT s, u, d, (u - d) as diff FROM stats WHERE u > d ORDER BY diff DESC LIMIT 5"
+
+# Now execute this query via query_db tool by printing it out
+print('__RESULT__:')
+print(json.dumps({'final_query': final_query, 'ticker_count': len(valid_tickers)}))"""
+
+env_args = {'var_functions.list_db:0': 'file_storage/functions.list_db:0.json', 'var_functions.query_db:2': 'file_storage/functions.query_db:2.json', 'var_functions.execute_python:10': 'file_storage/functions.list_db:0.json', 'var_functions.execute_python:14': {'all_tickers_count': 2753, 'nyse_tickers_count': 234, 'valid_tickers_count': 234}, 'var_functions.execute_python:16': ['AEFC', 'AIN', 'AIV', 'AIZP', 'AJRD', 'AL', 'AMN', 'AMP', 'AMT', 'ARD'], 'var_functions.query_db:22': [{'Date': '2019-10-24', 'Open': '25.399999618530277', 'Close': '25.450000762939453'}, {'Date': '2019-10-25', 'Open': '25.61000061035156', 'Close': '25.670000076293945'}, {'Date': '2019-10-28', 'Open': '25.68000030517578', 'Close': '25.59000015258789'}, {'Date': '2019-10-29', 'Open': '25.61000061035156', 'Close': '25.56999969482422'}, {'Date': '2019-10-30', 'Open': '25.530000686645508', 'Close': '25.65999984741211'}, {'Date': '2019-10-31', 'Open': '25.729999542236328', 'Close': '25.76000022888184'}, {'Date': '2019-11-01', 'Open': '25.739999771118164', 'Close': '25.700000762939453'}, {'Date': '2019-11-04', 'Open': '25.68000030517578', 'Close': '25.670000076293945'}, {'Date': '2019-11-05', 'Open': '25.549999237060547', 'Close': '25.520000457763672'}, {'Date': '2019-11-06', 'Open': '25.520000457763672', 'Close': '25.530000686645508'}], 'var_functions.execute_python:24': {'ticker_count': 234, 'tickers': ['AEFC', 'AIN', 'AIV', 'AIZP', 'AJRD']}, 'var_functions.query_db:26': [{'days_2017': '251'}], 'var_functions.execute_python:28': {'ticker_count': 234, 'sample': ['CXH', 'HTFA', 'CMA', 'PPG', 'YEXT']}, 'var_functions.execute_python:34': {'count': 234, 'query_preview': "SELECT 'AEFC' as symbol, SUM(CASE WHEN Close > Open THEN 1 ELSE 0 END) as up_days, SUM(CASE WHEN Close < Open THEN 1 ELSE 0 END) as down_days FROM AEFC WHERE Date >= '2017-01-01' AND Date <= '2017-12-"}, 'var_functions.execute_python:36': ['AEFC', 'AIN', 'AIV', 'AIZP', 'AJRD', 'AL', 'AMN', 'AMP', 'AMT', 'ARD', 'ARGD', 'ARLO', 'ASG', 'AVA', 'BANC', 'BBU', 'BBVA', 'BDXA', 'BKH', 'BKT', 'BLD', 'BNS', 'BV', 'BZH', 'CADE', 'CAE', 'CAF', 'CBT', 'CCC', 'CCZ', 'CHAP', 'CIA', 'CMA', 'CMI', 'CMSA', 'CNK', 'COTY', 'CRC', 'CRM', 'CRS', 'CSL', 'CTS', 'CUBE', 'CURO', 'CVIA', 'CVX', 'CXH', 'DAC', 'DDS', 'DDT', 'DEO', 'DGX', 'DMB', 'DTQ', 'DXC', 'EARN', 'EBS', 'EGO', 'EGY', 'EIG', 'ELF', 'EMP', 'ENLC', 'EPR', 'EPRT', 'ES', 'ESRT', 'ESS', 'ETM', 'EV', 'EVT', 'EXP', 'FMN', 'FPAC', 'FSM', 'GCO', 'GD', 'GDL', 'GDV', 'GEL', 'GJP', 'GLOB', 'GLT', 'GOL', 'GSLD', 'GTY', 'GVA', 'GWB', 'H', 'HBI', 'HDB', 'HEP', 'HIL', 'HIO', 'HIX', 'HLF', 'HLT', 'HNI', 'HRB', 'HTFA', 'IBM', 'IGR', 'IHC', 'IPG', 'IRM', 'IT', 'JGH', 'JHY', 'JKS', 'JMP', 'JNPR', 'KMB', 'KNX', 'KW', 'KYN', 'LB', 'LDOS', 'LHC', 'LHX', 'LOMA', 'MANU', 'MDLX', 'MDLY', 'MED', 'MFO', 'MGR', 'MGU', 'MHE', 'MIY', 'MKC', 'MLI', 'MNE', 'MR', 'MS', 'MTD', 'MYD', 'NFH', 'NGG', 'NJV', 'NNI', 'NNY', 'NRUC', 'NUE', 'NXN', 'OCFT', 'OEC', 'ORA', 'ORAN', 'ORCL', 'ORN', 'PAG', 'PBI', 'PFE', 'PFSI', 'PGR', 'PIM', 'PKE', 'PLAN', 'PLNT', 'PMT', 'PNM', 'PPG', 'PRSP', 'PRTY', 'PSV', 'PSXP', 'QTS', 'QUAD', 'RBC', 'RCB', 'RCI', 'RES', 'REXR', 'RH', 'RMT', 'ROG', 'ROL', 'RPAI', 'RPM', 'RQI', 'RWT', 'SAF', 'SAIL', 'SAM', 'SBR', 'SCU', 'SFUN', 'SHAK', 'SI', 'SITC', 'SJM', 'SJT', 'SJW', 'SLF', 'SMP', 'SOL', 'SPOT', 'SRC', 'SRF', 'SRT', 'SSD', 'STG', 'STL', 'STON', 'SYX', 'TBB', 'TCP', 'TDJ', 'TGP', 'TLYS', 'TNC', 'TPH', 'TRV', 'TTI', 'TUFN', 'TWTR', 'UHT', 'UIS', 'USX', 'UTL', 'VET', 'VGR', 'VHI', 'VIV', 'VKQ', 'VRT', 'VVI', 'WOR', 'WPG', 'WSM', 'X', 'YEXT', 'ZNH', 'ZTR'], 'var_functions.execute_python:42': {'tickers': 234, 'query_start': "SELECT 'AEFC' as s, SUM(CASE WHEN Close > Open THEN 1 ELSE 0 END) as u, SUM(CASE WHEN Close < Open THEN 1 ELSE 0 END) as d FROM AEFC WHERE Date >= '2017-01-01' AND Date <= '2017-12-31' UNION ALL SELEC"}, 'var_functions.execute_python:44': ['AEFC', 'AIN', 'AIV', 'AIZP', 'AJRD', 'AL', 'AMN', 'AMP', 'AMT', 'ARD', 'ARGD', 'ARLO', 'ASG', 'AVA', 'BANC', 'BBU', 'BBVA', 'BDXA', 'BKH', 'BKT'], 'var_functions.execute_python:46': 'file_storage/functions.execute_python:46.json', 'var_functions.execute_python:48': 'file_storage/functions.execute_python:48.json', 'var_functions.execute_python:50': {'tickers': ['AEFC', 'AIN', 'AIV', 'AIZP', 'AJRD', 'AL', 'AMN', 'AMP', 'AMT', 'ARD']}, 'var_functions.execute_python:52': 'file_storage/functions.execute_python:52.json', 'var_functions.query_db:54': [{'s': 'AIN', 'diff': '42.0'}], 'var_functions.execute_python:58': {'count': 234, 'tickers': ['AEFC', 'AIN', 'AIV', 'AIZP', 'AJRD']}, 'var_functions.execute_python:60': {'query_length': 45321, 'ticker_count': 234}, 'var_functions.query_db:62': 'file_storage/functions.query_db:62.json', 'var_functions.execute_python:64': 'file_storage/functions.execute_python:64.json', 'var_functions.execute_python:66': {'ticker_count': 234, 'first_10': ['AEFC', 'AIN', 'AIV', 'AIZP', 'AJRD', 'AL', 'AMN', 'AMP', 'AMT', 'ARD']}, 'var_functions.execute_python:68': {'tickers_in_batch': 50, 'query_preview': "WITH stats AS (SELECT 'AEFC' as sym, SUM(CASE WHEN Close > Open THEN 1 ELSE 0 END) as u, SUM(CASE WHEN Close < Open THEN 1 ELSE 0 END) as d FROM AEFC WHERE Date >= '2017-01-01' AND Date <= '2017-12-31' UNION ALL SELECT 'AIN' as sym, SUM(CASE WHEN Close > Open THEN 1 ELSE 0 END) as u, SUM(CASE WHEN Close < Open THEN 1 ELSE 0 END) as d FROM AIN WHERE Date >= '2017-01-01' AND Date <= '2017-12-31' UNION ALL SELECT 'AIV' as sym, SUM(CASE WHEN Close > Open THEN 1 ELSE 0 END) as u, SUM(CASE WHEN Close "}, 'var_functions.execute_python:70': {'query_file': '/tmp/final_query.sql', 'query_length': 45321, 'ticker_count': 234}}
+
+exec(code, env_args)

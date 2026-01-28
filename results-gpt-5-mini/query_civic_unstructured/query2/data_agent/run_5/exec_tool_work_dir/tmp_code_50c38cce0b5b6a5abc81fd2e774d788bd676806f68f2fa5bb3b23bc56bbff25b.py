@@ -1,0 +1,79 @@
+code = """import json
+
+# Load data from storage-provided file paths
+with open(var_call_imMVVH4ydlnQiLitue5achAa, 'r') as f:
+    funding = json.load(f)
+with open(var_call_LsS5gYiobVLdbl1d1c1xS3Ye, 'r') as f:
+    civic_docs = json.load(f)
+
+# Normalize funding records
+for r in funding:
+    amt = r.get('Amount', 0)
+    try:
+        r['Amount'] = int(amt)
+    except Exception:
+        try:
+            r['Amount'] = int(float(amt))
+        except Exception:
+            r['Amount'] = 0
+    # remove parenthetical suffixes for normalization by splitting
+    pname = r.get('Project_Name','')
+    r['Project_Name_norm'] = pname.split('(')[0].strip().lower()
+
+# Keywords indicating park-related projects
+park_keywords = ['park', 'playground', 'walkway', 'shade', 'bench', 'benches', 'bluffs', 'point dume', 'legacy park']
+
+# Combine civic texts
+civic_texts = [doc.get('text','').lower() for doc in civic_docs]
+full_civic = "\n".join(civic_texts)
+
+matched = []
+
+for r in funding:
+    name = r.get('Project_Name','').lower()
+    name_norm = r.get('Project_Name_norm','')
+    is_park = any(kw in name for kw in park_keywords) or any(kw in name_norm for kw in park_keywords)
+    if not is_park:
+        continue
+    found_completion = False
+    # search occurrences in civic texts using simple find
+    for text in civic_texts:
+        if name in text or name_norm in text:
+            idx = text.find(name_norm) if name_norm in text else text.find(name)
+            if idx != -1:
+                start = max(0, idx-200)
+                end = min(len(text), idx+500)
+                window = text[start:end]
+                if ("complete" in window or "construction was completed" in window or "notice of completion" in window) and "2022" in window:
+                    found_completion = True
+                    break
+    # fallback: search for short phrases
+    if not found_completion:
+        tokens = name_norm.split()
+        for i in range(len(tokens)):
+            for j in range(i+1, min(i+4, len(tokens))+1):
+                phrase = ' '.join(tokens[i:j])
+                if len(phrase) < 4:
+                    continue
+                idx = full_civic.find(phrase)
+                if idx != -1:
+                    start = max(0, idx-200)
+                    end = min(len(full_civic), idx+500)
+                    window = full_civic[start:end]
+                    if ("complete" in window or "construction was completed" in window or "notice of completion" in window) and "2022" in window:
+                        found_completion = True
+                        break
+            if found_completion:
+                break
+    if found_completion:
+        matched.append({'Project_Name': r.get('Project_Name',''), 'Amount': r['Amount']})
+
+total = sum(m['Amount'] for m in matched)
+result = {'total_funding': total, 'projects': matched}
+
+print('__RESULT__:')
+print(json.dumps(result))"""
+
+env_args = {'var_call_NnUo40dHHTLYgcQTqlojtfqg': ['civic_docs'], 'var_call_UjP3tQXtgm9tRd9gDjbiDPvo': ['Funding'], 'var_call_LsS5gYiobVLdbl1d1c1xS3Ye': 'file_storage/call_LsS5gYiobVLdbl1d1c1xS3Ye.json', 'var_call_imMVVH4ydlnQiLitue5achAa': 'file_storage/call_imMVVH4ydlnQiLitue5achAa.json'}
+
+exec(code, env_args)

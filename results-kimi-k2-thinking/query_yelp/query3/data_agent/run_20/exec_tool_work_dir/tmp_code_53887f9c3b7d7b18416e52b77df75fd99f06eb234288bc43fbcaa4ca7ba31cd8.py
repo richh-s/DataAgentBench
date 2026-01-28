@@ -1,0 +1,38 @@
+code = """import json
+import re
+
+# Get the file path from the variable
+file_path = var_functions.query_db:12
+
+# Read the review data from the file
+with open(file_path, 'r') as f:
+    reviews = json.load(f)
+
+print('Total reviews loaded:', len(reviews))
+
+# Filter reviews from 2018
+businesses_2018 = set()
+pattern_2018 = re.compile(r'2018')
+
+for review in reviews:
+    if pattern_2018.search(review['date']):
+        businesses_2018.add(review['business_ref'])
+
+print('Businesses with reviews in 2018:', len(businesses_2018))
+
+# Convert business_ref to business_id format
+business_ids_2018 = [bid.replace('businessref_', 'businessid_') for bid in businesses_2018]
+print('Sample converted IDs:', business_ids_2018[:10])
+
+# Save result
+result = {
+    'business_ids_2018': business_ids_2018,
+    'count': len(business_ids_2018)
+}
+
+print('__RESULT__:')
+print(json.dumps(result))"""
+
+env_args = {'var_functions.list_db:0': ['business', 'checkin'], 'var_functions.list_db:2': ['review', 'tip', 'user'], 'var_functions.query_db:5': [{'_id': '6859a000fe8b31cd7362e2ab', 'business_id': 'businessid_49', 'name': 'Steps to Learning Montessori Preschool', 'review_count': '8', 'is_open': '1', 'attributes': {'BusinessAcceptsCreditCards': 'True', 'WiFi': "u'no'", 'BusinessAcceptsBitcoin': 'False'}, 'hours': {'Monday': '0:0-0:0', 'Tuesday': '8:0-17:0', 'Wednesday': '8:0-17:0', 'Thursday': '8:0-17:0', 'Friday': '8:0-17:0'}, 'description': 'Located at 6901 Phelps Rd in Goleta, CA, this facility offers a nurturing environment for young learners, providing a range of services in Education, Elementary Schools, Child Care & Day Care, Local Services, Preschools, and Montessori Schools.'}, {'_id': '6859a000fe8b31cd7362e2ac', 'business_id': 'businessid_47', 'name': 'Breeze Blow Dry Bar', 'review_count': '81', 'is_open': '0', 'attributes': {'ByAppointmentOnly': 'False', 'BusinessAcceptsCreditCards': 'True', 'GoodForKids': 'True', 'RestaurantsPriceRange2': '2', 'BikeParking': 'False', 'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': True, 'valet': False}"}, 'hours': {'Monday': '7:0-18:0', 'Tuesday': '7:0-18:0', 'Wednesday': '7:0-18:0', 'Thursday': '7:0-18:0', 'Friday': '7:0-19:0', 'Saturday': '8:0-19:0', 'Sunday': '10:0-17:0'}, 'description': 'Located at 9916 Clayton Rd in St. Louis, MO, this establishment offers a wide range of services, including Hair Salons, Beauty & Spas, Hair Stylists, Skin Care, Blow Dry/Out Services, and Makeup Artists.'}, {'_id': '6859a000fe8b31cd7362e2ad', 'business_id': 'businessid_88', 'name': 'Impact Guns', 'review_count': '39', 'is_open': '1', 'attributes': {'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'GoodForKids': 'True', 'BusinessAcceptsCreditCards': 'True', 'ByAppointmentOnly': 'False', 'BikeParking': 'True'}, 'hours': {'Monday': '10:0-19:0', 'Tuesday': '10:0-19:0', 'Wednesday': '10:0-19:0', 'Thursday': '10:0-19:0', 'Friday': '10:0-19:0', 'Saturday': '10:0-19:0'}, 'description': 'Located at 11655 W Executive Dr in Boise, ID, this facility offers enthusiasts a premier destination for Gun/Rifle Ranges, Active Life.'}, {'_id': '6859a000fe8b31cd7362e2ae', 'business_id': 'businessid_41', 'name': 'Palms Primary Care', 'review_count': '5', 'is_open': '1', 'attributes': 'None', 'hours': {'Monday': '8:30-17:0', 'Tuesday': '8:30-17:0', 'Wednesday': '8:30-17:0', 'Thursday': '8:30-17:0', 'Friday': '8:30-17:0'}, 'description': 'Located at 1615 Pasadena Ave S, Ste 430 in Saint Petersburg, FL, this facility offers a range of services in Internal Medicine, Doctors, Health & Medical.'}, {'_id': '6859a000fe8b31cd7362e2af', 'business_id': 'businessid_33', 'name': 'J&Q Nails', 'review_count': '28', 'is_open': '1', 'attributes': {'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'BusinessAcceptsCreditCards': 'True', 'AcceptsInsurance': 'False', 'ByAppointmentOnly': 'False', 'RestaurantsPriceRange2': '2', 'WheelchairAccessible': 'True', 'BikeParking': 'False'}, 'hours': {'Monday': '9:30-19:0', 'Tuesday': '9:30-19:0', 'Wednesday': '9:30-19:0', 'Thursday': '9:30-19:0', 'Friday': '9:30-19:0', 'Saturday': '9:30-17:30'}, 'description': 'Located at 9655 E US Hwy 36, Unit H in Avon, IN, this establishment offers a range of services including Nail Salons, Hair Removal, Beauty & Spas, and Waxing.'}], 'var_functions.query_db:8': [{'date': 'September 18, 2014 at 05:50 PM', 'count': '1'}, {'date': 'April 22, 2017 at 04:21 PM', 'count': '1'}, {'date': 'February 11, 2019 at 08:56 PM', 'count': '1'}, {'date': '28 Sep 2016, 17:19', 'count': '1'}, {'date': '2020-08-05 12:48:00', 'count': '1'}, {'date': '08 Feb 2020, 15:41', 'count': '1'}, {'date': '2021-01-14 16:51:00', 'count': '1'}, {'date': '2013-04-10 19:19:00', 'count': '1'}, {'date': '2015-08-25 18:17:00', 'count': '1'}, {'date': '2016-12-12 05:07:17', 'count': '1'}], 'var_functions.query_db:10': [{'business_ref': 'businessref_77', 'date': '2018-01-05 00:33:00'}, {'business_ref': 'businessref_59', 'date': '2018-11-09 21:34:00'}, {'business_ref': 'businessref_59', 'date': 'November 05, 2018 at 05:46 PM'}, {'business_ref': 'businessref_26', 'date': '2018-07-28 14:46:00'}, {'business_ref': 'businessref_67', 'date': '2018-01-02 21:35:31'}, {'business_ref': 'businessref_15', 'date': '2018-08-23 01:01:00'}, {'business_ref': 'businessref_25', 'date': '20 Jul 2018, 17:24'}, {'business_ref': 'businessref_49', 'date': '05 Feb 2018, 19:58'}, {'business_ref': 'businessref_68', 'date': '12 Nov 2018, 00:35'}, {'business_ref': 'businessref_86', 'date': '2018-11-27 22:23:00'}, {'business_ref': 'businessref_79', 'date': '03 Feb 2018, 15:15'}, {'business_ref': 'businessref_86', 'date': '2018-05-31 01:58:00'}, {'business_ref': 'businessref_45', 'date': '18 Dec 2018, 23:26'}, {'business_ref': 'businessref_77', 'date': '2018-01-06 00:46:38'}, {'business_ref': 'businessref_8', 'date': 'July 21, 2018 at 02:00 PM'}, {'business_ref': 'businessref_6', 'date': '07 Jul 2018, 17:56'}, {'business_ref': 'businessref_72', 'date': '11 Sep 2018, 19:32'}, {'business_ref': 'businessref_47', 'date': 'December 14, 2018 at 02:56 PM'}, {'business_ref': 'businessref_13', 'date': '2018-08-25 03:59:00'}, {'business_ref': 'businessref_40', 'date': '2018-11-25 23:09:00'}], 'var_functions.query_db:12': 'file_storage/functions.query_db:12.json'}
+
+exec(code, env_args)

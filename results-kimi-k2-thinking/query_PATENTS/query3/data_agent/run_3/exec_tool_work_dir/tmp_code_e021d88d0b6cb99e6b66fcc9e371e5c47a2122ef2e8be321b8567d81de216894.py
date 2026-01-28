@@ -1,0 +1,106 @@
+code = """import json
+import re
+
+# Load all UNIV CALIFORNIA patents and extract their publication numbers
+uc_file = locals().get('var_functions.query_db:5', '')
+with open(uc_file, 'r') as f:
+    uc_patents = json.load(f)
+
+uc_pub_numbers = set()
+for patent in uc_patents:
+    patents_info = patent['Patents_info']
+    words = patents_info.split()
+    for word in words:
+        clean_word = word.strip('.,;:!?')
+        if re.match(r'^[A-Z]{2}-\d{4,}-[A-Z]\d*$', clean_word):
+            uc_pub_numbers.add(clean_word)
+
+print('Found', len(uc_pub_numbers), 'UC patent numbers')
+print('Sample US UC patents:', sorted([num for num in uc_pub_numbers if num.startswith('US-')])[:10])
+
+# Load non-UC patents
+other_file = locals().get('var_functions.query_db:32', '')
+with open(other_file, 'r') as f:
+    other_patents = json.load(f)
+
+# Find citations to UC patents
+citing_data = []
+
+for patent in other_patents:
+    patents_info = patent['Patents_info']
+    citation = patent.get('citation', '[]')
+    cpc_field = patent.get('cpc', '[]')
+    
+    if citation != '[]':
+        try:
+            citations = json.loads(citation.replace("'", '"'))
+            
+            for cite in citations:
+                cited_patent = cite.get('publication_number', '')
+                if cited_patent in uc_pub_numbers:
+                    # Extract assignee
+                    assignee_match = re.search(r'^(.+?)\s+(holds|is owned by|holds the|is assigned to)', patents_info)
+                    if assignee_match:
+                        assignee = assignee_match.group(1).strip()
+                        
+                        # Exclude UNIV CALIFORNIA itself
+                        if 'UNIV CALIFORNIA' not in assignee:
+                            # Get CPC codes from this citing patent
+                            cpc_codes = []
+                            try:
+                                cpc_list = json.loads(cpc_field.replace("'", '"'))
+                                for item in cpc_list:
+                                    code = item.get('code', '')
+                                    if code and code not in cpc_codes:
+                                        # Extract primary subclass (remove any subclasses after /)
+                                        primary = code.split('/')[0]
+                                        cpc_codes.append(primary)
+                            except:
+                                pass
+                            
+                            citing_data.append({
+                                'assignee': assignee,
+                                'cited_uc_patent': cited_patent,
+                                'cpc_subclasses': list(set(cpc_codes))  # Remove duplicates
+                            })
+        except:
+            continue
+
+print('Found', len(citing_data), 'citations from non-UC assignees')
+
+# Group by assignee
+assignee_summary = {}
+for item in citing_data:
+    assignee = item['assignee']
+    if assignee not in assignee_summary:
+        assignee_summary[assignee] = {
+            'cited_uc_patents': set(),
+            'cpc_subclasses': set()
+        }
+    assignee_summary[assignee]['cited_uc_patents'].add(item['cited_uc_patent'])
+    assignee_summary[assignee]['cpc_subclasses'].update(item['cpc_subclasses'])
+
+# Prepare final results
+final_results = []
+for assignee, data in assignee_summary.items():
+    final_results.append({
+        'assignee': assignee,
+        'cited_uc_patents': sorted(list(data['cited_uc_patents'])),
+        'cpc_subclasses': sorted(list(data['cpc_subclasses']))
+    })
+
+result = {
+    'citing_assignees': len(final_results),
+    'sample_assignees': final_results[:10],
+    'all_cpc_subclasses': sorted(list(set([code for item in final_results for code in item['cpc_subclasses']])))
+}
+
+print('Citing assignees found:', len(final_results))
+print('CPC subclasses to look up:', len(result['all_cpc_subclasses']))
+
+print('__RESULT__:')
+print(json.dumps(result, indent=2))"""
+
+env_args = {'var_functions.list_db:0': ['publicationinfo'], 'var_functions.query_db:2': 'file_storage/functions.query_db:2.json', 'var_functions.query_db:5': 'file_storage/functions.query_db:5.json', 'var_functions.execute_python:10': 'Found 50 patents from UNIV CALIFORNIA', 'var_functions.query_db:12': 'file_storage/functions.query_db:12.json', 'var_functions.execute_python:14': {'total_patents': 50, 'sample_patent': {'Patents_info': 'In US, the application (number US-202117472182-A) is owned by UNIV CALIFORNIA and has pub. number US-2022074631-A1.', 'citation': '[\n  {\n    "application_number": "",\n    "category": "SEA",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-4599677-A",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "SEA",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-2015129765-A1",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "SEA",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "FR-3105380-A1",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "SEA",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-11466906-B2",\n    "type": ""\n  }\n]', 'cpc': '[\n  {\n    "code": "Y02B30/00",\n    "first": false,\n    "inventive": false,\n    "tree": []\n  },\n  {\n    "code": "F25B2321/001",\n    "first": false,\n    "inventive": false,\n    "tree": []\n  },\n  {\n    "code": "F25B21/00",\n    "first": true,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "F28D15/00",\n    "first": false,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "F25B21/00",\n    "first": true,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "F25B2321/001",\n    "first": false,\n    "inventive": false,\n    "tree": []\n  },\n  {\n    "code": "F25B2321/001",\n    "first": false,\n    "inventive": false,\n    "tree": []\n  },\n  {\n    "code": "F28D15/00",\n    "first": false,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "F25B21/00",\n    "first": true,\n    "inventive": true,\n    "tree": []\n  }\n]'}}, 'var_functions.execute_python:16': {'total_uc_patents': 50, 'uc_publication_numbers': ['AU-2005269556-A1.', 'US-2020283856-A1.', 'US-2017281687-A1.', 'KR-20050085437-A.', 'EP-0826155-A4.', 'CN-103189548-A.', 'US-2021002329-A1.', 'WO-2017136335-A1.', 'AU-2019275518-B2.', 'US-2022074631-A1.', 'PT-2970346-T.', 'KR-20160119166-A.', 'US-7745569-B2.', 'AU-2898989-A.', 'KR-20200041324-A.', 'US-2006051790-A1.', 'US-2017145219-A1.', 'US-6237292-B1.', 'WO-2012162563-A2.', 'US-9061071-B2.'], 'total_unique_pub_numbers': 36}, 'var_functions.list_db:18': ['cpc_definition'], 'var_functions.execute_python:20': 'Preparing to search for citing patents...', 'var_functions.query_db:22': 'file_storage/functions.query_db:22.json', 'var_functions.execute_python:24': {'total_uc_patents': 50, 'uc_publication_numbers': [], 'count': 0}, 'var_functions.execute_python:26': {'total_uc_patents': 50, 'sample_patent_info': 'In US, the application (number US-202117472182-A) is owned by UNIV CALIFORNIA and has pub. number US-2022074631-A1.', 'extracted_pub_numbers': [], 'total_extracted': 0}, 'var_functions.execute_python:28': {'uc_publication_numbers': [], 'uc_count': 0, 'citing_pairs_found': 0, 'sample_pairs': []}, 'var_functions.execute_python:30': {'uc_patents_count': 50, 'uc_publication_numbers': ['AU-2001296493-A', 'AU-2001296493-B2', 'AU-2002254753-A', 'AU-2002254753-B2', 'AU-2003247814-A', 'AU-2003247814-A1', 'AU-2005269556-A', 'AU-2005269556-A1', 'AU-2008329628-A', 'AU-2008329628-B2', 'AU-2017356943-A', 'AU-2017356943-A1', 'AU-2019275518-A', 'AU-2019275518-B2', 'AU-2898989-A', 'CA-2298540-A', 'CA-2298540-A1', 'CN-100339724-C', 'CN-103189548-A', 'CN-200380105631-A', 'CN-201180052574-A', 'EP-00992018-A', 'EP-0826155-A4', 'EP-1224461-B1', 'EP-96907882-A', 'IL-140140-A0', 'IL-14014099-A', 'JP-13313985-A', 'JP-2004321293-A', 'JP-2005104983-A', 'KR-20050085437-A', 'KR-20057010360-A', 'KR-20160119166-A', 'KR-20167024476-A', 'KR-20180041236-A', 'KR-20187008669-A', 'KR-20200041324-A', 'KR-20200084864-A', 'KR-20207004898-A', 'KR-20207010098-A', 'PT-14764430-T', 'PT-2970346-T', 'RO-70061-A', 'RO-7944874-A', 'TW-107142982-A', 'TW-201925402-A', 'US-10765865-B2', 'US-10900049-B2', 'US-11072681-B2', 'US-11248107-B2', 'US-11376346-B2', 'US-11421276-B2', 'US-17323505-A', 'US-2006051790-A1', 'US-2009031436-A1', 'US-2012039471-W', 'US-201313787160-A', 'US-201515313510-A', 'US-201515329526-A', 'US-2017015812-W', 'US-2017145219-A1', 'US-201715422925-A', 'US-201715625819-A', 'US-201715646074-A', 'US-2017194630-A1', 'US-2017281687-A1', 'US-2017369950-A1', 'US-201815950106-A', 'US-201816612511-A', 'US-2018304537-A1', 'US-2019021660-W', 'US-2019059638-W', 'US-201916277921-A', 'US-201916362297-A', 'US-201916401060-A', 'US-201916454755-A', 'US-201916537416-A', 'US-2019169580-A1', 'US-2020061827-W', 'US-202016878973-A', 'US-202016883515-A', 'US-202017021925-A', 'US-2020283856-A1', 'US-2021000566-A1', 'US-2021002329-A1', 'US-202117472182-A', 'US-2022074631-A1', 'US-39548599-A', 'US-55161904-A', 'US-6237292-B1', 'US-7745569-B2', 'US-8864206-A', 'US-9061071-B2', 'WO-2012162563-A2', 'WO-2017136335-A1', 'WO-2019173834-A1', 'WO-2020096950-A1', 'WO-2021102420-A1'], 'count': 98, 'sample_patent': 'In US, the application (number US-202117472182-A) is owned by UNIV CALIFORNIA and has pub. number US-2022074631-A1.'}, 'var_functions.query_db:32': 'file_storage/functions.query_db:32.json', 'var_functions.execute_python:36': {'uc_patents_found': 0, 'citing_assignees_found': 0, 'sample_citations': []}, 'var_functions.execute_python:40': {'uc_patents_count': 50, 'extracted_pub_numbers': ['AU-2003247814-A1', 'AU-2005269556-A1', 'AU-2017356943-A1', 'AU-2019275518-B2', 'AU-2898989-A', 'CA-2298540-A1', 'CN-100339724-C', 'CN-103189548-A', 'EP-0826155-A4', 'JP-2005104983-A', 'JP-S6163700-A', 'KR-20050085437-A', 'KR-20160119166-A', 'KR-20200041324-A', 'PT-2970346-T', 'RO-70061-A', 'TW-201925402-A', 'US-11072681-B2', 'US-11376346-B2', 'US-11421276-B2', 'US-2006051790-A1', 'US-2009031436-A1', 'US-2017145219-A1', 'US-2017281687-A1', 'US-2019169580-A1', 'US-2020283856-A1', 'US-2021000566-A1', 'US-2021002329-A1', 'US-2022074631-A1', 'US-6237292-B1', 'US-7745569-B2', 'US-9061071-B2', 'WO-2012162563-A2', 'WO-2017136335-A1', 'WO-2019173834-A1', 'WO-2021102420-A1'], 'count': 36}, 'var_functions.execute_python:42': {'uc_patents_count': 36, 'assignees_analyzed': 500, 'citations_found': 0, 'sample_results': []}, 'var_functions.execute_python:44': {'sample_patent_citation': '[\n  {\n    "application_number": "",\n    "category": "APP",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "JP-H01209663-A",\n    "type": ""\n  },\n  {\n    "application_number": "",\n ', 'us_uc_patents': 0}, 'var_functions.execute_python:46': {'total_uc_patents': 36, 'us_uc_patents': 15, 'sample_patents': ['US-11072681-B2', 'US-11376346-B2', 'US-11421276-B2', 'US-2006051790-A1', 'US-2009031436-A1']}, 'var_functions.query_db:48': [{'Patents_info': 'The US patent filing (application number US-4007205-A) is assigned to CALIFORNIA INST OF TECHN and has publication number US-2005165588-A1.', 'cpc': '[\n  {\n    "code": "G01M7/00",\n    "first": false,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "G01M7/00",\n    "first": false,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "G01V1/01",\n    "first": true,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "G01V1/01",\n    "first": true,\n    "inventive": true,\n    "tree": []\n  }\n]', 'citation': '[\n  {\n    "application_number": "",\n    "category": "PRS",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-4843460-A",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "PRS",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-4913550-A",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "PRS",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-4964060-A",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "PRS",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-5036633-A",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "PRS",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-5163015-A",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "PRS",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-5576971-A",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "PRS",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-5663501-A",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "PRS",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-5737239-A",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "PRS",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-5842148-A",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "PRS",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-5851446-A",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "PRS",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-5984062-A",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "PRS",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-6237292-B1",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "PRS",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-2001030609-A1",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "PRS",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-2002059034-A1",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "PRS",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-2002095275-A1",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "PRS",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-6425157-B1",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "PRS",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-6543077-B2",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "PRS",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-6629042-B2",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "PRS",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-6792720-B2",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "PRS",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-2005013526-A1",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "PRS",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-6862848-B1",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "PRS",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-2005114105-A1",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "PRS",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-6966154-B1",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "PRS",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-7069158-B2",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "PRS",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-7346432-B2",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "PRS",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-2008236294-A1",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "PRS",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-2011054840-A1",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "PRS",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-2011154903-A1",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "PRS",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-2012019307-A1",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "PRS",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "US-2012310607-A1",\n    "type": ""\n  }\n]'}], 'var_functions.execute_python:52': {'uc_patents_analyzed': 0, 'other_patents_analyzed': 500, 'citing_assignees_found': 0, 'sample_results': []}, 'var_functions.execute_python:56': {'uc_patents_count': 50, 'uc_pub_numbers': [], 'count': 0}, 'var_functions.execute_python:58': {'uc_patents_count': 50, 'uc_pub_numbers': [], 'count': 0}, 'var_functions.execute_python:60': {'patents_info_length': 115, 'first_100_chars': 'In US, the application (number US-202117472182-A) is owned by UNIV CALIFORNIA and has pub. number US', 'us_matches': []}, 'var_functions.execute_python:62': {'uc_patents_count': 50, 'found_numbers': ['AU-2001296493-B2', 'AU-2002254753-B2', 'AU-2003247814-A1', 'AU-2005269556-A1', 'AU-2008329628-B2', 'AU-2017356943-A1', 'AU-2019275518-B2', 'AU-2898989-A', 'CA-2298540-A1', 'CN-100339724-C', 'CN-103189548-A', 'EP-0826155-A4', 'EP-1224461-B1', 'IL-140140-A0', 'JP-2005104983-A', 'KR-20050085437-A', 'KR-20160119166-A', 'KR-20180041236-A', 'KR-20200041324-A', 'KR-20200084864-A', 'PT-2970346-T', 'RO-70061-A', 'TW-201925402-A', 'US-10765865-B2', 'US-10900049-B2', 'US-11072681-B2', 'US-11248107-B2', 'US-11376346-B2', 'US-11421276-B2', 'US-2006051790-A1', 'US-2009031436-A1', 'US-2017145219-A1', 'US-2017194630-A1', 'US-2017281687-A1', 'US-2017369950-A1', 'US-2018304537-A1', 'US-2019169580-A1', 'US-2020283856-A1', 'US-2021000566-A1', 'US-2021002329-A1', 'US-2022074631-A1', 'US-6237292-B1', 'US-7745569-B2', 'US-9061071-B2', 'WO-2012162563-A2', 'WO-2017136335-A1', 'WO-2019173834-A1', 'WO-2020096950-A1', 'WO-2021102420-A1']}}
+
+exec(code, env_args)

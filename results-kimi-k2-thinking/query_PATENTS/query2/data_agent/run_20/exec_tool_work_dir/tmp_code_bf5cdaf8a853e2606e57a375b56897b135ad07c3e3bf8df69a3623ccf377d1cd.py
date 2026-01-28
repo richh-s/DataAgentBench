@@ -1,0 +1,154 @@
+code = """import json
+import re
+
+# Access the data filepath
+file_path = var_functions.query_db:16
+
+# Load all data
+with open(file_path, 'r') as f:
+    records = json.load(f)
+
+print('Total German 2019 patents loaded:', len(records))
+
+# Function to parse grant dates
+def parse_grant_date(date_str):
+    if not date_str:
+        return None, None
+    
+    date_lower = date_str.lower()
+    
+    # Extract year (4 digits)
+    year_match = re.search(r'(\d{4})', date_lower)
+    if not year_match:
+        return None, None
+    
+    year = int(year_match.group(1))
+    
+    # Extract month
+    months = {
+        'january': 1, 'february': 2, 'march': 3, 'april': 4, 'may': 5, 'june': 6,
+        'july': 7, 'august': 8, 'september': 9, 'october': 10, 'november': 11, 'december': 12
+    }
+    
+    month_num = None
+    for month_name, num in months.items():
+        if month_name in date_lower:
+            month_num = num
+            break
+    
+    # Alternative pattern: "14th Mar 2019"
+    if not month_num:
+        month_abbr = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
+        for i, abbr in enumerate(month_abbr, 1):
+            if abbr in date_lower:
+                month_num = i
+                break
+    
+    return year, month_num
+
+# Filter for 2019 H2 (July-December)
+h2_2019_patents = []
+
+for record in records:
+    grant_date = record.get('grant_date', '')
+    year, month = parse_grant_date(grant_date)
+    
+    if year == 2019 and month and month >= 7:
+        cpc_data = record.get('cpc', '[]')
+        patents_info = record.get('Patents_info', '')
+        
+        try:
+            cpc_list = json.loads(cpc_data) if isinstance(cpc_data, str) else cpc_data
+            
+            for cpc_item in cpc_list:
+                code = cpc_item.get('code', '')
+                if code:
+                    # Extract level 4 CPC (format: XXXX/XX)
+                    # CPC codes can be like G06F9/45533, we want G06F9/45
+                    if '/' in code:
+                        parts = code.split('/')
+                        main_group = parts[0]
+                        subgroup = parts[1] if len(parts) > 1 else ''
+                        
+                        # Level 4 is typically the first 2 digits after the slash
+                        if len(subgroup) >= 2:
+                            level4_code = f'{main_group}/{subgroup[:2]}'
+                        else:
+                            level4_code = code
+                            
+                        h2_2019_patents.append({
+                            'cpc_level4': level4_code,
+                            'full_cpc': code,
+                            'patents_info': patents_info,
+                            'grant_month': month
+                        })
+        except:
+            pass
+
+print('Filtered 2019 H2 patents with CPC level 4:', len(h2_2019_patents))
+
+# Count CPC filings by month
+cpc_monthly_counts = {}
+for patent in h2_2019_patents:
+    cpc = patent['cpc_level4']
+    month = patent['grant_month']
+    
+    if cpc not in cpc_monthly_counts:
+        cpc_monthly_counts[cpc] = {}
+    
+    cpc_monthly_counts[cpc][month] = cpc_monthly_counts[cpc].get(month, 0) + 1
+
+print('Unique CPC level 4 codes:', len(cpc_monthly_counts))
+
+# Calculate EMA for each CPC
+def calculate_ema(monthly_counts, smoothing=0.1):
+    # Sort months (July=7 to December=12)
+    months = sorted(monthly_counts.keys())
+    
+    if not months:
+        return 0
+    
+    # Start with first month value
+    ema = monthly_counts[months[0]]
+    
+    # Calculate EMA for subsequent months
+    for month in months[1:]:
+        value = monthly_counts[month]
+        ema = (smoothing * value) + ((1 - smoothing) * ema)
+    
+    return ema
+
+cpc_ema_results = []
+for cpc, monthly_counts in cpc_monthly_counts.items():
+    ema = calculate_ema(monthly_counts)
+    total_filings = sum(monthly_counts.values())
+    best_month = max(monthly_counts, key=monthly_counts.get)
+    
+    cpc_ema_results.append({
+        'cpc_level4': cpc,
+        'ema': ema,
+        'total_filings': total_filings,
+        'best_month': best_month,
+        'monthly_breakdown': monthly_counts
+    })
+
+# Sort by EMA descending
+cpc_ema_results.sort(key=lambda x: x['ema'], reverse=True)
+
+print('Top 10 CPC groups by EMA:')
+for i, result in enumerate(cpc_ema_results[:10]):
+    print(f"{i+1}. {result['cpc_level4']}: EMA={result['ema']:.2f}, Total={result['total_filings']}, Best month={result['best_month']}")
+
+# Prepare final result
+output = {
+    'total_cpc_groups': len(cpc_ema_results),
+    'top_groups': cpc_ema_results[:10],
+    'summary': f'Found {len(cpc_ema_results)} unique CPC level 4 groups in 2019 H2 Germany patents'
+}
+
+print('__RESULT__:')
+print(json.dumps(output))"""
+
+env_args = {'var_functions.list_db:0': ['publicationinfo'], 'var_functions.query_db:2': 'file_storage/functions.query_db:2.json', 'var_functions.list_db:14': ['cpc_definition'], 'var_functions.query_db:16': 'file_storage/functions.query_db:16.json', 'var_functions.query_db:18': 'file_storage/functions.query_db:18.json'}
+
+exec(code, env_args)

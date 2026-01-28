@@ -1,0 +1,115 @@
+code = """import json
+import re
+from collections import defaultdict
+
+# Load reviews from 2016-registered users
+reviews_file = locals()['var_functions.query_db:20']
+if isinstance(reviews_file, str) and reviews_file.endswith('.json'):
+    with open(reviews_file, 'r') as f:
+        reviews_2016_users = json.load(f)
+else:
+    reviews_2016_users = reviews_file
+
+# Load business information
+business_file = locals()['var_functions.query_db:18']
+if isinstance(business_file, str) and business_file.endswith('.json'):
+    with open(business_file, 'r') as f:
+        businesses = json.load(f)
+else:
+    businesses = business_file
+
+def parse_review_date(date_str):
+    """Parse various date formats to extract year"""
+    try:
+        if not date_str:
+            return None
+        # Extract 4-digit year
+        match = re.search(r'(\d{4})', date_str)
+        if match:
+            return int(match.group(1))
+    except:
+        return None
+    return None
+
+# Filter reviews from 2016 onwards
+reviews_since_2016 = []
+for review in reviews_2016_users:
+    date_str = review.get('date', '')
+    year = parse_review_date(date_str)
+    if year and year >= 2016:
+        reviews_since_2016.append(review)
+
+# Build business_id to business mapping
+business_map = {}
+for biz in businesses:
+    business_map[biz['business_id']] = biz
+
+# Extract categories from business descriptions and count reviews
+category_review_counts = defaultdict(int)
+
+for review in reviews_since_2016:
+    business_ref = review['business_ref']
+    business_id = business_ref.replace('businessref_', 'businessid_')
+    
+    if business_id in business_map:
+        business = business_map[business_id]
+        description = business.get('description', '')
+        
+        # Extract categories from description
+        categories = []
+        
+        # Pattern 1: after "including"
+        if 'including' in description:
+            parts = description.split('including')
+            if len(parts) > 1:
+                cat_text = parts[1].split('.')[0].split('making it')[0]
+                # Split by commas and 'and'
+                cats = re.split(r',\s*|\sand\s|\sto\s', cat_text)
+                for cat in cats:
+                    cat = cat.strip()
+                    if cat and cat not in ['and', 'to', '']:
+                        categories.append(cat)
+        
+        # Pattern 2: after "ranging from"
+        elif 'ranging from' in description:
+            parts = description.split('ranging from')
+            if len(parts) > 1:
+                cat_text = parts[1].split('.')[0].split('making it')[0]
+                cats = re.split(r',\s*|\sand\s|\sto\s', cat_text)
+                for cat in cats:
+                    cat = cat.strip()
+                    if cat and cat not in ['and', 'to', '']:
+                        categories.append(cat)
+        
+        # Pattern 3: after "offers" and before period
+        else:
+            # Look for "offers ..." pattern
+            match = re.search(r'offers[^\.]+\.?', description)
+            if match:
+                cat_text = match.group(0)
+                if 'including' in cat_text:
+                    cat_text = cat_text.split('including')[1]
+                cats = re.split(r',\s*|\sand\s|\sto\s', cat_text)
+                for cat in cats:
+                    cat = cat.strip()
+                    if cat and cat not in ['and', 'to', '']:
+                        categories.append(cat)
+        
+        # Count reviews for each category
+        for category in categories:
+            category_review_counts[category] += 1
+
+# Sort categories by review count
+top_categories = sorted(category_review_counts.items(), key=lambda x: x[1], reverse=True)[:10]
+
+result = {
+    'total_reviews_analyzed': len(reviews_since_2016),
+    'top_categories': top_categories
+}
+
+print('__RESULT__:')
+print(json.dumps(result))"""
+
+env_args = {'var_functions.query_db:0': [{'user_id': 'userid_286', 'name': 'Todd', 'review_count': '376', 'yelping_since': '15 Jan 2009, 16:40', 'useful': '1373', 'funny': '723', 'cool': '639', 'elite': '2010,2011,2012,2013,2014'}, {'user_id': 'userid_1331', 'name': 'Patt', 'review_count': '1028', 'yelping_since': '13 Jul 2010, 15:42', 'useful': '9050', 'funny': '3249', 'cool': '5929', 'elite': '2011,2012,2013,2014,2015,2016,2017,2018,2019,20,20,2021'}, {'user_id': 'userid_1880', 'name': 'Norma', 'review_count': '57', 'yelping_since': '2010-09-07 23:24:36', 'useful': '217', 'funny': '57', 'cool': '115', 'elite': '2012,2013'}, {'user_id': 'userid_271', 'name': 'Antony', 'review_count': '49', 'yelping_since': 'October 23, 2011 at 07:47 PM', 'useful': '116', 'funny': '159', 'cool': '34', 'elite': ''}, {'user_id': 'userid_534', 'name': 'Mandy', 'review_count': '754', 'yelping_since': '2011-08-30 13:46:26', 'useful': '2925', 'funny': '775', 'cool': '988', 'elite': '2011,2012,2013,2014,2015,2016,2017,2018,2019,20,20,2021'}], 'var_functions.query_db:2': [{'user_id': 'userid_1231', 'name': 'Ashley', 'review_count': '1110', 'yelping_since': '14 Sep 2016, 00:32', 'useful': '2871', 'funny': '672', 'cool': '2410', 'elite': '2017,2018,2019,20,20,2021'}, {'user_id': 'userid_765', 'name': 'Kong', 'review_count': '1048', 'yelping_since': '2015-01-14 06:29:09', 'useful': '2143', 'funny': '565', 'cool': '1436', 'elite': '2016,2017,2018,2019,20,20,2021'}, {'user_id': 'userid_341', 'name': 'Valarie', 'review_count': '243', 'yelping_since': '21 Nov 2015, 16:34', 'useful': '210', 'funny': '22', 'cool': '69', 'elite': '2016,2017,2018,2019,20,20,2021'}, {'user_id': 'userid_343', 'name': 'Chaz', 'review_count': '8', 'yelping_since': '02 Feb 2016, 04:30', 'useful': '1', 'funny': '0', 'cool': '0', 'elite': ''}, {'user_id': 'userid_746', 'name': 'Rita', 'review_count': '179', 'yelping_since': '2016-06-23 01:59:28', 'useful': '205', 'funny': '27', 'cool': '55', 'elite': '2017,2018,2019,20,20,2021'}, {'user_id': 'userid_1277', 'name': 'Liz', 'review_count': '80', 'yelping_since': '2015-01-24 18:32:47', 'useful': '134', 'funny': '43', 'cool': '45', 'elite': '2015,2016'}, {'user_id': 'userid_239', 'name': 'Heather', 'review_count': '4', 'yelping_since': '2015-03-20 13:06:07', 'useful': '6', 'funny': '0', 'cool': '0', 'elite': ''}, {'user_id': 'userid_1345', 'name': 'Sarita', 'review_count': '249', 'yelping_since': '2015-07-30 16:52:47', 'useful': '433', 'funny': '73', 'cool': '148', 'elite': '2016,2017,2018,2019,20,20,2021'}, {'user_id': 'userid_267', 'name': 'Blake', 'review_count': '329', 'yelping_since': '2015-10-05 20:13:50', 'useful': '263', 'funny': '39', 'cool': '80', 'elite': '2018,2019,20,20,2021'}, {'user_id': 'userid_972', 'name': 'Deanne', 'review_count': '232', 'yelping_since': '2015-03-23 12:00:43', 'useful': '145', 'funny': '21', 'cool': '60', 'elite': '2016,2017,2018,2019,20,20,2021'}], 'var_functions.query_db:4': [{'_id': '6859a000fe8b31cd7362e2ab', 'business_id': 'businessid_49', 'name': 'Steps to Learning Montessori Preschool', 'review_count': '8', 'is_open': '1', 'attributes': {'BusinessAcceptsCreditCards': 'True', 'WiFi': "u'no'", 'BusinessAcceptsBitcoin': 'False'}, 'hours': {'Monday': '0:0-0:0', 'Tuesday': '8:0-17:0', 'Wednesday': '8:0-17:0', 'Thursday': '8:0-17:0', 'Friday': '8:0-17:0'}, 'description': 'Located at 6901 Phelps Rd in Goleta, CA, this facility offers a nurturing environment for young learners, providing a range of services in Education, Elementary Schools, Child Care & Day Care, Local Services, Preschools, and Montessori Schools.'}, {'_id': '6859a000fe8b31cd7362e2ac', 'business_id': 'businessid_47', 'name': 'Breeze Blow Dry Bar', 'review_count': '81', 'is_open': '0', 'attributes': {'ByAppointmentOnly': 'False', 'BusinessAcceptsCreditCards': 'True', 'GoodForKids': 'True', 'RestaurantsPriceRange2': '2', 'BikeParking': 'False', 'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': True, 'valet': False}"}, 'hours': {'Monday': '7:0-18:0', 'Tuesday': '7:0-18:0', 'Wednesday': '7:0-18:0', 'Thursday': '7:0-18:0', 'Friday': '7:0-19:0', 'Saturday': '8:0-19:0', 'Sunday': '10:0-17:0'}, 'description': 'Located at 9916 Clayton Rd in St. Louis, MO, this establishment offers a wide range of services, including Hair Salons, Beauty & Spas, Hair Stylists, Skin Care, Blow Dry/Out Services, and Makeup Artists.'}, {'_id': '6859a000fe8b31cd7362e2ad', 'business_id': 'businessid_88', 'name': 'Impact Guns', 'review_count': '39', 'is_open': '1', 'attributes': {'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'GoodForKids': 'True', 'BusinessAcceptsCreditCards': 'True', 'ByAppointmentOnly': 'False', 'BikeParking': 'True'}, 'hours': {'Monday': '10:0-19:0', 'Tuesday': '10:0-19:0', 'Wednesday': '10:0-19:0', 'Thursday': '10:0-19:0', 'Friday': '10:0-19:0', 'Saturday': '10:0-19:0'}, 'description': 'Located at 11655 W Executive Dr in Boise, ID, this facility offers enthusiasts a premier destination for Gun/Rifle Ranges, Active Life.'}], 'var_functions.query_db:6': 'file_storage/functions.query_db:6.json', 'var_functions.execute_python:10': 'Found 168 users from 2016 with 168 user IDs', 'var_functions.query_db:12': 'file_storage/functions.query_db:12.json', 'var_functions.execute_python:14': 'Found 150 reviews for 62 unique businesses', 'var_functions.execute_python:16': {'business_ids': ['businessid_79', 'businessid_47', 'businessid_76', 'businessid_20', 'businessid_6', 'businessid_55', 'businessid_15', 'businessid_68', 'businessid_14', 'businessid_82', 'businessid_42', 'businessid_9', 'businessid_67', 'businessid_81', 'businessid_45', 'businessid_1', 'businessid_72', 'businessid_89', 'businessid_61', 'businessid_7', 'businessid_25', 'businessid_85', 'businessid_44', 'businessid_60', 'businessid_33', 'businessid_8', 'businessid_96', 'businessid_17', 'businessid_53', 'businessid_91', 'businessid_51', 'businessid_43', 'businessid_13', 'businessid_36', 'businessid_10', 'businessid_29', 'businessid_86', 'businessid_88', 'businessid_23', 'businessid_66', 'businessid_22', 'businessid_97', 'businessid_21', 'businessid_12', 'businessid_46', 'businessid_57', 'businessid_40', 'businessid_39', 'businessid_3', 'businessid_98', 'businessid_4', 'businessid_74', 'businessid_92', 'businessid_41', 'businessid_37', 'businessid_31', 'businessid_62', 'businessid_26', 'businessid_16', 'businessid_71', 'businessid_99', 'businessid_56'], 'count': 62}, 'var_functions.query_db:18': 'file_storage/functions.query_db:18.json', 'var_functions.query_db:20': 'file_storage/functions.query_db:20.json'}
+
+exec(code, env_args)

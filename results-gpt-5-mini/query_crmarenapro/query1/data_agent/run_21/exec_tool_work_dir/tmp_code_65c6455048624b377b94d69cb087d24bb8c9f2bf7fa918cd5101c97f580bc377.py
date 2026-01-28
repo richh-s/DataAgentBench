@@ -1,0 +1,89 @@
+code = """import json
+import re
+# Load stored tool results
+transcripts = var_call_xjq2cIkiXaBPPa2NrlCded7x
+knowledge_filepath = var_call_TACd1elz3myK62mTpgn4LmSg
+
+with open(knowledge_filepath, 'r', encoding='utf-8') as f:
+    knowledge = json.load(f)
+
+# Combine transcript bodies for the lead
+body_text = "\n".join([t.get('Body__c','') for t in transcripts])
+
+# Heuristics to determine BANT failures
+failed = []
+
+# Need: look for explicit interest or stated need
+need_indicators = ["interested", "want to", "need", "enhance", "looking to"]
+need = any(re.search(r"\b" + re.escape(w) + r"\b", body_text, flags=re.IGNORECASE) for w in need_indicators)
+
+# Budget: extract budget and price & quantity from transcript
+budget = None
+unit_price = None
+quantity = None
+# Find $ amounts
+dollars = re.findall(r"\$\s?([0-9,]+(?:\.[0-9]+)?)", body_text)
+nums = [float(s.replace(',','')) for s in dollars]
+if nums:
+    # choose largest as budget candidate
+    budget = max(nums)
+    # choose smallest as unit price candidate
+    unit_price = min(nums) if len(nums) > 1 else None
+
+# Find quantity mention like 'four units' or '4 units'
+m = re.search(r"(\b\d+\b)\s+units", body_text, flags=re.IGNORECASE)
+if m:
+    quantity = int(m.group(1))
+else:
+    if re.search(r"\bfour units\b", body_text, flags=re.IGNORECASE):
+        quantity = 4
+
+budget_ok = False
+if budget is not None and unit_price is not None and quantity is not None:
+    total = unit_price * quantity
+    budget_ok = (budget >= total)
+
+# Authority: look for phrases indicating lack of decision power
+authority_clues = ["don't have the final say", "i don't have the final say", "consult with the finance", "need to consult", "will need to consult", "not the decision", "need approval", "consult with the finance team"]
+authority = True
+for clue in authority_clues:
+    if re.search(clue, body_text, flags=re.IGNORECASE):
+        authority = False
+        break
+
+# Timeline: check for timeline concerns
+timeline_issue = False
+if re.search(r"tight timeline|timeline", body_text, flags=re.IGNORECASE):
+    # Estimate installation timeline based on quantity
+    est_timeline = None
+    if quantity is not None:
+        if quantity == 1:
+            est_timeline = 1
+        elif quantity <= 5:
+            est_timeline = 3
+        elif quantity <= 15:
+            est_timeline = 7
+        else:
+            est_timeline = 14
+    # If lead asked for very quick deployment (within a day/ASAP) and est_timeline >1, mark as issue
+    if re.search(r"within a day|by tomorrow|ASAP|urgent|end of the day|today", body_text, flags=re.IGNORECASE):
+        if est_timeline is not None and est_timeline > 1:
+            timeline_issue = True
+
+# Determine failing factors
+if not need:
+    failed.append('Need')
+if not budget_ok:
+    failed.append('Budget')
+if not authority:
+    failed.append('Authority')
+if timeline_issue:
+    failed.append('Timeline')
+
+# Output result
+print("__RESULT__:")
+print(json.dumps(failed))"""
+
+env_args = {'var_call_xjq2cIkiXaBPPa2NrlCded7x': [{'Id': 'a05Wt000003SukEIAS', 'OpportunityId__c': 'None', 'LeadId__c': '00QWt0000089AekMAE', 'Body__c': "[2023-10-21T10:02:00] Ava Sullivan: Hi Ali, this is Ava Sullivan from TechSolutions. How are you today?\n[2023-10-21T10:02:10] Ali Hussein: Hi Ava, I'm doing well, thank you. How about you?\n[2023-10-21T10:02:20] Ava Sullivan: I'm great, thank you for asking! I'm glad we could connect. I was looking over the details you provided about your interest in the PulseSim Pro. Is now a good time to discuss?\n[2023-10-21T10:02:30] Ali Hussein: Yes, now works for me. I'm interested to learn more and see how it fits with what we need.\n[2023-10-21T10:02:40] Ava Sullivan: Fantastic! From what you’ve mentioned, you’re interested in four units of the PulseSim Pro, correct?\n[2023-10-21T10:02:50] Ali Hussein: That's right. We want to enhance our simulation capabilities, and the PulseSim Pro seems like a great fit.\n[2023-10-21T10:03:05] Ava Sullivan: Absolutely. The PulseSim Pro is one of our top products for high precision simulation. It offers advanced analytics and seamless integration with existing systems, which is great for boosting efficiency.\n[2023-10-21T10:03:15] Ali Hussein: Those features sound beneficial. We do have a tight timeline for installation, though. Could you tell me more about that?\n[2023-10-21T10:03:30] Ava Sullivan: Certainly. We understand the importance of meeting tight schedules. We usually aim to complete installations within a day and ensure everything runs smoothly. Our technical team is very efficient.\n[2023-10-21T10:03:40] Ali Hussein: That’s reassuring. And as for the budget, how does it look for four units?\n[2023-10-21T10:03:55] Ava Sullivan: Considering your budget is $2,261, I think we can work something out. Each PulseSim Pro unit is priced at $500. For four units, it will come to $2,000. This is below your budget, leaving room for additional services if you wish.\n[2023-10-21T10:04:10] Ali Hussein: That fits really well. I'd like to move forward, but I'll need to consult with the finance team here since I don’t have the final say.\n[2023-10-21T10:04:20] Ava Sullivan: I completely understand, Ali. Would you like me to send over a detailed proposal and pricing information so you can present it to your team?\n[2023-10-21T10:04:25] Ali Hussein: Yes, please. That would be very helpful.\n[2023-10-21T10:04:35] Ava Sullivan: Great! I'll have that to you by the end of the day. Is there anything else you would need from my side?\n[2023-10-21T10:04:40] Ali Hussein: No, that sounds good for now. Thank you, Ava.\n[2023-10-21T10:04:50] Ava Sullivan: You're welcome, Ali. If any questions come up, feel free to reach out. Have a wonderful day!\n[2023-10-21T10:04:55] Ali Hussein: Thanks, Ava. You too!", 'CreatedDate': '2023-10-21T10:02:00.000+0000', 'EndTime__c': '2023-10-21'}], 'var_call_TACd1elz3myK62mTpgn4LmSg': 'file_storage/call_TACd1elz3myK62mTpgn4LmSg.json'}
+
+exec(code, env_args)

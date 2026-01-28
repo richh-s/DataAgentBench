@@ -1,0 +1,108 @@
+code = """import json
+import pandas as pd
+import re
+from collections import defaultdict
+
+# Load complete data
+tracks_var = locals()['var_functions.query_db:12']
+if isinstance(tracks_var, str) and tracks_var.endswith('.json'):
+    with open(tracks_var, 'r') as f:
+        tracks_data = json.load(f)
+else:
+    tracks_data = tracks_var
+
+sales_var = locals()['var_functions.query_db:6']
+if isinstance(sales_var, str) and sales_var.endswith('.json'):
+    with open(sales_var, 'r') as f:
+        sales_data = json.load(f)
+else:
+    sales_data = sales_var
+
+# Create DataFrames
+df_tracks = pd.DataFrame(tracks_data)
+df_sales = pd.DataFrame(sales_data)
+
+# Clean data types
+df_sales['track_id'] = df_sales['track_id'].astype(str)
+df_sales['revenue_usd'] = pd.to_numeric(df_sales['revenue_usd'])
+df_tracks['track_id'] = df_tracks['track_id'].astype(str)
+
+# Filter out tracks with no meaningful title
+df_tracks = df_tracks[df_tracks['title'].notna() & (df_tracks['title'] != 'None') & (df_tracks['title'].str.len() > 1)]
+
+# Better title normalization
+def normalize_title(title):
+    if pd.isna(title) or title == 'None':
+        return ''
+    title = str(title).lower().strip()
+    # Remove common patterns
+    title = re.sub(r'\s*\(\s*live\s*[^)]*\)', '', title)  # Remove (live...)
+    title = re.sub(r'\s*-\s*live\s*.*', '', title)  # Remove - live
+    title = re.sub(r'\s*\(\s*acoustic\s*[^)]*\)', '', title)  # Remove (acoustic...)
+    title = re.sub(r'\s*\d{4}.*', '', title)  # Remove year info
+    title = re.sub(r'\s*-\s*\d+.*', '', title)  # Remove - numbers
+    # Extract song title from "Artist - Title" format
+    if ' - ' in title:
+        parts = title.split(' - ')
+        if len(parts) >= 2:
+            # Take the last part as title, first as artist
+            return parts[-1].strip()
+    return title.strip()
+
+def normalize_artist(artist):
+    if pd.isna(artist) or artist in ['None', '[unknown]', '   ', '']:
+        return 'unknown'
+    return str(artist).lower().strip()
+
+df_tracks['norm_title'] = df_tracks['title'].apply(normalize_title)
+df_tracks['norm_artist'] = df_tracks['artist'].apply(normalize_artist)
+
+# Filter out empty titles after normalization
+df_tracks = df_tracks[df_tracks['norm_title'].str.len() > 0]
+
+# Create song identifier (title only, since artist can vary)
+df_tracks['song_key'] = df_tracks['norm_title']
+
+# Group by song_key and calculate total revenue
+track_to_revenue = df_sales.groupby('track_id')['revenue_usd'].sum().to_dict()
+
+# Group tracks by song_key
+song_revenue = defaultdict(float)
+song_examples = defaultdict(list)
+
+for _, track in df_tracks.iterrows():
+    track_id = track['track_id']
+    song_key = track['song_key']
+    if track_id in track_to_revenue:
+        revenue = track_to_revenue[track_id]
+        song_revenue[song_key] += revenue
+        song_examples[song_key].append({
+            'title': track['title'],
+            'artist': track['artist'],
+            'track_id': track_id,
+            'revenue': revenue
+        })
+
+# Sort by total revenue
+sorted_songs = sorted(song_revenue.items(), key=lambda x: x[1], reverse=True)
+
+top_song_key, top_revenue = sorted_songs[0]
+top_examples = song_examples[top_song_key]
+
+print('__RESULT__:')
+print(json.dumps({
+    'top_song_normalized_title': top_song_key,
+    'total_revenue': float(top_revenue),
+    'track_variations': len(top_examples),
+    'example_variations': [
+        {
+            'original_title': ex['title'],
+            'artist': ex['artist'],
+            'revenue': float(ex['revenue'])
+        } for ex in top_examples[:5]
+    ]
+}))"""
+
+env_args = {'var_functions.list_db:0': ['tracks'], 'var_functions.list_db:2': ['sales'], 'var_functions.query_db:4': [{'track_id': '1', 'source_id': '2', 'source_track_id': 'MBox7368722-HH', 'title': "Daniel Balavoine - L'enfant aux yeux d'Italie", 'artist': 'None', 'album': 'De vous à elle en passant par moi', 'year': '75', 'length': '219', 'language': 'French'}, {'track_id': '2', 'source_id': '4', 'source_track_id': '139137-A047', 'title': '007', 'artist': '[unknown]', 'album': 'Cantigas de roda (unknown)', 'year': 'None', 'length': '1m 58sec', 'language': 'Por.'}, {'track_id': '3', 'source_id': '2', 'source_track_id': 'MBox38440522-HH', 'title': 'Action PAINTING! - Mustard Gas', 'artist': 'None', 'album': 'There and Back Again Lane', 'year': '95', 'length': '129', 'language': 'English'}, {'track_id': '4', 'source_id': '5', 'source_track_id': '4489993', 'title': 'Your Grace', 'artist': 'Kathy Troccoli', 'album': 'Comfort', 'year': '2005', 'length': 'unk.', 'language': 'English'}, {'track_id': '5', 'source_id': '5', 'source_track_id': '10339621', 'title': "Well You Needn't", 'artist': 'Ernie Stadler Jazz Quintet', 'album': 'First Down', 'year': '2010', 'length': '321266', 'language': 'English'}, {'track_id': '6', 'source_id': '3', 'source_track_id': '49425110MB-01', 'title': 'Try (acoustic) - 2008-02-15: Le Grand Rex, Paris, France', 'artist': 'Neil Young', 'album': 'None', 'year': 'None', 'length': 'None', 'language': 'English'}, {'track_id': '7', 'source_id': '2', 'source_track_id': 'MBox28675636-HH', 'title': 'Bruce Maginnis - Sttreet Hype', 'artist': 'None', 'album': 'Groove City', 'year': '05', 'length': '177', 'language': 'English'}, {'track_id': '8', 'source_id': '2', 'source_track_id': 'MBox9589118-HH', 'title': 'Luce Dufault - Ballade à donner', 'artist': 'None', 'album': 'Luce Dufault', 'year': '96', 'length': '242', 'language': 'French'}, {'track_id': '9', 'source_id': '5', 'source_track_id': '10992441', 'title': "Just Like Tom Thumb's Blues (live)", 'artist': 'Wendy Saddington', 'album': 'Blues Women Anthology, Volume 7', 'year': '2007', 'length': '462000', 'language': 'English'}, {'track_id': '10', 'source_id': '5', 'source_track_id': '15761001', 'title': 'Στα καμένα', 'artist': 'Λαυρέντης Μαχαιρίίτσας', 'album': 'Συλλογή Δίφωνο, 22: Μουσικοί βιότοποι', 'year': '1997', 'length': '195000', 'language': 'Greek'}], 'var_functions.query_db:6': 'file_storage/functions.query_db:6.json', 'var_functions.execute_python:10': {'sales_rows': 58049, 'tracks_rows': 10, 'sales_columns': ['sale_id', 'track_id', 'country', 'store', 'units_sold', 'revenue_usd'], 'tracks_columns': ['track_id', 'source_id', 'source_track_id', 'title', 'artist', 'album', 'year', 'length', 'language'], 'sample_tracks': [{'track_id': '1', 'source_id': '2', 'source_track_id': 'MBox7368722-HH', 'title': "Daniel Balavoine - L'enfant aux yeux d'Italie", 'artist': 'None', 'album': 'De vous à elle en passant par moi', 'year': '75', 'length': '219', 'language': 'French'}, {'track_id': '2', 'source_id': '4', 'source_track_id': '139137-A047', 'title': '007', 'artist': '[unknown]', 'album': 'Cantigas de roda (unknown)', 'year': 'None', 'length': '1m 58sec', 'language': 'Por.'}, {'track_id': '3', 'source_id': '2', 'source_track_id': 'MBox38440522-HH', 'title': 'Action PAINTING! - Mustard Gas', 'artist': 'None', 'album': 'There and Back Again Lane', 'year': '95', 'length': '129', 'language': 'English'}], 'sample_sales': [{'sale_id': '1', 'track_id': '1', 'country': 'Canada', 'store': 'Google Play', 'units_sold': '349', 'revenue_usd': '408.0'}, {'sale_id': '2', 'track_id': '1', 'country': 'Canada', 'store': 'Apple Music', 'units_sold': '122', 'revenue_usd': '137.59'}, {'sale_id': '3', 'track_id': '1', 'country': 'Germany', 'store': 'Apple Music', 'units_sold': '373', 'revenue_usd': '371.57'}]}, 'var_functions.query_db:12': 'file_storage/functions.query_db:12.json', 'var_functions.execute_python:16': {'tracks_count': 19375, 'sales_count': 58049, 'unique_track_ids_in_sales': 19375, 'unique_track_ids_in_tracks': 19375, 'sales_revenue_stats': {'mean': 284.72739151406574, 'max': 641.82, 'min': 0.99, 'total': 16528140.350000001}}, 'var_functions.execute_python:18': {'first_20_tracks': [{'id': '1', 'title': "Daniel Balavoine - L'enfant aux yeux d'Italie", 'artist': 'None'}, {'id': '2', 'title': '007', 'artist': '[unknown]'}, {'id': '3', 'title': 'Action PAINTING! - Mustard Gas', 'artist': 'None'}, {'id': '4', 'title': 'Your Grace', 'artist': 'Kathy Troccoli'}, {'id': '5', 'title': "Well You Needn't", 'artist': 'Ernie Stadler Jazz Quintet'}, {'id': '6', 'title': 'Try (acoustic) - 2008-02-15: Le Grand Rex, Paris, France', 'artist': 'Neil Young'}, {'id': '7', 'title': 'Bruce Maginnis - Sttreet Hype', 'artist': 'None'}, {'id': '8', 'title': 'Luce Dufault - Ballade à donner', 'artist': 'None'}, {'id': '9', 'title': "Just Like Tom Thumb's Blues (live)", 'artist': 'Wendy Saddington'}, {'id': '10', 'title': 'Στα καμένα', 'artist': 'Λαυρέντης Μαχαιρίίτσας'}, {'id': '11', 'title': 'None', 'artist': 'Anathema'}, {'id': '12', 'title': 'El Vaquero Chido (The Cool Cowboy)', 'artist': 'Byron Brizuela & Enrique Carbajal'}, {'id': '13', 'title': '002-Particle/Wave', 'artist': 'Lunchbox'}, {'id': '14', 'title': '001-Deja Vu', 'artist': 'Blanket'}, {'id': '15', 'title': '019-Feeling Good', 'artist': 'Andy Bey and the Bey Sisters'}, {'id': '16', 'title': 'Scottish Fantasy: Adagio cantabile (The Classical Album, Volume 1)', 'artist': 'Max Bruch'}, {'id': '17', 'title': 'Marlene Dietrich - Wo ist der Mann?', 'artist': 'None'}, {'id': '18', 'title': '00-1', 'artist': 'None'}, {'id': '19', 'title': 'Gimme Dat (remix)', 'artist': 'Rye Rye'}, {'id': '20', 'title': "AmnerisIntro:EveryStoryIsaLoveStory/HeatherHeadley/It'sCheesy:EasyasLife(ForbiddenBroadway2001:ASpoofOdyssey(2001originaloffBroadwaycast))", 'artist': 'Gerard Alessandrini'}]}, 'var_functions.execute_python:22': {'tracks_after_cleaning': 19308, 'sample_normalized': [{'track_id': '1', 'title': "Daniel Balavoine - L'enfant aux yeux d'Italie", 'clean_title': "L'enfant aux yeux d'Italie", 'artist': 'None', 'clean_artist': 'Unknown', 'title_key': 'lenfantauxyeuxditalie', 'artist_key': 'unknown'}, {'track_id': '2', 'title': '007', 'clean_title': '007', 'artist': '[unknown]', 'clean_artist': 'Unknown', 'title_key': '007', 'artist_key': 'unknown'}, {'track_id': '3', 'title': 'Action PAINTING! - Mustard Gas', 'clean_title': 'Mustard Gas', 'artist': 'None', 'clean_artist': 'Unknown', 'title_key': 'mustardgas', 'artist_key': 'unknown'}, {'track_id': '4', 'title': 'Your Grace', 'clean_title': 'Your Grace', 'artist': 'Kathy Troccoli', 'clean_artist': 'Kathy Troccoli', 'title_key': 'yourgrace', 'artist_key': 'kathytroccoli'}, {'track_id': '5', 'title': "Well You Needn't", 'clean_title': "Well You Needn't", 'artist': 'Ernie Stadler Jazz Quintet', 'clean_artist': 'Ernie Stadler Jazz Quintet', 'title_key': 'wellyouneednt', 'artist_key': 'erniestadlerjazzquintet'}, {'track_id': '6', 'title': 'Try (acoustic) - 2008-02-15: Le Grand Rex, Paris, France', 'clean_title': 'Try (acoustic)', 'artist': 'Neil Young', 'clean_artist': 'Neil Young', 'title_key': 'tryacoustic', 'artist_key': 'neilyoung'}, {'track_id': '7', 'title': 'Bruce Maginnis - Sttreet Hype', 'clean_title': 'Sttreet Hype', 'artist': 'None', 'clean_artist': 'Unknown', 'title_key': 'sttreethype', 'artist_key': 'unknown'}, {'track_id': '8', 'title': 'Luce Dufault - Ballade à donner', 'clean_title': 'Ballade à donner', 'artist': 'None', 'clean_artist': 'Unknown', 'title_key': 'balladedonner', 'artist_key': 'unknown'}, {'track_id': '9', 'title': "Just Like Tom Thumb's Blues (live)", 'clean_title': "Just Like Tom Thumb's Blues", 'artist': 'Wendy Saddington', 'clean_artist': 'Wendy Saddington', 'title_key': 'justliketomthumbsblues', 'artist_key': 'wendysaddington'}, {'track_id': '10', 'title': 'Στα καμένα', 'clean_title': 'Στα καμένα', 'artist': 'Λαυρέντης Μαχαιρίίτσας', 'clean_artist': 'Λαυρέντης Μαχαιρίίτσας', 'title_key': '', 'artist_key': ''}], 'unique_title_keys': 16881, 'unique_combinations': 18500}, 'var_functions.execute_python:24': {'top_song_title': 'None', 'top_song_artist': 'None', 'total_revenue': 14647.519999999997, 'track_count': 17, 'track_ids_sample': ['2126', '2153', '3422', '4421', '5048'], 'revenue_by_track': [{'track_id': '2126', 'revenue': 1102.6899999999998}, {'track_id': '2153', 'revenue': 1246.92}, {'track_id': '3422', 'revenue': 492.4}, {'track_id': '4421', 'revenue': 3.14}, {'track_id': '5048', 'revenue': 1630.66}, {'track_id': '7036', 'revenue': 745.94}, {'track_id': '7146', 'revenue': 45.93}, {'track_id': '7481', 'revenue': 786.56}, {'track_id': '9478', 'revenue': 455.7}, {'track_id': '9788', 'revenue': 1791.84}]}}
+
+exec(code, env_args)

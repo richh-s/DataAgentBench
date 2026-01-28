@@ -1,0 +1,15 @@
+code = """import pandas as pd
+import sqlite3
+import json
+
+# Get all literature & fiction books
+lit_fiction_books = var_functions.query_db:4
+lit_fiction_df = pd.DataFrame(lit_fiction_books)
+
+print("__RESULT__:")
+print(f"Sample literature & fiction books: {lit_fiction_df.head().to_json(orient='records')}")
+print(f"Total literature & fiction books: {len(lit_fiction_df)}")"""
+
+env_args = {'var_functions.list_db:0': ['books_info'], 'var_functions.list_db:2': ['review'], 'var_functions.query_db:4': [{'book_id': 'bookid_1', 'title': 'Chaucer', 'categories': '["Books", "Literature & Fiction", "History & Criticism"]'}, {'book_id': 'bookid_9', 'title': 'Reunion: The Children of Lauderdale Park', 'categories': '["Books", "Literature & Fiction", "Genre Fiction"]'}, {'book_id': 'bookid_13', 'title': 'Girl Made of Glass', 'categories': '["Books", "Literature & Fiction", "Poetry"]'}, {'book_id': 'bookid_30', 'title': 'Sugary Sweets (A Taste of Love Series)', 'categories': '["Books", "Literature & Fiction", "Humor & Satire"]'}, {'book_id': 'bookid_36', 'title': 'Therapy Mammals', 'categories': '["Books", "Literature & Fiction", "Genre Fiction"]'}, {'book_id': 'bookid_37', 'title': "A Most Dangerous Book: Tacitus's Germania from the Roman Empire to the Third Reich", 'categories': '["Books", "Literature & Fiction", "History & Criticism"]'}, {'book_id': 'bookid_38', 'title': 'The Prophet: With Original 1923 Illustrations by the Author', 'categories': '["Books", "Literature & Fiction", "Poetry"]'}, {'book_id': 'bookid_39', 'title': 'The Melancholy Strumpet Master', 'categories': '["Books", "Literature & Fiction", "Humor & Satire"]'}, {'book_id': 'bookid_44', 'title': 'Reptilian', 'categories': '["Books", "Literature & Fiction", "Genre Fiction"]'}, {'book_id': 'bookid_49', 'title': 'Primeval: A Journal of the Uncanny - Issue #1', 'categories': '["Books", "Literature & Fiction", "History & Criticism"]'}], 'var_functions.query_db:6': [{'purchase_id': 'purchaseid_186', 'title': 'Ha! On me!  I thought this was a cookbook!', 'rating': '4'}, {'purchase_id': 'purchaseid_191', 'title': 'Four Stars', 'rating': '4'}, {'purchase_id': 'purchaseid_190', 'title': 'A wonderful adventure in France', 'rating': '4'}, {'purchase_id': 'purchaseid_8', 'title': 'Best beginner book.  Been looking for something like this for a long time.', 'rating': '5'}, {'purchase_id': 'purchaseid_178', 'title': 'Referance Guide', 'rating': '4'}, {'purchase_id': 'purchaseid_186', 'title': 'A Good read for Meat Eaters, and Veggie Heads as well', 'rating': '4'}, {'purchase_id': 'purchaseid_76', 'title': 'Greet book', 'rating': '5'}, {'purchase_id': 'purchaseid_186', 'title': 'For anyone except avid non-hunters.', 'rating': '4'}, {'purchase_id': 'purchaseid_115', 'title': 'Highly recommend this book if you love history of Mid Atlantic wrestling...', 'rating': '5'}, {'purchase_id': 'purchaseid_167', 'title': 'Heroine blames others for things & feels her bad behavior is justified', 'rating': '2'}]}
+
+exec(code, env_args)

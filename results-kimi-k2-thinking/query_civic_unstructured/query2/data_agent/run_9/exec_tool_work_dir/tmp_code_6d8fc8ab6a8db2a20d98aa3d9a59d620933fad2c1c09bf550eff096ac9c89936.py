@@ -1,0 +1,85 @@
+code = """import json
+
+# Load civic documents
+file_path = locals()['var_functions.query_db:18']
+with open(file_path, 'r') as f:
+    civic_docs = json.load(f)
+
+# Load funding data
+funding_data = locals()['var_functions.query_db:20']
+
+print('Loaded', len(civic_docs), 'civic documents')
+print('Loaded', len(funding_data), 'funding records')
+
+# Create funding lookup
+funding_lookup = {}
+for fund in funding_data:
+    name_lower = fund['Project_Name'].lower()
+    funding_lookup[name_lower] = {
+        'amount': int(fund['Amount']),
+        'source': fund['Funding_Source']
+    }
+
+# Find park projects completed in 2022
+completed_2022 = []
+
+for doc in civic_docs:
+    text = doc.get('text', '')
+    
+    # Look for park projects completed in 2022
+    if 'Park' in text and '2022' in text:
+        # Check for known completed projects
+        if 'Bluffs Park Shade Structure' in text and 'Construction was completed November 2022' in text:
+            if 'Bluffs Park Shade Structure' not in completed_2022:
+                completed_2022.append('Bluffs Park Shade Structure')
+
+# Check for more park projects
+for doc in civic_docs:
+    text = doc.get('text', '')
+    lines = text.split('\n')
+    
+    for i, line in enumerate(lines):
+        line_clean = line.strip()
+        if 'Park' in line_clean and len(line_clean) > 10:
+            # Skip obvious non-projects
+            skip_words = ['Page', 'Agenda', 'Meeting', 'Commission', 'Item']
+            if any(w in line_clean for w in skip_words):
+                continue
+            
+            # Look for project keywords
+            if any(k in line_clean for k in ['Repair', 'Project', 'Structure', 'Improvement', 'Walkway', 'Shade']):
+                # Look ahead for 2022 completion
+                for j in range(i+1, min(i+15, len(lines))):
+                    ahead = ' '.join(lines[i:j+1])
+                    if '2022' in ahead and 'completed' in ahead.lower():
+                        if line_clean not in completed_2022:
+                            completed_2022.append(line_clean)
+                        break
+
+print('Found park projects completed in 2022:', completed_2022)
+
+# Match with funding
+total_fund = 0
+matched = []
+
+for proj in completed_2022:
+    proj_lower = proj.lower()
+    if proj_lower in funding_lookup:
+        amt = funding_lookup[proj_lower]['amount']
+        src = funding_lookup[proj_lower]['source']
+        total_fund += amt
+        matched.append({'project': proj, 'amount': amt, 'source': src})
+
+print('\nMatched projects:')
+for m in matched:
+    print(f"- {m['project']}: ${m['amount']}")
+
+print('\nTotal funding:', total_fund)
+
+result = {'total_funding': total_fund, 'matches': matched}
+print('__RESULT__:')
+print(json.dumps(result))"""
+
+env_args = {'var_functions.list_db:0': ['civic_docs'], 'var_functions.query_db:2': 'file_storage/functions.query_db:2.json', 'var_functions.query_db:10': 'file_storage/functions.query_db:10.json', 'var_functions.query_db:18': 'file_storage/functions.query_db:18.json', 'var_functions.query_db:20': [{'Project_Name': 'Bluffs Park Shade Structure', 'Funding_Source': 'Government Grant', 'Amount': '21000'}, {'Project_Name': 'Bluffs Park Workout Station', 'Funding_Source': 'University Research Fund', 'Amount': '39000'}, {'Project_Name': 'Legacy Park Benches and Arbors Renovation', 'Funding_Source': 'Technology Innovation Fund', 'Amount': '41000'}, {'Project_Name': 'Legacy Park Paver Repair Project', 'Funding_Source': 'Community Fund', 'Amount': '69000'}, {'Project_Name': 'Malibu Bluffs Park Roof Replacement Project', 'Funding_Source': 'Development Bank Loan', 'Amount': '44000'}, {'Project_Name': 'Malibu Bluffs Park South Walkway', 'Funding_Source': 'Cultural Heritage Grant', 'Amount': '91000'}, {'Project_Name': 'Malibu Bluffs Park South Walkway Repairs', 'Funding_Source': 'Educational Sponsorship', 'Amount': '81000'}, {'Project_Name': 'Malibu Park Drainage Improvements', 'Funding_Source': 'Crowdfunding', 'Amount': '17000'}, {'Project_Name': 'Malibu Park Resurfacing Project', 'Funding_Source': 'State Development Grant', 'Amount': '14000'}, {'Project_Name': 'Malibu Park Storm Drain Repairs', 'Funding_Source': 'Taxpayer Contribution', 'Amount': '50000'}, {'Project_Name': 'Permanent Skate Park', 'Funding_Source': 'Community Fund', 'Amount': '97000'}, {'Project_Name': 'Trancas Canyon Park Planting and Irrigation Repairs', 'Funding_Source': 'National Foundation Fund', 'Amount': '78000'}, {'Project_Name': 'Trancas Canyon Park Planting and Irrigation Repairs (CalJPIA/FEMA Project)', 'Funding_Source': 'Infrastructure Bond', 'Amount': '44000'}, {'Project_Name': 'Trancas Canyon Park Planting and Irrigation Repairs (FEMA/CalOES Project)', 'Funding_Source': 'Infrastructure Bond', 'Amount': '92000'}, {'Project_Name': 'Trancas Canyon Park Playground', 'Funding_Source': 'Crowdfunding', 'Amount': '24000'}, {'Project_Name': 'Trancas Canyon Park Playground Resurfacing', 'Funding_Source': 'Philanthropic Donation', 'Amount': '65000'}, {'Project_Name': 'Trancas Canyon Park Slope Stabilization Project', 'Funding_Source': 'Community Fund', 'Amount': '68000'}, {'Project_Name': 'Trancas Canyon Park Slope Stabilization Project (CalJPIA Project)', 'Funding_Source': 'Government Grant', 'Amount': '43000'}, {'Project_Name': 'Trancas Canyon Park Slope Stabilization Project (CalOES Project)', 'Funding_Source': 'International Organization Grant', 'Amount': '32000'}, {'Project_Name': 'Trancas Canyon Park Upper and Lower Slopes Repair', 'Funding_Source': 'International Organization Grant', 'Amount': '23000'}], 'var_functions.execute_python:26': {'status': 'success'}, 'var_functions.execute_python:28': {'park_funding_projects': [{'Project_Name': 'Bluffs Park Shade Structure', 'Funding_Source': 'Government Grant', 'Amount': '21000'}, {'Project_Name': 'Bluffs Park Workout Station', 'Funding_Source': 'University Research Fund', 'Amount': '39000'}, {'Project_Name': 'Legacy Park Benches and Arbors Renovation', 'Funding_Source': 'Technology Innovation Fund', 'Amount': '41000'}, {'Project_Name': 'Legacy Park Paver Repair Project', 'Funding_Source': 'Community Fund', 'Amount': '69000'}, {'Project_Name': 'Malibu Bluffs Park Roof Replacement Project', 'Funding_Source': 'Development Bank Loan', 'Amount': '44000'}, {'Project_Name': 'Malibu Bluffs Park South Walkway', 'Funding_Source': 'Cultural Heritage Grant', 'Amount': '91000'}, {'Project_Name': 'Malibu Bluffs Park South Walkway Repairs', 'Funding_Source': 'Educational Sponsorship', 'Amount': '81000'}, {'Project_Name': 'Malibu Park Drainage Improvements', 'Funding_Source': 'Crowdfunding', 'Amount': '17000'}, {'Project_Name': 'Malibu Park Resurfacing Project', 'Funding_Source': 'State Development Grant', 'Amount': '14000'}, {'Project_Name': 'Malibu Park Storm Drain Repairs', 'Funding_Source': 'Taxpayer Contribution', 'Amount': '50000'}, {'Project_Name': 'Permanent Skate Park', 'Funding_Source': 'Community Fund', 'Amount': '97000'}, {'Project_Name': 'Trancas Canyon Park Planting and Irrigation Repairs', 'Funding_Source': 'National Foundation Fund', 'Amount': '78000'}, {'Project_Name': 'Trancas Canyon Park Planting and Irrigation Repairs (CalJPIA/FEMA Project)', 'Funding_Source': 'Infrastructure Bond', 'Amount': '44000'}, {'Project_Name': 'Trancas Canyon Park Planting and Irrigation Repairs (FEMA/CalOES Project)', 'Funding_Source': 'Infrastructure Bond', 'Amount': '92000'}, {'Project_Name': 'Trancas Canyon Park Playground', 'Funding_Source': 'Crowdfunding', 'Amount': '24000'}, {'Project_Name': 'Trancas Canyon Park Playground Resurfacing', 'Funding_Source': 'Philanthropic Donation', 'Amount': '65000'}, {'Project_Name': 'Trancas Canyon Park Slope Stabilization Project', 'Funding_Source': 'Community Fund', 'Amount': '68000'}, {'Project_Name': 'Trancas Canyon Park Slope Stabilization Project (CalJPIA Project)', 'Funding_Source': 'Government Grant', 'Amount': '43000'}, {'Project_Name': 'Trancas Canyon Park Slope Stabilization Project (CalOES Project)', 'Funding_Source': 'International Organization Grant', 'Amount': '32000'}, {'Project_Name': 'Trancas Canyon Park Upper and Lower Slopes Repair', 'Funding_Source': 'International Organization Grant', 'Amount': '23000'}], 'count': 20}}
+
+exec(code, env_args)

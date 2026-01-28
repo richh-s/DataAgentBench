@@ -1,0 +1,30 @@
+code = """# Load the ticker list
+import json
+import os
+
+tickers_data = locals()['var_functions.query_db:40']
+if isinstance(tickers_data, str) and os.path.exists(tickers_data):
+    with open(tickers_data, 'r') as f:
+        tickers = json.load(f)
+else:
+    tickers = tickers_data
+
+ticker_list = [t['Symbol'] for t in tickers]
+
+# Since we can't connect directly to DuckDB database, 
+# let's sample a few more leveraged/inverse ETFs that might have high prices
+high_priced_candidates = ['LABU', 'LABD', 'NUGT', 'DUST', 'TQQQ', 'SQQQ', 'SPXL', 'SPXS', 'UPRO', 'SDOW']
+
+# Check which of these are in our list
+nyse_arca_tickers = set(ticker_list)
+candidates_on_arca = [t for t in high_priced_candidates if t in nyse_arca_tickers]
+
+print('__RESULT__:')
+print(json.dumps({
+    'total_nyse_arca_etfs': len(ticker_list),
+    'candidate_leveraged_etfs': candidates_on_arca
+}))"""
+
+env_args = {'var_functions.list_db:0': ['stockinfo'], 'var_functions.query_db:2': [{'Nasdaq Traded': 'Y', 'Symbol': 'AAAU', 'Listing Exchange': 'P', 'Market Category': 'Not applicable or not NASDAQ-listed', 'ETF': 'Y', 'Round Lot Size': '100.0', 'Test Issue': 'N', 'Financial Status': 'None', 'NextShares': 'N', 'Company Description': 'Perth Mint Physical Gold ETF offers investors an opportunity to buy shares backed by physical gold, providing a secure and tangible way to invest in precious metals.'}, {'Nasdaq Traded': 'Y', 'Symbol': 'AADR', 'Listing Exchange': 'P', 'Market Category': 'Not applicable or not NASDAQ-listed', 'ETF': 'Y', 'Round Lot Size': '100.0', 'Test Issue': 'N', 'Financial Status': 'None', 'NextShares': 'N', 'Company Description': "AdvisorShares Dorsey Wright ADR ETF offers investors a dynamic way to access international markets through a diverse portfolio of American Depositary Receipts, leveraging the expertise of Dorsey Wright's investment strategies."}, {'Nasdaq Traded': 'Y', 'Symbol': 'ABEQ', 'Listing Exchange': 'P', 'Market Category': 'Not applicable or not NASDAQ-listed', 'ETF': 'Y', 'Round Lot Size': '100.0', 'Test Issue': 'N', 'Financial Status': 'None', 'NextShares': 'N', 'Company Description': 'Absolute Core Strategy ETF is an investment fund designed to offer a diversified portfolio, focusing on strategic asset allocation to optimize returns for investors.'}, {'Nasdaq Traded': 'Y', 'Symbol': 'ACSG', 'Listing Exchange': 'P', 'Market Category': 'Not applicable or not NASDAQ-listed', 'ETF': 'Y', 'Round Lot Size': '100.0', 'Test Issue': 'N', 'Financial Status': 'None', 'NextShares': 'N', 'Company Description': 'Xtrackers MSCI ACWI ex USA ESG Leaders Equity ETF offers investors an opportunity to engage with international companies that are recognized for their strong environmental, social, and governance practices, excluding those based in the USA.'}, {'Nasdaq Traded': 'Y', 'Symbol': 'ACWF', 'Listing Exchange': 'P', 'Market Category': 'Not applicable or not NASDAQ-listed', 'ETF': 'Y', 'Round Lot Size': '100.0', 'Test Issue': 'N', 'Financial Status': 'None', 'NextShares': 'N', 'Company Description': 'iShares Edge MSCI Multifactor Global ETF is an investment fund that provides exposure to a diversified portfolio of stocks worldwide, utilizing a multifactor approach to enhance returns and manage risk.'}], 'var_functions.query_db:5': 'file_storage/functions.query_db:5.json', 'var_functions.execute_python:8': {'count': 1435, 'first_10': [{'Symbol': 'AAAU'}, {'Symbol': 'AADR'}, {'Symbol': 'ABEQ'}, {'Symbol': 'ACSG'}, {'Symbol': 'ACWF'}, {'Symbol': 'AFK'}, {'Symbol': 'AFLG'}, {'Symbol': 'AFMC'}, {'Symbol': 'AFSM'}, {'Symbol': 'AFTY'}], 'last_10': [{'Symbol': 'YYY'}, {'Symbol': 'ZCAN'}, {'Symbol': 'ZDEU'}, {'Symbol': 'ZGBR'}, {'Symbol': 'ZHOK'}, {'Symbol': 'ZIG'}, {'Symbol': 'ZJPN'}, {'Symbol': 'ZMLP'}, {'Symbol': 'ZROZ'}, {'Symbol': 'ZSL'}]}, 'var_functions.query_db:14': [{'Date': '1993-01-29', 'Open': '43.96875', 'High': '43.96875', 'Low': '43.75', 'Close': '43.9375', 'Adj Close': '26.299287796020508', 'Volume': '1003200'}], 'var_functions.execute_python:16': {'ticker_count': 1435, 'sample_tickers': ['AAAU', 'AADR', 'ABEQ', 'ACSG', 'ACWF', 'AFK', 'AFLG', 'AFMC', 'AFSM', 'AFTY', 'AGG', 'AGGP', 'AGGY', 'AGQ', 'AGZ', 'AIEQ', 'AIIQ', 'AMLP', 'AMOM', 'AMZA']}, 'var_functions.query_db:18': 'file_storage/functions.query_db:18.json', 'var_functions.query_db:20': [{'Symbol': 'DIA'}, {'Symbol': 'EEM'}, {'Symbol': 'EFA'}, {'Symbol': 'GLD'}, {'Symbol': 'IWM'}, {'Symbol': 'SPY'}, {'Symbol': 'XLE'}], 'var_functions.query_db:22': [{'max_price': '193.3121490478516', 'min_price': '170.28823852539062', 'days': '252'}], 'var_functions.query_db:24': [{'max_price': '125.2300033569336'}], 'var_functions.query_db:26': [{'max_price': '163.6190185546875'}], 'var_functions.query_db:28': [{'Symbol': 'JNUG'}, {'Symbol': 'LABU'}, {'Symbol': 'NUGT'}, {'Symbol': 'UDOW'}, {'Symbol': 'UPRO'}], 'var_functions.query_db:30': [{'max_price': '24.036970138549805'}], 'var_functions.query_db:32': [{'max_price': '230.2828063964844'}], 'var_functions.query_db:34': [{'max_price': '162.96107482910156'}], 'var_functions.query_db:36': [{'Symbol': 'SOXL'}, {'Symbol': 'SPXL'}, {'Symbol': 'SPXS'}, {'Symbol': 'TECL'}, {'Symbol': 'UPRO'}], 'var_functions.query_db:38': [{'max_price': '21.189502716064453'}], 'var_functions.query_db:40': 'file_storage/functions.query_db:40.json', 'var_functions.execute_python:42': {'total_tickers': 1435, 'first_20': ['AAAU', 'AADR', 'ABEQ', 'ACSG', 'ACWF', 'AFK', 'AFLG', 'AFMC', 'AFSM', 'AFTY', 'AGG', 'AGGP', 'AGGY', 'AGQ', 'AGZ', 'AIEQ', 'AIIQ', 'AMLP', 'AMOM', 'AMZA'], 'last_20': ['XTN', 'XWEB', 'YANG', 'YCL', 'YCOM', 'YCS', 'YINN', 'YLD', 'YOLO', 'YXI', 'YYY', 'ZCAN', 'ZDEU', 'ZGBR', 'ZHOK', 'ZIG', 'ZJPN', 'ZMLP', 'ZROZ', 'ZSL']}}
+
+exec(code, env_args)

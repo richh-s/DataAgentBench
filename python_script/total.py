@@ -11,17 +11,17 @@ from python_script.llm_calls import llm_calls_analysis_per_query
 from python_script.tool_calls import tool_calls_analysis_per_query
 
 K_LIST = [1, 5, 10, 15, 20, 30, 40, 50]
-QUERY_ROOT = Path("/home/ruiying/DataAgentBench")
-RESULT_ROOT = Path("/home/ruiying/DataAgentBench/results-gpt5.1")
-# RESULT_ROOT = Path("/home/ruiying/DataAgentBench/results-gemini-3-pro")
-# RESULT_ROOT = Path("/home/ruiying/DataAgentBench/results-gemini-2.5-flash")
+QUERY_ROOT = Path("/home/ruiying/DataAgentBench-local")
+# RESULT_ROOT = Path("/home/ruiying/DataAgentBench-local/results-gpt5.1")
+# RESULT_ROOT = Path("/home/ruiying/DataAgentBench-local/results-gemini-3-pro")
+RESULT_ROOT = Path("/home/ruiying/DataAgentBench-local/results-gemini-2.5-flash")
 # RESULT_ROOT = Path("/home/ruiying/DataAgentBench")
 TOOL_LIST = ["query_db", "list_db", "execute_python", "return_answer"]
 
 def analysis_per_query(task, query_id, result_root: Path, runs: list):
     query_dir = QUERY_ROOT / f"query_{task}" / f"query{query_id}"
-    result_dir = result_root / f"query_{task}" / f"query{query_id}" # results-gpt5.1
-    # result_dir = result_root / f"query_{task}" / f"query{query_id}" / "data_agent" # gemini
+    # result_dir = result_root / f"query_{task}" / f"query{query_id}" # results-gpt5.1
+    result_dir = result_root / f"query_{task}" / f"query{query_id}" / "data_agent" # gemini
     # result_dir = result_root / f"query_{task}" / f"query{query_id}" / "logs" / "data_agent"
     assert result_dir.exists(), f"Result dir {result_dir} does not exist."
 
@@ -73,7 +73,9 @@ if __name__ == "__main__":
         # "stockmarket",
         # "yelp",
         # "agnews",
-        "music_brainz_20k",
+        # "music_brainz_20k",
+        "civic_unstructured",
+        "paper_unstructured"
     ]:
         print(task)
         query_dir = QUERY_ROOT / f"query_{task}"

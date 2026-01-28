@@ -1,0 +1,110 @@
+code = """import re
+import json
+from collections import Counter
+
+# Get the file path for ALL businesses
+key = 'var_functions.query_db:34'
+file_path = locals()[key]
+
+# Load JSON data from the file
+with open(file_path, 'r') as f:
+    all_businesses = json.load(f)
+
+print(f"Total businesses loaded: {len(all_businesses)}")
+
+# US state postal abbreviations
+us_states = {
+    'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 
+    'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 
+    'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 
+    'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 
+    'SD', 'TN', 'TX', 'UL', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY', 'DC'
+}
+
+# Function to extract state from description - simplified approach
+def extract_state(description):
+    if not description or not isinstance(description, str):
+        return None
+    
+    # Simply check if any US state code exists in the string
+    for state in us_states:
+        if state in description:
+            return state
+    
+    return None
+
+# Process businesses - check WiFi and extract state
+wifi_business_info = []
+wifi_no_count = 0
+wifi_other_count = 0
+
+for business in all_businesses:
+    # Check if attributes exist
+    if not business.get('attributes') or business['attributes'] == 'None':
+        continue
+    
+    if not isinstance(business['attributes'], dict):
+        continue
+    
+    # Get WiFi value
+    wifi_value = business['attributes'].get('WiFi')
+    if not wifi_value:
+        continue
+    
+    # Check if WiFi is 'no'
+    wifi_str = str(wifi_value).lower()
+    if wifi_str in ["u'no'", "'no'", '"no"', 'no']:
+        wifi_no_count += 1
+        continue
+    
+    wifi_other_count += 1
+    
+    # Extract state
+    description = business.get('description', '')
+    state = extract_state(description)
+    if state:
+        wifi_business_info.append({
+            'business_id': business['business_id'],
+            'state': state,
+            'wifi_value': wifi_value
+        })
+
+print(f"Businesses with WiFi='no': {wifi_no_count}")
+print(f"Businesses with WiFi != 'no': {wifi_other_count}")
+print(f"WiFi businesses with valid US state: {len(wifi_business_info)}")
+
+# Count businesses per state
+if wifi_business_info:
+    state_counts = Counter([b['state'] for b in wifi_business_info])
+    top_states = state_counts.most_common()
+    print(f"Top states: {top_states[:10]}")  # Top 10
+    
+    # Find the state with the most WiFi businesses
+    top_state = top_states[0][0]
+    top_state_count = top_states[0][1]
+    
+    # Get business IDs for the top state and convert to business_ref format
+    top_state_business_ids = [b['business_id'] for b in wifi_business_info if b['state'] == top_state]
+    top_state_business_refs = [bid.replace('businessid_', 'businessref_') for bid in top_state_business_ids]
+    
+    print(f"Top state: {top_state} with {top_state_count} businesses")
+    print(f"Business refs count: {len(top_state_business_refs)}")
+else:
+    top_state = None
+    top_state_count = 0
+    top_state_business_refs = []
+
+result = {
+    'wifi_businesses_count': len(wifi_business_info),
+    'state_counts': dict(Counter([b['state'] for b in wifi_business_info])) if wifi_business_info else {},
+    'top_state': top_state,
+    'top_state_count': top_state_count,
+    'top_state_business_refs': top_state_business_refs
+}
+
+print('__RESULT__:')
+print(json.dumps(result))"""
+
+env_args = {'var_functions.list_db:0': ['business', 'checkin'], 'var_functions.query_db:2': [{'_id': '6859a000fe8b31cd7362e2ab', 'business_id': 'businessid_49', 'attributes': {'BusinessAcceptsCreditCards': 'True', 'WiFi': "u'no'", 'BusinessAcceptsBitcoin': 'False'}, 'description': 'Located at 6901 Phelps Rd in Goleta, CA, this facility offers a nurturing environment for young learners, providing a range of services in Education, Elementary Schools, Child Care & Day Care, Local Services, Preschools, and Montessori Schools.'}, {'_id': '6859a000fe8b31cd7362e2ac', 'business_id': 'businessid_47', 'attributes': {'ByAppointmentOnly': 'False', 'BusinessAcceptsCreditCards': 'True', 'GoodForKids': 'True', 'RestaurantsPriceRange2': '2', 'BikeParking': 'False', 'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': True, 'valet': False}"}, 'description': 'Located at 9916 Clayton Rd in St. Louis, MO, this establishment offers a wide range of services, including Hair Salons, Beauty & Spas, Hair Stylists, Skin Care, Blow Dry/Out Services, and Makeup Artists.'}, {'_id': '6859a000fe8b31cd7362e2ad', 'business_id': 'businessid_88', 'attributes': {'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'GoodForKids': 'True', 'BusinessAcceptsCreditCards': 'True', 'ByAppointmentOnly': 'False', 'BikeParking': 'True'}, 'description': 'Located at 11655 W Executive Dr in Boise, ID, this facility offers enthusiasts a premier destination for Gun/Rifle Ranges, Active Life.'}, {'_id': '6859a000fe8b31cd7362e2ae', 'business_id': 'businessid_41', 'attributes': 'None', 'description': 'Located at 1615 Pasadena Ave S, Ste 430 in Saint Petersburg, FL, this facility offers a range of services in Internal Medicine, Doctors, Health & Medical.'}, {'_id': '6859a000fe8b31cd7362e2af', 'business_id': 'businessid_33', 'attributes': {'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'BusinessAcceptsCreditCards': 'True', 'AcceptsInsurance': 'False', 'ByAppointmentOnly': 'False', 'RestaurantsPriceRange2': '2', 'WheelchairAccessible': 'True', 'BikeParking': 'False'}, 'description': 'Located at 9655 E US Hwy 36, Unit H in Avon, IN, this establishment offers a range of services including Nail Salons, Hair Removal, Beauty & Spas, and Waxing.'}, {'_id': '6859a000fe8b31cd7362e2b0', 'business_id': 'businessid_74', 'attributes': {'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'RestaurantsPriceRange2': '4', 'BikeParking': 'False'}, 'description': 'Located at 735 Dodecanese Blvd in Tarpon Springs, FL, this charming establishment offers a delightful selection of treats, making it a must-visit for anyone seeking Candy Stores, Specialty Food, Food.'}, {'_id': '6859a000fe8b31cd7362e2b1', 'business_id': 'businessid_92', 'attributes': {'ByAppointmentOnly': 'False', 'BusinessAcceptsCreditCards': 'True', 'BusinessParking': "{'garage': True, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'RestaurantsPriceRange2': '2', 'WheelchairAccessible': 'True', 'BikeParking': 'True', 'NoiseLevel': "u'quiet'", 'WiFi': "u'no'"}, 'description': 'Located at 690 W Dekalb Pike in King of Prussia, PA, this business offers a diverse range of services and products in the fields of Cosmetics & Beauty Supply, Cosmetic Dentists, Tanning, Teeth Whitening, Beauty & Spas, Dentists, Shopping, Blow Dry/Out Services, Health & Medical, Spray Tanning, and Hair Salons.'}, {'_id': '6859a000fe8b31cd7362e2b2', 'business_id': 'businessid_64', 'attributes': {'BusinessParking': "{'garage': True, 'street': False, 'validated': False, 'lot': True, 'valet': False}", 'ByAppointmentOnly': 'False', 'BusinessAcceptsCreditCards': 'True', 'RestaurantsPriceRange2': '2', 'BikeParking': 'True', 'WiFi': "u'free'"}, 'description': 'Located at 12337 Olive Blvd in Creve Coeur, MO, this establishment offers a range of services in Nail Salons, Beauty & Spas.'}, {'_id': '6859a000fe8b31cd7362e2b3', 'business_id': 'businessid_52', 'attributes': {'ByAppointmentOnly': 'False', 'BusinessAcceptsCreditCards': 'True', 'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'RestaurantsPriceRange2': '2', 'BikeParking': 'True'}, 'description': 'Located at 5000 W 96th St in Indianapolis, IN, this establishment offers a diverse selection of Antiques, Shopping, Home Services, and Lighting Fixtures & Equipment for all your home and decorative needs.'}, {'_id': '6859a000fe8b31cd7362e2b4', 'business_id': 'businessid_29', 'attributes': {'BikeParking': 'True', 'BusinessAcceptsCreditCards': 'True', 'RestaurantsPriceRange2': '2', 'BusinessParking': "{'garage': False, 'street': True, 'validated': False, 'lot': False, 'valet': False}", 'RestaurantsDelivery': 'None'}, 'description': 'Located at 41 Haddon Ave in Collingswood, NJ, this versatile establishment offers a range of services including Wedding Planning, Flowers & Gifts, Event Planning & Services, Financial Services, Shopping, and Florists.'}], 'var_functions.query_db:5': 'file_storage/functions.query_db:5.json', 'var_functions.query_db:6': [{'review_id': 'reviewid_135', 'business_ref': 'businessref_34', 'rating': '2'}, {'review_id': 'reviewid_1067', 'business_ref': 'businessref_89', 'rating': '5'}, {'review_id': 'reviewid_871', 'business_ref': 'businessref_82', 'rating': '4'}, {'review_id': 'reviewid_314', 'business_ref': 'businessref_66', 'rating': '2'}, {'review_id': 'reviewid_487', 'business_ref': 'businessref_95', 'rating': '1'}], 'var_functions.query_db:8': 'file_storage/functions.query_db:8.json', 'var_functions.execute_python:12': {'wifi_businesses': [{'business_id': 'businessid_64', 'state': 'MO'}, {'business_id': 'businessid_54', 'state': 'FL'}, {'business_id': 'businessid_91', 'state': 'LA'}, {'business_id': 'businessid_93', 'state': 'IL'}, {'business_id': 'businessid_26', 'state': 'FL'}, {'business_id': 'businessid_89', 'state': 'PA'}, {'business_id': 'businessid_97', 'state': 'PA'}, {'business_id': 'businessid_67', 'state': 'PA'}, {'business_id': 'businessid_51', 'state': 'FL'}, {'business_id': 'businessid_5', 'state': 'AB'}, {'business_id': 'businessid_6', 'state': 'NV'}, {'business_id': 'businessid_55', 'state': 'FL'}, {'business_id': 'businessid_77', 'state': 'PA'}, {'business_id': 'businessid_86', 'state': 'PA'}, {'business_id': 'businessid_40', 'state': 'PA'}, {'business_id': 'businessid_44', 'state': 'PA'}, {'business_id': 'businessid_43', 'state': 'IN'}, {'business_id': 'businessid_20', 'state': 'FL'}, {'business_id': 'businessid_85', 'state': 'PA'}, {'business_id': 'businessid_25', 'state': 'ID'}, {'business_id': 'businessid_82', 'state': 'PA'}, {'business_id': 'businessid_12', 'state': 'AB'}, {'business_id': 'businessid_16', 'state': 'IN'}, {'business_id': 'businessid_46', 'state': 'MO'}], 'state_counts': {'MO': 2, 'FL': 5, 'LA': 1, 'IL': 1, 'PA': 9, 'AB': 2, 'NV': 1, 'IN': 2, 'ID': 1}, 'top_state': 'PA', 'top_state_count': 9}, 'var_functions.query_db:14': 'file_storage/functions.query_db:14.json', 'var_functions.execute_python:16': {'wifi_businesses_count': 21, 'state_counts': {'MO': 2, 'FL': 5, 'LA': 1, 'IL': 1, 'PA': 8, 'NV': 1, 'IN': 2, 'ID': 1}, 'top_state': 'PA', 'top_state_count': 8, 'top_state_business_ids': ['businessid_89', 'businessid_97', 'businessid_67', 'businessid_77', 'businessid_86', 'businessid_40', 'businessid_44', 'businessid_82']}, 'var_functions.query_db:18': 'file_storage/functions.query_db:18.json', 'var_functions.query_db:20': 'file_storage/functions.query_db:20.json', 'var_functions.execute_python:24': {'wifi_businesses_count': 0, 'state_counts': {}, 'top_state': None, 'top_state_count': 0, 'top_state_business_ids_len': 0, 'top_state_business_refs': []}, 'var_functions.query_db:26': 'file_storage/functions.query_db:26.json', 'var_functions.query_db:30': 'file_storage/functions.query_db:30.json', 'var_functions.execute_python:32': {'wifi_businesses_with_state': 0, 'state_counts': {}, 'top_state': None, 'top_state_count': 0, 'top_state_business_refs': []}, 'var_functions.query_db:34': 'file_storage/functions.query_db:34.json', 'var_functions.execute_python:38': {'wifi_businesses_count': 0, 'state_counts': {}, 'top_state': None, 'top_state_count': 0, 'top_state_business_refs': []}, 'var_functions.execute_python:40': {'test_businesses': [], 'wifi_other_count': 3}, 'var_functions.execute_python:44': [{'test': 1, 'string': 'Located at 12337 Olive Blvd in Creve Coeur, MO', 'found_states': ['MO']}, {'test': 2, 'string': 'Located at 13151 Race Track Rd in Tampa, FL', 'found_states': ['FL']}, {'test': 3, 'string': 'Located at 1625 Baronne St in New Orleans, LA', 'found_states': ['LA']}, {'test': 4, 'string': 'Located at 6901 Phelps Rd in Goleta, CA', 'found_states': ['CA']}, {'test': 5, 'string': 'Located at 9916 Clayton Rd in St. Louis, MO', 'found_states': ['MO']}, {'test': 6, 'string': 'Located at 11655 W Executive Dr in Boise, ID', 'found_states': ['ID']}]}
+
+exec(code, env_args)

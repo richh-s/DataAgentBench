@@ -1,0 +1,68 @@
+code = """import json
+import re
+import math
+
+# Let's work with the preview first to understand the structure
+preview_data = [{"Patient_description": "Case 739CC9F1-71BE-4F81-A5D1-EDA673903E45, linked to barcode TCGA-RY-A83X, corresponds to a FEMALE patient diagnosed with Brain lower grade glioma, with vital status Alive.", "histological_type": "Oligodendroglioma"}, {"Patient_description": "The individual with barcode TCGA-FG-A60K and UUID A85AEBDA-B182-41BA-815A-3FF055E22829 is a FEMALE case of Brain lower grade glioma, documented with vital status = Alive.", "histological_type": "Oligoastrocytoma"}]
+
+# Extract patient barcodes and histology types from preview
+lgg_patients = []
+for record in preview_data:
+    patient_desc = record.get('Patient_description', '')
+    histology = record.get('histological_type', '')
+    
+    # Extract patient barcode (TCGA- format)
+    barcode_match = re.search(r'(TCGA-[A-Z0-9-]+)', patient_desc)
+    if barcode_match:
+        patient_barcode = barcode_match.group(1)
+        # Only include histology not enclosed in square brackets
+        if histology and not (histology.startswith('[') and histology.endswith(']')):
+            lgg_patients.append({
+                'patient_barcode': patient_barcode,
+                'histology': histology
+            })
+
+print(f"Found {len(lgg_patients)} LGG patients from preview")
+
+# Now let's load the full file
+file_path = var_functions.query_db:18
+print(f"Full file path: {file_path}")
+
+# Load full data
+with open(file_path, 'r') as f:
+    full_lgg_data = json.load(f)
+
+print(f"Total LGG records in full file: {len(full_lgg_data)}")
+
+# Extract all valid LGG patients
+all_lgg_patients = []
+for record in full_lgg_data:
+    patient_desc = record.get('Patient_description', '')
+    histology = record.get('histological_type', '')
+    
+    # Extract patient barcode (TCGA- format)
+    barcode_match = re.search(r'(TCGA-[A-Z0-9-]+)', patient_desc)
+    if barcode_match:
+        patient_barcode = barcode_match.group(1)
+        # Only include histology not enclosed in square brackets
+        if histology and not (histology.startswith('[') and histology.endswith(']')):
+            all_lgg_patients.append({
+                'patient_barcode': patient_barcode,
+                'histology': histology
+            })
+
+print(f"Found {len(all_lgg_patients)} LGG patients with valid histology")
+
+# Get unique histology types
+histology_types = set(p['histology'] for p in all_lgg_patients)
+print(f"Histology types: {sorted(histology_types)}")
+
+print('__RESULT__:')
+print(json.dumps({
+    'patient_count': len(all_lgg_patients),
+    'histology_types': sorted(histology_types)
+}))"""
+
+env_args = {'var_functions.list_db:0': ['clinical_info'], 'var_functions.list_db:2': ['Mutation_Data', 'RNASeq_Expression'], 'var_functions.query_db:5': 'file_storage/functions.query_db:5.json', 'var_functions.query_db:7': [], 'var_functions.query_db:10': [{'Patient_description': 'In the Ovarian serous cystadenocarcinoma dataset, patient TCGA-31-1953 (UUID 61feee94-3ac9-42fe-aaa3-dc6a3efe563c) is recorded as a FEMALE with vital status: Alive.', 'histological_type': 'Serous Cystadenocarcinoma', 'tumor_tissue_site': 'Ovary'}, {'Patient_description': 'Patient TCGA-36-1576 (UUID 3445c524-5a37-40b6-8614-956d76eed939) is a FEMALE diagnosed with Ovarian serous cystadenocarcinoma. Current vital status: Alive.', 'histological_type': 'Serous Cystadenocarcinoma', 'tumor_tissue_site': 'Ovary'}, {'Patient_description': 'Record fdd4adb8-9295-480a-9352-305b5eb51187 refers to patient TCGA-25-2408, a FEMALE diagnosed with Ovarian serous cystadenocarcinoma. Vital status recorded as Dead.', 'histological_type': 'Serous Cystadenocarcinoma', 'tumor_tissue_site': 'Ovary'}, {'Patient_description': 'Record 6f25001a-f890-4fd0-a994-e62a9ea5c6f3 refers to patient TCGA-29-2427, a FEMALE diagnosed with Ovarian serous cystadenocarcinoma. Vital status recorded as Alive.', 'histological_type': 'Serous Cystadenocarcinoma', 'tumor_tissue_site': 'Ovary'}, {'Patient_description': 'Case 9446e349-71e6-455a-aa8f-53ec96597146, linked to barcode TCGA-10-0933, corresponds to a FEMALE patient diagnosed with Ovarian serous cystadenocarcinoma, with vital status Dead.', 'histological_type': 'Serous Cystadenocarcinoma', 'tumor_tissue_site': 'Ovary'}, {'Patient_description': "Patient TCGA-23-1124, registered under UUID 8a6d2ce3-cc57-451b-9b07-8263782aa23f, belongs to the Ovarian serous cystadenocarcinoma cohort. This FEMALE patient's vital status is Dead.", 'histological_type': 'Serous Cystadenocarcinoma', 'tumor_tissue_site': 'Ovary'}, {'Patient_description': 'In the Ovarian serous cystadenocarcinoma dataset, patient TCGA-23-2641 (UUID 49e5ee61-a1c9-4038-84ac-92683e573a65) is recorded as a FEMALE with vital status: Alive.', 'histological_type': 'Serous Cystadenocarcinoma', 'tumor_tissue_site': 'Ovary'}, {'Patient_description': 'Patient TCGA-23-1118 (FEMALE, UUID 700e91bb-d675-41b2-bbbd-935767c7b447) is enrolled in the study of Ovarian serous cystadenocarcinoma. Vital status: Alive.', 'histological_type': 'Serous Cystadenocarcinoma', 'tumor_tissue_site': 'Ovary'}, {'Patient_description': 'In the Ovarian serous cystadenocarcinoma dataset, patient TCGA-23-1120 (UUID fdf83fdf-dfbb-4306-9a1b-b4487d18b402) is recorded as a FEMALE with vital status: Alive.', 'histological_type': 'Serous Cystadenocarcinoma', 'tumor_tissue_site': 'Ovary'}, {'Patient_description': 'The individual with barcode TCGA-23-2081 and UUID 41178cbc-db73-4007-b5d8-febebf7f578d is a FEMALE case of Ovarian serous cystadenocarcinoma, documented with vital status = Dead.', 'histological_type': 'Serous Cystadenocarcinoma', 'tumor_tissue_site': 'Ovary'}], 'var_functions.query_db:12': 'file_storage/functions.query_db:12.json', 'var_functions.query_db:14': [{'ParticipantBarcode': 'TCGA-AB-2908', 'SampleBarcode': 'TCGA-AB-2908-03A', 'AliquotBarcode': 'TCGA-AB-2908-03A-01T-0740-13', 'SampleTypeLetterCode': 'TB', 'SampleType': 'Primary Blood Derived Cancer - Peripheral Blood', 'Symbol': 'IGF2', 'Entrez': '3481', 'normalized_count': '167.272646747735'}, {'ParticipantBarcode': 'TCGA-19-5960', 'SampleBarcode': 'TCGA-19-5960-01A', 'AliquotBarcode': 'TCGA-19-5960-01A-11R-1850-01', 'SampleTypeLetterCode': 'TP', 'SampleType': 'Primary solid Tumor', 'Symbol': 'IGF2', 'Entrez': '3481', 'normalized_count': '185.236'}, {'ParticipantBarcode': 'TCGA-21-1071', 'SampleBarcode': 'TCGA-21-1071-01A', 'AliquotBarcode': 'TCGA-21-1071-01A-01R-0692-07', 'SampleTypeLetterCode': 'TP', 'SampleType': 'Primary solid Tumor', 'Symbol': 'IGF2', 'Entrez': '3481', 'normalized_count': '80.6827'}, {'ParticipantBarcode': 'TCGA-30-1862', 'SampleBarcode': 'TCGA-30-1862-01A', 'AliquotBarcode': 'TCGA-30-1862-01A-02R-1568-13', 'SampleTypeLetterCode': 'TP', 'SampleType': 'Primary solid Tumor', 'Symbol': 'IGF2', 'Entrez': '3481', 'normalized_count': '13105.3695494317'}, {'ParticipantBarcode': 'TCGA-66-2795', 'SampleBarcode': 'TCGA-66-2795-01A', 'AliquotBarcode': 'TCGA-66-2795-01A-02R-0980-07', 'SampleTypeLetterCode': 'TP', 'SampleType': 'Primary solid Tumor', 'Symbol': 'IGF2', 'Entrez': '3481', 'normalized_count': '613.474'}, {'ParticipantBarcode': 'TCGA-A8-A082', 'SampleBarcode': 'TCGA-A8-A082-01A', 'AliquotBarcode': 'TCGA-A8-A082-01A-11R-A00Z-07', 'SampleTypeLetterCode': 'TP', 'SampleType': 'Primary solid Tumor', 'Symbol': 'IGF2', 'Entrez': '3481', 'normalized_count': '630.54'}, {'ParticipantBarcode': 'TCGA-B5-A3FA', 'SampleBarcode': 'TCGA-B5-A3FA-01A', 'AliquotBarcode': 'TCGA-B5-A3FA-01A-11R-A19W-07', 'SampleTypeLetterCode': 'TP', 'SampleType': 'Primary solid Tumor', 'Symbol': 'IGF2', 'Entrez': '3481', 'normalized_count': '423.628'}, {'ParticipantBarcode': 'TCGA-BH-A1EX', 'SampleBarcode': 'TCGA-BH-A1EX-01A', 'AliquotBarcode': 'TCGA-BH-A1EX-01A-11R-A13Q-07', 'SampleTypeLetterCode': 'TP', 'SampleType': 'Primary solid Tumor', 'Symbol': 'IGF2', 'Entrez': '3481', 'normalized_count': '1151.13'}, {'ParticipantBarcode': 'TCGA-BT-A20O', 'SampleBarcode': 'TCGA-BT-A20O-01A', 'AliquotBarcode': 'TCGA-BT-A20O-01A-21R-A14Y-07', 'SampleTypeLetterCode': 'TP', 'SampleType': 'Primary solid Tumor', 'Symbol': 'IGF2', 'Entrez': '3481', 'normalized_count': '369.106'}, {'ParticipantBarcode': 'TCGA-CD-5799', 'SampleBarcode': 'TCGA-CD-5799-01A', 'AliquotBarcode': 'TCGA-CD-5799-01A-11R-1602-13', 'SampleTypeLetterCode': 'TP', 'SampleType': 'Primary solid Tumor', 'Symbol': 'IGF2', 'Entrez': '3481', 'normalized_count': '3936.02070028943'}], 'var_functions.query_db:18': 'file_storage/functions.query_db:18.json'}
+
+exec(code, env_args)

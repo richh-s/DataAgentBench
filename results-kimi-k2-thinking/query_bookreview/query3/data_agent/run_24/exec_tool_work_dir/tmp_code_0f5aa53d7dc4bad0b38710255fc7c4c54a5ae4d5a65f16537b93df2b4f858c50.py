@@ -1,0 +1,50 @@
+code = """import json
+
+# Load reviews from 2020 onwards
+reviews_file = locals()['var_functions.query_db:6']
+with open(reviews_file, 'r') as f:
+    reviews_2020 = json.load(f)
+
+# Load children's books
+children_books = locals()['var_functions.query_db:20']
+
+# Create dictionary to store ratings per book numeric ID
+book_ratings = {}
+
+for review in reviews_2020:
+    purchase_id = review['purchase_id']
+    rating = float(review['rating'])
+    
+    # Extract numeric ID from purchase_id
+    if '_' in purchase_id:
+        numeric_id = purchase_id.split('_')[1]
+        if numeric_id not in book_ratings:
+            book_ratings[numeric_id] = []
+        book_ratings[numeric_id].append(rating)
+
+# Calculate average ratings
+avg_ratings = {}
+for numeric_id, ratings in book_ratings.items():
+    if len(ratings) > 0:
+        avg_rating = sum(ratings) / len(ratings)
+        avg_ratings[numeric_id] = avg_rating
+
+# Filter children's books with average rating >= 4.5
+result_books = []
+for book in children_books:
+    book_id = book['book_id']
+    if '_' in book_id:
+        numeric_id = book_id.split('_')[1]
+        if numeric_id in avg_ratings and avg_ratings[numeric_id] >= 4.5:
+            result_books.append({
+                'title': book['title'],
+                'book_id': book_id,
+                'average_rating': avg_ratings[numeric_id]
+            })
+
+print('__RESULT__:')
+print(json.dumps(result_books, indent=2))"""
+
+env_args = {'var_functions.list_db:0': ['review'], 'var_functions.list_db:2': ['books_info'], 'var_functions.query_db:5': [{'purchase_id': 'purchaseid_178', 'rating': '5', 'review_time': '2023-06-14 09:29:00'}, {'purchase_id': 'purchaseid_83', 'rating': '5', 'review_time': '2023-05-28 10:53:00'}, {'purchase_id': 'purchaseid_13', 'rating': '5', 'review_time': '2023-05-16 17:49:00'}, {'purchase_id': 'purchaseid_85', 'rating': '1', 'review_time': '2023-05-02 06:16:00'}, {'purchase_id': 'purchaseid_149', 'rating': '5', 'review_time': '2023-04-26 11:55:00'}, {'purchase_id': 'purchaseid_13', 'rating': '5', 'review_time': '2023-04-25 19:47:00'}, {'purchase_id': 'purchaseid_74', 'rating': '5', 'review_time': '2023-04-25 15:15:00'}, {'purchase_id': 'purchaseid_85', 'rating': '5', 'review_time': '2023-04-19 04:29:00'}, {'purchase_id': 'purchaseid_13', 'rating': '5', 'review_time': '2023-04-06 08:24:38'}, {'purchase_id': 'purchaseid_13', 'rating': '5', 'review_time': '2023-04-05 05:02:00'}], 'var_functions.query_db:6': 'file_storage/functions.query_db:6.json', 'var_functions.query_db:8': 'file_storage/functions.query_db:8.json', 'var_functions.execute_python:12': {'total_reviews': 329, 'sample_reviews': [{'purchase_id': 'purchaseid_8', 'rating': '5'}, {'purchase_id': 'purchaseid_76', 'rating': '5'}, {'purchase_id': 'purchaseid_167', 'rating': '2'}, {'purchase_id': 'purchaseid_23', 'rating': '5'}, {'purchase_id': 'purchaseid_99', 'rating': '2'}]}, 'var_functions.query_db:16': [{'categories': '["Books", "Children\'s Books", "Science Fiction & Fantasy"]'}, {'categories': '["Books", "Children\'s Books", "Science Fiction & Fantasy"]'}, {'categories': '["Books", "Children\'s Books", "Early Learning"]'}, {'categories': '["Books", "Children\'s Books", "Geography & Cultures"]'}, {'categories': '["Books", "Children\'s Books", "Growing Up & Facts of Life"]'}, {'categories': '["Books", "Children\'s Books", "Geography & Cultures"]'}, {'categories': '["Books", "Children\'s Books", "Animals"]'}, {'categories': '["Books", "Children\'s Books", "Literature & Fiction"]'}, {'categories': '["Books", "Children\'s Books", "Growing Up & Facts of Life"]'}, {'categories': '["Books", "Children\'s Books", "History"]'}, {'categories': '["Books", "Children\'s Books", "Literature & Fiction"]'}, {'categories': '["Books", "Children\'s Books", "Education & Reference"]'}, {'categories': '["Books", "Children\'s Books", "Literature & Fiction"]'}, {'categories': '["Books", "Children\'s Books", "Science Fiction & Fantasy"]'}, {'categories': '["Books", "Children\'s Books", "Growing Up & Facts of Life"]'}, {'categories': '["Books", "Children\'s Books", "Holidays & Celebrations"]'}, {'categories': '["Books", "Children\'s Books", "Growing Up & Facts of Life"]'}, {'categories': '["Books", "Children\'s Books", "Growing Up & Facts of Life"]'}, {'categories': '["Books", "Boxed Sets", "Children\'s Books"]'}, {'categories': '["Books", "Children\'s Books", "Growing Up & Facts of Life"]'}, {'categories': '["Books", "Children\'s Books", "Science Fiction & Fantasy"]'}, {'categories': '["Books", "Children\'s Books", "Activities, Crafts & Games"]'}, {'categories': '["Books", "Children\'s Books", "Science Fiction & Fantasy"]'}, {'categories': '["Books", "Children\'s Books", "Growing Up & Facts of Life"]'}, {'categories': '["Books", "Children\'s Books", "Comics & Graphic Novels"]'}], 'var_functions.query_db:20': [{'book_id': 'bookid_4', 'title': 'Monstrous Stories #4: The Day the Mice Stood Still'}, {'book_id': 'bookid_14', 'title': 'The Old Man and the Pirate Princess'}, {'book_id': 'bookid_32', 'title': 'The Very Hungry Caterpillar (English and Arabic Edition)'}, {'book_id': 'bookid_40', 'title': 'Egypt (Enchantment of the World)'}, {'book_id': 'bookid_48', 'title': 'Clark the Shark: Tooth Trouble, No. 1'}, {'book_id': 'bookid_52', 'title': "I Hadn't Meant to Tell You This"}, {'book_id': 'bookid_54', 'title': 'Favorite Thorton W. Burgess Stories: 6 Books'}, {'book_id': 'bookid_55', 'title': 'Behind the Wheel (Choose Your Own Adventure #35)(Paperback/Revised)'}, {'book_id': 'bookid_57', 'title': "Goodnight Riley and the Moon, It's Almost Bedtime: Personalized Children’s Books, Personalized Gifts, and Bedtime Stories (A Magnificent Me! estorytime.com Series)"}, {'book_id': 'bookid_96', 'title': 'Cheer Up, Ben Franklin! (Young Historians)'}, {'book_id': 'bookid_99', 'title': 'Buddy the Soldier Bear'}, {'book_id': 'bookid_108', 'title': 'The Library Book'}, {'book_id': 'bookid_111', 'title': 'Can You Buy Me The Wind?'}, {'book_id': 'bookid_116', 'title': 'From the Earth to the Moon by Jules Verne, Fiction, Fantasy & Magic'}, {'book_id': 'bookid_120', 'title': "Caroline's Color Dreams: Los Sueños Coloridos De Carolina : Babl Children's Books in Spanish and English"}, {'book_id': 'bookid_124', 'title': 'Skeleton Play: A Fun, Rhyming Halloween Book for Kids! (1)'}, {'book_id': 'bookid_130', 'title': "Benny Goes To The Moon: The great new book from Top Children's entertainer Gerry Ogilvie (1)"}, {'book_id': 'bookid_132', 'title': 'Mae and Jane in the Rain'}, {'book_id': 'bookid_145', 'title': 'Kirsten: An American Girl : 1854 (The American Girls Collection/Boxed Set)'}, {'book_id': 'bookid_146', 'title': 'LunaLu the Llamacorn'}, {'book_id': 'bookid_149', 'title': 'Trouble in the CTC!: The Terra Prime Adventures Book 2'}, {'book_id': 'bookid_152', 'title': 'Around the World Mazes'}, {'book_id': 'bookid_158', 'title': 'Cleo Porter and the Body Electric'}, {'book_id': 'bookid_163', 'title': 'Monster Kisses'}, {'book_id': 'bookid_170', 'title': 'Pokémon: Sun & Moon, Vol. 8 (8)'}], 'var_functions.execute_python:22': {'total_reviews': 329, 'total_children_books': 25, 'sample_reviews': [{'purchase_id': 'purchaseid_8', 'rating': '5'}, {'purchase_id': 'purchaseid_76', 'rating': '5'}, {'purchase_id': 'purchaseid_167', 'rating': '2'}], 'sample_books': [{'book_id': 'bookid_4', 'title': 'Monstrous Stories #4: The Day the Mice Stood Still'}, {'book_id': 'bookid_14', 'title': 'The Old Man and the Pirate Princess'}, {'book_id': 'bookid_32', 'title': 'The Very Hungry Caterpillar (English and Arabic Edition)'}]}, 'var_functions.execute_python:24': {'total_books_with_reviews': 80, 'high_rated_books_count': 59, 'sample_high_rated': {'8': {'average_rating': 4.709677419354839, 'review_count': 31}, '76': {'average_rating': 4.75, 'review_count': 4}, '23': {'average_rating': 4.5, 'review_count': 2}, '83': {'average_rating': 5.0, 'review_count': 14}, '38': {'average_rating': 5.0, 'review_count': 2}}}}
+
+exec(code, env_args)

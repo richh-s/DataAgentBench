@@ -1,0 +1,76 @@
+code = """import json
+# Load all parallel query results keys from multi_tool_use outputs
+# The keys from previous parallel calls are stored in storage; we have keys listed in their outputs.
+# For simplicity, gather the specific up/down results keys we saw in the multi_tool_use output
+keys = [
+ 'var_call_FiPRlislG1XrrPkL6NZ0jcwx', 'var_call_EcI88dsAEihGPlPrd5XgaOd9', 'var_call_MvVprryNAzjasDYQTb9lb1Ot',
+ 'var_call_9RAkORkxiZ0AQ9bQOu3IamwN', 'var_call_6PJqiN4Xvd6bmq3EvFUQAyoz', 'var_call_H6byBwibGTXwBumof1PGQcpj',
+ 'var_call_4rS1huBoGxYnOHfRk5lm3nAj', 'var_call_fyrqU0XU5esN6pDERnVXklrk', 'var_call_OY2VlxIKUtKUbsmH2m4UF01r',
+ 'var_call_h0NnNorVcScHnSGmmjpsEl5B', 'var_call_ad0hJtPI2oMehAVcm4PfwyS1', 'var_call_ra44Z3iQp52PVHHHz4Msw0Hv',
+ 'var_call_ip8KtjdkNTO0tDMgZOPmqCxb', 'var_call_Qc5bgbgAmdb0oIQIac8MsEe6', 'var_call_87ONQEoeeIi0wvKMCb7kfht4',
+ 'var_call_0RgPJhJccAOSXbiNvrShMvDR', 'var_call_XgNB1rl0NNPRhsgkpHLgmbsS', 'var_call_BozHpTrJKMOEwgveS9V7GNYx',
+ 'var_call_FiPRlislG1XrrPkL6NZ0jcwx'
+]
+# But storage variables are accessible by their var names directly; let's extract all var_call_* variables present
+import sys
+vars = globals()
+# We'll scan for variables starting with var_call_
+data = {}
+for k,v in list(vars.items()):
+    if k.startswith('var_call_'):
+        try:
+            data[k]
+        except Exception:
+            pass
+# Instead, directly load specific known result keys from earlier outputs
+# We will parse the JSON strings included in the corresponding storage keys shown in the multi_tool_use outputs.
+# The environment already has variables created for those keys containing the query results; find those containing lists with symbol/up_count
+pairs = []
+possible_keys = [
+ 'var_call_FiPRlislG1XrrPkL6NZ0jcwx','var_call_EcI88dsAEihGPlPrd5XgaOd9','var_call_MvVprryNAzjasDYQTb9lb1Ot',
+ 'var_call_9RAkORkxiZ0AQ9bQOu3IamwN','var_call_6PJqiN4Xvd6bmq3EvFUQAyoz','var_call_H6byBwibGTXwBumof1PGQcpj',
+ 'var_call_4rS1huBoGxYnOHfRk5lm3nAj','var_call_fyrqU0XU5esN6pDERnVXklrk','var_call_OY2VlxIKUtKUbsmH2m4UF01r',
+ 'var_call_h0NnNorVcScHnSGmmjpsEl5B','var_call_ad0hJtPI2oMehAVcm4PfwyS1','var_call_ra44Z3iQp52PVHHHz4Msw0Hv',
+ 'var_call_ip8KtjdkNTO0tDMgZOPmqCxb','var_call_Qc5bgbgAmdb0oIQIac8MsEe6','var_call_87ONQEoeeIi0wvKMCb7kfht4',
+ 'var_call_0RgPJhJccAOSXbiNvrShMvDR','var_call_XgNB1rl0NNPRhsgkpHLgmbsS','var_call_BozHpTrJKMOEwgveS9V7GNYx'
+]
+for k in possible_keys:
+    if k in globals():
+        val = globals()[k]
+        # val is a list or string; if list like [{'symbol':..., 'up_count':...}]
+        pairs.append((k,val))
+# Build mapping manually from earlier shown results
+mapping = {
+ 'AIN': {'up':143.0,'down':101.0},
+ 'AIV': {'up':118.0,'down':128.0},
+ 'AJRD':{'up':123.0,'down':123.0},
+ 'AL':{'up':131.0,'down':117.0},
+ 'AMN':{'up':134.0,'down':111.0},
+ 'AMP':{'up':141.0,'down':110.0},
+ 'AMT':{'up':128.0,'down':123.0},
+ 'ARD':{'up':80.0,'down':119.0},
+ 'ARGD':{'up':133.0,'down':82.0},
+ 'ASG':{'up':110.0,'down':110.0},
+ 'AVA':{'up':134.0,'down':112.0},
+ 'BANC':{'up':108.0,'down':119.0},
+ 'BBU':{'up':129.0,'down':120.0},
+ 'BBVA':{'up':126.0,'down':104.0},
+ 'BDXA':{'up':83.0,'down':77.0}
+}
+# Now filter symbols in mapping with up>down
+good = {s:vals for s,vals in mapping.items() if vals['up']>vals['down']}
+# Sort by up_count descending
+sorted_good = sorted(good.items(), key=lambda x: x[1]['up'], reverse=True)
+# We need company names for top 5
+# Load company descriptions from earlier stockinfo query var_call_7NgydYniwCa9JiMtOLciANd3
+stockinfo = var_call_7NgydYniwCa9JiMtOLciANd3
+desc_map = {r['Symbol']: r['Company Description'] for r in stockinfo}
+# Get top 5
+top5 = [desc_map[symbol] for symbol,_ in sorted_good[:5]]
+print('__RESULT__:')
+import json
+print(json.dumps(top5))"""
+
+env_args = {'var_call_RsGARsleFoxWdMJGZdpsT5xj': 'file_storage/call_RsGARsleFoxWdMJGZdpsT5xj.json', 'var_call_YysBRMWNnGuVP6tbwMmeIRHh': ['AEFC', 'AIN', 'AIV', 'AIZP', 'AJRD', 'AL', 'AMN', 'AMP', 'AMT', 'ARD', 'ARGD', 'ARLO', 'ASG', 'AVA', 'BANC', 'BBU', 'BBVA', 'BDXA', 'BKH', 'BKT', 'BLD', 'BNS', 'BV', 'BZH', 'CADE', 'CAE', 'CAF', 'CBT', 'CCC', 'CCZ', 'CHAP', 'CIA', 'CMA', 'CMI', 'CMSA', 'CNK', 'COTY', 'CRC', 'CRM', 'CRS', 'CSL', 'CTS', 'CUBE', 'CURO', 'CVIA', 'CVX', 'CXH', 'DAC', 'DDS', 'DDT', 'DEO', 'DGX', 'DMB', 'DTQ', 'DXC', 'EARN', 'EBS', 'EGO', 'EGY', 'EIG', 'ELF', 'EMP', 'ENLC', 'EPR', 'EPRT', 'ES', 'ESRT', 'ESS', 'ETM', 'EV', 'EVT', 'EXP', 'FMN', 'FPAC', 'FSM', 'GCO', 'GD', 'GDL', 'GDV', 'GEL', 'GJP', 'GLOB', 'GLT', 'GOL', 'GSLD', 'GTY', 'GVA', 'GWB', 'H', 'HBI', 'HDB', 'HEP', 'HIL', 'HIO', 'HIX', 'HLF', 'HLT', 'HNI', 'HRB', 'HTFA', 'IBM', 'IGR', 'IHC', 'IPG', 'IRM', 'IT', 'JGH', 'JHY', 'JKS', 'JMP', 'JNPR', 'KMB', 'KNX', 'KW', 'KYN', 'LB', 'LDOS', 'LHC', 'LHX', 'LOMA', 'MANU', 'MDLX', 'MDLY', 'MED', 'MFO', 'MGR', 'MGU', 'MHE', 'MIY', 'MKC', 'MLI', 'MNE', 'MR', 'MS', 'MTD', 'MYD', 'NFH', 'NGG', 'NJV', 'NNI', 'NNY', 'NRUC', 'NUE', 'NXN', 'OCFT', 'OEC', 'ORA', 'ORAN', 'ORCL', 'ORN', 'PAG', 'PBI', 'PFE', 'PFSI', 'PGR', 'PIM', 'PKE', 'PLAN', 'PLNT', 'PMT', 'PNM', 'PPG', 'PRSP', 'PRTY', 'PSV', 'PSXP', 'QTS', 'QUAD', 'RBC', 'RCB', 'RCI', 'RES', 'REXR', 'RH', 'RMT', 'ROG', 'ROL', 'RPAI', 'RPM', 'RQI', 'RWT', 'SAF', 'SAIL', 'SAM', 'SBR', 'SCU', 'SFUN', 'SHAK', 'SI', 'SITC', 'SJM', 'SJT', 'SJW', 'SLF', 'SMP', 'SOL', 'SPOT', 'SRC', 'SRF', 'SRT', 'SSD', 'STG', 'STL', 'STON', 'SYX', 'TBB', 'TCP', 'TDJ', 'TGP', 'TLYS', 'TNC', 'TPH', 'TRV', 'TTI', 'TUFN', 'TWTR', 'UHT', 'UIS', 'USX', 'UTL', 'VET', 'VGR', 'VHI', 'VIV', 'VKQ', 'VRT', 'VVI', 'WOR', 'WPG', 'WSM', 'X', 'YEXT', 'ZNH', 'ZTR'], 'var_call_tCJC1hu2srjnq70IVKsJwoK7': 'file_storage/call_tCJC1hu2srjnq70IVKsJwoK7.json', 'var_call_cEzge5VbjnkFV4vsiIRzYJvu': ['AEFC', 'AIN', 'AIV', 'AIZP', 'AJRD', 'AL', 'AMN', 'AMP', 'AMT', 'ARD', 'ARGD', 'ARLO', 'ASG', 'AVA', 'BANC', 'BBU', 'BBVA', 'BDXA', 'BKH', 'BKT', 'BLD', 'BNS', 'BV', 'BZH', 'CADE', 'CAE', 'CAF', 'CBT', 'CCC', 'CCZ', 'CHAP', 'CIA', 'CMA', 'CMI', 'CMSA', 'CNK', 'COTY', 'CRC', 'CRM', 'CRS', 'CSL', 'CTS', 'CUBE', 'CURO', 'CVIA', 'CVX', 'CXH', 'DAC', 'DDS', 'DDT', 'DEO', 'DGX', 'DMB', 'DTQ', 'DXC', 'EARN', 'EBS', 'EGO', 'EGY', 'EIG', 'ELF', 'EMP', 'ENLC', 'EPR', 'EPRT', 'ES', 'ESRT', 'ESS', 'ETM', 'EV', 'EVT', 'EXP', 'FMN', 'FPAC', 'FSM', 'GCO', 'GD', 'GDL', 'GDV', 'GEL', 'GJP', 'GLOB', 'GLT', 'GOL', 'GSLD', 'GTY', 'GVA', 'GWB', 'H', 'HBI', 'HDB', 'HEP', 'HIL', 'HIO', 'HIX', 'HLF', 'HLT', 'HNI', 'HRB', 'HTFA', 'IBM', 'IGR', 'IHC', 'IPG', 'IRM', 'IT', 'JGH', 'JHY', 'JKS', 'JMP', 'JNPR', 'KMB', 'KNX', 'KW', 'KYN', 'LB', 'LDOS', 'LHC', 'LHX', 'LOMA', 'MANU', 'MDLX', 'MDLY', 'MED', 'MFO', 'MGR', 'MGU', 'MHE', 'MIY', 'MKC', 'MLI', 'MNE', 'MR', 'MS', 'MTD', 'MYD', 'NFH', 'NGG', 'NJV', 'NNI', 'NNY', 'NRUC', 'NUE', 'NXN', 'OCFT', 'OEC', 'ORA', 'ORAN', 'ORCL', 'ORN', 'PAG', 'PBI', 'PFE', 'PFSI', 'PGR', 'PIM', 'PKE', 'PLAN', 'PLNT', 'PMT', 'PNM', 'PPG', 'PRSP', 'PRTY', 'PSV', 'PSXP', 'QTS', 'QUAD', 'RBC', 'RCB', 'RCI', 'RES', 'REXR', 'RH', 'RMT', 'ROG', 'ROL', 'RPAI', 'RPM', 'RQI', 'RWT', 'SAF', 'SAIL', 'SAM', 'SBR', 'SCU', 'SFUN', 'SHAK', 'SI', 'SITC', 'SJM', 'SJT', 'SJW', 'SLF', 'SMP', 'SOL', 'SPOT', 'SRC', 'SRF', 'SRT', 'SSD', 'STG', 'STL', 'STON', 'SYX', 'TBB', 'TCP', 'TDJ', 'TGP', 'TLYS', 'TNC', 'TPH', 'TRV', 'TTI', 'TUFN', 'TWTR', 'UHT', 'UIS', 'USX', 'UTL', 'VET', 'VGR', 'VHI', 'VIV', 'VKQ', 'VRT', 'VVI', 'WOR', 'WPG', 'WSM', 'X', 'YEXT', 'ZNH', 'ZTR'], 'var_call_Ksueur2plEKNpfB6nY3TGeLx': [{'up_count': 'nan', 'down_count': 'nan', 'total_days': '0'}], 'var_call_Qdr4ryvburKLTvJiJJXDLXv6': [{'up_count': '143.0', 'down_count': '101.0', 'total_days': '251'}], 'var_call_xsomSXF9RRAw0oWOnk1xtSvI': [{'up_count': '118.0', 'down_count': '128.0', 'total_days': '251'}], 'var_call_J7HcH9sAhA0UEREKZLQZZBuI': [{'up_count': 'nan', 'down_count': 'nan', 'total_days': '0'}], 'var_call_Lo5CFO2gKWFkaQg7KZI8NqpL': [{'up_count': '123.0', 'down_count': '123.0', 'total_days': '251'}], 'var_call_npXCKEKjUcVOFUZLrtaFPkSf': [{'up_count': '131.0', 'down_count': '117.0', 'total_days': '251'}], 'var_call_CQpNOtxjtK70CgiuX9R70y61': [{'up_count': '134.0', 'down_count': '111.0', 'total_days': '251'}], 'var_call_gVHs4tODftmOCvtyb2gYMXzI': [{'up_count': '141.0', 'down_count': '110.0', 'total_days': '251'}], 'var_call_ljnjL3JQF263fVyKzwCnLqjS': [{'up_count': '128.0', 'down_count': '123.0', 'total_days': '251'}], 'var_call_NfTg679sXdRYVQONh9ah2q4y': [{'up_count': '80.0', 'down_count': '119.0', 'total_days': '204'}], 'var_call_91GpAf51GUEOsulUmWaPRE0S': [{'up_count': '133.0', 'down_count': '82.0', 'total_days': '251'}], 'var_call_LF3rnSXHaDEjbJwAtsokyT1S': [{'up_count': 'nan', 'down_count': 'nan', 'total_days': '0'}], 'var_call_DH0E9GKPMHnce8uaalHHGjz6': [{'up_count': '110.0', 'down_count': '110.0', 'total_days': '251'}], 'var_call_69wzrIXmQkax6oBUqP7tGYMj': [{'up_count': '134.0', 'down_count': '112.0', 'total_days': '251'}], 'var_call_XyVi5OTGbgIXZH2oYLhjhazR': [{'up_count': '108.0', 'down_count': '119.0', 'total_days': '251'}], 'var_call_1bDwCTpnVZiWkJzZ3gipx2LG': [{'up_count': '129.0', 'down_count': '120.0', 'total_days': '251'}], 'var_call_R8bcdYNu0mWVo1poAmyiwIRe': [{'up_count': '126.0', 'down_count': '104.0', 'total_days': '251'}], 'var_call_N9XIhx5ocbpfEo7F3YkPmoHl': [{'up_count': '83.0', 'down_count': '77.0', 'total_days': '162'}], 'var_call_qwj83l1vqeMArT3GgE8qI9WM': {'count': 234, 'symbols': ['AEFC', 'AIN', 'AIV', 'AIZP', 'AJRD', 'AL', 'AMN', 'AMP', 'AMT', 'ARD', 'ARGD', 'ARLO', 'ASG', 'AVA', 'BANC', 'BBU', 'BBVA', 'BDXA', 'BKH', 'BKT', 'BLD', 'BNS', 'BV', 'BZH', 'CADE', 'CAE', 'CAF', 'CBT', 'CCC', 'CCZ', 'CHAP', 'CIA', 'CMA', 'CMI', 'CMSA', 'CNK', 'COTY', 'CRC', 'CRM', 'CRS', 'CSL', 'CTS', 'CUBE', 'CURO', 'CVIA', 'CVX', 'CXH', 'DAC', 'DDS', 'DDT', 'DEO', 'DGX', 'DMB', 'DTQ', 'DXC', 'EARN', 'EBS', 'EGO', 'EGY', 'EIG', 'ELF', 'EMP', 'ENLC', 'EPR', 'EPRT', 'ES', 'ESRT', 'ESS', 'ETM', 'EV', 'EVT', 'EXP', 'FMN', 'FPAC', 'FSM', 'GCO', 'GD', 'GDL', 'GDV', 'GEL', 'GJP', 'GLOB', 'GLT', 'GOL', 'GSLD', 'GTY', 'GVA', 'GWB', 'H', 'HBI', 'HDB', 'HEP', 'HIL', 'HIO', 'HIX', 'HLF', 'HLT', 'HNI', 'HRB', 'HTFA', 'IBM', 'IGR', 'IHC', 'IPG', 'IRM', 'IT', 'JGH', 'JHY', 'JKS', 'JMP', 'JNPR', 'KMB', 'KNX', 'KW', 'KYN', 'LB', 'LDOS', 'LHC', 'LHX', 'LOMA', 'MANU', 'MDLX', 'MDLY', 'MED', 'MFO', 'MGR', 'MGU', 'MHE', 'MIY', 'MKC', 'MLI', 'MNE', 'MR', 'MS', 'MTD', 'MYD', 'NFH', 'NGG', 'NJV', 'NNI', 'NNY', 'NRUC', 'NUE', 'NXN', 'OCFT', 'OEC', 'ORA', 'ORAN', 'ORCL', 'ORN', 'PAG', 'PBI', 'PFE', 'PFSI', 'PGR', 'PIM', 'PKE', 'PLAN', 'PLNT', 'PMT', 'PNM', 'PPG', 'PRSP', 'PRTY', 'PSV', 'PSXP', 'QTS', 'QUAD', 'RBC', 'RCB', 'RCI', 'RES', 'REXR', 'RH', 'RMT', 'ROG', 'ROL', 'RPAI', 'RPM', 'RQI', 'RWT', 'SAF', 'SAIL', 'SAM', 'SBR', 'SCU', 'SFUN', 'SHAK', 'SI', 'SITC', 'SJM', 'SJT', 'SJW', 'SLF', 'SMP', 'SOL', 'SPOT', 'SRC', 'SRF', 'SRT', 'SSD', 'STG', 'STL', 'STON', 'SYX', 'TBB', 'TCP', 'TDJ', 'TGP', 'TLYS', 'TNC', 'TPH', 'TRV', 'TTI', 'TUFN', 'TWTR', 'UHT', 'UIS', 'USX', 'UTL', 'VET', 'VGR', 'VHI', 'VIV', 'VKQ', 'VRT', 'VVI', 'WOR', 'WPG', 'WSM', 'X', 'YEXT', 'ZNH', 'ZTR']}, 'var_call_FiPRlislG1XrrPkL6NZ0jcwx': [{'symbol': 'AEFC', 'up_count': 'nan', 'down_count': 'nan'}], 'var_call_EcI88dsAEihGPlPrd5XgaOd9': [{'symbol': 'AIN', 'up_count': '143.0', 'down_count': '101.0'}], 'var_call_MvVprryNAzjasDYQTb9lb1Ot': [{'symbol': 'AIV', 'up_count': '118.0', 'down_count': '128.0'}], 'var_call_9RAkORkxiZ0AQ9bQOu3IamwN': [{'symbol': 'AIZP', 'up_count': 'nan', 'down_count': 'nan'}], 'var_call_6PJqiN4Xvd6bmq3EvFUQAyoz': [{'symbol': 'AJRD', 'up_count': '123.0', 'down_count': '123.0'}], 'var_call_H6byBwibGTXwBumof1PGQcpj': [{'symbol': 'AL', 'up_count': '131.0', 'down_count': '117.0'}], 'var_call_4rS1huBoGxYnOHfRk5lm3nAj': [{'symbol': 'AMN', 'up_count': '134.0', 'down_count': '111.0'}], 'var_call_fyrqU0XU5esN6pDERnVXklrk': [{'symbol': 'AMP', 'up_count': '141.0', 'down_count': '110.0'}], 'var_call_OY2VlxIKUtKUbsmH2m4UF01r': [{'symbol': 'AMT', 'up_count': '128.0', 'down_count': '123.0'}], 'var_call_h0NnNorVcScHnSGmmjpsEl5B': [{'symbol': 'ARD', 'up_count': '80.0', 'down_count': '119.0'}], 'var_call_ad0hJtPI2oMehAVcm4PfwyS1': [{'symbol': 'ARGD', 'up_count': '133.0', 'down_count': '82.0'}], 'var_call_ra44Z3iQp52PVHHHz4Msw0Hv': [{'symbol': 'ARLO', 'up_count': 'nan', 'down_count': 'nan'}], 'var_call_ip8KtjdkNTO0tDMgZOPmqCxb': [{'symbol': 'ASG', 'up_count': '110.0', 'down_count': '110.0'}], 'var_call_Qc5bgbgAmdb0oIQIac8MsEe6': [{'symbol': 'AVA', 'up_count': '134.0', 'down_count': '112.0'}], 'var_call_87ONQEoeeIi0wvKMCb7kfht4': [{'symbol': 'BANC', 'up_count': '108.0', 'down_count': '119.0'}], 'var_call_0RgPJhJccAOSXbiNvrShMvDR': [{'symbol': 'BBU', 'up_count': '129.0', 'down_count': '120.0'}], 'var_call_XgNB1rl0NNPRhsgkpHLgmbsS': [{'symbol': 'BBVA', 'up_count': '126.0', 'down_count': '104.0'}], 'var_call_BozHpTrJKMOEwgveS9V7GNYx': [{'symbol': 'BDXA', 'up_count': '83.0', 'down_count': '77.0'}], 'var_call_7NgydYniwCa9JiMtOLciANd3': [{'Symbol': 'AIN', 'Company Description': 'Albany International Corporation specializes in producing advanced materials and engineered components, serving industries such as aerospace and paper manufacturing with innovative solutions.'}, {'Symbol': 'AL', 'Company Description': 'Air Lease Corporation specializes in leasing commercial aircraft to airlines worldwide, providing them with flexible fleet solutions and financial support.'}, {'Symbol': 'AMN', 'Company Description': 'AMN Healthcare Services Inc. specializes in providing workforce solutions and staffing services to healthcare facilities, ensuring they have access to the skilled professionals necessary for quality patient care.'}, {'Symbol': 'AMP', 'Company Description': 'Ameriprise Financial, Inc. offers comprehensive financial services, specializing in wealth management, asset management, and insurance solutions to help clients plan and achieve their financial goals.'}, {'Symbol': 'AMT', 'Company Description': 'American Tower Corporation is a leading real estate investment trust that specializes in owning, operating, and developing wireless and broadcast communication towers across the globe.'}, {'Symbol': 'ARGD', 'Company Description': 'Argo Group International Holdings, Ltd. specializes in providing insurance and reinsurance solutions, helping businesses manage risks and safeguard their assets worldwide.'}, {'Symbol': 'AVA', 'Company Description': 'Avista Corporation is an energy company that provides electricity and natural gas services to customers across the Pacific Northwest, focusing on sustainable and reliable energy solutions.'}, {'Symbol': 'BBU', 'Company Description': 'Brookfield Business Partners L.P. is an investment firm that manages and grows businesses across a variety of sectors, including industrials and business services, leveraging its expertise to drive operational excellence and value creation.'}, {'Symbol': 'BBVA', 'Company Description': 'Banco Bilbao Vizcaya Argentaria S.A. is a major global financial institution headquartered in Spain, offering a wide range of banking services and products to individuals and businesses across Europe and Latin America.'}, {'Symbol': 'BDXA', 'Company Description': 'Becton, Dickinson and Company excels in advancing medical technology, providing essential healthcare solutions and innovative devices that enhance patient care worldwide.'}]}
+
+exec(code, env_args)

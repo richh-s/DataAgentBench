@@ -1,0 +1,39 @@
+code = """import json
+
+# Load stock info data
+stockinfo_path = locals()['var_functions.query_db:52']
+with open(stockinfo_path) as f:
+    nasdaq_stocks = json.load(f)
+
+# Create mapping from Symbol to Company Description
+company_map = {}
+for stock in nasdaq_stocks:
+    company_map[stock['Symbol']] = stock['Company Description']
+
+# Load query results
+results = locals()['var_functions.query_db:64']
+
+# Create proper company names by splitting on first period or taking first part
+def get_company_short_name(full_desc):
+    # Split on first period
+    parts = full_desc.split('.', 1)
+    name = parts[0].strip()
+    return name
+
+# Build final list
+top_companies = []
+for row in results:
+    symbol = row['Symbol']
+    days = int(row['days'])
+    company_name = company_map.get(symbol, 'Unknown')
+    company_short = get_company_short_name(company_name)
+    top_companies.append(f"{company_short}: {days} days")
+
+answer = '; '.join(top_companies)
+
+print('__RESULT__:')
+print(json.dumps(answer))"""
+
+env_args = {'var_functions.query_db:0': 'file_storage/functions.query_db:0.json', 'var_functions.list_db:2': 'file_storage/functions.list_db:2.json', 'var_functions.execute_python:6': {'count': 86, 'sample': [{'Symbol': 'AGMH', 'Company Description': 'AGM Group Holdings Inc. specializes in providing financial technology solutions and services, focusing on enhancing efficiency and performance for businesses in the financial sector.'}, {'Symbol': 'ALACU', 'Company Description': 'Alberton Acquisition Corporation is a special purpose acquisition company focused on merging with or acquiring promising businesses to bring them public and enhance their growth potential.'}, {'Symbol': 'AMHC', 'Company Description': 'Amplitude Healthcare Acquisition Corporation is a special purpose acquisition company focused on identifying and merging with promising healthcare businesses to accelerate their growth and innovation.'}]}, 'var_functions.execute_python:10': {'total_tables': 2753, 'sample': ['AAAU', 'AADR', 'AAME', 'AAWW', 'AAXJ', 'ABEQ', 'ABMD', 'ACAD', 'ACES', 'ACIO']}, 'var_functions.execute_python:12': {'nasdaq_capital_count': 86, 'available_in_stocktrade': 86, 'sample_symbols': ['BWEN', 'SSNT', 'HQI', 'FSBW', 'CCCL', 'CUBA', 'WHLM', 'IGIC', 'CPAH', 'FTFT']}, 'var_functions.query_db:14': [{'high_volatility_days': '13'}], 'var_functions.execute_python:18': 'file_storage/functions.execute_python:18.json', 'var_functions.execute_python:20': 'file_storage/functions.execute_python:20.json', 'var_functions.execute_python:22': 'file_storage/functions.execute_python:22.json', 'var_functions.execute_python:24': 'file_storage/functions.execute_python:24.json', 'var_functions.execute_python:26': 'file_storage/functions.execute_python:26.json', 'var_functions.query_db:28': 'file_storage/functions.query_db:28.json', 'var_functions.execute_python:30': 'file_storage/functions.execute_python:30.json', 'var_functions.execute_python:32': 'file_storage/functions.execute_python:32.json', 'var_functions.query_db:35': 'file_storage/functions.query_db:35.json', 'var_functions.list_db:36': 'file_storage/functions.list_db:36.json', 'var_functions.execute_python:38': {'length': 14144, 'complete': False}, 'var_functions.execute_python:44': {'symbol_count': 86, 'test_query': 'SELECT "AGMH" as Symbol, COUNT(*) as days FROM "AGMH" WHERE Date >= \'2019-01-01\' AND Date <= \'2019-12-31\' AND (High - Low) > (Low * 0.20) UNION ALL SELECT "ALACU" as Symbol, COUNT(*) as days FROM "ALACU" WHERE Date >= \'2019-01-01\' AND Date <= \'2019-12-31\' AND (High - Low) > (Low * 0.20) UNION ALL SELECT "AMHC" as Symbol, COUNT(*) as days FROM "AMHC" WHERE Date >= \'2019-01-01\' AND Date <= \'2019-12-31\' AND (High - Low) > (Low * 0.20) ORDER BY days DESC LIMIT 5', 'symbols': ['AGMH', 'ALACU', 'AMHC', 'ANDA', 'APEX', 'BCLI', 'BHAT', 'BIOC', 'BKYI', 'BLFS', 'BOSC', 'BOTJ', 'BWEN', 'CBAT', 'CCCL', 'CDMOP', 'CEMI', 'CFBK', 'CFFA', 'CLRB', 'CORV', 'CPAAU', 'CPAH', 'CUBA', 'CVV', 'DZSI', 'ELSE', 'EXPC', 'EYEG', 'FAMI', 'FNCB', 'FSBW', 'FTFT', 'GDYN', 'GLG', 'GRNVU', 'GTEC', 'HCCOU', 'HNNA', 'HQI', 'HRTX', 'IDEX', 'IGIC', 'IOTS', 'ISNS', 'ITI', 'LACQ', 'MBCN', 'MBNKP', 'MCEP', 'MLND', 'MMAC', 'MNCLU', 'MNPR', 'NVEE', 'NXTD', 'OPOF', 'OPTT', 'ORGO', 'ORSNU', 'OTEL', 'PBFS', 'PBTS', 'PCSB', 'PECK', 'PEIX', 'PFIE', 'PLIN', 'POPE', 'QRHC', 'SES', 'SHSP', 'SNSS', 'SSNT', 'STKS', 'TGLS', 'TMSR', 'VERB', 'VMD', 'VRRM', 'VTIQW', 'VVPR', 'WHLM', 'WHLR', 'XBIOW', 'XPEL']}, 'var_functions.execute_python:48': {'first_query_part': 'SELECT \n        \'AGMH\' as Symbol, \n        COUNT(*) as high_volatility_days \n    FROM "AGMH" \n    WHERE \n        "Date" >= \'2019-01-01\' AND \n        "Date" <= \'2019-12-31\' AND \n        ("High" - "Low") > ("Low" * 0.20)', 'total_symbols': 86}, 'var_functions.query_db:50': 'file_storage/functions.query_db:50.json', 'var_functions.query_db:52': 'file_storage/functions.query_db:52.json', 'var_functions.query_db:54': [{'Symbol': 'AGMH', 'high_volatility_days': '13'}], 'var_functions.query_db:60': [{'Symbol': 'AGMH', 'high_vol_days': '13'}, {'Symbol': 'ALACU', 'high_vol_days': '0'}, {'Symbol': 'AMHC', 'high_vol_days': '0'}, {'Symbol': 'ANDA', 'high_vol_days': '0'}, {'Symbol': 'APEX', 'high_vol_days': '15'}], 'var_functions.execute_python:62': 'file_storage/functions.execute_python:62.json', 'var_functions.query_db:64': [{'Symbol': 'BIOC', 'days': '21'}, {'Symbol': 'BKYI', 'days': '16'}, {'Symbol': 'APEX', 'days': '15'}, {'Symbol': 'AGMH', 'days': '13'}, {'Symbol': 'BHAT', 'days': '10'}], 'var_functions.execute_python:70': 'Biocept, Inc: 21 days, BIO-key International, Inc: 16 days, Apex Global Brands Inc: 15 days, AGM Group Holdings Inc: 13 days, Blue Hat Interactive Entertainment Technology specializes in developing immersive gaming experiences and interactive entertainment solutions, captivating audiences worldwide with their innovative digital platforms: 10 days'}
+
+exec(code, env_args)

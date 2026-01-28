@@ -1,0 +1,46 @@
+code = """import json
+
+# Load NYSE Arca ETF symbols
+file_path = globals().get('var_functions.query_db:36', None)
+if isinstance(file_path, str):
+    with open(file_path, 'r') as f:
+        etf_data = json.load(f)
+else:
+    etf_data = file_path if isinstance(file_path, list) else []
+
+symbols = [item['Symbol'] for item in etf_data]
+
+# Generate SQL queries to check each ETF
+# Since we can't run 1435 queries at once, let's create a batching script
+batch_size = 50
+batches = []
+for i in range(0, len(symbols), batch_size):
+    batch = symbols[i:i+batch_size]
+    queries = []
+    for symbol in batch:
+        # Query to check if this ETF ever had Adj Close > 200 in 2015
+        query = f"""
+        SELECT '{symbol}' as Symbol, 
+               CASE WHEN MAX("Adj Close") > 200 THEN 1 ELSE 0 END as exceeded,
+               MAX("Adj Close") as max_price
+        FROM {symbol} 
+        WHERE Date >= '2015-01-01' AND Date <= '2015-12-31'
+        """
+        queries.append(query)
+    
+    # Combine with UNION ALL
+    batch_query = ' UNION ALL '.join(queries)
+    batches.append(batch_query)
+
+print('__RESULT__:')
+print(json.dumps({
+    'total_symbols': len(symbols),
+    'batch_size': batch_size,
+    'total_batches': len(batches),
+    'first_batch': batches[0],
+    'number_of_queries': len(queries)
+}))"""
+
+env_args = {'var_functions.list_db:0': ['stockinfo'], 'var_functions.query_db:2': 'file_storage/functions.query_db:2.json', 'var_functions.execute_python:8': {'count': 1435, 'symbols': ['AAAU', 'AADR', 'ABEQ', 'ACSG', 'ACWF', 'AFK', 'AFLG', 'AFMC', 'AFSM', 'AFTY']}, 'var_functions.list_db:10': 'file_storage/functions.list_db:10.json', 'var_functions.execute_python:12': {'count': 1435, 'sample': ['AAAU', 'AADR', 'ABEQ', 'ACSG', 'ACWF', 'AFK', 'AFLG', 'AFMC', 'AFSM', 'AFTY', 'AGG', 'AGGP', 'AGGY', 'AGQ', 'AGZ', 'AIEQ', 'AIIQ', 'AMLP', 'AMOM', 'AMZA']}, 'var_functions.execute_python:14': {'total_etfs': 1435, 'total_tables': 2753, 'intersection': 1435, 'sample_tables': ['SPGM', 'HUSE', 'GBF', 'XPH', 'ASHX', 'CWEB', 'JPLS', 'GSJY', 'TLTD', 'RYJ', 'NFLT', 'SCHO', 'QID', 'SCHC', 'EWMC', 'OVL', 'EJUL', 'CPER', 'QED', 'EES']}, 'var_functions.query_db:18': [], 'var_functions.execute_python:20': {'total_symbols': 1435, 'first_10': ['AAAU', 'AADR', 'ABEQ', 'ACSG', 'ACWF', 'AFK', 'AFLG', 'AFMC', 'AFSM', 'AFTY']}, 'var_functions.execute_python:22': {'SPY_in_etfs': True, 'QQQ_in_etfs': False, 'DIA_in_etfs': True, 'GLD_in_etfs': True, 'IWM_in_etfs': True, 'etf_symbols_sample': ['WWJD', 'EFA', 'KCE', 'EDIV', 'USDY', 'EEM', 'DLBR', 'RWGV', 'MUB', 'OEUR', 'TBF', 'RFV', 'ECON', 'SMOG', 'CHIS', 'ARKW', 'JPHF', 'GFIN', 'VIOG', 'SCIJ']}, 'var_functions.query_db:24': [{'count': '0'}], 'var_functions.query_db:26': [{'Date': '2015-01-02', 'Adj Close': '185.07107543945312'}, {'Date': '2015-01-05', 'Adj Close': '181.72874450683597'}, {'Date': '2015-01-06', 'Adj Close': '180.01708984375'}, {'Date': '2015-01-07', 'Adj Close': '182.26026916503903'}, {'Date': '2015-01-08', 'Adj Close': '185.49449157714844'}, {'Date': '2015-01-09', 'Adj Close': '184.0080108642578'}, {'Date': '2015-01-12', 'Adj Close': '182.56655883789065'}, {'Date': '2015-01-13', 'Adj Close': '182.0530548095703'}, {'Date': '2015-01-14', 'Adj Close': '180.95396423339844'}, {'Date': '2015-01-15', 'Adj Close': '179.29635620117188'}], 'var_functions.query_db:28': [], 'var_functions.query_db:30': [], 'var_functions.execute_python:32': {'total_etfs': 1435, 'sample_count': 50, 'sample_etfs': ['AAAU', 'AADR', 'ABEQ', 'ACSG', 'ACWF', 'AFK', 'AFLG', 'AFMC', 'AFSM', 'AFTY', 'AGG', 'AGGP', 'AGGY', 'AGQ', 'AGZ', 'AIEQ', 'AIIQ', 'AMLP', 'AMOM', 'AMZA', 'AOA', 'AOK', 'AOM', 'AOR', 'ARGT', 'ARKF', 'ARKK', 'ARKW', 'ARMR', 'ASEA', 'ASHR', 'ASHS', 'ASHX', 'AUSF', 'AVDE', 'AVDV', 'AVEM', 'AVUS', 'AVUV', 'AWAY', 'AWTM', 'AXJL', 'BAB', 'BATT', 'BBC', 'BBP', 'BCD', 'BCI', 'BDCY', 'BDRY']}, 'var_functions.query_db:34': [{'Symbol': 'AAAU', 'count': '0'}], 'var_functions.query_db:36': 'file_storage/functions.query_db:36.json', 'var_functions.execute_python:38': {'total_symbols': 1435, 'sample_symbols': ['AAAU', 'AADR', 'ABEQ', 'ACSG', 'ACWF', 'AFK', 'AFLG', 'AFMC', 'AFSM', 'AFTY', 'AGG', 'AGGP', 'AGGY', 'AGQ', 'AGZ', 'AIEQ', 'AIIQ', 'AMLP', 'AMOM', 'AMZA']}, 'var_functions.execute_python:40': {'total_nyse_arca_etfs': 1435, 'first_10_symbols': ['AAAU', 'AADR', 'ABEQ', 'ACSG', 'ACWF', 'AFK', 'AFLG', 'AFMC', 'AFSM', 'AFTY']}, 'var_functions.query_db:42': [{'max_price': '193.3121490478516'}], 'var_functions.execute_python:44': {'message': 'Need to check 1435 NYSE Arca ETFs for prices > $200 in 2015', 'total_symbols': 1435}, 'var_functions.execute_python:48': {'batch_size': 10, 'batch_symbols': ['AAAU', 'AADR', 'ABEQ', 'ACSG', 'ACWF', 'AFK', 'AFLG', 'AFMC', 'AFSM', 'AFTY']}, 'var_functions.execute_python:50': {'SPY_in_list': True, 'DIA_in_list': True, 'GLD_in_list': True, 'IWM_in_list': True, 'QQQ_in_list': False, 'nyse_arca_etf_count': 1435}, 'var_functions.query_db:52': [{'max_price': '163.6190185546875'}], 'var_functions.query_db:54': [{'max_price': '79.51802825927734'}]}
+
+exec(code, env_args)

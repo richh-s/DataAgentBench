@@ -1,0 +1,45 @@
+code = """import pandas as pd
+import json
+
+# Access the query result from storage
+metadata_list = var_functions.query_db_6
+
+# If the result is a file path string, load it
+if isinstance(metadata_list, str):
+    with open(metadata_list, 'r') as f:
+        metadata_list = json.load(f)
+
+# Extract article IDs and publication years
+article_ids = []
+years = []
+if metadata_list:
+    for record in metadata_list:
+        article_ids.append(record['article_id'])
+        years.append(int(record['publication_date'].split('-')[0]))
+
+# Create dataframe
+df_meta = pd.DataFrame({
+    'article_id': article_ids,
+    'year': years
+})
+
+# Filter years 2010-2020
+df_filtered = df_meta[(df_meta['year'] >= 2010) & (df_meta['year'] <= 2020)]
+
+# Count articles per year
+articles_per_year = df_filtered.groupby('year').size()
+
+# Get unique article IDs for querying articles
+target_article_ids = df_filtered['article_id'].tolist()
+
+print('__RESULT__:')
+print(json.dumps({
+    'total_europe_articles': len(df_filtered),
+    'year_range': f"{df_filtered['year'].min()}-{df_filtered['year'].max()}",
+    'articles_per_year': articles_per_year.to_dict(),
+    'unique_article_ids': len(target_article_ids)
+}))"""
+
+env_args = {'var_functions.list_db:0': ['authors', 'article_metadata'], 'var_functions.query_db:2': [{'region': 'Europe', 'publication_date': '2020-03-04', 'article_id': '3'}, {'region': 'Europe', 'publication_date': '2016-05-24', 'article_id': '9'}, {'region': 'Europe', 'publication_date': '2015-10-17', 'article_id': '13'}, {'region': 'Europe', 'publication_date': '2017-09-08', 'article_id': '14'}, {'region': 'Europe', 'publication_date': '2020-04-06', 'article_id': '21'}, {'region': 'Europe', 'publication_date': '2013-09-07', 'article_id': '27'}, {'region': 'Europe', 'publication_date': '2010-03-12', 'article_id': '43'}, {'region': 'Europe', 'publication_date': '2017-04-30', 'article_id': '60'}, {'region': 'Europe', 'publication_date': '2018-09-12', 'article_id': '62'}, {'region': 'Europe', 'publication_date': '2010-04-19', 'article_id': '63'}, {'region': 'Europe', 'publication_date': '2018-03-11', 'article_id': '64'}, {'region': 'Europe', 'publication_date': '2010-03-12', 'article_id': '66'}, {'region': 'Europe', 'publication_date': '2019-07-08', 'article_id': '78'}, {'region': 'Europe', 'publication_date': '2019-09-27', 'article_id': '128'}, {'region': 'Europe', 'publication_date': '2010-06-02', 'article_id': '140'}, {'region': 'Europe', 'publication_date': '2017-06-01', 'article_id': '142'}, {'region': 'Europe', 'publication_date': '2018-03-01', 'article_id': '143'}, {'region': 'Europe', 'publication_date': '2017-07-22', 'article_id': '144'}, {'region': 'Europe', 'publication_date': '2014-04-21', 'article_id': '151'}, {'region': 'Europe', 'publication_date': '2013-01-08', 'article_id': '154'}, {'region': 'Europe', 'publication_date': '2017-04-17', 'article_id': '164'}, {'region': 'Europe', 'publication_date': '2015-04-27', 'article_id': '179'}, {'region': 'Europe', 'publication_date': '2019-08-11', 'article_id': '181'}, {'region': 'Europe', 'publication_date': '2016-11-07', 'article_id': '190'}, {'region': 'Europe', 'publication_date': '2013-06-08', 'article_id': '201'}, {'region': 'Europe', 'publication_date': '2014-08-23', 'article_id': '202'}, {'region': 'Europe', 'publication_date': '2015-05-13', 'article_id': '203'}, {'region': 'Europe', 'publication_date': '2016-08-06', 'article_id': '210'}, {'region': 'Europe', 'publication_date': '2019-02-11', 'article_id': '214'}, {'region': 'Europe', 'publication_date': '2011-07-13', 'article_id': '216'}, {'region': 'Europe', 'publication_date': '2020-10-28', 'article_id': '223'}, {'region': 'Europe', 'publication_date': '2015-04-12', 'article_id': '243'}, {'region': 'Europe', 'publication_date': '2017-12-26', 'article_id': '257'}, {'region': 'Europe', 'publication_date': '2014-05-19', 'article_id': '265'}, {'region': 'Europe', 'publication_date': '2013-12-23', 'article_id': '268'}, {'region': 'Europe', 'publication_date': '2017-01-20', 'article_id': '270'}, {'region': 'Europe', 'publication_date': '2015-06-24', 'article_id': '271'}, {'region': 'Europe', 'publication_date': '2020-01-12', 'article_id': '279'}, {'region': 'Europe', 'publication_date': '2013-06-05', 'article_id': '298'}, {'region': 'Europe', 'publication_date': '2013-08-19', 'article_id': '300'}, {'region': 'Europe', 'publication_date': '2015-08-01', 'article_id': '309'}, {'region': 'Europe', 'publication_date': '2018-08-25', 'article_id': '328'}, {'region': 'Europe', 'publication_date': '2020-11-09', 'article_id': '336'}, {'region': 'Europe', 'publication_date': '2017-07-24', 'article_id': '338'}, {'region': 'Europe', 'publication_date': '2019-04-10', 'article_id': '339'}, {'region': 'Europe', 'publication_date': '2017-02-24', 'article_id': '348'}, {'region': 'Europe', 'publication_date': '2011-06-04', 'article_id': '371'}, {'region': 'Europe', 'publication_date': '2015-01-23', 'article_id': '379'}, {'region': 'Europe', 'publication_date': '2012-04-14', 'article_id': '383'}, {'region': 'Europe', 'publication_date': '2010-05-05', 'article_id': '394'}], 'var_functions.query_db:5': 'file_storage/functions.query_db:5.json', 'var_functions.query_db:6': 'file_storage/functions.query_db:6.json', 'var_functions.query_db:8': [{'_id': '6969b34595c057d61b88a67b', 'article_id': '0', 'title': 'Wall St. Bears Claw Back Into the Black (Reuters)', 'description': "Reuters - Short-sellers, Wall Street's dwindling\\band of ultra-cynics, are seeing green again."}, {'_id': '6969b34595c057d61b88a67c', 'article_id': '1', 'title': 'Carlyle Looks Toward Commercial Aerospace (Reuters)', 'description': 'Reuters - Private investment firm Carlyle Group,\\which has a reputation for making well-timed and occasionally\\controversial plays in the defense industry, has quietly placed\\its bets on another part of the market.'}, {'_id': '6969b34595c057d61b88a67d', 'article_id': '2', 'title': "Oil and Economy Cloud Stocks' Outlook (Reuters)", 'description': 'Reuters - Soaring crude prices plus worries\\about the economy and the outlook for earnings are expected to\\hang over the stock market next week during the depth of the\\summer doldrums.'}, {'_id': '6969b34595c057d61b88a67e', 'article_id': '3', 'title': 'Iraq Halts Oil Exports from Main Southern Pipeline (Reuters)', 'description': 'Reuters - Authorities have halted oil export\\flows from the main pipeline in southern Iraq after\\intelligence showed a rebel militia could strike\\infrastructure, an oil official said on Saturday.'}, {'_id': '6969b34595c057d61b88a67f', 'article_id': '4', 'title': 'Oil prices soar to all-time record, posing new menace to US economy (AFP)', 'description': 'AFP - Tearaway world oil prices, toppling records and straining wallets, present a new economic menace barely three months before the US presidential elections.'}]}
+
+exec(code, env_args)

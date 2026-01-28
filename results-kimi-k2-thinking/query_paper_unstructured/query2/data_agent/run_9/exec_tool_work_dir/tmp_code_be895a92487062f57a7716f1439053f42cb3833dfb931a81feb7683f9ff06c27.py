@@ -1,0 +1,21 @@
+code = """import json
+
+# Access the stored file path
+citations_file_path = var_functions.query_db_0
+
+# Read the full citation data
+with open(citations_file_path, 'r') as f:
+    citations_data = json.load(f)
+
+# Quick look at the data structure
+sample = citations_data[0] if citations_data else None
+
+print('__RESULT__:')
+print(json.dumps({
+    'total_records': len(citations_data),
+    'sample': sample
+}))"""
+
+env_args = {'var_functions.query_db:0': 'file_storage/functions.query_db:0.json'}
+
+exec(code, env_args)

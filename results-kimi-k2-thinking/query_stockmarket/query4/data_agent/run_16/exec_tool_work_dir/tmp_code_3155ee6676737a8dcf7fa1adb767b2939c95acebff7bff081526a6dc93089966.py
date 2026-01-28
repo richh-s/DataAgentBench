@@ -1,0 +1,45 @@
+code = """import json
+
+# Load all NYSE non-ETF symbols with company names
+symbols_file = locals()['var_functions.query_db:0']
+with open(symbols_file, 'r') as f:
+    symbols_data = json.load(f)
+
+# Create mapping: symbol -> company name
+symbol_to_company = {rec['Symbol']: rec['Company Description'] for rec in symbols_data}
+symbols = list(symbol_to_company.keys())
+
+# Split into batches to avoid query length limits
+batch_size = 30
+all_batches = []
+
+for i in range(0, len(symbols), batch_size):
+    batch = symbols[i:i+batch_size]
+    union_parts = []
+    for symbol in batch:
+        part = f"""(
+            SELECT '{symbol}' as symbol,
+                   COUNT(CASE WHEN Close > Open THEN 1 END) as up_days,
+                   COUNT(CASE WHEN Close < Open THEN 1 END) as down_days
+            FROM {symbol}
+            WHERE Date >= '2017-01-01' AND Date <= '2017-12-31'
+        )"""
+        union_parts.append(part)
+    
+    batch_query = "\nUNION ALL\n".join(union_parts)
+    all_batches.append(batch_query)
+
+print(f"Created {len(all_batches)} batches with {batch_size} symbols each")
+print("First batch query preview:")
+print(all_batches[0][:300] + "...")
+
+print('__RESULT__:')
+print(json.dumps({
+    'total_symbols': len(symbols),
+    'batches': len(all_batches),
+    'first_batch_size': len(symbols[:batch_size])
+}))"""
+
+env_args = {'var_functions.query_db:0': 'file_storage/functions.query_db:0.json', 'var_functions.list_db:2': 'file_storage/functions.list_db:2.json', 'var_functions.execute_python:6': {'total_nyse_non_etf': 234, 'present_in_trade_db': 234, 'sample_symbols': ['AEFC', 'AIN', 'AIV', 'AIZP', 'AJRD']}, 'var_functions.query_db:8': [{'Symbol': 'AEFC', 'Company': 'None'}, {'Symbol': 'AIN', 'Company': 'None'}, {'Symbol': 'AIV', 'Company': 'None'}, {'Symbol': 'AIZP', 'Company': 'None'}, {'Symbol': 'AJRD', 'Company': 'None'}], 'var_functions.query_db:10': [{'Date': '1987-09-30', 'Open': '14.988152503967283', 'High': '15.701873779296877', 'Low': '14.988152503967283', 'Close': '15.107105255126951', 'Adj Close': '8.918145179748535', 'Volume': '2292200'}, {'Date': '1987-10-01', 'Open': '15.107105255126951', 'High': '15.345012664794922', 'Low': '14.988152503967283', 'Close': '15.345012664794922', 'Adj Close': '9.05859375', 'Volume': '468200'}, {'Date': '1987-10-02', 'Open': '15.345012664794922', 'High': '15.701873779296877', 'Low': '15.107105255126951', 'Close': '15.701873779296877', 'Adj Close': '9.26926040649414', 'Volume': '371600'}, {'Date': '1987-10-05', 'Open': '15.701873779296877', 'High': '15.701873779296877', 'Low': '15.226058959960938', 'Close': '15.701873779296877', 'Adj Close': '9.26926040649414', 'Volume': '121300'}, {'Date': '1987-10-06', 'Open': '15.58292007446289', 'High': '15.58292007446289', 'Low': '15.226058959960938', 'Close': '15.463966369628906', 'Adj Close': '9.128814697265623', 'Volume': '159300'}], 'var_functions.execute_python:14': {'count': 234, 'example': ['AEFC', 'Aegon Funding Company LLC is part of Aegon N.V., a global financial services group offering life insurance, pensions, and asset management solutions to help people achieve a lifetime of financial security.']}, 'var_functions.query_db:16': [{'total_2017': '251', 'up_days': '143', 'down_days': '101'}], 'var_functions.query_db:20': [{'up_days': '0', 'down_days': '0'}], 'var_functions.execute_python:22': {'company_names': {'AEFC': 'Aegon Funding Company LLC is part of Aegon N.V., a global financial services group offering life insurance, pensions, and asset management solutions to help people achieve a lifetime of financial security.', 'AIN': 'Albany International Corporation specializes in producing advanced materials and engineered components, serving industries such as aerospace and paper manufacturing with innovative solutions.', 'AIV': 'Apartment Investment and Management Company specializes in owning and managing a diverse portfolio of apartment communities, offering quality rental housing across various regions.', 'AIZP': 'Assurant, Inc. specializes in providing a diverse range of insurance products and services, focusing on lifestyle and housing solutions to protect what matters most to their customers.', 'AJRD': 'Aerojet Rocketdyne Holdings, Inc. specializes in developing advanced propulsion systems and aerospace technologies, playing a crucial role in powering rockets and missiles for both defense and space exploration.'}}, 'var_functions.query_db:24': [{'total_days': '204', 'up_days': '80', 'down_days': '119'}], 'var_functions.query_db:26': [{'total_days': '251', 'up_days': '137', 'down_days': '113'}], 'var_functions.execute_python:30': {'total_symbols': 234, 'first_10_symbols': [{'symbol': 'AEFC', 'company': 'Aegon Funding Company LLC is part of Aegon N.V., a global financial services group offering life insurance, pensions, and asset management solutions to help people achieve a lifetime of financial security.'}, {'symbol': 'AIN', 'company': 'Albany International Corporation specializes in producing advanced materials and engineered components, serving industries such as aerospace and paper manufacturing with innovative solutions.'}, {'symbol': 'AIV', 'company': 'Apartment Investment and Management Company specializes in owning and managing a diverse portfolio of apartment communities, offering quality rental housing across various regions.'}, {'symbol': 'AIZP', 'company': 'Assurant, Inc. specializes in providing a diverse range of insurance products and services, focusing on lifestyle and housing solutions to protect what matters most to their customers.'}, {'symbol': 'AJRD', 'company': 'Aerojet Rocketdyne Holdings, Inc. specializes in developing advanced propulsion systems and aerospace technologies, playing a crucial role in powering rockets and missiles for both defense and space exploration.'}, {'symbol': 'AL', 'company': 'Air Lease Corporation specializes in leasing commercial aircraft to airlines worldwide, providing them with flexible fleet solutions and financial support.'}, {'symbol': 'AMN', 'company': 'AMN Healthcare Services Inc. specializes in providing workforce solutions and staffing services to healthcare facilities, ensuring they have access to the skilled professionals necessary for quality patient care.'}, {'symbol': 'AMP', 'company': 'Ameriprise Financial, Inc. offers comprehensive financial services, specializing in wealth management, asset management, and insurance solutions to help clients plan and achieve their financial goals.'}, {'symbol': 'AMT', 'company': 'American Tower Corporation is a leading real estate investment trust that specializes in owning, operating, and developing wireless and broadcast communication towers across the globe.'}, {'symbol': 'ARD', 'company': 'Ardagh Group S.A. specializes in manufacturing and supplying sustainable packaging solutions, with a focus on glass and metal containers for leading brands across various industries.'}]}, 'var_functions.execute_python:32': {'count': 50, 'sample': ['AEFC', 'AIN', 'AIV', 'AIZP', 'AJRD']}, 'var_functions.execute_python:36': {'batch_queries_count': 50, 'first_query': "SELECT 'AEFC', COUNT(CLOSE) as total, COUNT(CASE WHEN Close > Open THEN 1 END) as up_days, COUNT(CASE WHEN Close < Open THEN 1 END) as down_days FROM AEFC WHERE Date >= '2017-01-01' AND Date <= '2017-12-31'"}, 'var_functions.execute_python:44': {'total_stocks': 234, 'first_stock': {'symbol': 'AEFC', 'company': 'Aegon Funding Company LLC is part of Aegon N.V., a global financial services group offering life insurance, pensions, and asset management solutions to help people achieve a lifetime of financial security.'}}, 'var_functions.query_db:48': [{'symbol': 'AEFC', 'up_days': '0', 'down_days': '0'}, {'symbol': 'AIN', 'up_days': '143', 'down_days': '101'}, {'symbol': 'AIV', 'up_days': '118', 'down_days': '128'}, {'symbol': 'AIZP', 'up_days': '0', 'down_days': '0'}, {'symbol': 'AJRD', 'up_days': '123', 'down_days': '123'}]}
+
+exec(code, env_args)

@@ -1,0 +1,15 @@
+code = """import json
+pubs_res = var_call_CseUXkBYEh0x7C6OSnU7kxDL
+cpcs_res = var_call_EVz8z9z1vdgSDYsvIxpwnXrP
+# build map symbol->title
+sym2title = {r['symbol']: r['titleFull'] for r in cpcs_res}
+assignee_to_titles = {}
+for assignee, codes in pubs_res['assignee_to_cpcs'].items():
+    titles = [sym2title.get(code, '') for code in codes]
+    assignee_to_titles[assignee] = titles
+print('__RESULT__:')
+print(json.dumps(assignee_to_titles))"""
+
+env_args = {'var_call_6s5RpImgm3iTcGaGq8ohXGZr': 'file_storage/call_6s5RpImgm3iTcGaGq8ohXGZr.json', 'var_call_gG2899rItsLZOgaJaeMhanfU': [], 'var_call_l3Wv2stVqubRXfB59zoHvWq0': 'file_storage/call_l3Wv2stVqubRXfB59zoHvWq0.json', 'var_call_CseUXkBYEh0x7C6OSnU7kxDL': {'assignee_to_cpcs': {'The US patent filing (application number US-4007205-A)': ['G01V1/01'], 'The US patent application (no. US-201715785968-A) is': ['H01M4/9066', 'H01M8/2425'], 'The US application (ID US-201414520615-A)': ['C30B11/003', 'C30B25/10', 'C30B25/16'], 'SCHOWALTER LEO J': ['H01L21/0262']}, 'cpc_codes': ['C30B11/003', 'C30B25/10', 'C30B25/16', 'G01V1/01', 'H01L21/0262', 'H01M4/9066', 'H01M8/2425'], 'num_pub_with_identified_pubnum': 277082}, 'var_call_EVz8z9z1vdgSDYsvIxpwnXrP': [{'symbol': 'H01M4/9066', 'titleFull': 'Metals or alloys specially used in fuel cell operating at high temperature, e.g. SOFC of metal-ceramic composites or mixtures, e.g. cermets'}, {'symbol': 'H01L21/0262', 'titleFull': 'Reduction or decomposition of gaseous compounds, e.g. CVD'}, {'symbol': 'G01V1/01', 'titleFull': 'Measuring or predicting earthquakes'}, {'symbol': 'C30B11/003', 'titleFull': 'Heating or cooling of the melt or the crystallised material'}, {'symbol': 'C30B25/10', 'titleFull': 'Heating of the reaction chamber or the substrate'}, {'symbol': 'C30B25/16', 'titleFull': 'Controlling or regulating'}, {'symbol': 'H01M8/2425', 'titleFull': 'High-temperature cells with solid electrolytes'}]}
+
+exec(code, env_args)

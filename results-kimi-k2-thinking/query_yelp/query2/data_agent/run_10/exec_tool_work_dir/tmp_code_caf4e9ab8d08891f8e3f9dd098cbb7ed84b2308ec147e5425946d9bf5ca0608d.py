@@ -1,0 +1,46 @@
+code = """import json
+
+# Get Missouri business numeric IDs from previous result
+prev_result = locals()['var_functions.query_db:4']
+# Actually, we need the result from the execute_python that computed Missouri IDs
+# Let's reconstruct from the business data file
+
+file_path = locals()['var_functions.query_db:4']
+with open(file_path, 'r') as f:
+    business_data = json.load(f)
+
+import re
+
+def extract_state(description):
+    pattern = r'in [^,]+, ([A-Z]{2})[,.]'
+    match = re.search(pattern, description, re.I)
+    if match:
+        return match.group(1).upper()
+    return None
+
+missouri_business_ids = []
+for rec in business_data:
+    desc = rec.get('description', '')
+    state = extract_state(desc)
+    if state == 'MO':
+        business_id = rec.get('business_id')
+        if business_id and 'businessid_' in business_id:
+            numeric_id = business_id.split('_')[1]
+            missouri_business_ids.append(numeric_id)
+
+# Construct business_ref values for SQL query
+business_refs = [f"'businessref_{id}'" for id in missouri_business_ids]
+business_refs_str = ', '.join(business_refs)
+
+result = {
+    "missouri_business_count": len(missouri_business_ids),
+    "business_refs": business_refs_str,
+    "business_refs_list": [f"businessref_{id}" for id in missouri_business_ids]
+}
+
+print('__RESULT__:')
+print(json.dumps(result))"""
+
+env_args = {'var_functions.query_db:0': [{'_id': '6859a000fe8b31cd7362e2ab', 'business_id': 'businessid_49', 'description': 'Located at 6901 Phelps Rd in Goleta, CA, this facility offers a nurturing environment for young learners, providing a range of services in Education, Elementary Schools, Child Care & Day Care, Local Services, Preschools, and Montessori Schools.'}, {'_id': '6859a000fe8b31cd7362e2ac', 'business_id': 'businessid_47', 'description': 'Located at 9916 Clayton Rd in St. Louis, MO, this establishment offers a wide range of services, including Hair Salons, Beauty & Spas, Hair Stylists, Skin Care, Blow Dry/Out Services, and Makeup Artists.'}, {'_id': '6859a000fe8b31cd7362e2ad', 'business_id': 'businessid_88', 'description': 'Located at 11655 W Executive Dr in Boise, ID, this facility offers enthusiasts a premier destination for Gun/Rifle Ranges, Active Life.'}, {'_id': '6859a000fe8b31cd7362e2ae', 'business_id': 'businessid_41', 'description': 'Located at 1615 Pasadena Ave S, Ste 430 in Saint Petersburg, FL, this facility offers a range of services in Internal Medicine, Doctors, Health & Medical.'}, {'_id': '6859a000fe8b31cd7362e2af', 'business_id': 'businessid_33', 'description': 'Located at 9655 E US Hwy 36, Unit H in Avon, IN, this establishment offers a range of services including Nail Salons, Hair Removal, Beauty & Spas, and Waxing.'}], 'var_functions.list_db:2': ['review', 'tip', 'user'], 'var_functions.query_db:4': 'file_storage/functions.query_db:4.json', 'var_functions.execute_python:12': {'record_count': 100}, 'var_functions.execute_python:14': {'top_state': None, 'total_reviews_top_state': 0, 'businesses_in_top_state': 0, 'state_review_sums': {}}, 'var_functions.execute_python:16': [{'business_id': 'businessid_49', 'description': 'Located at 6901 Phelps Rd in Goleta, CA, this facility offers a nurturing environment for young lear...', 'found_state': 'CA'}, {'business_id': 'businessid_47', 'description': 'Located at 9916 Clayton Rd in St. Louis, MO, this establishment offers a wide range of services, inc...', 'found_state': 'MO'}, {'business_id': 'businessid_88', 'description': 'Located at 11655 W Executive Dr in Boise, ID, this facility offers enthusiasts a premier destination...', 'found_state': 'ID'}, {'business_id': 'businessid_41', 'description': 'Located at 1615 Pasadena Ave S, Ste 430 in Saint Petersburg, FL, this facility offers a range of ser...', 'found_state': 'FL'}, {'business_id': 'businessid_33', 'description': 'Located at 9655 E US Hwy 36, Unit H in Avon, IN, this establishment offers a range of services inclu...', 'found_state': 'IN'}, {'business_id': 'businessid_74', 'description': 'Located at 735 Dodecanese Blvd in Tarpon Springs, FL, this charming establishment offers a delightfu...', 'found_state': 'FL'}, {'business_id': 'businessid_92', 'description': 'Located at 690 W Dekalb Pike in King of Prussia, PA, this business offers a diverse range of service...', 'found_state': 'PA'}, {'business_id': 'businessid_64', 'description': 'Located at 12337 Olive Blvd in Creve Coeur, MO, this establishment offers a range of services in Nai...', 'found_state': 'MO'}, {'business_id': 'businessid_52', 'description': 'Located at 5000 W 96th St in Indianapolis, IN, this establishment offers a diverse selection of Anti...', 'found_state': 'IN'}, {'business_id': 'businessid_29', 'description': 'Located at 41 Haddon Ave in Collingswood, NJ, this versatile establishment offers a range of service...', 'found_state': 'NJ'}], 'var_functions.execute_python:18': {'top_state': 'MO', 'top_state_total_reviews': 2243, 'total_businesses_in_top_state': 9, 'all_states_count': 13, 'top_10_states': {'MO': 2243, 'PA': 1804, 'FL': 565, 'NV': 304, 'LA': 255, 'IN': 226, 'ID': 209, 'CA': 92, 'AB': 45, 'TN': 39}}, 'var_functions.execute_python:20': {'missouri_business_count': 9, 'first_10_businesses': ['47', '64', '10', '24', '30', '96', '11', '4', '46']}}
+
+exec(code, env_args)

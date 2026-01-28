@@ -1,0 +1,84 @@
+code = """import json
+import re
+
+# Read the full language data from the file
+language_file_path = locals().get('var_functions.query_db:8')
+language_data = []
+if isinstance(language_file_path, str) and language_file_path.endswith('.json'):
+    with open(language_file_path, 'r') as f:
+        language_data = json.load(f)
+
+# Create a language lookup for faster access
+languages_by_repo = {item['repo_name']: item['language_description'] for item in language_data}
+
+# For repositories present in our top commits, let's extract the main language
+result = []
+
+# The matched_repos already have language info from previous query
+matched_repos = locals().get('var_functions.execute_python:23', {})
+if isinstance(matched_repos, dict):
+    matched_repos_list = matched_repos.get('matched_repos', [])
+else:
+    matched_repos_list = []
+
+# Filter repositories where main language is not Python
+def is_main_language_python(language_description):
+    if not language_description:
+        return False
+    # Extract all languages with their byte counts
+    languages = []
+    # Match patterns like "Python (42,782,002 bytes)" or "C++ (49,043,456 bytes)"
+    matches = re.findall(r'(\w+(?:\+|#|-)?)\s+\(([\d,]+)\s+bytes\)', language_description)
+    
+    if not matches:
+        # Try alternative pattern for complex names
+        matches = re.findall(r'([\w\-#+]+)\s+\(([\d,]+)\s+bytes\)', language_description)
+    
+    for lang, bytes_str in matches:
+        try:
+            bytes_int = int(bytes_str.replace(',', '').replace('.', ''))
+            languages.append((lang, bytes_int))
+        except:
+            continue
+    
+    # Sort by byte count descending
+    languages.sort(key=lambda x: x[1], reverse=True)
+    
+    if not languages:
+        return False
+    
+    # Check if Python is the main language (highest byte count)
+    main_language = languages[0][0].lower()
+    return 'python' in main_language
+
+for repo_info in matched_repos_list:
+    repo_name = repo_info['repo_name']
+    commit_count = repo_info['commit_count']
+    lang_desc = repo_info.get('language', '')
+    
+    if lang_desc == 'NOT_FOUND':
+        continue
+    
+    is_python_main = is_main_language_python(lang_desc)
+    
+    result.append({
+        'repo_name': repo_name,
+        'commit_count': commit_count,
+        'main_language_is_python': is_python_main,
+        'language_desc': lang_desc
+    })
+
+# Sort by commit count descending and get top 5 where main language is NOT Python
+result.sort(key=lambda x: x['commit_count'], reverse=True)
+non_python_repos = [repo for repo in result if not repo['main_language_is_python']]
+
+print('__RESULT__:')
+print(json.dumps({
+    'all_repos_with_lang': result,
+    'non_python_repos': non_python_repos[:5],
+    'non_python_repo_names': [repo['repo_name'] for repo in non_python_repos[:5]]
+}))"""
+
+env_args = {'var_functions.query_db:0': [{'repo_name': 'torvalds/linux', 'commit_count': '16061'}, {'repo_name': 'apple/swift', 'commit_count': '1051'}, {'repo_name': 'twbs/bootstrap', 'commit_count': '340'}, {'repo_name': 'Microsoft/vscode', 'commit_count': '190'}, {'repo_name': 'facebook/react', 'commit_count': '178'}, {'repo_name': 'tensorflow/tensorflow', 'commit_count': '156'}], 'var_functions.query_db:2': [{'repo_name': 'tensorflow/tensorflow', 'language_description': 'While most of the project is built in C++ (126,099,822 bytes), it also incorporates Python (42,782,002 bytes), MLIR (11,447,433 bytes), Starlark (7,738,020 bytes), HTML (4,686,483 bytes), Go (2,129,888 bytes), C (1,400,913 bytes), Java (1,074,438 bytes), Jupyter Notebook (792,906 bytes), Shell (621,854 bytes), Dockerfile (416,133 bytes), Objective-C++ (300,213 bytes), CMake (182,430 bytes), Objective-C (172,666 bytes), Smarty (89,538 bytes), Swift (78,435 bytes), Batchfile (36,962 bytes), SourcePawn (14,625 bytes), C# (13,584 bytes), Ruby (9,199 bytes), Perl (7,536 bytes), LLVM (6,536 bytes), Pawn (5,552 bytes), Roff (5,034 bytes), Cython (5,003 bytes), Makefile (2,760 bytes), Vim Snippet (58 bytes).'}, {'repo_name': 'twbs/bootstrap', 'language_description': 'The codebase includes: JavaScript (865,640 bytes), HTML (679,522 bytes), SCSS (322,086 bytes), CSS (263,808 bytes), PowerShell (932 bytes).'}, {'repo_name': 'apple/swift', 'language_description': 'The codebase includes: C++ (49,043,456 bytes), Swift (41,439,628 bytes), C (5,467,361 bytes), Python (1,831,390 bytes), CMake (730,234 bytes), Objective-C (486,889 bytes), Shell (217,313 bytes), Objective-C++ (166,236 bytes), LLVM (74,481 bytes), Emacs Lisp (57,637 bytes), Batchfile (47,838 bytes), Vim Script (20,025 bytes), Roff (3,683 bytes), DTrace (2,593 bytes), Makefile (2,361 bytes), Ruby (2,132 bytes), D (1,107 bytes).'}, {'repo_name': 'facebook/react', 'language_description': 'While most of the project is built in JavaScript (6,256,474 bytes), it also incorporates HTML (120,058 bytes), CSS (64,972 bytes), C++ (44,290 bytes), TypeScript (21,454 bytes), CoffeeScript (17,390 bytes), C (5,227 bytes), Shell (2,306 bytes), Python (259 bytes), Makefile (189 bytes).'}, {'repo_name': 'Microsoft/vscode', 'language_description': 'The majority of the code is in TypeScript (21,066,876 bytes), followed by JavaScript (872,486 bytes), CSS (492,430 bytes), Inno Setup (165,483 bytes), HTML (47,005 bytes), Shell (25,657 bytes), PowerShell (6,430 bytes), Batchfile (5,369 bytes), Groovy (3,928 bytes), Python (2,405 bytes), Makefile (2,127 bytes), Ruby (1,703 bytes), Objective-C (1,387 bytes), Clojure (1,206 bytes), C++ (1,072 bytes), Perl 6 (1,065 bytes), PHP (998 bytes), Visual Basic (893 bytes), Perl (857 bytes), C (818 bytes), Go (652 bytes), F# (634 bytes), Java (599 bytes), CoffeeScript (590 bytes), Rust (532 bytes), C# (488 bytes), Dockerfile (425 bytes), R (362 bytes), Roff (351 bytes), ShaderLab (330 bytes), Swift (284 bytes), Lua (252 bytes), HLSL (184 bytes).'}], 'var_functions.execute_python:5': {'commit_count': 6, 'language_count': 5, 'sample_commits': [{'repo_name': 'torvalds/linux', 'commit_count': '16061'}, {'repo_name': 'apple/swift', 'commit_count': '1051'}], 'sample_languages': [{'repo_name': 'tensorflow/tensorflow', 'language_description': 'While most of the project is built in C++ (126,099,822 bytes), it also incorporates Python (42,782,002 bytes), MLIR (11,447,433 bytes), Starlark (7,738,020 bytes), HTML (4,686,483 bytes), Go (2,129,888 bytes), C (1,400,913 bytes), Java (1,074,438 bytes), Jupyter Notebook (792,906 bytes), Shell (621,854 bytes), Dockerfile (416,133 bytes), Objective-C++ (300,213 bytes), CMake (182,430 bytes), Objective-C (172,666 bytes), Smarty (89,538 bytes), Swift (78,435 bytes), Batchfile (36,962 bytes), SourcePawn (14,625 bytes), C# (13,584 bytes), Ruby (9,199 bytes), Perl (7,536 bytes), LLVM (6,536 bytes), Pawn (5,552 bytes), Roff (5,034 bytes), Cython (5,003 bytes), Makefile (2,760 bytes), Vim Snippet (58 bytes).'}, {'repo_name': 'twbs/bootstrap', 'language_description': 'The codebase includes: JavaScript (865,640 bytes), HTML (679,522 bytes), SCSS (322,086 bytes), CSS (263,808 bytes), PowerShell (932 bytes).'}]}, 'var_functions.query_db:6': [], 'var_functions.query_db:8': 'file_storage/functions.query_db:8.json', 'var_functions.execute_python:10': {'language_records': 3325634, 'commit_records': 6, 'sample_language': {'repo_name': 'juliandunn/rackspacecloud', 'language_description': 'The codebase includes: Ruby (22,438 bytes), Shell (465 bytes).'}}, 'var_functions.execute_python:12': {'top_commit_repos': [{'repo_name': 'torvalds/linux', 'commit_count': '16061'}, {'repo_name': 'apple/swift', 'commit_count': '1051'}, {'repo_name': 'twbs/bootstrap', 'commit_count': '340'}, {'repo_name': 'Microsoft/vscode', 'commit_count': '190'}, {'repo_name': 'facebook/react', 'commit_count': '178'}, {'repo_name': 'tensorflow/tensorflow', 'commit_count': '156'}], 'found_in_language': [{'repo_name': 'apple/swift', 'commit_count': 1051, 'has_language': True, 'language_description': 'The codebase includes: C++ (49,043,456 bytes), Swift (41,439,628 bytes), C (5,467,361 bytes), Python (1,831,390 bytes), CMake (730,234 bytes), Objective-C (486,889 bytes), Shell (217,313 bytes), Objective-C++ (166,236 bytes), LLVM (74,481 bytes), Emacs Lisp (57,637 bytes), Batchfile (47,838 bytes), Vim Script (20,025 bytes), Roff (3,683 bytes), DTrace (2,593 bytes), Makefile (2,361 bytes), Ruby (2,132 bytes), D (1,107 bytes).'}, {'repo_name': 'twbs/bootstrap', 'commit_count': 340, 'has_language': True, 'language_description': 'The codebase includes: JavaScript (865,640 bytes), HTML (679,522 bytes), SCSS (322,086 bytes), CSS (263,808 bytes), PowerShell (932 bytes).'}, {'repo_name': 'Microsoft/vscode', 'commit_count': 190, 'has_language': True, 'language_description': 'The majority of the code is in TypeScript (21,066,876 bytes), followed by JavaScript (872,486 bytes), CSS (492,430 bytes), Inno Setup (165,483 bytes), HTML (47,005 bytes), Shell (25,657 bytes), PowerShell (6,430 bytes), Batchfile (5,369 bytes), Groovy (3,928 bytes), Python (2,405 bytes), Makefile (2,127 bytes), Ruby (1,703 bytes), Objective-C (1,387 bytes), Clojure (1,206 bytes), C++ (1,072 bytes), Perl 6 (1,065 bytes), PHP (998 bytes), Visual Basic (893 bytes), Perl (857 bytes), C (818 bytes), Go (652 bytes), F# (634 bytes), Java (599 bytes), CoffeeScript (590 bytes), Rust (532 bytes), C# (488 bytes), Dockerfile (425 bytes), R (362 bytes), Roff (351 bytes), ShaderLab (330 bytes), Swift (284 bytes), Lua (252 bytes), HLSL (184 bytes).'}, {'repo_name': 'facebook/react', 'commit_count': 178, 'has_language': True, 'language_description': 'While most of the project is built in JavaScript (6,256,474 bytes), it also incorporates HTML (120,058 bytes), CSS (64,972 bytes), C++ (44,290 bytes), TypeScript (21,454 bytes), CoffeeScript (17,390 bytes), C (5,227 bytes), Shell (2,306 bytes), Python (259 bytes), Makefile (189 bytes).'}, {'repo_name': 'tensorflow/tensorflow', 'commit_count': 156, 'has_language': True, 'language_description': 'While most of the project is built in C++ (126,099,822 bytes), it also incorporates Python (42,782,002 bytes), MLIR (11,447,433 bytes), Starlark (7,738,020 bytes), HTML (4,686,483 bytes), Go (2,129,888 bytes), C (1,400,913 bytes), Java (1,074,438 bytes), Jupyter Notebook (792,906 bytes), Shell (621,854 bytes), Dockerfile (416,133 bytes), Objective-C++ (300,213 bytes), CMake (182,430 bytes), Objective-C (172,666 bytes), Smarty (89,538 bytes), Swift (78,435 bytes), Batchfile (36,962 bytes), SourcePawn (14,625 bytes), C# (13,584 bytes), Ruby (9,199 bytes), Perl (7,536 bytes), LLVM (6,536 bytes), Pawn (5,552 bytes), Roff (5,034 bytes), Cython (5,003 bytes), Makefile (2,760 bytes), Vim Snippet (58 bytes).'}], 'total_language_records': 3325634, 'common_repos_count': 5}, 'var_functions.query_db:14': [{'total': '7'}], 'var_functions.query_db:16': [{'repo_name': 'torvalds/linux', 'commit_count': '16061'}, {'repo_name': 'apple/swift', 'commit_count': '1051'}, {'repo_name': 'twbs/bootstrap', 'commit_count': '340'}, {'repo_name': 'Microsoft/vscode', 'commit_count': '190'}, {'repo_name': 'facebook/react', 'commit_count': '178'}, {'repo_name': 'tensorflow/tensorflow', 'commit_count': '156'}], 'var_functions.query_db:18': [{'repo_name': 'torvalds/subsurface'}], 'var_functions.query_db:20': [{'repo_name': 'dinahosting/dinaip-linux-grafica', 'language_description': 'The majority of the code is in Ruby (54,423 bytes), followed by Shell (2,392 bytes).'}, {'repo_name': 'pexip/os-util-linux', 'language_description': 'This repository is mainly written in C (4,861,385 bytes), with additional code in Makefile (1,424,739 bytes), Shell (909,014 bytes), Roff (802,856 bytes), M4 (203,114 bytes), Berry (84,168 bytes), Yacc (41,713 bytes), Python (8,511 bytes), Perl (528 bytes), sed (370 bytes).'}, {'repo_name': 'ShinySide/Linux-Patches', 'language_description': 'Nearly all of the code is in Groff, totaling 106,202 bytes.'}, {'repo_name': 'arcivanov/linuxbrew', 'language_description': 'The majority of the code is in Ruby (5,266,706 bytes), followed by Groff (29,628 bytes), Shell (21,488 bytes), Perl (608 bytes), PostScript (485 bytes).'}, {'repo_name': 'Ginfung/linux-variability-analysis-tools', 'language_description': 'The codebase includes: Scala (113,078 bytes).'}, {'repo_name': 'leutheus/linux-variability-analysis-tools.fm-translation', 'language_description': 'This repository is mainly written in Scala (151,690 bytes).'}, {'repo_name': 'ohnosequences/amazon-linux-ami', 'language_description': 'This project is built entirely in Scala (5,640 bytes of code).'}, {'repo_name': 'christinloehner/linuxcounter-update-examples', 'language_description': 'The codebase includes: Shell (37,205 bytes).'}, {'repo_name': 'arparp3733/linux-util-scripts', 'language_description': 'This project is built entirely in Shell (355 bytes of code).'}, {'repo_name': 'ascode/zn-linux', 'language_description': 'Nearly all of the code is in Shell, totaling 514 bytes.'}], 'var_functions.query_db:22': [{'repo_name': 'torvalds/linux', 'commit_count': '16061'}, {'repo_name': 'apple/swift', 'commit_count': '1051'}, {'repo_name': 'twbs/bootstrap', 'commit_count': '340'}, {'repo_name': 'Microsoft/vscode', 'commit_count': '190'}, {'repo_name': 'facebook/react', 'commit_count': '178'}, {'repo_name': 'tensorflow/tensorflow', 'commit_count': '156'}], 'var_functions.execute_python:23': {'torvalds_linux_in_language': False, 'total_language_records': 3325634, 'matched_repos': [{'repo_name': 'torvalds/linux', 'commit_count': 16061, 'language': 'NOT_FOUND'}, {'repo_name': 'apple/swift', 'commit_count': 1051, 'language': 'The codebase includes: C++ (49,043,456 bytes), Swift (41,439,628 bytes), C (5,467,361 bytes), Python (1,831,390 bytes), CMake (730,234 bytes), Objective-C (486,889 bytes), Shell (217,313 bytes), Objective-C++ (166,236 bytes), LLVM (74,481 bytes), Emacs Lisp (57,637 bytes), Batchfile (47,838 bytes), Vim Script (20,025 bytes), Roff (3,683 bytes), DTrace (2,593 bytes), Makefile (2,361 bytes), Ruby (2,132 bytes), D (1,107 bytes).'}, {'repo_name': 'twbs/bootstrap', 'commit_count': 340, 'language': 'The codebase includes: JavaScript (865,640 bytes), HTML (679,522 bytes), SCSS (322,086 bytes), CSS (263,808 bytes), PowerShell (932 bytes).'}, {'repo_name': 'Microsoft/vscode', 'commit_count': 190, 'language': 'The majority of the code is in TypeScript (21,066,876 bytes), followed by JavaScript (872,486 bytes), CSS (492,430 bytes), Inno Setup (165,483 bytes), HTML (47,005 bytes), Shell (25,657 bytes), PowerShell (6,430 bytes), Batchfile (5,369 bytes), Groovy (3,928 bytes), Python (2,405 bytes), Makefile (2,127 bytes), Ruby (1,703 bytes), Objective-C (1,387 bytes), Clojure (1,206 bytes), C++ (1,072 bytes), Perl 6 (1,065 bytes), PHP (998 bytes), Visual Basic (893 bytes), Perl (857 bytes), C (818 bytes), Go (652 bytes), F# (634 bytes), Java (599 bytes), CoffeeScript (590 bytes), Rust (532 bytes), C# (488 bytes), Dockerfile (425 bytes), R (362 bytes), Roff (351 bytes), ShaderLab (330 bytes), Swift (284 bytes), Lua (252 bytes), HLSL (184 bytes).'}, {'repo_name': 'facebook/react', 'commit_count': 178, 'language': 'While most of the project is built in JavaScript (6,256,474 bytes), it also incorporates HTML (120,058 bytes), CSS (64,972 bytes), C++ (44,290 bytes), TypeScript (21,454 bytes), CoffeeScript (17,390 bytes), C (5,227 bytes), Shell (2,306 bytes), Python (259 bytes), Makefile (189 bytes).'}, {'repo_name': 'tensorflow/tensorflow', 'commit_count': 156, 'language': 'While most of the project is built in C++ (126,099,822 bytes), it also incorporates Python (42,782,002 bytes), MLIR (11,447,433 bytes), Starlark (7,738,020 bytes), HTML (4,686,483 bytes), Go (2,129,888 bytes), C (1,400,913 bytes), Java (1,074,438 bytes), Jupyter Notebook (792,906 bytes), Shell (621,854 bytes), Dockerfile (416,133 bytes), Objective-C++ (300,213 bytes), CMake (182,430 bytes), Objective-C (172,666 bytes), Smarty (89,538 bytes), Swift (78,435 bytes), Batchfile (36,962 bytes), SourcePawn (14,625 bytes), C# (13,584 bytes), Ruby (9,199 bytes), Perl (7,536 bytes), LLVM (6,536 bytes), Pawn (5,552 bytes), Roff (5,034 bytes), Cython (5,003 bytes), Makefile (2,760 bytes), Vim Snippet (58 bytes).'}]}}
+
+exec(code, env_args)

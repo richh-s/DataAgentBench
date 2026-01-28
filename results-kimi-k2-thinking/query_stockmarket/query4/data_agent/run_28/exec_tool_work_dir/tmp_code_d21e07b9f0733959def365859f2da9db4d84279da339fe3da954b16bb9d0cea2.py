@@ -1,0 +1,33 @@
+code = """import json
+
+# Load data
+nyse_file = locals()['var_functions.query_db:10']
+trade_file = locals()['var_functions.list_db:8']
+
+with open(nyse_file, 'r') as f:
+    nyse_stocks = json.load(f)
+
+with open(trade_file, 'r') as f:
+    all_trade_symbols = json.load(f)
+
+# Create company name lookup
+company_lookup = {stock['Symbol']: stock['Company Description'] for stock in nyse_stocks}
+
+# Get all NYSE symbols
+nyse_symbols = [stock['Symbol'] for stock in nyse_stocks]
+
+print('Total NYSE non-ETF symbols:', len(nyse_symbols))
+print('First 10 symbols:', nyse_symbols[:10])
+
+# Output the list for the next step
+result = json.dumps({
+    'symbols': nyse_symbols,
+    'count': len(nyse_symbols),
+    'company_lookup': {k: company_lookup[k] for k in nyse_symbols[:5]}
+})
+print('__RESULT__:')
+print(result)"""
+
+env_args = {'var_functions.query_db:0': [{'Listing Exchange': 'A', 'count': '28'}, {'Listing Exchange': 'N', 'count': '234'}, {'Listing Exchange': 'P', 'count': '1444'}, {'Listing Exchange': 'Q', 'count': '710'}, {'Listing Exchange': 'Z', 'count': '336'}], 'var_functions.query_db:2': [], 'var_functions.query_db:5': [{'ETF': 'Y'}, {'ETF': 'N'}], 'var_functions.query_db:6': 'file_storage/functions.query_db:6.json', 'var_functions.list_db:8': 'file_storage/functions.list_db:8.json', 'var_functions.query_db:10': 'file_storage/functions.query_db:10.json', 'var_functions.execute_python:18': {'total_stocks': 234, 'symbols': ['AEFC', 'AIN', 'AIV', 'AIZP', 'AJRD', 'AL', 'AMN', 'AMP', 'AMT', 'ARD']}, 'var_functions.query_db:22': [{'Date': '2017-01-03', 'Open': '69.29000091552734', 'High': '70.86000061035156', 'Low': '69.0', 'Close': '70.54000091552734', 'Adj Close': '70.54000091552734', 'Volume': '8112200'}, {'Date': '2017-01-04', 'Open': '71.08000183105469', 'High': '73.06999969482422', 'Low': '70.76000213623047', 'Close': '72.80000305175781', 'Adj Close': '72.80000305175781', 'Volume': '9289500'}, {'Date': '2017-01-05', 'Open': '72.80999755859375', 'High': '73.66000366210938', 'Low': '72.52999877929688', 'Close': '72.79000091552734', 'Adj Close': '72.79000091552734', 'Volume': '4695600'}, {'Date': '2017-01-06', 'Open': '72.88999938964844', 'High': '74.12999725341797', 'Low': '72.55000305175781', 'Close': '73.80000305175781', 'Adj Close': '73.80000305175781', 'Volume': '4466100'}, {'Date': '2017-01-09', 'Open': '74.05000305175781', 'High': '74.44000244140625', 'Low': '73.51000213623047', 'Close': '73.95999908447266', 'Adj Close': '73.95999908447266', 'Volume': '3933100'}], 'var_functions.execute_python:24': {'total_symbols': 2753, 'sample_symbols': ['AAAU', 'AADR', 'AAME', 'AAWW', 'AAXJ', 'ABEQ', 'ABMD', 'ACAD', 'ACES', 'ACIO']}, 'var_functions.execute_python:28': {'nyse_count': 234, 'trade_count': 2753, 'common_count': 234, 'sample_common': ['LB', 'ES', 'MYD', 'GD', 'MLI', 'SCU', 'JMP', 'MED', 'SMP', 'TLYS'], 'lookup_sample': {'LB': "L Brands, Inc. is a retail powerhouse known for its iconic brands, including Victoria's Secret and Bath & Body Works, which dominate the fashion and personal care markets with their trendsetting products.", 'ES': 'Eversource Energy is a leading utility provider that delivers reliable electricity and natural gas services to millions of customers across the northeastern United States.', 'MYD': 'Blackrock MuniYield Fund, Inc. offers investors access to a diversified portfolio of municipal bonds, providing a way to generate tax-free income through its expertly managed fund.'}}}
+
+exec(code, env_args)

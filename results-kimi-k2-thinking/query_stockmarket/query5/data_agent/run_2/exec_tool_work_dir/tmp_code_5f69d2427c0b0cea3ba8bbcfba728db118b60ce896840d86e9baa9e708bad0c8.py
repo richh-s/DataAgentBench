@@ -1,0 +1,32 @@
+code = """import json
+
+# Load first batch results
+batch1_result = locals()['var_functions.query_db:32']
+if isinstance(batch1_result, str):
+    with open(batch1_result, 'r') as f:
+        batch1_data = json.load(f)
+else:
+    batch1_data = batch1_result
+
+# Load second batch results (partial)  
+batch2_result = locals()['var_functions.query_db:36']
+if isinstance(batch2_result, str):
+    with open(batch2_result, 'r') as f:
+        batch2_data = json.load(f)
+else:
+    batch2_data = batch2_result
+
+# Combine results
+combined_results = batch1_data + batch2_data
+
+print('__RESULT__:')
+print(json.dumps({
+    'batch1_count': len(batch1_data),
+    'batch2_count': len(batch2_data),
+    'total_so_far': len(combined_results),
+    'sample_results': combined_results[:5]
+}))"""
+
+env_args = {'var_functions.query_db:0': 'file_storage/functions.query_db:0.json', 'var_functions.execute_python:2': {'total_symbols': 86, 'sample_symbols': ['AGMH', 'ALACU', 'AMHC', 'ANDA', 'APEX', 'BCLI', 'BHAT', 'BIOC', 'BKYI', 'BLFS']}, 'var_functions.list_db:5': 'file_storage/functions.list_db:5.json', 'var_functions.execute_python:6': [['AGMH', 'AGM Group Holdings Inc. specializes in providing financial technology solutions and services, focusing on enhancing efficiency and performance for businesses in the financial sector.'], ['ALACU', 'Alberton Acquisition Corporation is a special purpose acquisition company focused on merging with or acquiring promising businesses to bring them public and enhance their growth potential.'], ['AMHC', 'Amplitude Healthcare Acquisition Corporation is a special purpose acquisition company focused on identifying and merging with promising healthcare businesses to accelerate their growth and innovation.'], ['ANDA', 'Andina Acquisition Corp. III is a special purpose acquisition company focused on identifying and partnering with promising businesses in Latin America to facilitate their growth and expansion.'], ['APEX', 'Apex Global Brands Inc. specializes in creating and marketing a diverse portfolio of fashion and lifestyle brands, connecting consumers with trendy and innovative products worldwide.'], ['BCLI', 'Brainstorm Cell Therapeutics Inc. is pioneering advancements in regenerative medicine, focusing on developing innovative stem cell therapies for neurodegenerative diseases.'], ['BHAT', 'Blue Hat Interactive Entertainment Technology specializes in developing immersive gaming experiences and interactive entertainment solutions, captivating audiences worldwide with their innovative digital platforms.'], ['BIOC', 'Biocept, Inc. specializes in developing advanced diagnostic solutions that help detect and analyze cancer cells, driving innovation in personalized medicine and cancer treatment.'], ['BKYI', 'BIO-key International, Inc. specializes in advanced biometric solutions, providing secure and convenient identity verification systems for enterprises and consumers alike.'], ['BLFS', 'BioLife Solutions, Inc. specializes in developing and manufacturing biopreservation tools that enhance the storage and transport of cells and tissues, playing a crucial role in advancing regenerative medicine and cell therapy.']], 'var_functions.execute_python:8': {'total_nasdaq_cap_symbols': 86, 'total_available_tables': 86, 'sample_symbols': ['VRRM', 'EXPC', 'VERB', 'FNCB', 'ALACU', 'CUBA', 'HQI', 'VMD', 'PLIN', 'ISNS']}, 'var_functions.execute_python:10': {'message': 'Will analyze 86 NASDAQ Capital Market symbols', 'sample_symbols': ['AGMH', 'ALACU', 'AMHC', 'ANDA', 'APEX']}, 'var_functions.execute_python:12': ['AGMH', 'ALACU', 'AMHC', 'ANDA', 'APEX'], 'var_functions.query_db:14': 'file_storage/functions.query_db:14.json', 'var_functions.execute_python:18': {'total_symbols': 86, 'symbols_with_tables': 86, 'sample_symbols': ['AGMH', 'ALACU', 'AMHC', 'ANDA', 'APEX']}, 'var_functions.query_db:20': [{'high_volatility_days': '13'}], 'var_functions.execute_python:22': {'total_symbols': 86, 'sample_queries': [{'symbol': 'AGMH', 'company': 'AGM Group Holdings Inc. specializes in providing financial technology solutions and services, focusing on enhancing efficiency and performance for businesses in the financial sector.'}, {'symbol': 'ALACU', 'company': 'Alberton Acquisition Corporation is a special purpose acquisition company focused on merging with or acquiring promising businesses to bring them public and enhance their growth potential.'}, {'symbol': 'AMHC', 'company': 'Amplitude Healthcare Acquisition Corporation is a special purpose acquisition company focused on identifying and merging with promising healthcare businesses to accelerate their growth and innovation.'}]}, 'var_functions.query_db:24': [{'high_volatility_days': '0'}], 'var_functions.execute_python:28': {'total_symbols': 86, 'query_preview': "SELECT 'AGMH' as Symbol, COUNT(*) as high_volatility_days FROM AGMH WHERE Date >= '2019-01-01' AND Date <= '2019-12-31' AND ((High - Low) > (0.20 * Low)) UNION ALL SELECT 'ALACU' as Symbol, COUNT(*) as high_volatility_days FROM ALACU WHERE Date >= '2019-01-01' AND Date <= '2019-12-31' AND ((High - Low) > (0.20 * Low)) UNION ALL SELECT 'AMHC' as Symbol, COUNT(*) as high_volatility_days FROM AMHC WH...", 'sample_symbols': ['AGMH', 'ALACU', 'AMHC']}, 'var_functions.execute_python:30': {'total_symbols': 86, 'total_batches': 6, 'batch_size': 15, 'first_batch': ['AGMH', 'ALACU', 'AMHC', 'ANDA', 'APEX', 'BCLI', 'BHAT', 'BIOC', 'BKYI', 'BLFS', 'BOSC', 'BOTJ', 'BWEN', 'CBAT', 'CCCL']}, 'var_functions.query_db:32': [{'Symbol': 'AGMH', 'high_volatility_days': '13'}, {'Symbol': 'ALACU', 'high_volatility_days': '0'}, {'Symbol': 'AMHC', 'high_volatility_days': '0'}, {'Symbol': 'ANDA', 'high_volatility_days': '0'}, {'Symbol': 'APEX', 'high_volatility_days': '15'}, {'Symbol': 'BCLI', 'high_volatility_days': '0'}, {'Symbol': 'BHAT', 'high_volatility_days': '10'}, {'Symbol': 'BIOC', 'high_volatility_days': '21'}, {'Symbol': 'BKYI', 'high_volatility_days': '16'}, {'Symbol': 'BLFS', 'high_volatility_days': '0'}, {'Symbol': 'BOSC', 'high_volatility_days': '3'}, {'Symbol': 'BOTJ', 'high_volatility_days': '0'}, {'Symbol': 'BWEN', 'high_volatility_days': '5'}, {'Symbol': 'CBAT', 'high_volatility_days': '23'}, {'Symbol': 'CCCL', 'high_volatility_days': '13'}], 'var_functions.query_db:36': [{'Symbol': 'CDMOP', 'high_volatility_days': '0'}, {'Symbol': 'CEMI', 'high_volatility_days': '3'}, {'Symbol': 'CFBK', 'high_volatility_days': '0'}, {'Symbol': 'CFFA', 'high_volatility_days': '0'}, {'Symbol': 'CLRB', 'high_volatility_days': '14'}]}
+
+exec(code, env_args)

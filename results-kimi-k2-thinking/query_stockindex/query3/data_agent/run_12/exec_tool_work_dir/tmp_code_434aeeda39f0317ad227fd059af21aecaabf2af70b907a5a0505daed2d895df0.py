@@ -1,0 +1,22 @@
+code = """import json
+import pandas as pd
+from datetime import datetime
+
+# Load the data from the file
+file_path = var_functions.query_db:8
+with open(file_path, 'r') as f:
+    data = json.load(f)
+
+# Convert to DataFrame
+df = pd.DataFrame(data)
+print(f'Dataset shape: {df.shape}')
+print(f'Columns: {df.columns.tolist()}')
+print(f'Unique indices: {df["Index"].nunique()}')
+print(f'Date range: {df["Date"].min()} to {df["Date"].max()}')
+print('')
+print('Sample data:')
+print(df.head(10))"""
+
+env_args = {'var_functions.list_db:0': ['index_info'], 'var_functions.query_db:2': [{'Exchange': 'New York Stock Exchange', 'Currency': 'USD'}, {'Exchange': 'NASDAQ', 'Currency': 'USD'}, {'Exchange': 'Hong Kong Stock Exchange', 'Currency': 'HKD'}, {'Exchange': 'Shanghai Stock Exchange', 'Currency': 'CNY'}, {'Exchange': 'Tokyo Stock Exchange', 'Currency': 'JPY'}, {'Exchange': 'Euronext', 'Currency': 'EUR'}, {'Exchange': 'Shenzhen Stock Exchange', 'Currency': 'CNY'}, {'Exchange': 'Toronto Stock Exchange', 'Currency': 'CAD'}, {'Exchange': 'National Stock Exchange of India', 'Currency': 'INR'}, {'Exchange': 'Frankfurt Stock Exchange', 'Currency': 'EUR'}, {'Exchange': 'Korea Exchange', 'Currency': 'KRW'}, {'Exchange': 'SIX Swiss Exchange', 'Currency': 'CHF'}, {'Exchange': 'Taiwan Stock Exchange', 'Currency': 'TWD'}, {'Exchange': 'Johannesburg Stock Exchange', 'Currency': 'ZAR'}], 'var_functions.list_db:5': ['index_trade'], 'var_functions.query_db:6': [{'Index': 'N225', 'count': '7979'}, {'Index': 'NYA', 'count': '7960'}, {'Index': 'IXIC', 'count': '7351'}, {'Index': 'GSPTSE', 'count': '6506'}, {'Index': 'HSI', 'count': '5604'}, {'Index': 'GDAXI', 'count': '5590'}, {'Index': 'SSMI', 'count': '5188'}, {'Index': 'TWII', 'count': '4385'}, {'Index': '399001.SZ', 'count': '4355'}, {'Index': '000001.SS', 'count': '4354'}, {'Index': 'N100', 'count': '4245'}, {'Index': 'NSEI', 'count': '2577'}, {'Index': 'J203.JO', 'count': '1854'}], 'var_functions.query_db:8': 'file_storage/functions.query_db:8.json'}
+
+exec(code, env_args)

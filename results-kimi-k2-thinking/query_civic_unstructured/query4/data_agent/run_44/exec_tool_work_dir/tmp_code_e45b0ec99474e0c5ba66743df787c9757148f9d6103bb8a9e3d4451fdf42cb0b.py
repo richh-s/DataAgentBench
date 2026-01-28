@@ -1,0 +1,67 @@
+code = """import json
+import re
+
+# Load the filtered documents
+file_path = locals()['var_functions.query_db:32']
+with open(file_path, 'r') as f:
+    spring_docs = json.load(f)
+
+project_names = []
+
+# Extract project names systematically
+for doc in spring_docs:
+    text = doc['text']
+    lines = text.split('\n')
+    
+    for i in range(len(lines)):
+        line = lines[i].strip()
+        
+        # Skip irrelevant lines
+        if not line or len(line) < 5: continue
+        if line.startswith('(') or line.startswith('•') or line.startswith('□'): continue
+        
+        # Look ahead for Spring 2022 references
+        if i + 8 < len(lines):
+            upcoming_text = '\n'.join(lines[i:i+8])
+            
+            # Check if this block contains Spring 2022 references
+            if 'Spring' in upcoming_text and '2022' in upcoming_text:
+                # Clean the line
+                clean_name = line.replace('•', '').replace('·', '').strip()
+                
+                # Filter out non-project names
+                if (len(clean_name) > 5 and len(clean_name) < 150 and
+                    not clean_name.isupper() and 'Updates' not in clean_name and
+                    'Schedule' not in clean_name and 'Page' not in clean_name and
+                    'Agenda' not in clean_name):
+                    
+                    # Additional filtering: exclude section headers
+                    section_headers = [
+                        'Capital Improvement Projects',
+                        'Disaster Projects',
+                        '(Design)',
+                        '(Construction)',
+                        '(Not Started)',
+                        '(Completed)'
+                    ]
+                    
+                    if not any(header in clean_name for header in section_headers):
+                        project_names.append(clean_name)
+
+# Remove duplicates
+unique_projects = list(set(project_names))
+unique_projects.sort()
+
+print('Spring 2022 project count: ' + str(len(unique_projects)))
+print('Projects:')
+for proj in unique_projects:
+    print('  ' + proj)
+
+# Save results
+print('__RESULT__:')
+result = json.dumps({'count': len(unique_projects), 'projects': unique_projects})
+print(result)"""
+
+env_args = {'var_functions.query_db:0': 'file_storage/functions.query_db:0.json', 'var_functions.query_db:10': [{'Funding_ID': '1', 'Project_Name': '2021 Annual Street Maintenance', 'Funding_Source': 'Public-Private Partnership (PPP)', 'Amount': '24000'}, {'Funding_ID': '2', 'Project_Name': '2022 Annual Street Maintenance', 'Funding_Source': 'Government Grant', 'Amount': '45000'}, {'Funding_ID': '3', 'Project_Name': '2022 Morning View Resurfacing & Storm Drain Improvements', 'Funding_Source': 'State Development Grant', 'Amount': '38000'}, {'Funding_ID': '4', 'Project_Name': 'Annual Street Maintenance', 'Funding_Source': 'Corporate Sponsorship', 'Amount': '23000'}, {'Funding_ID': '5', 'Project_Name': 'Birdview Avenue Improvements', 'Funding_Source': 'National Foundation Fund', 'Amount': '79000'}, {'Funding_ID': '6', 'Project_Name': 'Birdview Avenue Improvements (CalOES Project)', 'Funding_Source': 'International Aid', 'Amount': '85000'}, {'Funding_ID': '7', 'Project_Name': 'Birdview Avenue Improvements (FEMA/CalOES Project)', 'Funding_Source': 'Research Institution Funding', 'Amount': '14000'}, {'Funding_ID': '8', 'Project_Name': 'Bluffs Park Shade Structure', 'Funding_Source': 'Government Grant', 'Amount': '21000'}, {'Funding_ID': '9', 'Project_Name': 'Bluffs Park Workout Station', 'Funding_Source': 'University Research Fund', 'Amount': '39000'}, {'Funding_ID': '10', 'Project_Name': 'Broad Beach Road Water Quality Infrastructure Repairs', 'Funding_Source': 'International Organization Grant', 'Amount': '87000'}], 'var_functions.query_db:18': 'file_storage/functions.query_db:18.json', 'var_functions.execute_python:30': {'doc_count': 5, 'spring_count': 5}, 'var_functions.query_db:32': 'file_storage/functions.query_db:32.json'}
+
+exec(code, env_args)

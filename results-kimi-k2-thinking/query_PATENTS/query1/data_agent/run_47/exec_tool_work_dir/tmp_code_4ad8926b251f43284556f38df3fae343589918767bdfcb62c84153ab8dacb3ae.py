@@ -1,0 +1,19 @@
+code = """import json
+import pandas as pd
+from datetime import datetime
+import re
+
+# Read the data file
+data_file = var_functions.query_db:5
+with open(data_file, 'r') as f:
+    raw_data = json.load(f)
+
+print(f"__RESULT__:")
+print(f"Total records: {len(raw_data)}")
+print(f"Sample record keys: {raw_data[0].keys()}")
+print(f"Sample CPC data: {raw_data[0]['cpc'][:200]}")
+print(f"Sample publication_date: {raw_data[0]['publication_date']}")"""
+
+env_args = {'var_functions.list_db:0': ['publicationinfo'], 'var_functions.query_db:2': 'file_storage/functions.query_db:2.json', 'var_functions.query_db:5': 'file_storage/functions.query_db:5.json'}
+
+exec(code, env_args)

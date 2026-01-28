@@ -1,0 +1,108 @@
+code = """import json
+import pandas as pd
+import re
+import os
+
+# Get the file paths from the storage
+clinical_file_path = var_functions.query_db:58
+mutation_file_path = var_functions.query_db:60
+
+print('Clinical file path:', clinical_file_path)
+print('Mutation file path:', mutation_file_path)
+
+# Check if files exist
+print('Clinical file exists:', os.path.exists(clinical_file_path))
+print('Mutation file exists:', os.path.exists(mutation_file_path))
+
+# Load the data
+with open(clinical_file_path, 'r') as f:
+    brca_clinical = json.load(f)
+
+with open(mutation_file_path, 'r') as f:
+    cdh1_mutations = json.load(f)
+
+print('Loaded', len(brca_clinical), 'BRCA clinical records')
+print('Loaded', len(cdh1_mutations), 'CDH1 mutation records')
+
+# Convert to DataFrames
+df_clinical = pd.DataFrame(brca_clinical)
+df_mutations = pd.DataFrame(cdh1_mutations)
+
+# Extract patient barcode from clinical descriptions
+def extract_barcode(desc):
+    if not desc:
+        return None
+    match = re.search(r'(TCGA-[A-Z0-9]{2}-[A-Z0-9]{4})', desc)
+    return match.group(1) if match else None
+
+df_clinical['patient_barcode'] = df_clinical['Patient_description'].apply(extract_barcode)
+
+print('Clinical shape:', df_clinical.shape)
+print('Mutation shape:', df_mutations.shape)
+print('Unique clinical barcodes:', df_clinical['patient_barcode'].nunique())
+print('Unique mutation barcodes:', df_mutations['ParticipantBarcode'].nunique())
+
+# Check for barcode overlap
+clinical_barcodes = set(df_clinical['patient_barcode'].dropna())
+mutation_barcodes = set(df_mutations['ParticipantBarcode'])
+common_barcodes = clinical_barcodes.intersection(mutation_barcodes)
+
+print('Common barcodes (clinical & mutation):', len(common_barcodes))
+
+# Count histological types
+histology_counts = df_clinical['histological_type'].value_counts()
+print('\nTop histological types:')
+print(histology_counts.head())
+
+# Calculate CDH1 mutation rate for each histological type
+results = []
+for hist_type in histology_counts.index:
+    if pd.isna(hist_type) or hist_type.strip() == '' or hist_type == 'Other  specify':
+        continue
+        
+    # Get patients with this histological type
+    patients_with_hist = df_clinical[df_clinical['histological_type'] == hist_type]['patient_barcode'].dropna()
+    total_patients = len(patients_with_hist)
+    
+    # Count how many have CDH1 mutations
+    mutated_patients = set(patients_with_hist).intersection(mutation_barcodes)
+    num_mutated = len(mutated_patients)
+    
+    # Calculate percentage
+    mutation_rate = (num_mutated / total_patients * 100) if total_patients > 0 else 0
+    
+    results.append({
+        'histological_type': hist_type,
+        'total_patients': total_patients,
+        'mutated_patients': num_mutated,
+        'mutation_rate_percent': round(mutation_rate, 2)
+    })
+
+# Sort by mutation rate
+df_results = pd.DataFrame(results).sort_values('mutation_rate_percent', ascending=False)
+
+print('\nCDH1 mutation rates by histological type:')
+print(df_results.head(10))
+
+# Get top 3 histological types
+top_3 = df_results.head(3)
+
+print('\nTop 3 histological types by CDH1 mutation rate:')
+for idx, row in top_3.iterrows():
+    print(f"{row['histological_type']}: {row['mutation_rate_percent']}% ({row['mutated_patients']}/{row['total_patients']} patients)")
+
+output = {
+    'top_3_histological_types': top_3.to_dict('records'),
+    'analysis_summary': {
+        'total_patients_analyzed': len(df_clinical),
+        'total_cdh1_mutations': len(df_mutations),
+        'patients_with_cdh1_and_clinical': len(common_barcodes)
+    }
+}
+
+print('__RESULT__:')
+print(json.dumps(output))"""
+
+env_args = {'var_functions.list_db:0': ['clinical_info'], 'var_functions.query_db:2': 'file_storage/functions.query_db:2.json', 'var_functions.list_db:5': ['Mutation_Data', 'RNASeq_Expression'], 'var_functions.query_db:10': [], 'var_functions.query_db:12': [], 'var_functions.query_db:15': [{'barcode': 'None', 'cancer_type': 'None', 'histological_type': 'None'}, {'barcode': 'None', 'cancer_type': 'UQ', 'histological_type': 'Other  specify'}, {'barcode': 'TCGA-60-2720', 'cancer_type': ' corresponds to a FEMALE patient diagnosed with Lung squamous cell carcinoma', 'histological_type': 'Lung Squamous Cell Carcinoma- Not Otherwise Specified (NOS)'}, {'barcode': 'TCGA-55-7281', 'cancer_type': 'ab', 'histological_type': 'Lung Adenocarcinoma- Not Otherwise Specified (NOS)'}, {'barcode': 'None', 'cancer_type': 'AAKG', 'histological_type': 'Non-Seminoma; Embryonal Carcinoma'}, {'barcode': 'TCGA-94-7943', 'cancer_type': ' corresponds to a MALE patient diagnosed with Lung squamous cell carcinoma', 'histological_type': 'Lung Squamous Cell Carcinoma- Not Otherwise Specified (NOS)'}, {'barcode': 'None', 'cancer_type': 'IM', 'histological_type': 'Other  specify'}, {'barcode': 'None', 'cancer_type': 'PL', 'histological_type': 'Cervical Squamous Cell Carcinoma'}, {'barcode': 'None', 'cancer_type': 'YO', 'histological_type': 'None'}, {'barcode': 'TCGA-60-2708', 'cancer_type': 'In the Lung squamous cell carcinoma dataset', 'histological_type': 'Lung Squamous Cell Carcinoma- Not Otherwise Specified (NOS)'}, {'barcode': 'None', 'cancer_type': 'AAMF', 'histological_type': 'Muscle invasive urothelial carcinoma (pT2 or above)'}, {'barcode': 'None', 'cancer_type': 'AADJ', 'histological_type': 'Hepatocellular Carcinoma'}, {'barcode': 'TCGA-95-8494', 'cancer_type': 'None', 'histological_type': 'Lung Adenocarcinoma- Not Otherwise Specified (NOS)'}, {'barcode': 'None', 'cancer_type': 'a', 'histological_type': 'Kidney Chromophobe'}, {'barcode': 'None', 'cancer_type': 'cac is a MALE case of Brain lower grade glioma', 'histological_type': 'Oligoastrocytoma'}, {'barcode': 'None', 'cancer_type': 'c', 'histological_type': 'Endometrioid endometrial adenocarcinoma'}, {'barcode': 'None', 'cancer_type': 'FR', 'histological_type': 'Infiltrating Ductal Carcinoma'}, {'barcode': 'None', 'cancer_type': 'BCF is a MALE case of Esophageal carcinoma', 'histological_type': 'Esophagus Adenocarcinoma  NOS'}, {'barcode': 'None', 'cancer_type': 'MALE', 'histological_type': 'Thymoma; Type B2'}, {'barcode': 'None', 'cancer_type': 'None', 'histological_type': 'Kidney Chromophobe'}], 'var_functions.query_db:16': [], 'var_functions.query_db:18': [], 'var_functions.query_db:20': 'file_storage/functions.query_db:20.json', 'var_functions.query_db:30': [{'ParticipantBarcode': 'TCGA-AX-A3G8', 'Hugo_Symbol': 'GLI3'}, {'ParticipantBarcode': 'TCGA-EO-A22U', 'Hugo_Symbol': 'MUM1L1'}, {'ParticipantBarcode': 'TCGA-02-2466', 'Hugo_Symbol': 'CSF2RA'}, {'ParticipantBarcode': 'TCGA-02-2466', 'Hugo_Symbol': 'CMC4'}, {'ParticipantBarcode': 'TCGA-02-2466', 'Hugo_Symbol': 'THADA'}, {'ParticipantBarcode': 'TCGA-02-2466', 'Hugo_Symbol': 'OBSCN'}, {'ParticipantBarcode': 'TCGA-02-2466', 'Hugo_Symbol': 'RIMS2'}, {'ParticipantBarcode': 'TCGA-02-2466', 'Hugo_Symbol': 'TMEM53'}, {'ParticipantBarcode': 'TCGA-04-1331', 'Hugo_Symbol': 'CCDC102A'}, {'ParticipantBarcode': 'TCGA-04-1331', 'Hugo_Symbol': 'WNT7A'}], 'var_functions.query_db:32': [{'Patient_description': 'In the Ovarian serous cystadenocarcinoma dataset, patient TCGA-31-1953 (UUID 61feee94-3ac9-42fe-aaa3-dc6a3efe563c) is recorded as a FEMALE with vital status: Alive.', 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': 'Patient TCGA-36-1576 (UUID 3445c524-5a37-40b6-8614-956d76eed939) is a FEMALE diagnosed with Ovarian serous cystadenocarcinoma. Current vital status: Alive.', 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': 'Record fdd4adb8-9295-480a-9352-305b5eb51187 refers to patient TCGA-25-2408, a FEMALE diagnosed with Ovarian serous cystadenocarcinoma. Vital status recorded as Dead.', 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': 'Record 6f25001a-f890-4fd0-a994-e62a9ea5c6f3 refers to patient TCGA-29-2427, a FEMALE diagnosed with Ovarian serous cystadenocarcinoma. Vital status recorded as Alive.', 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': 'Case 9446e349-71e6-455a-aa8f-53ec96597146, linked to barcode TCGA-10-0933, corresponds to a FEMALE patient diagnosed with Ovarian serous cystadenocarcinoma, with vital status Dead.', 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': "Patient TCGA-23-1124, registered under UUID 8a6d2ce3-cc57-451b-9b07-8263782aa23f, belongs to the Ovarian serous cystadenocarcinoma cohort. This FEMALE patient's vital status is Dead.", 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': 'In the Ovarian serous cystadenocarcinoma dataset, patient TCGA-23-2641 (UUID 49e5ee61-a1c9-4038-84ac-92683e573a65) is recorded as a FEMALE with vital status: Alive.', 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': 'Patient TCGA-23-1118 (FEMALE, UUID 700e91bb-d675-41b2-bbbd-935767c7b447) is enrolled in the study of Ovarian serous cystadenocarcinoma. Vital status: Alive.', 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': 'In the Ovarian serous cystadenocarcinoma dataset, patient TCGA-23-1120 (UUID fdf83fdf-dfbb-4306-9a1b-b4487d18b402) is recorded as a FEMALE with vital status: Alive.', 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': 'The individual with barcode TCGA-23-2081 and UUID 41178cbc-db73-4007-b5d8-febebf7f578d is a FEMALE case of Ovarian serous cystadenocarcinoma, documented with vital status = Dead.', 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': 'Case 1db60f09-7f5a-4f21-8003-06a6abc781db, linked to barcode TCGA-29-1694, corresponds to a FEMALE patient diagnosed with Ovarian serous cystadenocarcinoma, with vital status Dead.', 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': 'In the Ovarian serous cystadenocarcinoma dataset, patient TCGA-WR-A838 (UUID B8023162-5E82-40E6-AD8C-8ACF81821F01) is recorded as a FEMALE with vital status: Dead.', 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': "Patient TCGA-31-1955, registered under UUID cce34351-1700-405b-818f-a598f63a33e8, belongs to the Ovarian serous cystadenocarcinoma cohort. This FEMALE patient's vital status is Alive.", 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': 'Patient TCGA-32-4209 (MALE, UUID 5438322c-9db0-4974-ba01-801020559f97) is enrolled in the study of Glioblastoma multiforme. Vital status: Dead.', 'histological_type': 'Treated primary GBM'}, {'Patient_description': 'In the Ovarian serous cystadenocarcinoma dataset, patient TCGA-29-1696 (UUID 8a98a6e6-b763-4824-858b-fd2738e6c9a3) is recorded as a FEMALE with vital status: Dead.', 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': 'Record 40635bf3-d8ba-4833-b623-547e55e5d07e refers to patient TCGA-29-2425, a FEMALE diagnosed with Ovarian serous cystadenocarcinoma. Vital status recorded as Alive.', 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': 'Case 05019013-7ea5-4905-ac79-901146ba2ee2, linked to barcode TCGA-29-1688, corresponds to a FEMALE patient diagnosed with Ovarian serous cystadenocarcinoma, with vital status Dead.', 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': 'Record 13319c20-02f6-4b5f-b24f-3d8f4084094c refers to patient TCGA-25-1318, a FEMALE diagnosed with Ovarian serous cystadenocarcinoma. Vital status recorded as Dead.', 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': 'Record 79fd602b-3e8e-4353-aa78-4f5f170b607d refers to patient TCGA-25-1328, a FEMALE diagnosed with Ovarian serous cystadenocarcinoma. Vital status recorded as Dead.', 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': 'The individual with barcode TCGA-57-1584 and UUID ed21615c-0de3-421c-9e8d-8996026c4431 is a FEMALE case of Ovarian serous cystadenocarcinoma, documented with vital status = Alive.', 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': 'Record 92960f76-0242-4a1c-bf7d-014c2f720219 refers to patient TCGA-29-1692, a FEMALE diagnosed with Ovarian serous cystadenocarcinoma. Vital status recorded as Dead.', 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': 'Record b520aae5-65a6-4b27-bc2a-10b02c7b1aeb refers to patient TCGA-25-1322, a FEMALE diagnosed with Ovarian serous cystadenocarcinoma. Vital status recorded as Dead.', 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': 'Patient TCGA-04-1346 (UUID 25a0a9e6-4f5b-45d8-8f34-abfd31d5ff1b) is a FEMALE diagnosed with Ovarian serous cystadenocarcinoma. Current vital status: Alive.', 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': 'Record e0502c47-3234-4609-a8d5-730a9e6eb5b8 refers to patient TCGA-04-1360, a FEMALE diagnosed with Ovarian serous cystadenocarcinoma. Vital status recorded as Alive.', 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': "Patient TCGA-36-1581, registered under UUID ef5e85cf-2d82-4d52-a02c-fed5c76e4cec, belongs to the Ovarian serous cystadenocarcinoma cohort. This FEMALE patient's vital status is Alive.", 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': 'In the Ovarian serous cystadenocarcinoma dataset, patient TCGA-09-1661 (UUID f8e9d538-7291-4fe7-b3f2-d01676a027f9) is recorded as a FEMALE with vital status: Dead.', 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': 'Case F1CB3D48-1415-408D-89D1-DFDCC5924963, linked to barcode TCGA-29-A5NZ, corresponds to a FEMALE patient diagnosed with Ovarian serous cystadenocarcinoma, with vital status Dead.', 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': "Patient TCGA-57-1994, registered under UUID 602e2934-223a-44db-8c33-06eb05d72f94, belongs to the Ovarian serous cystadenocarcinoma cohort. This FEMALE patient's vital status is Alive.", 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': 'Clinical entry 5554a003-da6f-4ddf-9f05-6785987ac46c identifies patient TCGA-23-2643, a FEMALE subject with Ovarian serous cystadenocarcinoma. Their current vital status is Alive.', 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': 'Patient TCGA-25-1628 (FEMALE, UUID 3f917550-89a6-404b-94df-938c99121411) is enrolled in the study of Ovarian serous cystadenocarcinoma. Vital status: Dead.', 'histological_type': 'Serous Cystadenocarcinoma'}], 'var_functions.query_db:34': 'file_storage/functions.query_db:34.json', 'var_functions.query_db:36': [{'Patient_description': 'Clinical entry D13FB44B-291B-4EA4-920C-142DAA8D1989 identifies patient TCGA-AC-A5EH, a FEMALE subject with Breast invasive carcinoma. Their current vital status is Alive.', 'histological_type': 'Infiltrating Ductal Carcinoma', 'vital_status': 'Unknown'}, {'Patient_description': 'Record 09A5E9FD-D816-4F8C-BAA9-0E40BA607B16 refers to patient TCGA-LL-A7SZ, a FEMALE diagnosed with Breast invasive carcinoma. Vital status recorded as Alive.', 'histological_type': 'Infiltrating Ductal Carcinoma', 'vital_status': 'Unknown'}, {'Patient_description': "Patient TCGA-AN-A0FY, registered under UUID de75d0b9-0f47-4732-8df5-05c350cfcd32, belongs to the Breast invasive carcinoma cohort. This FEMALE patient's vital status is Alive.", 'histological_type': 'Infiltrating Ductal Carcinoma', 'vital_status': 'Unknown'}, {'Patient_description': 'Patient TCGA-AC-A2FB (UUID 02BBB632-0F7F-439D-B8F0-C86A06237424) is a FEMALE diagnosed with Breast invasive carcinoma. Current vital status: Alive.', 'histological_type': 'Infiltrating Lobular Carcinoma', 'vital_status': 'Alive'}, {'Patient_description': 'The individual with barcode TCGA-AO-A1KR and UUID b7f74ae1-6f58-447c-be50-a7666eb19d9a is a FEMALE case of Breast invasive carcinoma, documented with vital status = Alive.', 'histological_type': 'Infiltrating Ductal Carcinoma', 'vital_status': 'Alive'}, {'Patient_description': 'Clinical entry C07B122E-AC50-4DB2-ADD2-5617A5D0E976 identifies patient TCGA-GM-A2DA, a FEMALE subject with Breast invasive carcinoma. Their current vital status is Dead.', 'histological_type': 'Infiltrating Ductal Carcinoma', 'vital_status': 'Unknown'}, {'Patient_description': 'The individual with barcode TCGA-3C-AAAU and UUID 6E7D5EC6-A469-467C-B748-237353C23416 is a FEMALE case of Breast invasive carcinoma, documented with vital status = Alive.', 'histological_type': 'Infiltrating Lobular Carcinoma', 'vital_status': 'Alive'}, {'Patient_description': "Patient TCGA-A7-A26I, registered under UUID b2ecbc0f-2c30-4200-8d5e-7b95424bcadb, belongs to the Breast invasive carcinoma cohort. This FEMALE patient's vital status is Alive.", 'histological_type': 'Infiltrating Ductal Carcinoma', 'vital_status': 'Unknown'}, {'Patient_description': 'Record 523E24A2-51B9-4658-BE2F-42E5FCCEBB17 refers to patient TCGA-A7-A5ZW, a FEMALE diagnosed with Breast invasive carcinoma. Vital status recorded as Alive.', 'histological_type': 'Infiltrating Ductal Carcinoma', 'vital_status': 'Unknown'}, {'Patient_description': 'The individual with barcode TCGA-C8-A26Z and UUID dc11b1c7-1f00-4813-b4b5-ecf776b2eb37 is a FEMALE case of Breast invasive carcinoma, documented with vital status = Alive.', 'histological_type': 'Infiltrating Ductal Carcinoma', 'vital_status': 'Alive'}, {'Patient_description': 'The individual with barcode TCGA-EW-A6SA and UUID ABA5F46A-E67A-4CD2-9C52-C0686968FF04 is a MALE case of Breast invasive carcinoma, documented with vital status = Alive.', 'histological_type': 'Infiltrating Ductal Carcinoma', 'vital_status': 'Alive'}, {'Patient_description': 'The individual with barcode TCGA-C8-A273 and UUID 5a5f0f48-2b13-4e78-b130-901b85d9a7f3 is a FEMALE case of Breast invasive carcinoma, documented with vital status = Alive.', 'histological_type': 'Infiltrating Ductal Carcinoma', 'vital_status': 'Alive'}, {'Patient_description': 'Record c2a742fe-3e8b-4210-85a6-7191a1123609 refers to patient TCGA-AN-A0FN, a FEMALE diagnosed with Breast invasive carcinoma. Vital status recorded as Alive.', 'histological_type': 'Infiltrating Lobular Carcinoma', 'vital_status': 'Unknown'}, {'Patient_description': "Patient TCGA-AN-A0FD, registered under UUID c6086936-7544-4da0-8c0c-114166848483, belongs to the Breast invasive carcinoma cohort. This FEMALE patient's vital status is Alive.", 'histological_type': 'Infiltrating Ductal Carcinoma', 'vital_status': 'Unknown'}, {'Patient_description': 'Clinical entry 10c9be1e-2cc0-45e4-8d2c-c013ea63ef05 identifies patient TCGA-AN-A0FS, a FEMALE subject with Breast invasive carcinoma. Their current vital status is Alive.', 'histological_type': 'Infiltrating Lobular Carcinoma', 'vital_status': 'Unknown'}, {'Patient_description': 'Record b5b99291-507e-4b68-a039-9a0f571f55df refers to patient TCGA-AO-A12H, a FEMALE diagnosed with Breast invasive carcinoma. Vital status recorded as Alive.', 'histological_type': 'Other  specify', 'vital_status': 'Unknown'}, {'Patient_description': 'Record 3e9f93c0-aa79-4b4c-bd6c-b3325912362a refers to patient TCGA-AN-A0AL, a FEMALE diagnosed with Breast invasive carcinoma. Vital status recorded as Alive.', 'histological_type': 'Infiltrating Ductal Carcinoma', 'vital_status': 'Unknown'}, {'Patient_description': 'Patient TCGA-AC-A3YI (UUID A45D296E-EFC0-479E-B2F6-BAD834668CDF) is a FEMALE diagnosed with Breast invasive carcinoma. Current vital status: Alive.', 'histological_type': 'Infiltrating Lobular Carcinoma', 'vital_status': 'Alive'}, {'Patient_description': "Patient TCGA-C8-A137, registered under UUID 03ab1e9f-4918-404d-b178-3a4fd929c5e8, belongs to the Breast invasive carcinoma cohort. This FEMALE patient's vital status is Alive.", 'histological_type': 'Infiltrating Ductal Carcinoma', 'vital_status': 'Unknown'}, {'Patient_description': 'Clinical entry 0DD8DBC1-C48B-4E7C-B401-57101F724967 identifies patient TCGA-S3-AA11, a FEMALE subject with Breast invasive carcinoma. Their current vital status is Alive.', 'histological_type': 'Infiltrating Ductal Carcinoma', 'vital_status': 'Unknown'}], 'var_functions.query_db:38': 'file_storage/functions.query_db:38.json', 'var_functions.query_db:40': 'file_storage/functions.query_db:40.json', 'var_functions.query_db:42': 'file_storage/functions.query_db:42.json', 'var_functions.query_db:44': 'file_storage/functions.query_db:44.json', 'var_functions.query_db:58': 'file_storage/functions.query_db:58.json', 'var_functions.query_db:60': 'file_storage/functions.query_db:60.json'}
+
+exec(code, env_args)

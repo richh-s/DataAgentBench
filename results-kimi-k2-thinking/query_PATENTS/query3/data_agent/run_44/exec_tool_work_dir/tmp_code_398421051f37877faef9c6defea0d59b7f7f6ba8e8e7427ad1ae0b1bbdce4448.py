@@ -1,0 +1,88 @@
+code = """import json
+import re
+
+# Load UC patent publication numbers
+uc_file = locals().get('var_functions.query_db:30')
+with open(uc_file, 'r') as f:
+    uc_data = json.load(f)
+
+# Extract UC publication numbers
+uc_pub_numbers = set()
+for record in uc_data:
+    info = record.get('Patents_info', '')
+    patterns = [
+        r'pub\.\s*number\s+([A-Z]{2}-\d{6,12}-[A-Z]\d?)',
+        r'publication\s*number\s+([A-Z]{2}-\d{6,12}-[A-Z]\d?)',
+        r'has\s+pub\.\s*number\s+([A-Z]{2}-\d{6,12}-[A-Z]\d?)',
+        r'with\s+pub\.\s*number\s+([A-Z]{2}-\d{6,12}-[A-Z]\d?)',
+        r'with\s+publication\s*number\s+([A-Z]{2}-\d{6,12}-[A-Z]\d?)',
+        r'has\s+publication\s*number\s+([A-Z]{2}-\d{6,12}-[A-Z]\d?)'
+    ]
+    for pattern in patterns:
+        matches = re.findall(pattern, info, re.IGNORECASE)
+        uc_pub_numbers.update(matches)
+
+# Load patents with citations for cross-referencing
+citing_file = locals().get('var_functions.query_db:72')
+with open(citing_file, 'r') as f:
+    patents_data = json.load(f)
+
+# Check each patent's citations against UC publication numbers
+citing_patents = []
+for record in patents_data:
+    # Extract assignee
+    info = record.get('Patents_info', '')
+    assignee_match = re.search(r'^([^,]+?)(?: holds| is| from|,)', info)
+    assignee = assignee_match.group(1).strip() if assignee_match else 'Unknown'
+    
+    # Skip UC patents
+    if 'UNIV CALIFORNIA' in assignee.upper() or 'UNIVERSITY OF CALIFORNIA' in assignee.upper():
+        continue
+    
+    # Parse citations
+    citations_str = record.get('citation', '[]')
+    try:
+        citation_list = json.loads(citations_str) if citations_str else []
+    except:
+        citation_list = []
+    
+    # Check if any citation matches UC patent
+    for citation in citation_list:
+        pub_num = citation.get('publication_number')
+        if pub_num and pub_num in uc_pub_numbers:
+            # Get CPC data
+            cpc_str = record.get('cpc', '[]')
+            try:
+                cpc_list = json.loads(cpc_str) if cpc_str else []
+            except:
+                cpc_list = []
+            
+            # Get primary CPC subclasses (sequence = 0)
+            primary_cpc = []
+            for cpc_entry in cpc_list:
+                if isinstance(cpc_entry, dict):
+                    sequence = cpc_entry.get('sequence', 0)
+                    if sequence == 0 or sequence == '0':
+                        code = cpc_entry.get('code', '')
+                        if len(code) >= 4:
+                            subclass = code[:4]
+                            primary_cpc.append(subclass)
+            
+            citing_patents.append({
+                'assignee': assignee,
+                'cited_uc_patent': pub_num,
+                'primary_cpc_subclasses': list(set(primary_cpc))
+            })
+            break  # Only record once per patent
+
+print('__RESULT__:')
+print(json.dumps({
+    'uc_publication_numbers': len(uc_pub_numbers),
+    'patents_checked': len(patents_data),
+    'citing_patents_found': len(citing_patents),
+    'sample_citing': citing_patents[:5]
+}))"""
+
+env_args = {'var_functions.list_db:0': ['publicationinfo'], 'var_functions.query_db:2': 'file_storage/functions.query_db:2.json', 'var_functions.query_db:5': 'file_storage/functions.query_db:5.json', 'var_functions.execute_python:16': {'count': 169, 'first_keys': ['Patents_info', 'citation'], 'first_patent_info': 'In US, the application (number US-202117472182-A) is owned by UNIV CALIFORNIA and has pub. number US-2022074631-A1.', 'first_citation_len': 653}, 'var_functions.query_db:18': 'file_storage/functions.query_db:18.json', 'var_functions.execute_python:20': {'message': 'Loaded UNIV CALIFORNIA patents', 'count': 169}, 'var_functions.execute_python:22': {'uc_patents_count': 169}, 'var_functions.execute_python:24': {'uc_patents': 169, 'nonuc_patents': 1000, 'uc_pub_numbers_found': 322, 'sample_uc_numbers': ['US-202318169681-A', 'CN-96195210-A', 'AU-2005269556-A', 'AU-5711401-A', 'US-201313787160-A', 'US-201514981715-A', 'US-202218054917-A', 'US-2019021660-W', 'CA-3027364-A1', 'US-2023321419-A1']}, 'var_functions.execute_python:26': {'uc_patents_count': 169, 'uc_pub_numbers_count': 322, 'nonuc_patents_checked': 1000, 'citing_patents_found': 0}, 'var_functions.query_db:28': 'file_storage/functions.query_db:28.json', 'var_functions.query_db:30': 'file_storage/functions.query_db:30.json', 'var_functions.query_db:32': 'file_storage/functions.query_db:32.json', 'var_functions.query_db:34': 'file_storage/functions.query_db:34.json', 'var_functions.execute_python:36': {'uc_patents': 169, 'uc_pub_numbers': 322, 'sample_numbers': ['US-6980295-B2', 'US-201515329526-A', 'CN-200380105631-A', 'US-37750473-A', 'US-58729205-A', 'US-11607427-B2', 'US-2017031596-W', 'US-6750960-B2', 'KR-20087016723-A', 'IL-236725-A']}, 'var_functions.execute_python:38': {'uc_patents_count': 169, 'uc_pub_numbers_count': 0, 'nonuc_patents_checked': 2000, 'citing_patents_found': 0, 'sample_citations': []}, 'var_functions.query_db:40': 'file_storage/functions.query_db:40.json', 'var_functions.execute_python:42': {'total_uc_records': 169, 'first_record': {'Patents_info': 'In US, the application (number US-202117472182-A) is owned by UNIV CALIFORNIA and has pub. number US-2022074631-A1.'}, 'sample_info': 'In US, the application (number US-202117472182-A) is owned by UNIV CALIFORNIA and has pub. number US-2022074631-A1.'}, 'var_functions.query_db:44': [{'total_patents': '277813'}], 'var_functions.execute_python:46': {'total_uc_patents': 169, 'total_uc_pub_numbers': 56, 'total_nonuc_patents_checked': 2000, 'citing_patents_found': 0, 'sample_uc_numbers': ['AU-2007297661-A1', 'US-2006051790-A1', 'AU-6535890-A', 'US-2022018060-A1', 'TW-201925402-A', 'CN-103189548-A', 'AU-2003297741-A1', 'AU-2010214112-B2', 'US-2023155090-A1', 'KR-20200041324-A'], 'sample_citing': []}, 'var_functions.execute_python:48': {'uc_patents_count': 169, 'uc_pub_numbers_count': 134, 'sample_uc_pub_numbers': ['EP-2029921-A4', 'AU-7724398-A', 'US-9061071-B2', 'JP-2009260386-A', 'CN-102584712-A', 'US-2022018060-A1', 'KR-20160119166-A', 'CN-100339724-C', 'US-2006292670-A1', 'US-11376346-B2', 'CA-2550552-A1', 'US-2021181673-A1', 'WO-2024044766-A3', 'US-11421276-B2', 'JP-2005104983-A']}, 'var_functions.query_db:50': 'file_storage/functions.query_db:50.json', 'var_functions.query_db:52': 'file_storage/functions.query_db:52.json', 'var_functions.execute_python:54': {'uc_patents_analyzed': 169, 'uc_publication_numbers': 134, 'uc_sample': ['US-2017087258-A1', 'BR-9610580-A', 'US-10744347-B2', 'AU-2015364602-B2', 'PT-2970346-T', 'US-11421276-B2', 'US-2003112494-A1', 'WO-2018067976-A1', 'KR-20110004413-A', 'AU-2008349842-A1']}, 'var_functions.execute_python:56': {'uc_pub_numbers': 110, 'total_patents_to_check': 5000, 'sample_uc_numbers': ['US-2022074631-A1', 'WO-2018067976-A1', 'WO-2024112568-A1', 'CA-2718348-C', 'US-2023171142-A1', 'US-2009031436-A1', 'WO-2012162563-A2', 'US-2023321419-A1', 'AU-2409401-A', 'JP-2005104983-A']}, 'var_functions.execute_python:58': {'uc_publication_numbers': 110, 'total_patents_checked': 5000, 'citing_patents_found': 0, 'sample_citing': []}, 'var_functions.query_db:60': 'file_storage/functions.query_db:60.json', 'var_functions.execute_python:62': {'uc_patents_count': 169, 'uc_pub_numbers_count': 110, 'sample_uc_numbers': ['US-11421276-B2', 'EP-2210307-A4', 'WO-2017136335-A1', 'US-5547866-A', 'US-2003112494-A1', 'EP-3668487-A4', 'US-6767662-B2', 'US-2021002329-A1', 'US-2023279470-A1', 'US-11546022-B2']}, 'var_functions.execute_python:64': {'citing_patents_total': 0, 'sample': []}, 'var_functions.query_db:66': [], 'var_functions.execute_python:68': {'total_records': 5000, 'first_record_keys': ['Patents_info', 'citation'], 'first_patent_info': 'PANASONIC IP MAN CO LTD holds the US patent application (ID US-201916293577-A), with publication number US-11081687-B2.', 'first_citation_preview': '[\n  {\n    "application_number": "",\n    "category": "APP",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "JP-H01209663-A",\n    "type": ""\n  },\n  {\n    "application_number": "",\n    "category": "APP",\n    "filing_date": 0,\n    "npl_text": "",\n    "publication_number": "JP-H07376'}, 'var_functions.query_db:72': 'file_storage/functions.query_db:72.json'}
+
+exec(code, env_args)

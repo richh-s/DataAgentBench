@@ -1,0 +1,24 @@
+code = """import json
+# each var_call_... is a string containing the textual result; need to eval the JSON inside it
+import ast
+
+def extract(varstr):
+    # varstr begins with newlines and text; find first '[' and last ']'
+    s = varstr
+    i = s.find('[')
+    j = s.rfind(']')
+    return json.loads(s[i:j+1])
+
+r1 = extract(var_call_01xeWJ6DlbUF6ExjEiN0knj3)
+r2 = extract(var_call_k22XZZZHlqzT8CA5vvfK2jqG)
+r3 = extract(var_call_Jy1o2iezClzd7PwE5VvdoNGN)
+r4 = extract(var_call_8Y9dYxhK3RBbQxgW2fcVch3u)
+r5 = extract(var_call_CukME8smKID93D9ATGgNoNJ5)
+
+out = r1 + r2 + r3 + r4 + r5
+print('__RESULT__:')
+print(json.dumps(out))"""
+
+env_args = {'var_call_JgVdZ5lPpvNbcr53P85FVhko': 'file_storage/call_JgVdZ5lPpvNbcr53P85FVhko.json', 'var_call_pg5PrTVxGV9a7THHNxzy7odL': 'file_storage/call_pg5PrTVxGV9a7THHNxzy7odL.json', 'var_call_3CdQj3Q6YQ8u0U19WMxZbALc': 'file_storage/call_3CdQj3Q6YQ8u0U19WMxZbALc.json', 'var_call_QV8UTH7arKnVHjxz3ksLPxOA': {'count': 234, 'symbols_sample': ['AEFC', 'AIN', 'AIV', 'AIZP', 'AJRD', 'AL', 'AMN', 'AMP', 'AMT', 'ARD', 'ARGD', 'ARLO', 'ASG', 'AVA', 'BANC', 'BBU', 'BBVA', 'BDXA', 'BKH', 'BKT', 'BLD', 'BNS', 'BV', 'BZH', 'CADE', 'CAE', 'CAF', 'CBT', 'CCC', 'CCZ', 'CHAP', 'CIA', 'CMA', 'CMI', 'CMSA', 'CNK', 'COTY', 'CRC', 'CRM', 'CRS', 'CSL', 'CTS', 'CUBE', 'CURO', 'CVIA', 'CVX', 'CXH', 'DAC', 'DDS', 'DDT', 'DEO', 'DGX', 'DMB', 'DTQ', 'DXC', 'EARN', 'EBS', 'EGO', 'EGY', 'EIG', 'ELF', 'EMP', 'ENLC', 'EPR', 'EPRT', 'ES', 'ESRT', 'ESS', 'ETM', 'EV', 'EVT', 'EXP', 'FMN', 'FPAC', 'FSM', 'GCO', 'GD', 'GDL', 'GDV', 'GEL', 'GJP', 'GLOB', 'GLT', 'GOL', 'GSLD', 'GTY', 'GVA', 'GWB', 'H', 'HBI', 'HDB', 'HEP', 'HIL', 'HIO', 'HIX', 'HLF', 'HLT', 'HNI', 'HRB', 'HTFA']}, 'var_call_01xeWJ6DlbUF6ExjEiN0knj3': [{'symbol': 'AEFC', 'up_days': 'nan', 'down_days': 'nan'}], 'var_call_k22XZZZHlqzT8CA5vvfK2jqG': [{'symbol': 'AIN', 'up_days': '143.0', 'down_days': '101.0'}], 'var_call_Jy1o2iezClzd7PwE5VvdoNGN': [{'symbol': 'AIV', 'up_days': '118.0', 'down_days': '128.0'}], 'var_call_8Y9dYxhK3RBbQxgW2fcVch3u': [{'symbol': 'AIZP', 'up_days': 'nan', 'down_days': 'nan'}], 'var_call_CukME8smKID93D9ATGgNoNJ5': [{'symbol': 'AJRD', 'up_days': '123.0', 'down_days': '123.0'}]}
+
+exec(code, env_args)

@@ -1,0 +1,81 @@
+code = """import json
+import pandas as pd
+import math
+import re
+
+# Load the actual data
+clinical_path = locals()['var_functions.query_db:30']
+igf2_path = locals()['var_functions.query_db:10']
+
+with open(clinical_path, 'r') as f:
+    lgg_clinical = json.load(f)
+
+with open(igf2_path, 'r') as f:
+    igf2_expression = json.load(f)
+
+# Create DataFrames
+df_clinical = pd.DataFrame(lgg_clinical)
+df_expression = pd.DataFrame(igf2_expression)
+
+# Convert normalized_count to numeric
+df_expression['normalized_count'] = pd.to_numeric(df_expression['normalized_count'], errors='coerce')
+
+# Extract FULL patient barcodes from Patient_description
+def extract_full_barcode(description):
+    if pd.isna(description):
+        return None
+    # Look for TCGA- barcodes with format TCGA-XX-XXXX
+    match = re.search(r'(TCGA-[A-Z0-9]+-[A-Z0-9]+)', str(description))
+    if match:
+        return match.group(1)
+    return None
+
+df_clinical['ParticipantBarcode'] = df_clinical['Patient_description'].apply(extract_full_barcode)
+
+# Filter for valid data
+df_clinical_filtered = df_clinical[
+    (df_clinical['ParticipantBarcode'].notna()) &
+    (df_clinical['histological_type'].notna()) &
+    (df_clinical['histological_type'].str.len() > 0) &
+    (~df_clinical['histological_type'].str.contains(r'\[|\]', regex=True, na=False))
+]
+
+df_expression_filtered = df_expression[df_expression['normalized_count'].notna()]
+
+# Check overlap
+clinical_barcodes = set(df_clinical_filtered['ParticipantBarcode'].tolist())
+igf2_barcodes = set(df_expression_filtered['ParticipantBarcode'].tolist())
+common_barcodes = clinical_barcodes.intersection(igf2_barcodes)
+
+# Merge data on common barcodes
+merged_df = pd.merge(
+    df_clinical_filtered[['ParticipantBarcode', 'histological_type']],
+    df_expression_filtered[['ParticipantBarcode', 'normalized_count']],
+    on='ParticipantBarcode',
+    how='inner'
+)
+
+# Calculate log10(normalized_count + 1)
+merged_df['log10_expression'] = merged_df['normalized_count'].apply(lambda x: math.log10(x + 1))
+
+# Group by histological type and calculate average
+results = merged_df.groupby('histological_type')['log10_expression'].mean().reset_index()
+
+# Round to 4 decimal places and sort
+results['avg_log10_expression'] = results['log10_expression'].round(4)
+results = results.sort_values('histological_type')
+
+# Create final output
+total_patients = merged_df['ParticipantBarcode'].nunique()
+output_lines = []
+for _, row in results.iterrows():
+    output_lines.append(f"{row['histological_type']}: {row['avg_log10_expression']:.4f}")
+
+final_output = "\n".join(output_lines)
+
+print('__RESULT__:')
+print(final_output)"""
+
+env_args = {'var_functions.query_db:0': [{'column_name': 'Patient_description'}, {'column_name': 'days_to_birth'}, {'column_name': 'days_to_death'}, {'column_name': 'days_to_last_followup'}, {'column_name': 'days_to_initial_pathologic_diagnosis'}, {'column_name': 'age_at_initial_pathologic_diagnosis'}, {'column_name': 'icd_10'}, {'column_name': 'tissue_retrospective_collection_indicator'}, {'column_name': 'icd_o_3_histology'}, {'column_name': 'tissue_prospective_collection_indicator'}, {'column_name': 'history_of_neoadjuvant_treatment'}, {'column_name': 'icd_o_3_site'}, {'column_name': 'tumor_tissue_site'}, {'column_name': 'new_tumor_event_after_initial_treatment'}, {'column_name': 'radiation_therapy'}, {'column_name': 'race'}, {'column_name': 'prior_dx'}, {'column_name': 'ethnicity'}, {'column_name': 'informed_consent_verified'}, {'column_name': 'person_neoplasm_cancer_status'}, {'column_name': 'patient_id'}, {'column_name': 'year_of_initial_pathologic_diagnosis'}, {'column_name': 'histological_type'}, {'column_name': 'tissue_source_site'}, {'column_name': 'form_completion_date'}, {'column_name': 'pathologic_T'}, {'column_name': 'pathologic_M'}, {'column_name': 'clinical_M'}, {'column_name': 'pathologic_N'}, {'column_name': 'system_version'}, {'column_name': 'pathologic_stage'}, {'column_name': 'clinical_stage'}, {'column_name': 'clinical_T'}, {'column_name': 'clinical_N'}, {'column_name': 'extranodal_involvement'}, {'column_name': 'postoperative_rx_tx'}, {'column_name': 'primary_therapy_outcome_success'}, {'column_name': 'lymph_node_examined_count'}, {'column_name': 'primary_lymph_node_presentation_assessment'}, {'column_name': 'initial_pathologic_diagnosis_method'}, {'column_name': 'number_of_lymphnodes_positive_by_he'}, {'column_name': 'eastern_cancer_oncology_group'}, {'column_name': 'anatomic_neoplasm_subdivision'}, {'column_name': 'residual_tumor'}, {'column_name': 'histological_type_other'}, {'column_name': 'init_pathology_dx_method_other'}, {'column_name': 'karnofsky_performance_score'}, {'column_name': 'neoplasm_histologic_grade'}, {'column_name': 'height'}, {'column_name': 'weight'}, {'column_name': 'number_of_lymphnodes_positive_by_ihc'}, {'column_name': 'tobacco_smoking_history'}, {'column_name': 'number_pack_years_smoked'}, {'column_name': 'stopped_smoking_year'}, {'column_name': 'performance_status_scale_timing'}, {'column_name': 'laterality'}, {'column_name': 'targeted_molecular_therapy'}, {'column_name': 'year_of_tobacco_smoking_onset'}, {'column_name': 'anatomic_neoplasm_subdivision_other'}, {'column_name': 'patient_death_reason'}, {'column_name': 'tumor_tissue_site_other'}, {'column_name': 'menopause_status'}, {'column_name': 'margin_status'}, {'column_name': 'kras_gene_analysis_performed'}, {'column_name': 'venous_invasion'}, {'column_name': 'lymphatic_invasion'}, {'column_name': 'perineural_invasion_present'}, {'column_name': 'her2_immunohistochemistry_level_result'}, {'column_name': 'breast_carcinoma_progesterone_receptor_status'}, {'column_name': 'breast_carcinoma_surgical_procedure_name'}, {'column_name': 'breast_neoplasm_other_surgical_procedure_descriptive_text'}, {'column_name': 'axillary_lymph_node_stage_method_type'}, {'column_name': 'breast_carcinoma_estrogen_receptor_status'}, {'column_name': 'cytokeratin_immunohistochemistry_staining_method_micrometastasi'}, {'column_name': 'lab_proc_her2_neu_immunohistochemistry_receptor_status'}, {'column_name': 'lab_procedure_her2_neu_in_situ_hybrid_outcome_type'}, {'column_name': 'additional_pharmaceutical_therapy'}, {'column_name': 'additional_radiation_therapy'}, {'column_name': 'lymphovascular_invasion_present'}, {'column_name': 'location_in_lung_parenchyma'}, {'column_name': 'pulmonary_function_test_performed'}, {'column_name': 'egfr_mutation_performed'}, {'column_name': 'diagnosis'}, {'column_name': 'eml4_alk_translocation_performed'}, {'column_name': 'days_to_new_tumor_event_after_initial_treatment'}, {'column_name': 'hemoglobin_result'}, {'column_name': 'serum_calcium_result'}, {'column_name': 'platelet_qualitative_result'}, {'column_name': 'number_of_lymphnodes_positive'}, {'column_name': 'white_cell_count_result'}, {'column_name': 'alcohol_history_documented'}, {'column_name': 'family_history_of_cancer'}, {'column_name': 'braf_gene_analysis_performed'}, {'column_name': 'city_of_procurement'}, {'column_name': 'surgical_approach'}, {'column_name': 'peritoneal_wash'}, {'column_name': 'total_pelv_lnr'}, {'column_name': 'total_aor_lnr'}, {'column_name': 'prior_glioma'}], 'var_functions.query_db:4': 'file_storage/functions.query_db:4.json', 'var_functions.query_db:6': [{'Symbol': 'LXN'}, {'Symbol': 'ZNF770'}, {'Symbol': 'AMELY'}, {'Symbol': 'TPTE2P1'}, {'Symbol': 'ITGB3'}, {'Symbol': 'DEFB116'}, {'Symbol': 'FGD1'}, {'Symbol': 'P2RY14'}, {'Symbol': 'ARID5B'}, {'Symbol': 'TSPY1'}], 'var_functions.query_db:10': 'file_storage/functions.query_db:10.json', 'var_functions.query_db:12': [], 'var_functions.query_db:18': 'file_storage/functions.query_db:18.json', 'var_functions.query_db:20': [], 'var_functions.query_db:22': [], 'var_functions.query_db:24': 'file_storage/functions.query_db:24.json', 'var_functions.query_db:30': 'file_storage/functions.query_db:30.json', 'var_functions.execute_python:36': {'available_keys': ['var_functions.query_db:0', 'var_functions.query_db:10', 'var_functions.query_db:12', 'var_functions.query_db:18', 'var_functions.query_db:20', 'var_functions.query_db:22', 'var_functions.query_db:24', 'var_functions.query_db:30', 'var_functions.query_db:4', 'var_functions.query_db:6']}, 'var_functions.execute_python:44': {'status': 'checking storage'}, 'var_functions.execute_python:46': {'status': 'checked storage'}, 'var_functions.execute_python:52': {'clinical_records': 0, 'expression_records': 0}, 'var_functions.execute_python:60': {'clinical_type': "<class 'str'>", 'igf2_type': "<class 'str'>", 'clinical_is_list': False, 'igf2_is_list': False, 'clinical_len': 39, 'igf2_len': 39}, 'var_functions.execute_python:62': {}, 'var_functions.execute_python:64': {'clinical_total_records': 513, 'clinical_with_barcode': 513, 'clinical_with_valid_histology': 513, 'igf2_total_records': 496, 'igf2_with_valid_expression': 496, 'clinical_barcodes': 26, 'igf2_barcodes': 496, 'common_barcodes': 0, 'sample_common_barcodes': []}, 'var_functions.execute_python:66': {'clinical_barcode_sample': ['TCGA-RY', 'TCGA-FG', 'TCGA-DB', 'TCGA-DB', 'TCGA-DB', 'TCGA-P5', 'TCGA-S9', 'TCGA-TM', 'TCGA-S9', 'TCGA-TM'], 'igf2_barcode_sample': ['TCGA-AB-2908', 'TCGA-19-5960', 'TCGA-21-1071', 'TCGA-30-1862', 'TCGA-66-2795', 'TCGA-A8-A082', 'TCGA-B5-A3FA', 'TCGA-BH-A1EX', 'TCGA-BT-A20O', 'TCGA-CD-5799'], 'clinical_unique_barcode_count': 26, 'igf2_unique_barcode_count': 496}}
+
+exec(code, env_args)

@@ -1,0 +1,14 @@
+code = """import pandas as pd
+
+# Read the data from the file
+with open('/tmp/tmp1e4m9eg0.json', 'r') as f:
+    data = pd.read_json(f)
+
+print('Number of opportunities with ContractID__c:', len(data[data['ContractID__c'].notna() & (data['ContractID__c'] != 'None') & (data['ContractID__c'] != '')]))
+print('Number of opportunities created in April 2023:', len(data))
+print('Sample data:')
+print(data.head())"""
+
+env_args = {'var_functions.query_db:0': [], 'var_functions.query_db:2': [{'OpportunityId': '006Wt000007BI41IAG', 'OwnerId': '005Wt000003NDEBIA4', 'CreatedDate': '2022-06-15T10:20:30.000+0000', 'CompanySignedDate': '2023-04-15'}], 'var_functions.query_db:4': [{'OpportunityId': '006Wt000007BI41IAG', 'OwnerId': '005Wt000003NDEBIA4', 'CreatedDate': '2022-06-15T10:20:30.000+0000', 'CompanySignedDate': '2023-04-15'}], 'var_functions.query_db:6': [{'Id': '800Wt00000DE9FGIA1', 'AccountId': '001Wt00000PFrk1IAD', 'Status': 'Activated', 'StartDate': '2023-04-20', 'CustomerSignedDate': '2023-04-10', 'CompanySignedDate': '2023-04-15', 'Description': 'This contract solidifies the partnership between TechPulse Solutions and SkyNet Technologies to provide AI-powered electronic design automation solutions for innovative drone and aviation technology projects starting from April 2023.', 'ContractTerm': '12'}], 'var_functions.query_db:8': [{'ContractId': '800Wt00000DE9FGIA1', 'CompanySignedDate': '2023-04-15', 'OpportunityId': '006Wt000007BI41IAG', 'OwnerId': '005Wt000003NDEBIA4', 'CreatedDate': '2022-06-15T10:20:30.000+0000'}], 'var_functions.query_db:10': 'file_storage/functions.query_db:10.json', 'var_functions.query_db:12': [{'ContractId': '800Wt00000DE9FGIA1', 'CompanySignedDate': '2023-04-15', 'OpportunityId': '006Wt000007BI41IAG', 'OwnerId': '005Wt000003NDEBIA4', 'CreatedDate': '2022-06-15T10:20:30.000+0000'}], 'var_functions.query_db:14': [{'ContractId': '800Wt00000DE9FGIA1', 'AccountId': '001Wt00000PFrk1IAD', 'CompanySignedDate': '2023-04-15', 'OpportunityId': '006Wt000007BI41IAG', 'OwnerId': '005Wt000003NDEBIA4', 'CreatedDate': '2022-06-15T10:20:30.000+0000', 'OpportunityName': 'SkyNet Tech-Driven Revolution', 'ContractTerm': '12'}], 'var_functions.query_db:16': [{'Id': '800Wt00000DE9FGIA1', 'AccountId': '001Wt00000PFrk1IAD', 'Status': 'Activated', 'StartDate': '2023-04-20', 'CustomerSignedDate': '2023-04-10', 'CompanySignedDate': '2023-04-15', 'Description': 'This contract solidifies the partnership between TechPulse Solutions and SkyNet Technologies to provide AI-powered electronic design automation solutions for innovative drone and aviation technology projects starting from April 2023.', 'ContractTerm': '12'}], 'var_functions.query_db:18': [{'Id': '800Wt00000DE9FGIA1', 'CompanySignedDate': '2023-04-15', 'OpportunityId': '006Wt000007BI41IAG', 'OwnerId': '005Wt000003NDEBIA4', 'CreatedDate': '2022-06-15T10:20:30.000+0000'}]}
+
+exec(code, env_args)

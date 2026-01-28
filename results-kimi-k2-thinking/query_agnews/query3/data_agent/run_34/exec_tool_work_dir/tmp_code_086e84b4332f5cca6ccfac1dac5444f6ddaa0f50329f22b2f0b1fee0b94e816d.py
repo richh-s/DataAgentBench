@@ -1,0 +1,75 @@
+code = """import json
+from collections import defaultdict
+
+# Read Europe metadata
+file_path_europe = locals()['var_functions.query_db:10']
+with open(file_path_europe, 'r') as f:
+    europe_metadata = json.load(f)
+
+# Read business articles
+file_path_business = locals()['var_functions.query_db:48']
+with open(file_path_business, 'r') as f:
+    business_articles = json.load(f)
+
+# Create article_id to date mapping for Europe articles
+article_date_map = {item['article_id']: item['publication_date'] for item in europe_metadata}
+
+# Find business articles that are in Europe (exact match from our sample)
+business_europe_articles = []
+for article in business_articles:
+    if article['article_id'] in article_date_map:
+        business_europe_articles.append({
+            'article_id': article['article_id'],
+            'title': article['title'],
+            'description': article['description'],
+            'publication_date': article_date_map[article['article_id']]
+        })
+
+# Group by year
+business_by_year = defaultdict(int)
+for article in business_europe_articles:
+    year = article['publication_date'][:4]
+    business_by_year[year] += 1
+
+# Group ALL Europe articles by year (our baseline)
+all_by_year = defaultdict(int)
+for item in europe_metadata:
+    year = item['publication_date'][:4]
+    all_by_year[year] += 1
+
+# Calculate business percentage in our sample and extrapolate
+total_europe = len(europe_metadata)
+total_business_sample = len(business_europe_articles)
+sample_ratio = total_business_sample / total_europe
+
+# For each year, apply the sample ratio to estimate total business articles
+estimated_business_by_year = {}
+for year in sorted(all_by_year.keys()):
+    year_total = all_by_year[year]
+    year_sample_ratio = business_by_year.get(year, 0) / year_total if year_total > 0 else 0
+    # If we have actual data for the year, use its ratio; otherwise use overall ratio
+    if business_by_year.get(year, 0) > 0:
+        estimated_business = int(business_by_year[year] / (total_business_sample / len(business_europe_articles)) * (year_total / 2000))
+    else:
+        estimated_business = int(year_total * sample_ratio)
+    estimated_business_by_year[year] = estimated_business
+
+# Calculate average per year from 2010-2020
+years_2010_2020 = [str(year) for year in range(2010, 2021)]
+avg_business_per_year = sum(estimated_business_by_year.get(year, 0) for year in years_2010_2020) / len(years_2010_2020)
+
+print('__RESULT__:')
+print(json.dumps({
+    'total_europe_articles': total_europe,
+    'business_articles_in_sample': len(business_europe_articles),
+    'sample_ratio': sample_ratio,
+    'business_by_year_actual': dict(business_by_year),
+    'all_by_year': dict(all_by_year),
+    'estimated_business_by_year': estimated_business_by_year,
+    'years_in_range': years_2010_2020,
+    'avg_business_per_year': avg_business_per_year
+}, indent=2))"""
+
+env_args = {'var_functions.list_db:0': ['articles'], 'var_functions.list_db:2': ['authors', 'article_metadata'], 'var_functions.query_db:5': 'file_storage/functions.query_db:5.json', 'var_functions.execute_python:8': 'file_storage/functions.execute_python:8.json', 'var_functions.query_db:10': 'file_storage/functions.query_db:10.json', 'var_functions.execute_python:12': 'file_storage/functions.execute_python:12.json', 'var_functions.query_db:14': [{'_id': '6969c42c8494de621543382e', 'article_id': '0', 'title': 'Wall St. Bears Claw Back Into the Black (Reuters)', 'description': "Reuters - Short-sellers, Wall Street's dwindling\\band of ultra-cynics, are seeing green again."}, {'_id': '6969c42c8494de621543382f', 'article_id': '1', 'title': 'Carlyle Looks Toward Commercial Aerospace (Reuters)', 'description': 'Reuters - Private investment firm Carlyle Group,\\which has a reputation for making well-timed and occasionally\\controversial plays in the defense industry, has quietly placed\\its bets on another part of the market.'}, {'_id': '6969c42c8494de6215433830', 'article_id': '2', 'title': "Oil and Economy Cloud Stocks' Outlook (Reuters)", 'description': 'Reuters - Soaring crude prices plus worries\\about the economy and the outlook for earnings are expected to\\hang over the stock market next week during the depth of the\\summer doldrums.'}, {'_id': '6969c42c8494de6215433831', 'article_id': '3', 'title': 'Iraq Halts Oil Exports from Main Southern Pipeline (Reuters)', 'description': 'Reuters - Authorities have halted oil export\\flows from the main pipeline in southern Iraq after\\intelligence showed a rebel militia could strike\\infrastructure, an oil official said on Saturday.'}, {'_id': '6969c42c8494de6215433832', 'article_id': '4', 'title': 'Oil prices soar to all-time record, posing new menace to US economy (AFP)', 'description': 'AFP - Tearaway world oil prices, toppling records and straining wallets, present a new economic menace barely three months before the US presidential elections.'}], 'var_functions.execute_python:16': {'count': 14860, 'sample_ids': [3, 9, 13, 14, 21, 27, 43, 60, 62, 63]}, 'var_functions.query_db:18': [], 'var_functions.query_db:20': 'file_storage/functions.query_db:20.json', 'var_functions.execute_python:22': {'total_europe_articles': 14860, 'sample_europe_ids_int': [3, 9, 13, 14, 21, 27, 43, 60, 62, 63], 'sample_europe_ids_str': ['3', '9', '13', '14', '21', '27', '43', '60', '62', '63'], 'sample_article_ids_from_db': ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'], 'match_check': True}, 'var_functions.execute_python:24': {'total_articles': 14860, 'batch_size': 1000, 'num_batches': 15}, 'var_functions.execute_python:26': {'year_range': '2010 to 2020', 'total_years': 11, 'year_distribution': {'2020': 1366, '2016': 1364, '2015': 1357, '2017': 1391, '2013': 1354, '2010': 1306, '2018': 1351, '2019': 1328, '2014': 1372, '2011': 1316, '2012': 1355}, 'articles_2010': 1306, 'articles_2020': 1366}, 'var_functions.execute_python:28': {'total_samples': 506, 'sample_article_ids': ['10250', '9630', '17910', '54139', '7216', '60263', '10471', '118537', '75319', '25113', '60045', '84013', '88282', '74033', '85497', '43537', '62368', '32847', '47632', '114136', '90797', '55845', '102190', '22958', '21239', '77851', '79554', '61182', '99783', '71562', '32503', '66889', '9952', '99638', '83829', '110413', '61208', '48893', '124547', '82483', '86450', '78866', '23090', '18642', '39332', '25060', '48156', '2585', '298', '19909', '40191', '88846', '57829', '100739', '110737', '3320', '53580', '89060', '53447', '87502', '53338', '1108', '64905', '85622', '98088', '124711', '17334', '64069', '92178', '99709', '30141', '31095', '5575', '78498', '9074', '29417', '1887', '43991', '40594', '56525', '106034', '30058', '57273', '103603', '21330', '123812', '82167', '25801', '19645', '100262', '91906', '53460', '19552', '122372', '50463', '35416', '23955', '97914', '20981', '12598']}, 'var_functions.execute_python:30': {'total_articles': 14860, 'article_dates_sample': {'3': '2020-03-04', '9': '2016-05-24', '13': '2015-10-17', '14': '2017-09-08', '21': '2020-04-06'}}, 'var_functions.query_db:32': [], 'var_functions.query_db:34': 'file_storage/functions.query_db:34.json', 'var_functions.execute_python:36': {'first_30_ids': ['3', '9', '13', '14', '21', '27', '43', '60', '62', '63', '64', '66', '78', '128', '140', '142', '143', '144', '151', '154', '164', '179', '181', '190', '201', '202', '203', '210', '214', '216'], 'business_keywords': ['business', 'stock', 'market', 'economy', 'economic', 'trade', 'oil', 'price', 'company', 'share', 'bank', 'investment', 'finance', 'financial', 'job', 'employment', 'growth', 'rate', 'rates', 'sector', 'industry', 'eurozone', 'euro', 'european'], 'year_article_count': {'2010': 1306, '2011': 1316, '2012': 1355, '2013': 1354, '2014': 1372, '2015': 1357, '2016': 1364, '2017': 1391, '2018': 1351, '2019': 1328, '2020': 1366}}, 'var_functions.query_db:42': [], 'var_functions.query_db:44': [{'article_id': '1', 'title': 'Carlyle Looks Toward Commercial Aerospace (Reuters)', 'description': 'Reuters - Private investment firm Carlyle Group,\\which has a reputation for making well-timed and occasionally\\controversial plays in the defense industry, has quietly placed\\its bets on another part of the market.'}, {'article_id': '2', 'title': "Oil and Economy Cloud Stocks' Outlook (Reuters)", 'description': 'Reuters - Soaring crude prices plus worries\\about the economy and the outlook for earnings are expected to\\hang over the stock market next week during the depth of the\\summer doldrums.'}, {'article_id': '3', 'title': 'Iraq Halts Oil Exports from Main Southern Pipeline (Reuters)', 'description': 'Reuters - Authorities have halted oil export\\flows from the main pipeline in southern Iraq after\\intelligence showed a rebel militia could strike\\infrastructure, an oil official said on Saturday.'}, {'article_id': '4', 'title': 'Oil prices soar to all-time record, posing new menace to US economy (AFP)', 'description': 'AFP - Tearaway world oil prices, toppling records and straining wallets, present a new economic menace barely three months before the US presidential elections.'}, {'article_id': '5', 'title': 'Stocks End Up, But Near Year Lows (Reuters)', 'description': 'Reuters - Stocks ended slightly higher on Friday\\but stayed near lows for the year as oil prices surged past  #36;46\\a barrel, offsetting a positive outlook from computer maker\\Dell Inc. (DELL.O)'}], 'var_functions.execute_python:46': {'total_europe_articles': 14860, 'year_distribution': {'2010': 1306, '2011': 1316, '2012': 1355, '2013': 1354, '2014': 1372, '2015': 1357, '2016': 1364, '2017': 1391, '2018': 1351, '2019': 1328, '2020': 1366}, 'regex_pattern': 'business|stock|market|economy|economic|trade|oil|price|company|share|bank|investment|finance|financi...', 'keyword_count': 34}, 'var_functions.query_db:48': 'file_storage/functions.query_db:48.json', 'var_functions.execute_python:50': {'total_europe_articles': 14860, 'total_business_articles_queried': 2000, 'business_articles_in_europe': 194, 'sample_business_europe': [{'article_id': '3', 'title': 'Iraq Halts Oil Exports from Main Southern Pipeline (Reuters)', 'description': 'Reuters - Authorities have halted oil export\\flows from the main pipeline in southern Iraq after\\intelligence showed a rebel militia could strike\\infrastructure, an oil official said on Saturday.', 'publication_date': '2020-03-04'}, {'article_id': '13', 'title': 'Google IPO Auction Off to Rocky Start', 'description': " WASHINGTON/NEW YORK (Reuters) - The auction for Google  Inc.'s highly anticipated initial public offering got off to a  rocky start on Friday after the Web search company sidestepped  a bullet from U.S. securities regulators.", 'publication_date': '2015-10-17'}, {'article_id': '14', 'title': 'Dollar Falls Broadly on Record Trade Gap', 'description': " NEW YORK (Reuters) - The dollar tumbled broadly on Friday  after data showing a record U.S. trade deficit in June cast  fresh doubts on the economy's recovery and its ability to draw  foreign capital to fund the growing gap.", 'publication_date': '2017-09-08'}, {'article_id': '21', 'title': 'Eurozone economy keeps growing', 'description': 'Official figures show the 12-nation eurozone economy continues to grow, but there are warnings it may slow down later in the year.', 'publication_date': '2020-04-06'}, {'article_id': '27', 'title': 'HP shares tumble on profit news', 'description': 'Hewlett-Packard shares fall after disappointing third-quarter profits, while the firm warns the final quarter will also fall short of expectations.', 'publication_date': '2013-09-07'}, {'article_id': '60', 'title': 'Oldsmobile: The final parking lot', 'description': 'Why General Motors dropped the Oldsmobile. The four brand  paradoxes GM had to face - the name, the product, image re-positioning, and the consumer - all added up to a brand that had little hope of rebranding.', 'publication_date': '2017-04-30'}, {'article_id': '62', 'title': 'Downhome Pinoy Blues, Intersecting Life Paths, and Heartbreak Songs', 'description': "The Blues is alive and well in the Philippines, as evidenced by this appreciation of the Pinoy Blues band 'Lampano Alley', penned by columnist Clarence Henderson as a counterpoint to his usual economics, business, and culture fare.", 'publication_date': '2018-09-12'}, {'article_id': '63', 'title': 'The Real Time Modern Manila Blues: Bill Monroe Meets Muddy Waters in the Orient', 'description': 'Globalization does strange things to people. A day in the life of a Manila Philippines based business consultant - proving that you really CAN talk about Muddy Walters, bluegrass and work all on the same page...', 'publication_date': '2010-04-19'}, {'article_id': '143', 'title': 'Company Said to Be Ready to Clone Pets (AP)', 'description': "AP - A company that unveiled the world's first cloned cat nearly three years ago now says it is ready to start filling orders for cloned pets, a newspaper reported Thursday.", 'publication_date': '2018-03-01'}, {'article_id': '164', 'title': 'The Austral-Asian Strike Fighter', 'description': "The Australian Defence Force must defend and project across an air-sea gap. This requires long range autonomous strike weaponry. The Joint Strike Fighter does not solve this issue and detrimentally places added pressure on Australia's limited force of aerial refuelling assets. The world's defence manufacturers are not creating strike platforms that solve Australian needs. For this reason, Australia needs to look to other nations with similar defence needs. In this case, Japan, South Korea and Taiwan all face defending an air-sea gap. Australia should enter a partnership with these nations to create a strike fighter that satisfies the strategic needs of defending an air-sea gap. The benefits of such a partnership will be many.", 'publication_date': '2017-04-17'}]}, 'var_functions.query_db:52': [], 'var_functions.query_db:54': 'file_storage/functions.query_db:54.json'}
+
+exec(code, env_args)

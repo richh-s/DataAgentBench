@@ -1,0 +1,39 @@
+code = """import json
+import os
+
+# Load ETF symbols from NYSE Arca
+etf_file = locals()['var_functions.query_db:16']
+with open(etf_file, 'r') as f:
+    etf_symbols_data = json.load(f)
+
+etf_info = {etf['Symbol']: etf['Company Description'] for etf in etf_symbols_data}
+all_symbols = list(etf_info.keys())
+
+# First, let's identify potential candidates that might be high-priced
+# These include: bond ETFs, leveraged ETFs with "high" prices, and some index ETFs
+potential_high_price_symbols = []
+
+# Add some logic to identify symbols that might have high prices
+for symbol in all_symbols:
+    # Look for bond/income ETFs
+    if any(keyword in etf_info[symbol].lower() for keyword in ['bond', 'aggregate', 'treasury', 'municipal', 'income']):
+        potential_high_price_symbols.append(symbol)
+    # Look for leveraged/inverse ETFs
+    elif any(keyword in etf_info[symbol].lower() for keyword in ['ultra', 'leveraged', 'inverse', '3x', '2x']):
+        potential_high_price_symbols.append(symbol)
+    # Add some specific large index ETFs
+    elif symbol in ['SPY', 'IVV', 'VOO', 'QQQ', 'DIA', 'VTI', 'VEA', 'VWO', 'EFA', 'EEM']:
+        potential_high_price_symbols.append(symbol)
+
+# Remove duplicates
+potential_high_price_symbols = list(set(potential_high_price_symbols))
+
+print('__RESULT__:')
+print(json.dumps({
+    'potential_candidates_count': len(potential_high_price_symbols),
+    'candidates_sample': potential_high_price_symbols[:30]
+}))"""
+
+env_args = {'var_functions.query_db:0': 'file_storage/functions.query_db:0.json', 'var_functions.execute_python:6': {'type': "<class 'str'>", 'length': 38}, 'var_functions.execute_python:8': {'symbol_count': 1435, 'first_few': ['AAAU', 'AADR', 'ABEQ', 'ACSG', 'ACWF', 'AFK', 'AFLG', 'AFMC', 'AFSM', 'AFTY']}, 'var_functions.list_db:10': 'file_storage/functions.list_db:10.json', 'var_functions.execute_python:12': {'total_nyse_arca_etfs': 1435, 'total_tables_in_db': 2753, 'common_symbols': 1435}, 'var_functions.query_db:16': 'file_storage/functions.query_db:16.json', 'var_functions.query_db:18': [{'Date': '2015-01-02', 'Open': '110.18000030517578', 'High': '110.5', 'Low': '110.18000030517578', 'Close': '110.43000030517578', 'Adj Close': '96.55731201171876', 'Volume': '2090200'}, {'Date': '2015-01-05', 'Open': '110.55999755859376', 'High': '110.76000213623048', 'Low': '110.4800033569336', 'Close': '110.66999816894533', 'Adj Close': '96.7671356201172', 'Volume': '3446200'}, {'Date': '2015-01-06', 'Open': '110.95999908447266', 'High': '111.3499984741211', 'Low': '110.88999938964844', 'Close': '110.9499969482422', 'Adj Close': '97.011962890625', 'Volume': '3688100'}, {'Date': '2015-01-07', 'Open': '111.0', 'High': '111.04000091552734', 'Low': '110.73999786376952', 'Close': '110.93000030517578', 'Adj Close': '96.9944839477539', 'Volume': '3984400'}, {'Date': '2015-01-08', 'Open': '110.83999633789062', 'High': '110.83999633789062', 'Low': '110.62999725341795', 'Close': '110.76000213623048', 'Adj Close': '96.8458023071289', 'Volume': '2212200'}], 'var_functions.execute_python:20': 'file_storage/functions.execute_python:20.json', 'var_functions.query_db:22': [{'Adj Close': '125.2300033569336'}], 'var_functions.execute_python:24': {'first_batch': ['AAAU', 'AADR', 'ABEQ', 'ACSG', 'ACWF', 'AFK', 'AFLG', 'AFMC', 'AFSM', 'AFTY', 'AGG', 'AGGP', 'AGGY', 'AGQ', 'AGZ', 'AIEQ', 'AIIQ', 'AMLP', 'AMOM', 'AMZA'], 'total_to_check': 1435}, 'var_functions.query_db:26': [{'max_price_2015': '110.42893981933594'}], 'var_functions.execute_python:28': {'total_symbols': 1435, 'valid_symbols': 1435, 'sample': ['AAAU', 'AADR', 'ABEQ', 'ACSG', 'ACWF', 'AFK', 'AFLG', 'AFMC', 'AFSM', 'AFTY', 'AGG', 'AGGP', 'AGGY', 'AGQ', 'AGZ', 'AIEQ', 'AIIQ', 'AMLP', 'AMOM', 'AMZA']}, 'var_functions.execute_python:30': {'candidates_to_check': ['QQQ', 'DIA', 'SPY', 'IVV', 'VOO', 'IWM', 'EFA', 'EEM'], 'total_symbols_to_check': 1435}, 'var_functions.query_db:32': [{'max_price_2015': '193.3121490478516'}], 'var_functions.query_db:34': [{'max_price_2015': '163.6190185546875'}], 'var_functions.execute_python:36': {'symbols_to_check': 1435, 'first_10': ['AAAU', 'AADR', 'ABEQ', 'ACSG', 'ACWF', 'AFK', 'AFLG', 'AFMC', 'AFSM', 'AFTY']}, 'var_functions.query_db:38': [{'max_price_2015': '193.5270538330078'}], 'var_functions.execute_python:40': {'sample_size': 61, 'sample_etfs': ['YINN', 'IBDQ', 'DZK', 'IAK', 'LABU', 'CSD', 'XAR', 'ABEQ', 'IOO', 'SPLB', 'CMDY', 'SJNK', 'BNDC', 'VO', 'CLTL', 'GSIE', 'PRF', 'PLAT', 'PPDM', 'FXY', 'NERD', 'DDG', 'SPIB', 'IQIN', 'VEGA', 'WEAT', 'JPSE', 'HUSV', 'IDMO', 'ROKT', 'SLYV', 'FLEE', 'PBW', 'BSV', 'EEV', 'WBIT', 'SPAB', 'GII', 'PZD', 'IBDN', 'EPOL', 'ILF', 'MNA', 'ICOL', 'QLTA', 'FLJP', 'HEDJ', 'LGOV', 'EDOG', 'DLBR', 'SPY', 'DIA', 'IVV', 'VOO', 'IWM', 'EFA', 'EEM', 'GLD', 'SLV', 'USO', 'HYG']}}
+
+exec(code, env_args)

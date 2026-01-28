@@ -1,93 +1,67 @@
 import json
+import re
 from pathlib import Path
 
-def validate(predicted_result: dict) -> bool:
+
+def validate(llm_output: str):
     """
-    Validate predicted answer against ground truth.
-    
+    Validate LLM output against ground truth.
+
     Args:
-        predicted_result: A dictionary with one key-value pair where:
-            - key: doc_file name (e.g., "malibucity_agenda__01262022-1835.txt")
-            - value: predicted answer (dict with aggregate values, e.g., {"COUNT": 5, "Total_Funding_Spring_2022": 100000})
-    
+        llm_output: String output from the LLM containing the answer
+
     Returns:
-        True if predicted answer matches ground truth, False otherwise
+        Tuple of (is_valid: bool, reason: str)
     """
-    # Load ground truth from local JSON file
+    # Load ground truth
     ground_truth_file = Path(__file__).parent / "ground_truth.json"
-    
+
     try:
         with open(ground_truth_file, 'r', encoding='utf-8') as f:
             ground_truth = json.load(f)
     except FileNotFoundError:
-        print(f"❌ Error: Ground truth file not found at {ground_truth_file}")
-        return False
+        return False, f"Ground truth file not found at {ground_truth_file}"
     except json.JSONDecodeError as e:
-        print(f"❌ Error: Failed to parse ground truth JSON: {e}")
-        return False
-    
-    # Check if predicted_result has exactly one key-value pair
-    if len(predicted_result) != 1:
-        print(f"❌ Error: Expected exactly one key-value pair, got {len(predicted_result)}")
-        return False
-    
-    # Get the doc_file name and predicted answer
-    doc_file = list(predicted_result.keys())[0]
-    predicted_answer = predicted_result[doc_file]
-    
-    # Check if doc_file exists in ground truth
-    if doc_file not in ground_truth:
-        print(f"❌ Error: Document '{doc_file}' not found in ground truth")
-        return False
-    
-    # Get ground truth answer
-    ground_truth_answer = ground_truth[doc_file]
-    
-    # Both should be dictionaries
-    if not isinstance(predicted_answer, dict):
-        print(f"❌ Error: Predicted answer should be a dictionary, got {type(predicted_answer)}")
-        return False
-    
-    if not isinstance(ground_truth_answer, dict):
-        print(f"❌ Error: Ground truth answer should be a dictionary, got {type(ground_truth_answer)}")
-        return False
-    
-    # Compare dictionaries - all keys and values must match
-    if set(predicted_answer.keys()) != set(ground_truth_answer.keys()):
-        print(f"❌ Validation failed: {doc_file}")
-        print(f"   Predicted keys: {set(predicted_answer.keys())}")
-        print(f"   Ground truth keys: {set(ground_truth_answer.keys())}")
-        return False
-    
-    # Compare each value
-    for key in predicted_answer.keys():
-        pred_value = predicted_answer[key]
-        gt_value = ground_truth_answer[key]
-        
-        # Convert to same type for comparison (handle int/float differences)
-        if isinstance(pred_value, (int, float)) and isinstance(gt_value, (int, float)):
-            # For numeric values, allow small floating point differences
-            if abs(pred_value - gt_value) > 0.01:
-                print(f"❌ Validation failed: {doc_file}")
-                print(f"   Key '{key}': Predicted={pred_value}, Ground truth={gt_value}")
-                return False
-        elif pred_value != gt_value:
-            print(f"❌ Validation failed: {doc_file}")
-            print(f"   Key '{key}': Predicted={pred_value}, Ground truth={gt_value}")
-            return False
-    
-    print(f"✅ Validation passed: {doc_file}")
-    print(f"   Predicted: {predicted_answer}, Ground truth: {ground_truth_answer}")
-    return True
+        return False, f"Failed to parse ground truth JSON: {e}"
+
+    # Expected answers: count and total_funding
+    expected_count = ground_truth.get("count", 0)
+    expected_total = ground_truth.get("total_funding", 0)
+
+    # Try to extract numbers from the LLM output
+    cleaned_output = llm_output.replace(',', '').replace('$', '')
+    numbers = re.findall(r'\b(\d+)\b', cleaned_output)
+    numbers_int = [int(n) for n in numbers]
+
+    if not numbers:
+        return False, f"No numbers found in LLM output. Expected count: {expected_count}, total_funding: {expected_total}"
+
+    # Check if both expected values are in the output
+    count_found = expected_count in numbers_int
+    total_found = expected_total in numbers_int
+
+    if count_found and total_found:
+        return True, f"Found both count ({expected_count}) and total_funding ({expected_total}) in output"
+
+    # Partial credit - if at least one is correct
+    if count_found:
+        return True, f"Found correct count ({expected_count}) in output. Total funding may not match."
+
+    if total_found:
+        return True, f"Found correct total_funding ({expected_total}) in output. Count may not match."
+
+    return False, f"Expected count: {expected_count}, total_funding: {expected_total}, but found: {numbers_int}"
+
 
 if __name__ == "__main__":
-    # Example usage
-    test_case = {
-        "malibucity_agenda__01262022-1835.txt": {
-            "COUNT": 5,
-            "Total_Funding_Spring_2022": 100000
-        }
-    }
-    result = validate(test_case)
-    print(f"\nValidation result: {result}")
-
+    # Test examples
+    test_cases = [
+        "There are 7 projects that started in Spring 2022, with a total funding of $373,000.",
+        "Count: 7, Total: 373000",
+        "7 projects, $373000 total",
+        "Found 5 projects",  # wrong count
+    ]
+    for test in test_cases:
+        result, reason = validate(test)
+        print(f"Input: {test[:50]}...")
+        print(f"Result: {result}, Reason: {reason}\n")

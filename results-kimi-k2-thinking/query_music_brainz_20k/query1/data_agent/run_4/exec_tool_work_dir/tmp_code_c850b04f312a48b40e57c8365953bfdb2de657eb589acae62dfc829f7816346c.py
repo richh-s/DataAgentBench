@@ -1,0 +1,10 @@
+code = """sales_records = [{"sale_id": "12728", "track_id": "4233", "country": "Canada", "store": "Apple Music", "units_sold": "354", "revenue_usd": "377.62"}, {"sale_id": "15801", "track_id": "5281", "country": "Canada", "store": "Apple Music", "units_sold": "426", "revenue_usd": "458.02"}, {"sale_id": "38994", "track_id": "12954", "country": "Canada", "store": "Apple Music", "units_sold": "210", "revenue_usd": "223.82"}]
+
+total_revenue = sum(float(record['revenue_usd']) for record in sales_records)
+
+print('__RESULT__:')
+print(str(total_revenue))"""
+
+env_args = {'var_functions.list_db:0': ['tracks'], 'var_functions.query_db:2': [{'track_id': '15158', 'source_id': '4', 'source_track_id': '93213-A07', 'title': '022-Get Me Bodied', 'artist': 'Beyonce', 'album': 'Sexxxplicit R&B, Volume 25 (2007)', 'year': 'None', 'length': 'unknown', 'language': 'Eng.'}], 'var_functions.list_db:4': ['sales'], 'var_functions.query_db:6': [{'track_id': '4233', 'source_id': '1', 'title': 'Get Me Bodied (Sexxxplicit R&B, Volume 25)', 'artist': 'Beyoncé', 'album': 'Sexxxplicit R&B, Volume 25', 'year': '2007'}, {'track_id': '5281', 'source_id': '5', 'title': 'GetMe Bodied', 'artist': 'Beyoncé', 'album': 'Sexxxplicit R&B, Volume X25', 'year': '2007'}, {'track_id': '10838', 'source_id': '2', 'title': 'Beyoncé - Get Me Bodied', 'artist': 'None', 'album': 'Sexxxplicit R&B, Volume 25', 'year': '07'}, {'track_id': '12954', 'source_id': '3', 'title': 'Get Me Bodied - Sexxxplicit R&B, Volume 25', 'artist': 'Beyoncé', 'album': 'None', 'year': "'07"}, {'track_id': '15158', 'source_id': '4', 'title': '022-Get Me Bodied', 'artist': 'Beyonce', 'album': 'Sexxxplicit R&B, Volume 25 (2007)', 'year': 'None'}], 'var_functions.query_db:8': [{'sale_id': '12728', 'track_id': '4233', 'country': 'Canada', 'store': 'Apple Music', 'units_sold': '354', 'revenue_usd': '377.62'}, {'sale_id': '15801', 'track_id': '5281', 'country': 'Canada', 'store': 'Apple Music', 'units_sold': '426', 'revenue_usd': '458.02'}, {'sale_id': '38994', 'track_id': '12954', 'country': 'Canada', 'store': 'Apple Music', 'units_sold': '210', 'revenue_usd': '223.82'}]}
+
+exec(code, env_args)

@@ -1,0 +1,62 @@
+code = """import json, re, os, sys
+
+# Access stored variables properly
+papers_key = 'var_functions.query_db:41'
+citations_key = 'var_functions.query_db:44'
+
+# Get the file paths from the runtime context
+papers_path = globals()[papers_key]
+citations_path = globals()[citations_key]
+
+print('Papers path:', papers_path)
+print('Citations path:', citations_path)
+
+# Load data
+with open(papers_path) as pf:
+    papers = json.load(pf)
+    
+with open(citations_path) as cf:
+    citations = json.load(cf)
+
+print('Loaded', len(papers), 'papers and', len(citations), 'citation records')
+
+# Build citation lookup
+citation_lookup = {c['title'].lower().strip(): int(c['total_citations']) for c in citations}
+
+# Process papers
+results = []
+for paper in papers:
+    # Extract title
+    title = paper['filename'].replace('.txt', '').strip()
+    title_lower = title.lower()
+    
+    # Extract year from text (look for 2017, 2018, 2019, etc.)
+    text = paper['text']
+    year_match = re.search(r'201[7-9]|202[0-2]', text)
+    if not year_match:
+        continue
+    year = int(year_match.group())
+    
+    # Check for empirical contribution
+    if 'empirical' not in text.lower():
+        continue
+    
+    # Get citation count
+    total_citations = citation_lookup.get(title_lower, 0)
+    
+    if total_citations > 0:
+        results.append({
+            'title': title,
+            'year': year,
+            'total_citations': total_citations
+        })
+
+print('Found', len(results), 'matching papers')
+
+# Output
+print('__RESULT__:')
+print(json.dumps(results))"""
+
+env_args = {'var_functions.list_db:0': ['paper_docs'], 'var_functions.query_db:2': 'file_storage/functions.query_db:2.json', 'var_functions.list_db:5': ['Citations', 'sqlite_sequence'], 'var_functions.query_db:12': 'file_storage/functions.query_db:12.json', 'var_functions.query_db:18': 'file_storage/functions.query_db:18.json', 'var_functions.query_db:28': [{'title': '"This Girl is on Fire": Sensemaking in an Online Health Community for Vulvodynia', 'total_citations': '53'}, {'title': 'A Family Health App: Engaging Children to Manage Wellness of Adults', 'total_citations': '313'}, {'title': 'A Lived Informatics Model of Personal Informatics', 'total_citations': '390'}, {'title': 'A Quantified-Self Framework for Exploring and Enhancing Personal Productivity', 'total_citations': '368'}, {'title': 'A Situated Exploration of Designing for Personal Health Ecosystems Through Data-enabled Design', 'total_citations': '277'}, {'title': 'A Spark of Activity: Exploring Informative Art As Visualization for Physical Activity', 'total_citations': '221'}, {'title': 'A Stage-based Model of Personal Informatics Systems', 'total_citations': '220'}, {'title': 'A Trip to the Moon: Personalized Animated Movies for Self-reflection', 'total_citations': '265'}, {'title': 'A Wee Bit More Interaction: Designing and Evaluating an Overactive Bladder App', 'total_citations': '266'}, {'title': 'Activity Tracking in Vivo', 'total_citations': '316'}, {'title': 'Activity Tracking: Barriers, Workarounds and Customisation', 'total_citations': '91'}, {'title': 'Affordances for Self-tracking Wearable Devices', 'total_citations': '195'}, {'title': 'An Anxious Alliance', 'total_citations': '370'}, {'title': 'An Empirical Exploration of Mindfulness Design Using Solo Travel Domain', 'total_citations': '352'}, {'title': 'Anxiety and Autism: Towards Personalized Digital Health', 'total_citations': '520'}, {'title': 'ArmSleeve: A Patient Monitoring System to Support Occupational Therapists in Stroke Rehabilitation', 'total_citations': '452'}, {'title': 'Armbeta: Towards Accessible Wearable Technology to Quantify Upper Limb Movement and Activities', 'total_citations': '317'}, {'title': 'Balancing Accuracy and Fun: Designing Camera Based Mobile Games for Implicit Heart Rate Monitoring', 'total_citations': '345'}, {'title': 'Barriers and Negative Nudges: Exploring Challenges in Food Journaling', 'total_citations': '270'}, {'title': 'Barriers to Engagement with a Personal Informatics Productivity Tool', 'total_citations': '306'}], 'var_functions.execute_python:38': [], 'var_functions.query_db:40': 'file_storage/functions.query_db:40.json', 'var_functions.query_db:41': 'file_storage/functions.query_db:41.json', 'var_functions.query_db:44': 'file_storage/functions.query_db:44.json'}
+
+exec(code, env_args)

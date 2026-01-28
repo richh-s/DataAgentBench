@@ -1,0 +1,50 @@
+code = """import json
+import re
+
+# Load UC patents data to get publication numbers and their CPCs
+uc_file = locals()['var_functions.query_db:42']
+with open(uc_file, 'r') as f:
+    uc_data = json.load(f)
+
+# Build UC publication number -> CPC mapping
+uc_cpc_map = {}
+uc_pub_numbers = set()
+
+for record in uc_data:
+    patents_info = record.get('Patents_info', '')
+    cpc_data = record.get('cpc', '')
+    
+    # Extract publication number
+    pub_match = re.search(r'([A-Z]{2}-\d+-[A-Z]\d+)', patents_info)
+    if pub_match:
+        pub_num = pub_match.group(1)
+        uc_pub_numbers.add(pub_num)
+        
+        # Get primary CPC codes
+        primary_cpcs = []
+        if cpc_data:
+            try:
+                cpc_list = json.loads(cpc_data)
+                for cpc_item in cpc_list:
+                    if cpc_item.get('inventive') or cpc_item.get('first'):
+                        code = cpc_item.get('code')
+                        if code:
+                            primary_cpcs.append(code)
+            except:
+                pass
+        
+        uc_cpc_map[pub_num] = list(set(primary_cpcs))
+
+# Save UC pub numbers and CPC map for next step
+result = {
+    'uc_publication_numbers': list(uc_pub_numbers),
+    'uc_cpc_map': uc_cpc_map,
+    'total_uc_pubs': len(uc_pub_numbers)
+}
+
+print('__RESULT__:')
+print(json.dumps(result))"""
+
+env_args = {'var_functions.query_db:0': 'file_storage/functions.query_db:0.json', 'var_functions.execute_python:12': {'status': 'no_valid_data', 'summary': {}}, 'var_functions.query_db:14': 'file_storage/functions.query_db:14.json', 'var_functions.query_db:18': [{'symbol': 'A01K2227/108', 'titleFull': 'Swine'}, {'symbol': 'A01K2227/105', 'titleFull': 'Murine'}, {'symbol': 'A01K2227/101', 'titleFull': 'Bovine'}, {'symbol': 'A01K2227/107', 'titleFull': 'Rabbit'}, {'symbol': 'A01K2227/103', 'titleFull': 'Ovine'}], 'var_functions.query_db:24': [{'cid': '0', 'name': 'Patents_info', 'type': 'TEXT', 'notnull': '0', 'dflt_value': 'None', 'pk': '0'}, {'cid': '1', 'name': 'kind_code', 'type': 'TEXT', 'notnull': '0', 'dflt_value': 'None', 'pk': '0'}, {'cid': '2', 'name': 'application_kind', 'type': 'TEXT', 'notnull': '0', 'dflt_value': 'None', 'pk': '0'}, {'cid': '3', 'name': 'pct_number', 'type': 'TEXT', 'notnull': '0', 'dflt_value': 'None', 'pk': '0'}, {'cid': '4', 'name': 'family_id', 'type': 'INTEGER', 'notnull': '0', 'dflt_value': 'None', 'pk': '0'}, {'cid': '5', 'name': 'title_localized', 'type': 'TEXT', 'notnull': '0', 'dflt_value': 'None', 'pk': '0'}, {'cid': '6', 'name': 'abstract_localized', 'type': 'TEXT', 'notnull': '0', 'dflt_value': 'None', 'pk': '0'}, {'cid': '7', 'name': 'claims_localized_html', 'type': 'TEXT', 'notnull': '0', 'dflt_value': 'None', 'pk': '0'}, {'cid': '8', 'name': 'description_localized_html', 'type': 'TEXT', 'notnull': '0', 'dflt_value': 'None', 'pk': '0'}, {'cid': '9', 'name': 'publication_date', 'type': 'TEXT', 'notnull': '0', 'dflt_value': 'None', 'pk': '0'}, {'cid': '10', 'name': 'filing_date', 'type': 'TEXT', 'notnull': '0', 'dflt_value': 'None', 'pk': '0'}, {'cid': '11', 'name': 'grant_date', 'type': 'TEXT', 'notnull': '0', 'dflt_value': 'None', 'pk': '0'}, {'cid': '12', 'name': 'priority_date', 'type': 'TEXT', 'notnull': '0', 'dflt_value': 'None', 'pk': '0'}, {'cid': '13', 'name': 'priority_claim', 'type': 'TEXT', 'notnull': '0', 'dflt_value': 'None', 'pk': '0'}, {'cid': '14', 'name': 'inventor_harmonized', 'type': 'TEXT', 'notnull': '0', 'dflt_value': 'None', 'pk': '0'}, {'cid': '15', 'name': 'examiner', 'type': 'TEXT', 'notnull': '0', 'dflt_value': 'None', 'pk': '0'}, {'cid': '16', 'name': 'uspc', 'type': 'TEXT', 'notnull': '0', 'dflt_value': 'None', 'pk': '0'}, {'cid': '17', 'name': 'ipc', 'type': 'TEXT', 'notnull': '0', 'dflt_value': 'None', 'pk': '0'}, {'cid': '18', 'name': 'cpc', 'type': 'TEXT', 'notnull': '0', 'dflt_value': 'None', 'pk': '0'}, {'cid': '19', 'name': 'citation', 'type': 'TEXT', 'notnull': '0', 'dflt_value': 'None', 'pk': '0'}, {'cid': '20', 'name': 'parent', 'type': 'TEXT', 'notnull': '0', 'dflt_value': 'None', 'pk': '0'}, {'cid': '21', 'name': 'child', 'type': 'TEXT', 'notnull': '0', 'dflt_value': 'None', 'pk': '0'}, {'cid': '22', 'name': 'entity_status', 'type': 'TEXT', 'notnull': '0', 'dflt_value': 'None', 'pk': '0'}, {'cid': '23', 'name': 'art_unit', 'type': 'TEXT', 'notnull': '0', 'dflt_value': 'None', 'pk': '0'}], 'var_functions.query_db:26': 'file_storage/functions.query_db:26.json', 'var_functions.query_db:28': 'file_storage/functions.query_db:28.json', 'var_functions.execute_python:32': {'type': "<class 'str'>", 'is_list': True, 'record_count': 169}, 'var_functions.query_db:34': 'file_storage/functions.query_db:34.json', 'var_functions.query_db:37': 'file_storage/functions.query_db:37.json', 'var_functions.execute_python:38': {'total_uc_patents': 169, 'uc_publication_numbers': ['US-6750960-B2', 'US-11667770-B2', 'US-10744347-B2', 'US-11607427-B2', 'EP-4284234-A1', 'US-2020283856-A1', 'US-10900049-B2', 'US-2017087258-A1', 'AU-2007297661-A1', 'US-11014955-B2', 'WO-2024050335-A2', 'WO-2018152537-A1', 'AU-2001296493-B2', 'US-7052856-B2', 'US-6767662-B2', 'WO-2024044766-A3', 'WO-2020096950-A1', 'CA-3161617-A1', 'US-2023171142-A1', 'US-2021282642-A1'], 'total_unique_pub_numbers': 124}, 'var_functions.execute_python:37': {'uc_patents_count': 169, 'uc_pub_numbers_count': 124, 'sample_uc_pub_numbers': ['WO-2023225482-A3', 'WO-2019173834-A1', 'AU-2002254753-B2', 'US-2017087258-A1', 'WO-2021102420-A1', 'US-11667770-B2', 'PE-20130764-A1', 'WO-2024050335-A2', 'US-11960018-B2', 'WO-2012158833-A3']}, 'var_functions.query_db:42': 'file_storage/functions.query_db:42.json', 'var_functions.execute_python:43': {'uc_patents_found': 10, 'uc_publication_numbers': 8, 'sample_mapping': {'US-2022074631-A1': ['F25B21/00', 'F28D15/00'], 'US-11421276-B2': ['C12Q1/6883'], 'AU-2019275518-B2': ['A61K9/007', 'A61K31/357', 'A61K31/08', 'A61K31/34', 'A61M16/01', 'A61P23/00', 'A61K31/351', 'A61P11/00', 'A61P43/00', 'A61D7/04', 'A61K31/015', 'A61K31/341', 'A61P25/20', 'A61K31/045', 'A61K31/02', 'A61K31/025']}}}
+
+exec(code, env_args)

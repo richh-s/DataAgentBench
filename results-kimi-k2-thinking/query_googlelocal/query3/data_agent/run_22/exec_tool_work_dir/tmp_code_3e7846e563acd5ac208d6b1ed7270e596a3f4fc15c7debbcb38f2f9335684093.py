@@ -1,0 +1,18 @@
+code = """import json
+import pandas as pd
+
+# Get the file path from the previous query result
+file_path = locals()['var_functions.query_db:8']
+
+# Read the data from the file
+with open(file_path, 'r') as f:
+    business_data = json.load(f)
+
+print(f"Total businesses with hours data: {len(business_data)}")
+print(f"First business: {business_data[0] if business_data else 'None'}")
+print('__RESULT__:')
+print(json.dumps({"count": len(business_data), "sample": business_data[0] if business_data else None}))"""
+
+env_args = {'var_functions.list_db:0': ['business_description'], 'var_functions.query_db:2': [], 'var_functions.query_db:5': [{'state': 'Open ⋅ Closes 5PM', 'count': '18'}, {'state': 'None', 'count': '9'}, {'state': 'Closed ⋅ Opens 10AM', 'count': '5'}, {'state': 'Open ⋅ Closes 9:30PM', 'count': '4'}, {'state': 'Open now', 'count': '4'}, {'state': 'Open ⋅ Closes 8PM', 'count': '3'}, {'state': 'Permanently closed', 'count': '3'}, {'state': 'Open ⋅ Closes 7PM', 'count': '3'}, {'state': 'Open ⋅ Closes 4PM', 'count': '3'}, {'state': 'Open ⋅ Closes 10PM', 'count': '3'}, {'state': 'Open ⋅ Closes 6PM', 'count': '3'}, {'state': 'Closed ⋅ Opens 9AM', 'count': '3'}, {'state': 'Open 24 hours', 'count': '2'}, {'state': 'Open ⋅ Closes 5:30PM', 'count': '2'}, {'state': 'Open ⋅ Closes 11AM ⋅ Reopens 4PM', 'count': '1'}, {'state': 'Open ⋅ Closes 3:30PM', 'count': '1'}, {'state': 'Open ⋅ Closes 9PM', 'count': '1'}, {'state': 'Closed ⋅ Opens 5PM Fri', 'count': '1'}, {'state': 'Open ⋅ Closes 11:30AM ⋅ Reopens 1PM', 'count': '1'}, {'state': 'Open ⋅ Closes 12PM ⋅ Reopens 1PM', 'count': '1'}], 'var_functions.query_db:6': [{'name': 'City Textile', 'hours': 'None'}, {'name': 'San Soo Dang', 'hours': '[["Thursday", "6:30AM–6PM"], ["Friday", "6:30AM–6PM"], ["Saturday", "6:30AM–6PM"], ["Sunday", "7AM–12PM"], ["Monday", "Closed"], ["Tuesday", "6:30AM–6PM"], ["Wednesday", "6:30AM–6PM"]]'}, {'name': 'Nova Fabrics', 'hours': '[["Thursday", "9AM–5PM"], ["Friday", "9AM–5PM"], ["Saturday", "Closed"], ["Sunday", "Closed"], ["Monday", "9AM–5PM"], ["Tuesday", "9AM–5PM"], ["Wednesday", "9AM–5PM"]]'}, {'name': 'Nobel Textile Co', 'hours': '[["Thursday", "9AM–5PM"], ["Friday", "9AM–5PM"], ["Saturday", "Closed"], ["Sunday", "Closed"], ["Monday", "9AM–5PM"], ["Tuesday", "9AM–5PM"], ["Wednesday", "9AM–5PM"]]'}, {'name': 'Matrix International Textiles', 'hours': '[["Thursday", "8:30AM–5:30PM"], ["Friday", "8:30AM–5:30PM"], ["Saturday", "Closed"], ["Sunday", "Closed"], ["Monday", "8:30AM–5:30PM"], ["Tuesday", "8:30AM–5:30PM"], ["Wednesday", "8:30AM–5:30PM"]]'}, {'name': 'Vons Chicken', 'hours': '[["Thursday", "11AM–9:30PM"], ["Friday", "11AM–9:30PM"], ["Saturday", "11AM–9:30PM"], ["Sunday", "11AM–9:30PM"], ["Monday", "Closed"], ["Tuesday", "11AM–9:30PM"], ["Wednesday", "11AM–9:30PM"]]'}, {'name': 'Black Tie Ski Rental Delivery of Mammoth', 'hours': '[["Thursday", "8AM–5PM"], ["Friday", "8AM–5PM"], ["Saturday", "8AM–5PM"], ["Sunday", "8AM–5PM"], ["Monday", "Closed"], ["Tuesday", "Closed"], ["Wednesday", "Closed"]]'}, {'name': 'Angel-A Massage', 'hours': '[["Thursday", "9:30AM–9:30PM"], ["Friday", "9:30AM–9:30PM"], ["Saturday", "9:30AM–9:30PM"], ["Sunday", "10AM–8PM"], ["Monday", "10AM–9:30PM"], ["Tuesday", "10AM–9:30PM"], ["Wednesday", "9:30AM–9:30PM"]]'}, {'name': 'Dunn-Edwards Paints', 'hours': '[["Thursday", "6:30AM–5PM"], ["Friday", "6:30AM–5PM"], ["Saturday", "7AM–3PM"], ["Sunday", "Closed"], ["Monday", "6:30AM–5PM"], ["Tuesday", "6:30AM–5PM"], ["Wednesday", "6:30AM–5PM"]]'}, {'name': 'Elite Massage', 'hours': 'None'}], 'var_functions.query_db:8': 'file_storage/functions.query_db:8.json'}
+
+exec(code, env_args)

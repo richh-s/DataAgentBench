@@ -1,0 +1,86 @@
+code = """import json
+import os
+import re
+
+# Access the language data file path
+lang_result_path = locals()['var_functions.query_db:20']
+
+# Read the languages data
+with open(lang_result_path, 'r') as f:
+    languages_data = json.load(f)
+
+# Create a set of non-Python repos for fast lookup
+non_python_set = set()
+python_set = set()
+
+for row in languages_data:
+    repo_name = row['repo_name']
+    lang_desc = row['language_description'].lower()
+    
+    if 'python' in lang_desc:
+        python_set.add(repo_name)
+    else:
+        non_python_set.add(repo_name)
+
+print(f"Total repositories: {len(languages_data)}")
+print(f"Python repositories: {len(python_set)}")
+print(f"Non-Python repositories: {len(non_python_set)}")
+
+# Access the README data
+readme_result_path = locals()['var_functions.query_db:28']
+
+# Read the README data
+with open(readme_result_path, 'r') as f:
+    readme_data = json.load(f)
+
+print(f"README files in sample: {len(readme_data)}")
+
+# Filter READMEs for non-Python repos and check for copyright
+non_python_readmes = []
+copyright_count = 0
+non_python_count = 0
+
+copyright_patterns = [
+    r'copyright\s+(©|\(c\)|\(C\))?',  # copyright with symbol
+    r'©',  # copyright symbol alone
+    r'\(c\).*\d{4}',  # (c) with year
+    r'\(C\).*\d{4}',  # (C) with year
+    r'copyright\s+\d{4}',  # copyright with year
+]
+
+copyright_regex = re.compile('|'.join(copyright_patterns), re.IGNORECASE)
+
+for row in readme_data:
+    repo_name = row['sample_repo_name']
+    content = row['content'] or ''
+    
+    if repo_name in non_python_set:
+        non_python_count += 1
+        non_python_readmes.append({
+            'repo': repo_name,
+            'has_copyright': bool(copyright_regex.search(content))
+        })
+        if copyright_regex.search(content):
+            copyright_count += 1
+
+print(f"Non-Python READMEs in sample: {non_python_count}")
+print(f"READMEs with copyright info: {copyright_count}")
+
+proportion = copyright_count / non_python_count if non_python_count > 0 else 0
+print(f"Proportion: {proportion:.4f} ({copyright_count}/{non_python_count})")
+
+result = {
+    'total_non_python_repos': len(non_python_set),
+    'sample_size': len(readme_data),
+    'non_python_readmes_in_sample': non_python_count,
+    'copyright_count': copyright_count,
+    'proportion': proportion,
+    'sample_proportion': non_python_count / len(readme_data) if readme_data else 0
+}
+
+print('__RESULT__:')
+print(json.dumps(result))"""
+
+env_args = {'var_functions.list_db:0': ['languages', 'repos', 'licenses'], 'var_functions.query_db:2': [{'repo_name': 'juliandunn/rackspacecloud', 'language_description': 'The codebase includes: Ruby (22,438 bytes), Shell (465 bytes).'}, {'repo_name': 'xMarkusSpringerx/coloranalyzer', 'language_description': 'This repository is mainly written in Ruby (1,897 bytes), with additional code in Shell (115 bytes).'}, {'repo_name': 'michaellihs/gitlab', 'language_description': 'The codebase includes: Ruby (162,002 bytes), Shell (168 bytes).'}, {'repo_name': 'vyorkin/xftp', 'language_description': 'The majority of the code is in Ruby (25,709 bytes), followed by Shell (115 bytes).'}, {'repo_name': 'airatshigapov/drophunter', 'language_description': 'The majority of the code is in Ruby (4,198 bytes), followed by Shell (115 bytes).'}, {'repo_name': 'tombruijn/chef-ruby-install', 'language_description': 'While most of the project is built in Ruby (10,174 bytes), it also incorporates Shell (716 bytes).'}, {'repo_name': 'SenseTecnic/stsplatform-lib-ruby', 'language_description': 'While most of the project is built in Ruby (17,195 bytes), it also incorporates Shell (115 bytes).'}, {'repo_name': 'procore/site-reliability-scripts', 'language_description': 'The majority of the code is in Ruby (12,891 bytes), followed by Shell (2,343 bytes).'}, {'repo_name': 'tibastral/web_motion', 'language_description': 'The majority of the code is in Ruby (5,324 bytes), followed by Shell (115 bytes).'}, {'repo_name': 'Haegin/stately', 'language_description': 'The codebase includes: Ruby (8,171 bytes), Shell (131 bytes).'}], 'var_functions.query_db:5': 'file_storage/functions.query_db:5.json', 'var_functions.query_db:6': 'file_storage/functions.query_db:6.json', 'var_functions.query_db:8': 'file_storage/functions.query_db:8.json', 'var_functions.execute_python:12': {'status': 'checked variables'}, 'var_functions.execute_python:16': {'error': 'variable not found'}, 'var_functions.query_db:18': [{'sample_repo_name': 'ninja-ide/ninja-ide', 'content': '![Travis report](https://travis-ci.org/ninja-ide/ninja-ide.svg?branch=master "Travis-C.I. Testing report")\n\n# Ninja-ide Is Not Just Another IDE.\n**Ninja-IDE** is a cross-platform integrated development environment (IDE) that allows developers to create applications for any purpose making the task of writing software easier and more enjoyable. It\'s also a secret ninja agency but this doesn\'t matter right now.\n![Ninja-IDE logo](http://ninjaide.webfactional.com/static/common/img/ninja-big.png)\n\n\n## Platforms\n- Linux/X11\n- Mac OS X\n- Windows\n- BSD\n\n\n## Ninja contact\n-   [Ninja website](http://ninja-ide.org "http://ninja-ide.org") at ninja-ide.org\n-   [Mailing List](http://groups.google.com/group/ninja-ide/topics "Ninja Google Groups") at Google Groups\n-   [@ninja\\\\_ide](https://twitter.com/ninja_ide "@ninja_ide") at Twitter\n-   [+Ninja-IDE](https://plus.google.com/103973182574871451647 "Ninja-IDE at Google Plus") at Google Plus\n-   [Ninja-IDE](https://kiwiirc.com/client/chat.freenode.net/?nick=Ninja%7C?&theme=cli#ninja-ide "ninja-ide at Freenode.net") at Freenode.net\n\n\n## Requirements\nOn any system you want **Ninja-IDE**, you\'ll need to have this dependencies installed:\n\n-   [Python](http://python.org "Python Homepage") >= 2.7  *(or Python3)*\n-   [PyQt4](http://www.riverbankcomputing.com/software/pyqt/intro "PyQt Homepage") >= 4.8  *(Not Qt5)*\n-   [PyQt4-QScintilla2](http://www.riverbankcomputing.com/software/qscintilla/intro "QScintilla2 Homepage") >= 2.0  *(Not Qt5)*\n-   [PIP](https://pip.pypa.io/en/latest/installing.html "About Installing PIP")  *(Not PIP3)*\n-   [Virtualenv](https://pypi.python.org/pypi/virtualenv "About Installing Virtualenv")\n\n\n## Installing on Mac OS\n```bash\nbrew install qt pyqt sip qscintilla2\n```\n\n\n## Cloning and Running\nYou can clone this repo and simply execute:\n\n```bash\ngit clone git://github.com/ninja-ide/ninja-ide.git\ncd ninja-ide\nsudo pip install -r requirements.txt\npython ninja-ide.py\n```\n\nPiece of cake, huh?\n\n\n## Source Code API Documentation\n- [http://ninja-ide.github.io/ninja-ide](http://ninja-ide.github.io/ninja-ide "Source Code API Documentation")\n\n\n## Videos\n[![Ninja-IDE Videos and Screencasts](http://img.youtube.com/vi/xShpNY5w-64/0.jpg)](https://www.youtube.com/channel/UCPopm5397ozfsS8FOSSOWGQ "Ninja-IDE Videos and Screencasts")\n\n\n## License\n-   **GPLv3+** *(GPLv3 or any other version later published by FSF at your option)*\n'}, {'sample_repo_name': 'cwilso/midi-synth', 'content': "# MIDI Synth\n\nThis application is a analog synthesizer simulation built on the [Web Audio API](https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html).  It is very loosely based on the architecture of a [Moog Prodigy](http://www.vintagesynth.com/moog/prodigy.php) synthesizer, although this is a polyphonic synthesizer, and it lacks the oscillator sync and glide effects of the Prodigy.  (AKA: this is not intended to be a replication of the Prodigy, so pleased don't tell me how crappy a reproduction it is! :)\n\nThis uses my [Web MIDI Polyfill](https://github.com/cwilso/WebMIDIAPIShim) to add MIDI support via the [Web MIDI API](http://webaudio.github.io/web-midi-api/) - in fact, I partly wrote this as a test case for the polyfill and the MIDI API itself, so if you have a MIDI keyboard attached, check it out.  The polyfill uses Java to access the MIDI device, so if you're wondering why Java is loading, that's why.  It may take a few seconds for MIDI to become active - the library takes a while to load - but when the ring turns gray (instead of blue), it's ready.  If you have a native implementation of the Web MIDI API in your browser, the polyfill shouldn't load - at the time of this writing, Chrome Stable (from version 43) has the only such implementation. Earlier versions of Chrome (from version 33) can enable Web MIDI via chrome://flags/#enable-web-midi\n\nYou can try it out live at https://webaudiodemos.appspot.com/midi-synth/index.html.\n\nCheck it out, feel free to fork, submit pull requests, etc.\n\n-Chris\n"}, {'sample_repo_name': 'ha/doozerd', 'content': '# Doozer\n\n![logo](doc/doozer.png)\n\n[![Build Status](https://secure.travis-ci.org/ha/doozerd.png)](http://travis-ci.org/ha/doozerd)\n\n## What Is It?\n\nDoozer is a highly-available, completely consistent\nstore for small amounts of extremely important data.\nWhen the data changes, it can notify connected clients\nimmediately (no polling), making it ideal for\ninfrequently-updated data for which clients want\nreal-time updates. Doozer is good for name service,\ndatabase master elections, and configuration data shared\nbetween several machines. See *When Should I Use It?*,\nbelow, for details.\n\nSee the [mailing list][mail] to discuss doozer with\nother users and developers.\n\n## Quick Start\n\n1. Download [doozerd](https://github.com/ha/doozerd/downloads)\n2. Unpack the archive and put `doozerd` in your `PATH`\n3. Repeat for [doozer](https://github.com/ha/doozer/downloads)\n4. Start a doozerd with a WebView listening on `:8080`\n\n        $ doozerd -w ":8080"\n\n5. Set a key and read it back\n\n        $ echo "hello, world" | doozer add /message\n        $ doozer get /message\n        hello, world\n\n6. Open <http://localhost:8080> and see your message\n\n![doozer web view](doc/webview.png)\n\n## How Does It Work?\n\nDoozer is a network service. A handful of machines\n(usually three, five, or seven) each run one doozer\nserver process. These processes communicate with each\nother using a standard fully-consistent distributed\nconsensus algorithm. Clients dial in to one or more of\nthe doozer servers, issue commands, such as GET, SET,\nand WATCH, and receive responses.\n\n(insert network diagram here)\n\nEach doozerd process has a complete copy of the\ndatastore and serves both read and write requests; there\nis no distinguished "master" or "leader". Doozer is\ndesigned to store data that fits entirely in memory; it\nnever writes data to permanent files. A separate tool\nprovides durable storage for backup and recovery.\n\n## When Should I Use It?\n\nHere are some example scenarios:\n\n1. *Name Service*\n\n    You have a set of machines that serve incoming HTTP\n    requests. Due to hardware failure, occasionally one\n    of these machines will fail and you replace it with a\n    new machine at a new network address. A change to DNS\n    data would take time to reach all clients, because\n    the TTL of the old DNS record would cause it to\n    remain in client caches for some time.\n\n    Instead of DNS, you could use Doozer. Clients can\n    subscribe to the names they are interested in, and\n    they will get notified when any of those names&#8217;\n    addresses change.\n\n2. *Database Master Election*\n\n    You are deploying a MySQL system. You want it to have\n    high availability, so you add slaves on separate\n    physical machines. When the master fails, you might\n    promote one slave to become the new master. At any\n    given time, clients need to know which machine is the\n    master, and the slaves must coordinate with each\n    other during failover.\n\n    You can use doozer to store the address of the\n    current master and all information necessary to\n    coordinate failover.\n\n3. *Configuration*\n\n    You have processes on several different machines, and\n    you want them all to use the same config file, which\n    you must occasionally update. It is important that\n    they all use the same configuration.\n\n    Store the config file in doozer, and have the\n    processes read their configuration directly from\n    doozer.\n\n## What can I do with it?\n\nWe have a detailed description of the [data model](doc/data-model.md).\n\nFor ways to manipulate or read the data, see the [protocol spec](doc/proto.md).\n\nTry out doozer\'s fault-tolerance with some [fire drills](doc/firedrill.md).\n\n## Similar Projects\n\nDoozer is similar to the following pieces of software:\n\n * Apache Zookeeper <http://zookeeper.apache.org/>\n * Google Chubby <http://research.google.com/archive/chubby.html>\n\n## Hacking on Doozer\n\n * [hacking on doozer](doc/hacking.md)\n * [mailing list][mail]\n\n## License and Authors\n\nDoozer is distributed under the terms of the MIT\nLicense. See [LICENSE](LICENSE) for details.\n\nDoozer was created by Blake Mizerany and Keith Rarick.\nType `git shortlog -s` for a full list of contributors.\n\n[mail]: https://groups.google.com/group/doozer\n'}], 'var_functions.query_db:20': 'file_storage/functions.query_db:20.json', 'var_functions.execute_python:24': 'file_storage/functions.execute_python:24.json', 'var_functions.execute_python:26': {'non_python_count': 2774729, 'non_python_repos_sample': ['Rinkana/maxmailer', '3makkk/SlmLocale', 'kyuba/kyuba.github.io', 'ac100-ru/sosboot-manifests', 'gnwong/mathparse-c', 'Mr0grog/newless', 'jb99park/finna-be-cyril', 'opium-coursera/responsive-website-development-and-design-specialization', 'snirkol/web-programming-project', 'kurt-stolle/primid']}, 'var_functions.query_db:28': 'file_storage/functions.query_db:28.json'}
+
+exec(code, env_args)

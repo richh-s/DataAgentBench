@@ -1,0 +1,84 @@
+code = """import json, re, math
+
+clinical = json.load(open(var_call_spCEGh9pTe256nADB4blw3NY, 'r', encoding='utf-8'))
+mutations = json.load(open(var_call_v2YtiC8nH4O8JzVZ0zGWt9NA, 'r', encoding='utf-8'))
+
+barcode_re = re.compile(r'(TCGA[-A-Za-z0-9]+)', re.IGNORECASE)
+
+def extract_barcode(desc):
+    if not isinstance(desc, str):
+        return None
+    m = barcode_re.search(desc)
+    return m.group(1).upper() if m else None
+
+# Build mutated set
+mutated_set = set()
+for rec in mutations:
+    pb = rec.get('ParticipantBarcode')
+    if isinstance(pb, str):
+        mutated_set.add(pb.upper())
+
+# Build patient dict: barcode -> histological_type, include only female, breast, histological_type present
+patient_by_barcode = {}
+for rec in clinical:
+    desc = rec.get('Patient_description')
+    if not isinstance(desc, str):
+        continue
+    if 'BREAST' not in desc.upper():
+        continue
+    if 'FEMALE' not in desc.upper():
+        continue
+    hist = rec.get('histological_type')
+    if not hist:
+        continue
+    bc = extract_barcode(desc)
+    if not bc:
+        continue
+    if bc not in patient_by_barcode:
+        patient_by_barcode[bc] = hist
+
+# Now count per histological_type mutated vs not
+counts = {}
+for bc, hist in patient_by_barcode.items():
+    mutated = bc in mutated_set
+    if hist not in counts:
+        counts[hist] = {'mutated': 0, 'not_mutated': 0}
+    if mutated:
+        counts[hist]['mutated'] += 1
+    else:
+        counts[hist]['not_mutated'] += 1
+
+# Filter out hist types with marginal totals <=10
+filtered = {h: v for h, v in counts.items() if (v['mutated'] + v['not_mutated']) > 10}
+
+result = {}
+if len(filtered) < 1:
+    result['error'] = 'Not enough data after filtering to compute chi-square.'
+    result['included_histological_types'] = len(filtered)
+else:
+    # compute chi-square
+    # Build lists
+    hist_list = list(filtered.keys())
+    obs = []
+    for h in hist_list:
+        obs.append([filtered[h]['mutated'], filtered[h]['not_mutated']])
+    # compute totals
+    row_totals = [sum(r) for r in obs]
+    col_totals = [sum(r[i] for r in obs) for i in range(2)]
+    grand_total = sum(row_totals)
+    chi2 = 0.0
+    for i, r in enumerate(obs):
+        for j, O in enumerate(r):
+            E = (row_totals[i] * col_totals[j]) / grand_total if grand_total>0 else 0
+            if E>0:
+                chi2 += (O - E)**2 / E
+    result['chi2'] = chi2
+    result['included_histological_types'] = len(hist_list)
+    result['contingency_table'] = {h: filtered[h] for h in hist_list}
+
+print('__RESULT__:')
+print(json.dumps(result))"""
+
+env_args = {'var_call_LezJA4Cs5rCxfZn1WQgXC95R': ['clinical_info'], 'var_call_jCAiuLhbXp01mWuX97bgS9Vc': [{'column_name': 'stopped_smoking_year'}, {'column_name': 'days_to_initial_pathologic_diagnosis'}, {'column_name': 'number_of_lymphnodes_positive_by_he'}, {'column_name': 'age_at_initial_pathologic_diagnosis'}, {'column_name': 'year_of_tobacco_smoking_onset'}, {'column_name': 'year_of_initial_pathologic_diagnosis'}, {'column_name': 'height'}, {'column_name': 'weight'}, {'column_name': 'number_of_lymphnodes_positive_by_ihc'}, {'column_name': 'days_to_birth'}, {'column_name': 'total_pelv_lnr'}, {'column_name': 'total_aor_lnr'}, {'column_name': 'number_pack_years_smoked'}, {'column_name': 'prior_dx'}, {'column_name': 'ethnicity'}, {'column_name': 'informed_consent_verified'}, {'column_name': 'person_neoplasm_cancer_status'}, {'column_name': 'patient_id'}, {'column_name': 'histological_type'}, {'column_name': 'tissue_source_site'}, {'column_name': 'form_completion_date'}, {'column_name': 'pathologic_T'}, {'column_name': 'pathologic_M'}, {'column_name': 'clinical_M'}, {'column_name': 'pathologic_N'}, {'column_name': 'system_version'}, {'column_name': 'pathologic_stage'}, {'column_name': 'clinical_stage'}, {'column_name': 'clinical_T'}, {'column_name': 'clinical_N'}, {'column_name': 'extranodal_involvement'}, {'column_name': 'postoperative_rx_tx'}, {'column_name': 'primary_therapy_outcome_success'}, {'column_name': 'lymph_node_examined_count'}, {'column_name': 'primary_lymph_node_presentation_assessment'}, {'column_name': 'initial_pathologic_diagnosis_method'}, {'column_name': 'eastern_cancer_oncology_group'}, {'column_name': 'anatomic_neoplasm_subdivision'}, {'column_name': 'residual_tumor'}, {'column_name': 'histological_type_other'}, {'column_name': 'init_pathology_dx_method_other'}, {'column_name': 'karnofsky_performance_score'}, {'column_name': 'neoplasm_histologic_grade'}, {'column_name': 'tobacco_smoking_history'}, {'column_name': 'performance_status_scale_timing'}, {'column_name': 'laterality'}, {'column_name': 'targeted_molecular_therapy'}, {'column_name': 'anatomic_neoplasm_subdivision_other'}, {'column_name': 'patient_death_reason'}, {'column_name': 'tumor_tissue_site_other'}, {'column_name': 'menopause_status'}, {'column_name': 'margin_status'}, {'column_name': 'kras_gene_analysis_performed'}, {'column_name': 'venous_invasion'}, {'column_name': 'lymphatic_invasion'}, {'column_name': 'perineural_invasion_present'}, {'column_name': 'her2_immunohistochemistry_level_result'}, {'column_name': 'breast_carcinoma_progesterone_receptor_status'}, {'column_name': 'breast_carcinoma_surgical_procedure_name'}, {'column_name': 'breast_neoplasm_other_surgical_procedure_descriptive_text'}, {'column_name': 'axillary_lymph_node_stage_method_type'}, {'column_name': 'breast_carcinoma_estrogen_receptor_status'}, {'column_name': 'cytokeratin_immunohistochemistry_staining_method_micrometastasi'}, {'column_name': 'lab_proc_her2_neu_immunohistochemistry_receptor_status'}, {'column_name': 'lab_procedure_her2_neu_in_situ_hybrid_outcome_type'}, {'column_name': 'additional_pharmaceutical_therapy'}, {'column_name': 'additional_radiation_therapy'}, {'column_name': 'lymphovascular_invasion_present'}, {'column_name': 'location_in_lung_parenchyma'}, {'column_name': 'pulmonary_function_test_performed'}, {'column_name': 'egfr_mutation_performed'}, {'column_name': 'diagnosis'}, {'column_name': 'eml4_alk_translocation_performed'}, {'column_name': 'days_to_new_tumor_event_after_initial_treatment'}, {'column_name': 'hemoglobin_result'}, {'column_name': 'serum_calcium_result'}, {'column_name': 'platelet_qualitative_result'}, {'column_name': 'number_of_lymphnodes_positive'}, {'column_name': 'white_cell_count_result'}, {'column_name': 'alcohol_history_documented'}, {'column_name': 'family_history_of_cancer'}, {'column_name': 'braf_gene_analysis_performed'}, {'column_name': 'city_of_procurement'}, {'column_name': 'surgical_approach'}, {'column_name': 'peritoneal_wash'}, {'column_name': 'Patient_description'}, {'column_name': 'prior_glioma'}, {'column_name': 'days_to_death'}, {'column_name': 'days_to_last_followup'}, {'column_name': 'icd_10'}, {'column_name': 'tissue_retrospective_collection_indicator'}, {'column_name': 'icd_o_3_histology'}, {'column_name': 'tissue_prospective_collection_indicator'}, {'column_name': 'history_of_neoadjuvant_treatment'}, {'column_name': 'icd_o_3_site'}, {'column_name': 'tumor_tissue_site'}, {'column_name': 'new_tumor_event_after_initial_treatment'}, {'column_name': 'radiation_therapy'}, {'column_name': 'race'}], 'var_call_iHcUbCsEwYHCtmDCBTMclLH7': 'file_storage/call_iHcUbCsEwYHCtmDCBTMclLH7.json', 'var_call_Jh8hgpdCCtTFIlO2bR3YApjB': [{'tumor_tissue_site': 'Breast'}], 'var_call_spCEGh9pTe256nADB4blw3NY': 'file_storage/call_spCEGh9pTe256nADB4blw3NY.json', 'var_call_v2YtiC8nH4O8JzVZ0zGWt9NA': 'file_storage/call_v2YtiC8nH4O8JzVZ0zGWt9NA.json', 'var_call_DNYejpNC5iXyB37itkRq2XB5': {'clinical_type': 'list', 'clinical_len': 1086, 'clinical_first_keys': ['patient_id', 'histological_type', 'Patient_description'], 'mutation_type': 'list', 'mutation_len': 261, 'mutation_first_keys': ['ParticipantBarcode', 'Hugo_Symbol', 'FILTER', 'HGVSp_Short', 'Variant_Classification']}, 'var_call_aATm8OXbX8qfKc8681tF3c5D': {'clinical_len': 1086, 'mut_len': 261, 'clinical_first10': [{'patient_id': 'A5EH', 'histological_type': 'Infiltrating Ductal Carcinoma', 'Patient_description': 'Clinical entry D13FB44B-291B-4EA4-920C-142DAA8D1989 identifies patient TCGA-AC-A5EH, a FEMALE subject with Breast invasive carcinoma. Their current vital status is Alive.'}, {'patient_id': 'A7SZ', 'histological_type': 'Infiltrating Ductal Carcinoma', 'Patient_description': 'Record 09A5E9FD-D816-4F8C-BAA9-0E40BA607B16 refers to patient TCGA-LL-A7SZ, a FEMALE diagnosed with Breast invasive carcinoma. Vital status recorded as Alive.'}, {'patient_id': 'A0FY', 'histological_type': 'Infiltrating Ductal Carcinoma', 'Patient_description': "Patient TCGA-AN-A0FY, registered under UUID de75d0b9-0f47-4732-8df5-05c350cfcd32, belongs to the Breast invasive carcinoma cohort. This FEMALE patient's vital status is Alive."}, {'patient_id': 'A2FB', 'histological_type': 'Infiltrating Lobular Carcinoma', 'Patient_description': 'Patient TCGA-AC-A2FB (UUID 02BBB632-0F7F-439D-B8F0-C86A06237424) is a FEMALE diagnosed with Breast invasive carcinoma. Current vital status: Alive.'}, {'patient_id': 'A1KR', 'histological_type': 'Infiltrating Ductal Carcinoma', 'Patient_description': 'The individual with barcode TCGA-AO-A1KR and UUID b7f74ae1-6f58-447c-be50-a7666eb19d9a is a FEMALE case of Breast invasive carcinoma, documented with vital status = Alive.'}, {'patient_id': 'A2DA', 'histological_type': 'Infiltrating Ductal Carcinoma', 'Patient_description': 'Clinical entry C07B122E-AC50-4DB2-ADD2-5617A5D0E976 identifies patient TCGA-GM-A2DA, a FEMALE subject with Breast invasive carcinoma. Their current vital status is Dead.'}, {'patient_id': 'AAAU', 'histological_type': 'Infiltrating Lobular Carcinoma', 'Patient_description': 'The individual with barcode TCGA-3C-AAAU and UUID 6E7D5EC6-A469-467C-B748-237353C23416 is a FEMALE case of Breast invasive carcinoma, documented with vital status = Alive.'}, {'patient_id': 'A26I', 'histological_type': 'Infiltrating Ductal Carcinoma', 'Patient_description': "Patient TCGA-A7-A26I, registered under UUID b2ecbc0f-2c30-4200-8d5e-7b95424bcadb, belongs to the Breast invasive carcinoma cohort. This FEMALE patient's vital status is Alive."}, {'patient_id': 'A5ZW', 'histological_type': 'Infiltrating Ductal Carcinoma', 'Patient_description': 'Record 523E24A2-51B9-4658-BE2F-42E5FCCEBB17 refers to patient TCGA-A7-A5ZW, a FEMALE diagnosed with Breast invasive carcinoma. Vital status recorded as Alive.'}, {'patient_id': 'A26Z', 'histological_type': 'Infiltrating Ductal Carcinoma', 'Patient_description': 'The individual with barcode TCGA-C8-A26Z and UUID dc11b1c7-1f00-4813-b4b5-ecf776b2eb37 is a FEMALE case of Breast invasive carcinoma, documented with vital status = Alive.'}], 'patient_desc_samples': ['Clinical entry D13FB44B-291B-4EA4-920C-142DAA8D1989 identifies patient TCGA-AC-A5EH, a FEMALE subject with Breast invasive carcinoma. Their current vital status is Alive.', 'Record 09A5E9FD-D816-4F8C-BAA9-0E40BA607B16 refers to patient TCGA-LL-A7SZ, a FEMALE diagnosed with Breast invasive carcinoma. Vital status recorded as Alive.', "Patient TCGA-AN-A0FY, registered under UUID de75d0b9-0f47-4732-8df5-05c350cfcd32, belongs to the Breast invasive carcinoma cohort. This FEMALE patient's vital status is Alive.", 'Patient TCGA-AC-A2FB (UUID 02BBB632-0F7F-439D-B8F0-C86A06237424) is a FEMALE diagnosed with Breast invasive carcinoma. Current vital status: Alive.', 'The individual with barcode TCGA-AO-A1KR and UUID b7f74ae1-6f58-447c-be50-a7666eb19d9a is a FEMALE case of Breast invasive carcinoma, documented with vital status = Alive.', 'Clinical entry C07B122E-AC50-4DB2-ADD2-5617A5D0E976 identifies patient TCGA-GM-A2DA, a FEMALE subject with Breast invasive carcinoma. Their current vital status is Dead.', 'The individual with barcode TCGA-3C-AAAU and UUID 6E7D5EC6-A469-467C-B748-237353C23416 is a FEMALE case of Breast invasive carcinoma, documented with vital status = Alive.', "Patient TCGA-A7-A26I, registered under UUID b2ecbc0f-2c30-4200-8d5e-7b95424bcadb, belongs to the Breast invasive carcinoma cohort. This FEMALE patient's vital status is Alive.", 'Record 523E24A2-51B9-4658-BE2F-42E5FCCEBB17 refers to patient TCGA-A7-A5ZW, a FEMALE diagnosed with Breast invasive carcinoma. Vital status recorded as Alive.', 'The individual with barcode TCGA-C8-A26Z and UUID dc11b1c7-1f00-4813-b4b5-ecf776b2eb37 is a FEMALE case of Breast invasive carcinoma, documented with vital status = Alive.'], 'hist_sample_30': ['Mixed Histology (please specify)', 'Other  specify', 'Infiltrating Carcinoma NOS', 'Infiltrating Lobular Carcinoma', 'Infiltrating Ductal Carcinoma', 'Medullary Carcinoma', 'Metaplastic Carcinoma', 'Mucinous Carcinoma'], 'mut_first10': [{'ParticipantBarcode': 'TCGA-A2-A0YL', 'Hugo_Symbol': 'CDH1', 'FILTER': 'PASS', 'HGVSp_Short': 'p.T364Hfs*4', 'Variant_Classification': 'Frame_Shift_Del'}, {'ParticipantBarcode': 'TCGA-AR-A1AT', 'Hugo_Symbol': 'CDH1', 'FILTER': 'PASS', 'HGVSp_Short': 'p.N315Ifs*41', 'Variant_Classification': 'Frame_Shift_Del'}, {'ParticipantBarcode': 'TCGA-BS-A0U8', 'Hugo_Symbol': 'CDH1', 'FILTER': 'PASS', 'HGVSp_Short': 'p.A824V', 'Variant_Classification': 'Missense_Mutation'}, {'ParticipantBarcode': 'TCGA-D8-A27G', 'Hugo_Symbol': 'CDH1', 'FILTER': 'PASS', 'HGVSp_Short': 'p.G169Rfs*5', 'Variant_Classification': 'Frame_Shift_Ins'}, {'ParticipantBarcode': 'TCGA-E6-A1LX', 'Hugo_Symbol': 'CDH1', 'FILTER': 'PASS', 'HGVSp_Short': 'p.R598Q', 'Variant_Classification': 'Missense_Mutation'}, {'ParticipantBarcode': 'TCGA-EJ-7782', 'Hugo_Symbol': 'CDH1', 'FILTER': 'PASS', 'HGVSp_Short': 'p.L249V', 'Variant_Classification': 'Missense_Mutation'}, {'ParticipantBarcode': 'TCGA-FI-A2D5', 'Hugo_Symbol': 'CDH1', 'FILTER': 'PASS', 'HGVSp_Short': 'p.N785S', 'Variant_Classification': 'Missense_Mutation'}, {'ParticipantBarcode': 'TCGA-G4-6628', 'Hugo_Symbol': 'CDH1', 'FILTER': 'PASS', 'HGVSp_Short': 'p.V425I', 'Variant_Classification': 'Missense_Mutation'}, {'ParticipantBarcode': 'TCGA-GI-A2C8', 'Hugo_Symbol': 'CDH1', 'FILTER': 'PASS', 'HGVSp_Short': 'p.W409L', 'Variant_Classification': 'Missense_Mutation'}, {'ParticipantBarcode': 'TCGA-VQ-A8PX', 'Hugo_Symbol': 'CDH1', 'FILTER': 'PASS', 'HGVSp_Short': 'p.L776M', 'Variant_Classification': 'Missense_Mutation'}]}}
+
+exec(code, env_args)

@@ -1,0 +1,106 @@
+code = """import json
+import os
+
+# Load the full dataset
+file_path = locals()['var_functions.query_db:16']
+with open(file_path, 'r') as f:
+    all_articles = json.load(f)
+
+print(f"Total articles in dataset: {len(all_articles)}")
+
+# Different approach: Let's categorize articles properly and see what we have
+def categorize_article(title, description):
+    text = (title + " " + description).lower()
+    
+    # Business keywords
+    business_keywords = ['stock', 'market', 'wall st', 'finance', 'business', 'economy', 'corporate', 'investment', 'company', 'bank', 'trade', 'dollar', 'oil', 'price', 'prices', 'fed', 'economics']
+    
+    # World keywords  
+    world_keywords = ['iraq', 'iran', 'war', 'conflict', 'government', 'president', 'country', 'nation', 'military', 'peace', 'treaty', 'international', 'global', 'china', 'japan', 'india', 'russia', 'africa', 'europe']
+    
+    # Tech keywords
+    tech_keywords = ['google', 'software', 'hardware', 'computer', 'technology', 'tech', 'microsoft', 'internet', 'digital', 'chips', 'amd', 'intel', 'hp', 'dell', 'science', 'scientific']
+    
+    # Sports keywords
+    sports_keywords = ['football', 'soccer', 'basketball', 'tennis', 'golf', 'cricket', 'baseball', 'hockey', 'athlete', 'game', 'team', 'player', 'league', 'championship', 'olympics', 'nba', 'nfl', 'mlb', 'nhl', 'world cup', 'coach', 'sports']
+    
+    business_score = sum(1 for k in business_keywords if k in text)
+    world_score = sum(1 for k in world_keywords if k in text)
+    tech_score = sum(1 for k in tech_keywords if k in text)
+    sports_score = sum(1 for k in sports_keywords if k in text)
+    
+    # Determine category by highest score, with tie-breaking priority: business > world > tech > sports
+    scores = {'Business': business_score, 'World': world_score, 'Science/Technology': tech_score, 'Sports': sports_score}
+    max_score = max(scores.values())
+    
+    if max_score == 0:
+        return 'World'
+    
+    # Find all categories with max score
+    max_categories = [cat for cat, score in scores.items() if score == max_score]
+    
+    if len(max_categories) == 1:
+        return max_categories[0]
+    else:
+        # Tie-breaking
+        if 'Business' in max_categories: return 'Business'
+        if 'World' in max_categories: return 'World'
+        if 'Science/Technology' in max_categories: return 'Science/Technology'
+        if 'Sports' in max_categories: return 'Sports'
+        return 'World'
+
+# Categorize all articles
+categorized_articles = []
+sports_articles = []
+
+for i, article in enumerate(all_articles):
+    category = categorize_article(article.get('title', ''), article.get('description', ''))
+    
+    categorized_articles.append({
+        'id': article.get('article_id'),
+        'title': article.get('title'),
+        'category': category,
+        'description_length': len(article.get('description', ''))
+    })
+    
+    if category == 'Sports':
+        sports_articles.append({
+            'id': article.get('article_id'),
+            'title': article.get('title'),
+            'description_length': len(article.get('description', ''))
+        })
+
+print(f"Found {len(sports_articles)} sports articles")
+
+# Print first few sports articles if any
+if sports_articles:
+    print("\nAll sports articles:")
+    for article in sorted(sports_articles, key=lambda x: int(x['id']) if x['id'] else 0):
+        print(f"ID {article['id']}: {article['title']} (length: {article['description_length']})")
+    
+    # Find the sports article with longest description
+    longest_sports = max(sports_articles, key=lambda x: x['description_length'])
+    print(f"\nLongest sports article has {longest_sports['description_length']} characters")
+    result = {'title': longest_sports['title']}
+else:
+    # Let's see the distribution of categories
+    categories = {'Business': 0, 'World': 0, 'Science/Technology': 0, 'Sports': 0}
+    for article in categorized_articles:
+        categories[article['category']] = categories.get(article['category'], 0) + 1
+    
+    print("\nArticle category distribution:")
+    for cat, count in categories.items():
+        print(f"{cat}: {count}")
+    
+    # Find the longest article overall as fallback
+    longest_overall = max(categorized_articles, key=lambda x: x['description_length'])
+    print(f"\nLongest article overall: {longest_overall['title']} (category: {longest_overall['category']})")
+    
+    result = {'title': None, 'message': 'No sports articles found', 'longest_overall': longest_overall['title']}
+
+print('__RESULT__:')
+print(json.dumps(result))"""
+
+env_args = {'var_functions.query_db:0': [{'_id': '69696fbf477cc36744114c00', 'article_id': '0', 'title': 'Wall St. Bears Claw Back Into the Black (Reuters)', 'description': "Reuters - Short-sellers, Wall Street's dwindling\\band of ultra-cynics, are seeing green again."}, {'_id': '69696fbf477cc36744114c01', 'article_id': '1', 'title': 'Carlyle Looks Toward Commercial Aerospace (Reuters)', 'description': 'Reuters - Private investment firm Carlyle Group,\\which has a reputation for making well-timed and occasionally\\controversial plays in the defense industry, has quietly placed\\its bets on another part of the market.'}, {'_id': '69696fbf477cc36744114c02', 'article_id': '2', 'title': "Oil and Economy Cloud Stocks' Outlook (Reuters)", 'description': 'Reuters - Soaring crude prices plus worries\\about the economy and the outlook for earnings are expected to\\hang over the stock market next week during the depth of the\\summer doldrums.'}, {'_id': '69696fbf477cc36744114c03', 'article_id': '3', 'title': 'Iraq Halts Oil Exports from Main Southern Pipeline (Reuters)', 'description': 'Reuters - Authorities have halted oil export\\flows from the main pipeline in southern Iraq after\\intelligence showed a rebel militia could strike\\infrastructure, an oil official said on Saturday.'}, {'_id': '69696fbf477cc36744114c04', 'article_id': '4', 'title': 'Oil prices soar to all-time record, posing new menace to US economy (AFP)', 'description': 'AFP - Tearaway world oil prices, toppling records and straining wallets, present a new economic menace barely three months before the US presidential elections.'}], 'var_functions.query_db:2': [{'_id': '69696fbf477cc36744114c00', 'article_id': '0', 'title': 'Wall St. Bears Claw Back Into the Black (Reuters)', 'description': "Reuters - Short-sellers, Wall Street's dwindling\\band of ultra-cynics, are seeing green again."}, {'_id': '69696fbf477cc36744114c01', 'article_id': '1', 'title': 'Carlyle Looks Toward Commercial Aerospace (Reuters)', 'description': 'Reuters - Private investment firm Carlyle Group,\\which has a reputation for making well-timed and occasionally\\controversial plays in the defense industry, has quietly placed\\its bets on another part of the market.'}, {'_id': '69696fbf477cc36744114c02', 'article_id': '2', 'title': "Oil and Economy Cloud Stocks' Outlook (Reuters)", 'description': 'Reuters - Soaring crude prices plus worries\\about the economy and the outlook for earnings are expected to\\hang over the stock market next week during the depth of the\\summer doldrums.'}, {'_id': '69696fbf477cc36744114c03', 'article_id': '3', 'title': 'Iraq Halts Oil Exports from Main Southern Pipeline (Reuters)', 'description': 'Reuters - Authorities have halted oil export\\flows from the main pipeline in southern Iraq after\\intelligence showed a rebel militia could strike\\infrastructure, an oil official said on Saturday.'}, {'_id': '69696fbf477cc36744114c04', 'article_id': '4', 'title': 'Oil prices soar to all-time record, posing new menace to US economy (AFP)', 'description': 'AFP - Tearaway world oil prices, toppling records and straining wallets, present a new economic menace barely three months before the US presidential elections.'}], 'var_functions.execute_python:8': {'title': None, 'message': 'No sports articles'}, 'var_functions.query_db:14': [{'_id': '69696fbf477cc36744114c00', 'article_id': '0', 'title': 'Wall St. Bears Claw Back Into the Black (Reuters)', 'description': "Reuters - Short-sellers, Wall Street's dwindling\\band of ultra-cynics, are seeing green again."}, {'_id': '69696fbf477cc36744114c01', 'article_id': '1', 'title': 'Carlyle Looks Toward Commercial Aerospace (Reuters)', 'description': 'Reuters - Private investment firm Carlyle Group,\\which has a reputation for making well-timed and occasionally\\controversial plays in the defense industry, has quietly placed\\its bets on another part of the market.'}, {'_id': '69696fbf477cc36744114c02', 'article_id': '2', 'title': "Oil and Economy Cloud Stocks' Outlook (Reuters)", 'description': 'Reuters - Soaring crude prices plus worries\\about the economy and the outlook for earnings are expected to\\hang over the stock market next week during the depth of the\\summer doldrums.'}, {'_id': '69696fbf477cc36744114c03', 'article_id': '3', 'title': 'Iraq Halts Oil Exports from Main Southern Pipeline (Reuters)', 'description': 'Reuters - Authorities have halted oil export\\flows from the main pipeline in southern Iraq after\\intelligence showed a rebel militia could strike\\infrastructure, an oil official said on Saturday.'}, {'_id': '69696fbf477cc36744114c04', 'article_id': '4', 'title': 'Oil prices soar to all-time record, posing new menace to US economy (AFP)', 'description': 'AFP - Tearaway world oil prices, toppling records and straining wallets, present a new economic menace barely three months before the US presidential elections.'}], 'var_functions.execute_python:14': {'title': None, 'message': 'No sports articles found in current sample', 'total_articles_checked': 5}, 'var_functions.query_db:16': 'file_storage/functions.query_db:16.json', 'var_functions.execute_python:20': {'title': "Why Windows isn't Unix"}, 'var_functions.execute_python:24': {'title': 'China Begins Countdown for Next Manned Space Flight'}, 'var_functions.execute_python:30': {'title': 'China Begins Countdown for Next Manned Space Flight'}, 'var_functions.query_db:34': [{'_id': '69696fbf477cc36744114c00', 'article_id': '0', 'title': 'Wall St. Bears Claw Back Into the Black (Reuters)', 'description': "Reuters - Short-sellers, Wall Street's dwindling\\band of ultra-cynics, are seeing green again."}, {'_id': '69696fbf477cc36744114c01', 'article_id': '1', 'title': 'Carlyle Looks Toward Commercial Aerospace (Reuters)', 'description': 'Reuters - Private investment firm Carlyle Group,\\which has a reputation for making well-timed and occasionally\\controversial plays in the defense industry, has quietly placed\\its bets on another part of the market.'}, {'_id': '69696fbf477cc36744114c02', 'article_id': '2', 'title': "Oil and Economy Cloud Stocks' Outlook (Reuters)", 'description': 'Reuters - Soaring crude prices plus worries\\about the economy and the outlook for earnings are expected to\\hang over the stock market next week during the depth of the\\summer doldrums.'}, {'_id': '69696fbf477cc36744114c03', 'article_id': '3', 'title': 'Iraq Halts Oil Exports from Main Southern Pipeline (Reuters)', 'description': 'Reuters - Authorities have halted oil export\\flows from the main pipeline in southern Iraq after\\intelligence showed a rebel militia could strike\\infrastructure, an oil official said on Saturday.'}, {'_id': '69696fbf477cc36744114c04', 'article_id': '4', 'title': 'Oil prices soar to all-time record, posing new menace to US economy (AFP)', 'description': 'AFP - Tearaway world oil prices, toppling records and straining wallets, present a new economic menace barely three months before the US presidential elections.'}], 'var_functions.execute_python:38': {'title': 'AMD starts shipping 90-nanometer chips to customers'}, 'var_functions.list_db:40': ['authors', 'article_metadata']}
+
+exec(code, env_args)

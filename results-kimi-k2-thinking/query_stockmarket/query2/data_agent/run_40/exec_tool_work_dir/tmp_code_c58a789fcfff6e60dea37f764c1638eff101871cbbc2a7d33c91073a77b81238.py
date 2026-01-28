@@ -1,0 +1,24 @@
+code = """import json
+
+# Get NYSE Arca ETFs
+result_key1 = 'var_functions.query_db:0'
+result_file_1 = locals()[result_key1]
+
+with open(result_file_1, 'r') as f:
+    etf_list = json.load(f)
+
+# Create a set for fast lookup
+nyse_arca_symbols = {etf['Symbol'] for etf in etf_list}
+
+# Check if SQQQ is in the list
+sqqq_in_list = 'SQQQ' in nyse_arca_symbols
+
+print('__RESULT__:')
+print(json.dumps({
+    'SQQQ_in_nyse_arca': sqqq_in_list,
+    'checked_against_total': len(nyse_arca_symbols)
+}))"""
+
+env_args = {'var_functions.query_db:0': 'file_storage/functions.query_db:0.json', 'var_functions.execute_python:5': 'file_storage/functions.execute_python:5.json', 'var_functions.list_db:6': 'file_storage/functions.list_db:6.json', 'var_functions.execute_python:10': {'total_nyse_arca_etfs': 1435, 'etfs_with_price_data': 1435, 'sample_etfs': ['AAAU', 'AADR', 'ABEQ', 'ACSG', 'ACWF', 'AFK', 'AFLG', 'AFMC', 'AFSM', 'AFTY']}, 'var_functions.query_db:12': [], 'var_functions.query_db:14': [{'Date': '2015-07-20', 'Adj Close': '193.3121490478516'}, {'Date': '2015-07-17', 'Adj Close': '193.212158203125'}, {'Date': '2015-05-21', 'Adj Close': '193.1998443603516'}, {'Date': '2015-07-16', 'Adj Close': '193.0484619140625'}, {'Date': '2015-11-03', 'Adj Close': '192.8638153076172'}, {'Date': '2015-05-18', 'Adj Close': '192.83792114257807'}, {'Date': '2015-06-23', 'Adj Close': '192.8120574951172'}, {'Date': '2015-05-19', 'Adj Close': '192.77456665039065'}, {'Date': '2015-05-22', 'Adj Close': '192.73838806152344'}, {'Date': '2015-06-22', 'Adj Close': '192.67564392089844'}], 'var_functions.query_db:16': [{'Date': '2015-01-22', 'Adj Close': '125.2300033569336'}, {'Date': '2015-01-27', 'Adj Close': '124.4000015258789'}, {'Date': '2015-01-21', 'Adj Close': '124.2300033569336'}, {'Date': '2015-01-23', 'Adj Close': '124.2300033569336'}, {'Date': '2015-01-20', 'Adj Close': '124.1999969482422'}], 'var_functions.execute_python:20': {'total_etfs_to_check': 1435, 'first_five_etfs': ['AAAU', 'AADR', 'ABEQ', 'ACSG', 'ACWF']}, 'var_functions.query_db:22': [{'max_close': '110.42893981933594'}], 'var_functions.query_db:24': [{'max_close': '24.036970138549805'}], 'var_functions.query_db:26': [{'max_close': '163.6190185546875'}], 'var_functions.query_db:28': [], 'var_functions.execute_python:30': {'status': 'Starting check for 1435 ETFs'}, 'var_functions.query_db:32': [{'max_close': '193.5270538330078'}], 'var_functions.query_db:34': [{'max_close': '21.189502716064453'}], 'var_functions.query_db:36': [{'max_close': '41.19669723510742'}], 'var_functions.query_db:38': [{'max_close': '52.82048416137695'}], 'var_functions.execute_python:36': 'file_storage/functions.execute_python:36.json', 'var_functions.execute_python:42': {'message': 'Created list of 1435 NYSE Arca ETFs to check', 'sample': [{'symbol': 'AAAU', 'description': 'Perth Mint Physical Gold ETF offers investors an opportunity to buy shares backed by physical gold, providing a secure and tangible way to invest in precious metals.'}, {'symbol': 'AADR', 'description': "AdvisorShares Dorsey Wright ADR ETF offers investors a dynamic way to access international markets through a diverse portfolio of American Depositary Receipts, leveraging the expertise of Dorsey Wright's investment strategies."}, {'symbol': 'ABEQ', 'description': 'Absolute Core Strategy ETF is an investment fund designed to offer a diversified portfolio, focusing on strategic asset allocation to optimize returns for investors.'}]}, 'var_functions.query_db:44': [{'max_close': '193.3121490478516', 'min_close': '170.28823852539062', 'avg_close': '187.21235711233956'}], 'var_functions.query_db:46': [{'max_close': '66.95523071289062'}], 'var_functions.query_db:48': [{'max_close': '125.2300033569336'}], 'var_functions.query_db:50': [{'max_close': '116.41609191894533'}], 'var_functions.query_db:52': [{'max_close': '24.133516311645508'}], 'var_functions.query_db:54': [{'max_close': '22.93797874450684'}], 'var_functions.query_db:56': [{'max_close': '39.58057403564453'}], 'var_functions.query_db:58': [{'count': '252'}], 'var_functions.query_db:60': [{'max_close': '507.2368774414063'}]}
+
+exec(code, env_args)

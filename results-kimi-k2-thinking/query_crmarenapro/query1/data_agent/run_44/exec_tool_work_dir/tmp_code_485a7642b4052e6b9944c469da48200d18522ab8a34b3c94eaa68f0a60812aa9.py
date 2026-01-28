@@ -1,0 +1,96 @@
+code = """import json
+import re
+
+transcript_data = locals()['var_functions.query_db:0']
+
+# Extract the transcript text
+transcript = transcript_data[0]['Body__c']
+
+print("ANALYZING BANT FACTORS FROM TRANSCRIPT:")
+print("=" * 50)
+
+# BUDGET ANALYSIS
+budget = None
+price = None
+budget_match = re.search(r'budget is \$(\d+)', transcript, re.IGNORECASE)
+if budget_match:
+    budget = int(budget_match.group(1))
+    print("Budget mentioned: $" + str(budget))
+
+price_match = re.search(r'four units.*\$([\d,]+)', transcript, re.IGNORECASE)
+if price_match:
+    price = int(price_match.group(1).replace(',', ''))
+    print("Price for 4 units: $" + str(price))
+
+# AUTHORITY ANALYSIS - looking for decision maker indicators
+authority_keywords = ['final say', 'consult with', 'finance team', 'need to check', 'approval', 'decision maker', 'authority']
+authority_issues = []
+for keyword in authority_keywords:
+    if keyword.lower() in transcript.lower():
+        authority_issues.append(keyword)
+
+print("\nAuthority issues found: " + str(authority_issues))
+
+# NEED ANALYSIS - looking for need indicators
+need_indicators = ['interested', 'enhance', 'simulation capabilities', 'great fit', 'beneficial', 'move forward']
+need_matches = []
+for indicator in need_indicators:
+    if indicator.lower() in transcript.lower():
+        need_matches.append(indicator)
+
+print("Need indicators found: " + str(need_matches))
+
+# TIMELINE ANALYSIS - looking for timeline indicators
+timeline_keywords = ['tight timeline', 'installation', 'within a day']
+timeline_matches = []
+for keyword in timeline_keywords:
+    if keyword.lower() in transcript.lower():
+        timeline_matches.append(keyword)
+
+print("Timeline indicators found: " + str(timeline_matches))
+
+# Check if any other transcripts exist for this lead
+print("\nNumber of transcripts found: " + str(len(transcript_data)))
+
+budget_ok = False
+if budget is not None and price is not None:
+    budget_ok = budget >= price
+    print("\nBUDGET OK: " + str(budget_ok) + " (Budget: $" + str(budget) + ", Price: $" + str(price) + ")")
+
+authority_ok = len(authority_issues) == 0
+print("AUTHORITY OK: " + str(authority_ok))
+
+need_ok = len(need_matches) > 0
+print("NEED OK: " + str(need_ok))
+
+timeline_ok = len(timeline_matches) > 0
+print("TIMELINE OK: " + str(timeline_ok))
+
+# Determine which BANT factors fail
+failing_factors = []
+if not budget_ok:
+    failing_factors.append('Budget')
+if not authority_ok:
+    failing_factors.append('Authority')
+if not need_ok:
+    failing_factors.append('Need')
+if not timeline_ok:
+    failing_factors.append('Timeline')
+
+print("\nFAILING FACTORS: " + str(failing_factors))
+
+# Convert to JSON for final output
+result = {
+    "budget_ok": budget_ok,
+    "authority_ok": authority_ok,
+    "need_ok": need_ok,
+    "timeline_ok": timeline_ok,
+    "failing_factors": failing_factors
+}
+
+print('__RESULT__:')
+print(json.dumps(result, indent=2))"""
+
+env_args = {'var_functions.query_db:0': [{'Id': 'a05Wt000003SukEIAS', 'OpportunityId__c': 'None', 'LeadId__c': '00QWt0000089AekMAE', 'Body__c': "[2023-10-21T10:02:00] Ava Sullivan: Hi Ali, this is Ava Sullivan from TechSolutions. How are you today?\n[2023-10-21T10:02:10] Ali Hussein: Hi Ava, I'm doing well, thank you. How about you?\n[2023-10-21T10:02:20] Ava Sullivan: I'm great, thank you for asking! I'm glad we could connect. I was looking over the details you provided about your interest in the PulseSim Pro. Is now a good time to discuss?\n[2023-10-21T10:02:30] Ali Hussein: Yes, now works for me. I'm interested to learn more and see how it fits with what we need.\n[2023-10-21T10:02:40] Ava Sullivan: Fantastic! From what you’ve mentioned, you’re interested in four units of the PulseSim Pro, correct?\n[2023-10-21T10:02:50] Ali Hussein: That's right. We want to enhance our simulation capabilities, and the PulseSim Pro seems like a great fit.\n[2023-10-21T10:03:05] Ava Sullivan: Absolutely. The PulseSim Pro is one of our top products for high precision simulation. It offers advanced analytics and seamless integration with existing systems, which is great for boosting efficiency.\n[2023-10-21T10:03:15] Ali Hussein: Those features sound beneficial. We do have a tight timeline for installation, though. Could you tell me more about that?\n[2023-10-21T10:03:30] Ava Sullivan: Certainly. We understand the importance of meeting tight schedules. We usually aim to complete installations within a day and ensure everything runs smoothly. Our technical team is very efficient.\n[2023-10-21T10:03:40] Ali Hussein: That’s reassuring. And as for the budget, how does it look for four units?\n[2023-10-21T10:03:55] Ava Sullivan: Considering your budget is $2,261, I think we can work something out. Each PulseSim Pro unit is priced at $500. For four units, it will come to $2,000. This is below your budget, leaving room for additional services if you wish.\n[2023-10-21T10:04:10] Ali Hussein: That fits really well. I'd like to move forward, but I'll need to consult with the finance team here since I don’t have the final say.\n[2023-10-21T10:04:20] Ava Sullivan: I completely understand, Ali. Would you like me to send over a detailed proposal and pricing information so you can present it to your team?\n[2023-10-21T10:04:25] Ali Hussein: Yes, please. That would be very helpful.\n[2023-10-21T10:04:35] Ava Sullivan: Great! I'll have that to you by the end of the day. Is there anything else you would need from my side?\n[2023-10-21T10:04:40] Ali Hussein: No, that sounds good for now. Thank you, Ava.\n[2023-10-21T10:04:50] Ava Sullivan: You're welcome, Ali. If any questions come up, feel free to reach out. Have a wonderful day!\n[2023-10-21T10:04:55] Ali Hussein: Thanks, Ava. You too!", 'CreatedDate': '2023-10-21T10:02:00.000+0000', 'EndTime__c': '2023-10-21'}], 'var_functions.query_db:2': [], 'var_functions.query_db:5': []}
+
+exec(code, env_args)

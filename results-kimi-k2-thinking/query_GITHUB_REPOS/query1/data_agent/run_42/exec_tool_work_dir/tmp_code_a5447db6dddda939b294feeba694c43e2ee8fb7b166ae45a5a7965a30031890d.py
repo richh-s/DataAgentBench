@@ -1,0 +1,70 @@
+code = """import json
+import re
+import os
+
+# Load the stored results from previous queries
+readme_file = '/tmp/tmptx9f5__v/results.json'
+non_python_file = '/tmp/tmp_5w_kh_e/results.json'
+
+with open(readme_file, 'r') as f:
+    readme_data = json.load(f)
+
+with open(non_python_file, 'r') as f:
+    non_python_data = json.load(f)
+
+# Create a set of non-Python repository names for fast lookup
+non_python_repos = set(item['repo_name'] for item in non_python_data)
+
+print('Total README.md files sampled: ' + str(len(readme_data)))
+print('Total non-Python repos in sample: ' + str(len(non_python_repos)))
+
+# Filter README.md files to only include those from non-Python repositories
+copyright_count = 0
+total_non_python_readmes = 0
+
+for readme in readme_data:
+    repo_name = readme['sample_repo_name']
+    
+    # Check if this repo is in our non-Python set
+    if repo_name in non_python_repos:
+        total_non_python_readmes += 1
+        content = readme.get('content', '')
+        
+        # Check for copyright information (case-insensitive)
+        if content:
+            content_lower = content.lower()
+            # Look for common copyright patterns
+            if ('copyright' in content_lower or 
+                'all rights reserved' in content_lower or
+                '©' in content_lower or
+                re.search(r'\(c\)\s*\d{4}', content_lower)):
+                copyright_count += 1
+
+# Calculate proportion
+if total_non_python_readmes > 0:
+    proportion = copyright_count / total_non_python_readmes
+    proportion_pct = '{:.2%}'.format(proportion)
+else:
+    proportion = 0
+    proportion_pct = '0.00%'
+
+print('\n=== RESULTS ===')
+print('Non-Python repositories examined: ' + str(len(non_python_repos)))
+print('README.md files from non-Python repos: ' + str(total_non_python_readmes))
+print('README.md files with copyright: ' + str(copyright_count))
+print('Proportion: ' + proportion_pct)
+
+result = {
+    'non_python_repos_in_sample': len(non_python_repos),
+    'readme_files_examined': total_non_python_readmes,
+    'readme_files_with_copyright': copyright_count,
+    'proportion': proportion,
+    'proportion_percentage': proportion_pct
+}
+
+print('\n__RESULT__:')
+print(json.dumps(result, indent=2))"""
+
+env_args = {'var_functions.query_db:0': [{'repo_name': 'juliandunn/rackspacecloud', 'language_description': 'The codebase includes: Ruby (22,438 bytes), Shell (465 bytes).'}, {'repo_name': 'xMarkusSpringerx/coloranalyzer', 'language_description': 'This repository is mainly written in Ruby (1,897 bytes), with additional code in Shell (115 bytes).'}, {'repo_name': 'michaellihs/gitlab', 'language_description': 'The codebase includes: Ruby (162,002 bytes), Shell (168 bytes).'}, {'repo_name': 'vyorkin/xftp', 'language_description': 'The majority of the code is in Ruby (25,709 bytes), followed by Shell (115 bytes).'}, {'repo_name': 'airatshigapov/drophunter', 'language_description': 'The majority of the code is in Ruby (4,198 bytes), followed by Shell (115 bytes).'}, {'repo_name': 'tombruijn/chef-ruby-install', 'language_description': 'While most of the project is built in Ruby (10,174 bytes), it also incorporates Shell (716 bytes).'}, {'repo_name': 'SenseTecnic/stsplatform-lib-ruby', 'language_description': 'While most of the project is built in Ruby (17,195 bytes), it also incorporates Shell (115 bytes).'}, {'repo_name': 'procore/site-reliability-scripts', 'language_description': 'The majority of the code is in Ruby (12,891 bytes), followed by Shell (2,343 bytes).'}, {'repo_name': 'tibastral/web_motion', 'language_description': 'The majority of the code is in Ruby (5,324 bytes), followed by Shell (115 bytes).'}, {'repo_name': 'Haegin/stately', 'language_description': 'The codebase includes: Ruby (8,171 bytes), Shell (131 bytes).'}], 'var_functions.query_db:2': 'file_storage/functions.query_db:2.json', 'var_functions.query_db:5': 'file_storage/functions.query_db:5.json', 'var_functions.query_db:6': 'file_storage/functions.query_db:6.json', 'var_functions.query_db:10': 'file_storage/functions.query_db:10.json', 'var_functions.query_db:12': 'file_storage/functions.query_db:12.json', 'var_functions.query_db:16': 'file_storage/functions.query_db:16.json', 'var_functions.query_db:18': [{'total_repos': '3325634'}], 'var_functions.query_db:20': 'file_storage/functions.query_db:20.json', 'var_functions.query_db:24': 'file_storage/functions.query_db:24.json', 'var_functions.query_db:26': [{'python_repos': '550905'}], 'var_functions.query_db:28': [{'python_repos': '550905'}], 'var_functions.query_db:30': 'file_storage/functions.query_db:30.json', 'var_functions.query_db:32': [{'total_repos': '3325634'}], 'var_functions.query_db:34': 'file_storage/functions.query_db:34.json', 'var_functions.query_db:36': 'file_storage/functions.query_db:36.json', 'var_functions.query_db:38': [{'total_repos': '3325634'}], 'var_functions.query_db:40': [{'python_repos': '550905'}], 'var_functions.query_db:42': 'file_storage/functions.query_db:42.json', 'var_functions.query_db:52': 'file_storage/functions.query_db:52.json', 'var_functions.query_db:54': [{'total_repos': '3325634', 'python_repos': '550905', 'non_python_repos': '2774729'}], 'var_functions.query_db:56': [{'sample_repo_name': 'ninja-ide/ninja-ide'}, {'sample_repo_name': 'cwilso/midi-synth'}, {'sample_repo_name': 'ha/doozerd'}, {'sample_repo_name': 'devsoulwolf/ChatMessageView'}, {'sample_repo_name': 'google/traceur-compiler'}, {'sample_repo_name': 'jeffmo/jasmine-pit'}, {'sample_repo_name': 'radare/radeco'}, {'sample_repo_name': 'jcinnamond/el-presenti'}, {'sample_repo_name': 'durka/named-block'}, {'sample_repo_name': 'MaLeLabTs/RegexGenerator'}, {'sample_repo_name': 'blond/hash-set'}, {'sample_repo_name': 'uupaa/UserAgent.js'}, {'sample_repo_name': 'Magnetme/consultant'}, {'sample_repo_name': 'rafiuske/papergram'}, {'sample_repo_name': 'wahern/cqueues'}, {'sample_repo_name': 'Hexworks/hexameter'}, {'sample_repo_name': 'xxtea/xxtea-php'}, {'sample_repo_name': 'JSSolutions/meteor-google-prediction'}, {'sample_repo_name': 'JuliaDB/MySQL.jl'}, {'sample_repo_name': 'varlesh/elementary-add'}, {'sample_repo_name': 'blynkkk/blynk-server'}, {'sample_repo_name': 'sakaal/service_platform_ansible'}, {'sample_repo_name': '3ventic/DiscordServers'}, {'sample_repo_name': 'sskyy/redux-task'}, {'sample_repo_name': 'jeelabs/jet'}, {'sample_repo_name': 'Swader/diffbot-php-client'}, {'sample_repo_name': 'mluisbrown/Memories'}, {'sample_repo_name': 'lucaspouzac/contiperf'}, {'sample_repo_name': 'mattinove/SwiftySlider'}, {'sample_repo_name': 'polomoshnov/jQuery-UI-Resizable-Snap-extension'}, {'sample_repo_name': 'dfletcher/tsws'}, {'sample_repo_name': 'marcelklehr/gulf-contenteditable'}, {'sample_repo_name': 'F1ReKing/wheelview'}, {'sample_repo_name': 'pmwkaa/serenity'}, {'sample_repo_name': 'nodejs/node-gyp'}, {'sample_repo_name': 'Moq/moq'}, {'sample_repo_name': 'adafruit/Adafruit-Trinket-Gemma-Bootloader'}, {'sample_repo_name': 'aceway/findX'}, {'sample_repo_name': 'Blizzard/omniauth-bnet'}, {'sample_repo_name': 'rluders/phaser-skeleton'}, {'sample_repo_name': 'mozilla/oneanddone'}, {'sample_repo_name': 'dikiaap/mangan'}, {'sample_repo_name': 'CfABrigadePhiladelphia/jawn'}, {'sample_repo_name': 'hosom/bro-file-extraction'}, {'sample_repo_name': 'Maaphoo/Retr3d'}, {'sample_repo_name': 'andres-erbsen/dename'}, {'sample_repo_name': 'dblock/slack-google-bot'}, {'sample_repo_name': 'jconst/JCDialPad'}, {'sample_repo_name': 'chrisdone/hulk'}, {'sample_repo_name': 'winunet/Hui'}, {'sample_repo_name': 'adobe-type-tools/cmap-resources'}, {'sample_repo_name': 'crossroadlabs/homebrew-tap'}, {'sample_repo_name': 'NickolausDS/Unity-Free-Flight'}, {'sample_repo_name': 'OscarES/Differential-Algebra-Tracker'}, {'sample_repo_name': 'isychev93/Xamarin.Forms-Drag-and-drop-ListView'}, {'sample_repo_name': 'rdebath/Brainfuck'}, {'sample_repo_name': 'himanshu-soni/image-intent-handler'}, {'sample_repo_name': 'mstevenson/AssetsWatcher'}, {'sample_repo_name': 'j-bennet/wharfee'}, {'sample_repo_name': 'AcyOrt/acyort'}, {'sample_repo_name': 'rogpeppe/showdeps'}, {'sample_repo_name': 'AutoDo/AutoDo'}, {'sample_repo_name': 'JMPerez/beats-audio-api'}, {'sample_repo_name': 'inamiy/DebugLog'}, {'sample_repo_name': 'fdaciuk/ajax'}, {'sample_repo_name': 'jzitelli/poolvr'}, {'sample_repo_name': 'thedeibo/ServerLoveMCPE'}, {'sample_repo_name': 'guangzhuwu/p2engine'}, {'sample_repo_name': 'rusty1s/koa2-rest-api'}, {'sample_repo_name': 'DUBULEE/FileCacheUtil'}, {'sample_repo_name': 'VeliovGroup/Meteor-logger'}, {'sample_repo_name': 'claudijd/c7decrypt'}, {'sample_repo_name': 'alexchamberlain/piimg'}, {'sample_repo_name': 'SuperID/super-cache'}, {'sample_repo_name': 'PECE-project/pece-distro'}, {'sample_repo_name': 'paul999/433.92-Raspberry-Pi'}, {'sample_repo_name': 'jsonld-java/jsonld-java-tools'}, {'sample_repo_name': 'noveogroup/android-logger'}, {'sample_repo_name': 'nictuku/stardew-rocks'}, {'sample_repo_name': 'edomaru/codeigniter_multilevel_menu'}, {'sample_repo_name': 'shenxgan/xblog'}, {'sample_repo_name': 'LI-COR/eddypro-engine'}, {'sample_repo_name': 'zverok/magic_cloud'}, {'sample_repo_name': 'rita-marylin-raquel/softbloks'}, {'sample_repo_name': 'mojeda/ServerStatus'}, {'sample_repo_name': 'yuvirajsinh/YCameraView'}, {'sample_repo_name': 'firebase/EventSource-Examples'}, {'sample_repo_name': 'otoolep/gosf-rqlite'}, {'sample_repo_name': 'keithwhor/cmnd'}, {'sample_repo_name': 'kluivers/jbw-builders'}, {'sample_repo_name': 'TelerikAcademy/TelerikAcademyPlus'}, {'sample_repo_name': 'delight-im/OpenSoccer'}, {'sample_repo_name': 'lmammino/gulp-cozy'}, {'sample_repo_name': 'Nebulosus/shamir'}, {'sample_repo_name': 'daemon3000/InputManager'}, {'sample_repo_name': 'brindille/brindille-component'}, {'sample_repo_name': 'laxa1986/gulp-angular-embed-templates'}, {'sample_repo_name': 'krishkumar/BlockParty'}, {'sample_repo_name': 'hypriot/rpi-busybox-httpd'}, {'sample_repo_name': 'DMarby/Harpia'}, {'sample_repo_name': 'CESNET/owncloud-theme'}, {'sample_repo_name': 'sendgrid/python-http-client'}, {'sample_repo_name': 'ravl1084/TJ2PDF'}, {'sample_repo_name': 'richtr/plug.play.js'}, {'sample_repo_name': 'PixarAnimationStudios/jss-api-gem'}, {'sample_repo_name': 'qt-pods/qt-pods'}, {'sample_repo_name': 'analog-nico/passport-pinterest'}, {'sample_repo_name': 'kittens/lerna'}, {'sample_repo_name': 'mmerian/phpcrawl'}, {'sample_repo_name': 'spaar/besiege-modloader'}, {'sample_repo_name': 'derrickburns/generalized-kmeans-clustering'}, {'sample_repo_name': 'johnhamelink/exrm_deb'}, {'sample_repo_name': 'jforman/munin-graphite'}, {'sample_repo_name': 'rubylit/guevara'}, {'sample_repo_name': 'Flat/Konachan-for-Muzei'}, {'sample_repo_name': 'smklancher/ZeoSleepMonitor'}, {'sample_repo_name': 'Calinou/godot-snippets'}, {'sample_repo_name': 'jbboehr/php-mustache'}, {'sample_repo_name': 'johnpneumann/portable-maya-prefs'}, {'sample_repo_name': 'OfficeDev/Product-List-Code-Sample'}, {'sample_repo_name': 'chrisbarrett/emacs-refactor'}, {'sample_repo_name': 'pouetnet/pouet2.0'}, {'sample_repo_name': 'divmain/GitSavvy'}, {'sample_repo_name': 'kinduff/spree_reffiliate'}, {'sample_repo_name': 'velveteer/mithril-boilerplate'}, {'sample_repo_name': 'atom/node-ctags'}, {'sample_repo_name': 'bh107/bohrium'}, {'sample_repo_name': 'opinkerfi/adagios'}], 'var_functions.query_db:60': [{'total_repos': '3325634', 'python_repos': '550905', 'non_python_repos': '2774729'}], 'var_functions.query_db:62': 'file_storage/functions.query_db:62.json', 'var_functions.query_db:74': 'file_storage/functions.query_db:74.json', 'var_functions.query_db:82': [{'COUNT(*)': '3325634'}], 'var_functions.query_db:84': 'file_storage/functions.query_db:84.json', 'var_functions.query_db:86': 'file_storage/functions.query_db:86.json'}
+
+exec(code, env_args)

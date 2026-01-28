@@ -84,6 +84,11 @@ class DataAgent:
                 api_key=os.getenv("GEMINI_API_KEY"),
                 base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
             )
+        elif "kimi" in deployment_name.lower() or "qwen" in deployment_name.lower():
+            self.client = OpenAI(
+                api_key=os.getenv("TOGETHER_API_KEY"),
+                base_url="https://api.together.xyz/v1",
+            )
         else:
             raise ValueError(f"Unsupported deployment name: {deployment_name}")
         self.deployment_name = deployment_name

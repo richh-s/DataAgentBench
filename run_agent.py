@@ -20,6 +20,8 @@ TASK_LIST = [
     "yelp",
     "agnews",
     "music_brainz_20k",
+    "civic_unstructured",
+    "paper_unstructured",
 ]
 
 if __name__ == "__main__":

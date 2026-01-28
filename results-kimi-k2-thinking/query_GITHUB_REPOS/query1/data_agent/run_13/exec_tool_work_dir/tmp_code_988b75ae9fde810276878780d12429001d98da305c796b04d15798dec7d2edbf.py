@@ -1,0 +1,58 @@
+code = """import json
+
+# Access the previous query results
+db24_result = var_functions.query_db:24
+
+# Debug: check what we have
+print('Type of db24_result:', type(db24_result))
+print('Length of db24_result:', len(db24_result) if isinstance(db24_result, list) else 'not a list')
+
+if isinstance(db24_result, list) and len(db24_result) > 0:
+    print('First item:', db24_result[0])
+    print('Keys in first item:', list(db24_result[0].keys()))
+
+# Load non-python repos data from the file
+with open('/tmp/tmp8q3_5v3g.json', 'r') as f:
+    non_python_repos = json.load(f)
+
+print('Non-python repos loaded:', len(non_python_repos))
+
+# Get repo names
+non_python_names = {repo['repo_name'] for repo in non_python_repos}
+print('Unique non-python repo names:', len(non_python_names))
+
+# Filter README files
+readme_files = db24_result if isinstance(db24_result, list) else []
+filtered_readmes = []
+
+for readme in readme_files:
+    if readme.get('sample_repo_name') in non_python_names:
+        filtered_readmes.append(readme)
+
+print('Filtered READMEs:', len(filtered_readmes))
+
+# Check copyright terms
+copyright_terms = ['copyright', 'Copyright', '©', '(c)', '(C)']
+copyright_count = sum(1 for readme in filtered_readmes 
+                      if any(term in (readme.get('content', '') or '') for term in copyright_terms))
+
+print('Copyright found:', copyright_count)
+
+# Calculate proportion
+total = len(filtered_readmes)
+proportion = copyright_count / total if total > 0 else 0
+
+result = {
+    'non_python_repos': len(non_python_names),
+    'readme_files': total,
+    'copyright_found': copyright_count,
+    'proportion': round(proportion, 4),
+    'percentage': round(proportion * 100, 2)
+}
+
+print('__RESULT__:')
+print(json.dumps(result))"""
+
+env_args = {'var_functions.list_db:0': ['languages', 'repos', 'licenses'], 'var_functions.list_db:2': ['commits', 'contents', 'files'], 'var_functions.query_db:5': 'file_storage/functions.query_db:5.json', 'var_functions.query_db:6': 'file_storage/functions.query_db:6.json', 'var_functions.query_db:8': 'file_storage/functions.query_db:8.json', 'var_functions.query_db:10': [{'sample_repo_name': 'dale3h/alexa-skills-list'}, {'sample_repo_name': 'varlesh/elementary-add'}, {'sample_repo_name': 'sskyy/redux-task'}, {'sample_repo_name': 'F1ReKing/wheelview'}, {'sample_repo_name': 'hosom/bro-file-extraction'}, {'sample_repo_name': 'thedeibo/ServerLoveMCPE'}, {'sample_repo_name': 'alexchamberlain/piimg'}, {'sample_repo_name': 'shenxgan/xblog'}, {'sample_repo_name': 'CESNET/owncloud-theme'}, {'sample_repo_name': 'PixarAnimationStudios/jss-api-gem'}, {'sample_repo_name': 'kittens/lerna'}, {'sample_repo_name': 'spaar/besiege-modloader'}, {'sample_repo_name': 'Microsoft/Windows-classic-samples'}, {'sample_repo_name': 'jbboehr/php-mustache'}, {'sample_repo_name': 'atom/node-ctags'}, {'sample_repo_name': 'Theseus-Aegis/tac-a3-mods'}, {'sample_repo_name': 'JSSolutions/meteor-google-prediction'}, {'sample_repo_name': 'aceway/findX'}, {'sample_repo_name': 'VeliovGroup/Meteor-logger'}, {'sample_repo_name': 'PECE-project/pece-distro'}, {'sample_repo_name': 'americanpanorama/panorama'}, {'sample_repo_name': 'kinduff/spree_reffiliate'}, {'sample_repo_name': 'EngoEngine/engo'}, {'sample_repo_name': 'linux-on-ibm-z/kubernetes'}, {'sample_repo_name': 'jeffmo/jasmine-pit'}, {'sample_repo_name': 'marcelklehr/gulf-contenteditable'}, {'sample_repo_name': 'mozilla/oneanddone'}, {'sample_repo_name': 'CfABrigadePhiladelphia/jawn'}, {'sample_repo_name': 'guangzhuwu/p2engine'}, {'sample_repo_name': 'firebase/EventSource-Examples'}, {'sample_repo_name': 'hypriot/rpi-busybox-httpd'}, {'sample_repo_name': 'jforman/munin-graphite'}, {'sample_repo_name': 'johnpneumann/portable-maya-prefs'}, {'sample_repo_name': 'hortonworks/kubernetes-yarn'}, {'sample_repo_name': 'ZenLulz/MemorySharp'}, {'sample_repo_name': 'rtrouton/rtrouton_scripts'}, {'sample_repo_name': 'DynamoRIO/dynamorio'}, {'sample_repo_name': 'Download/polymer-cdn'}, {'sample_repo_name': 'alexandrucoman/labs'}, {'sample_repo_name': 'meganz/sdk'}, {'sample_repo_name': 'felladrin/runuo-custom-scripts'}, {'sample_repo_name': 'mattinove/SwiftySlider'}, {'sample_repo_name': 'adafruit/Adafruit-Trinket-Gemma-Bootloader'}, {'sample_repo_name': 'winunet/Hui'}, {'sample_repo_name': 'NickolausDS/Unity-Free-Flight'}, {'sample_repo_name': 'paul999/433.92-Raspberry-Pi'}, {'sample_repo_name': 'voussoir/reddit'}, {'sample_repo_name': 'sclorg/rhscl-dockerfiles'}, {'sample_repo_name': 'premgane/agolo-slackbot'}, {'sample_repo_name': 'Hexworks/hexameter'}, {'sample_repo_name': 'pmwkaa/serenity'}, {'sample_repo_name': 'Blizzard/omniauth-bnet'}, {'sample_repo_name': 'chrisdone/hulk'}, {'sample_repo_name': 'tangrams/blocks'}, {'sample_repo_name': 'claudijd/c7decrypt'}, {'sample_repo_name': 'smklancher/ZeoSleepMonitor'}, {'sample_repo_name': 'StackStorm/st2contrib'}, {'sample_repo_name': 'ninja-ide/ninja-ide'}, {'sample_repo_name': 'zpz1237/NirZhihuNews'}, {'sample_repo_name': 'paf31/lambdaconf-2015'}, {'sample_repo_name': 'hacklabr/mapasculturais'}, {'sample_repo_name': 'rancher/rancher-compose'}, {'sample_repo_name': 'andyhqtran/UI-Library'}, {'sample_repo_name': 'JuliaDB/MySQL.jl'}, {'sample_repo_name': '3ventic/DiscordServers'}, {'sample_repo_name': 'Maaphoo/Retr3d'}, {'sample_repo_name': 'inamiy/DebugLog'}, {'sample_repo_name': 'ravl1084/TJ2PDF'}, {'sample_repo_name': 'velveteer/mithril-boilerplate'}, {'sample_repo_name': 'opencog/atomspace'}, {'sample_repo_name': 'durka/named-block'}, {'sample_repo_name': 'blond/hash-set'}, {'sample_repo_name': 'wahern/cqueues'}, {'sample_repo_name': 'adobe-type-tools/cmap-resources'}, {'sample_repo_name': 'crossroadlabs/homebrew-tap'}, {'sample_repo_name': 'isychev93/Xamarin.Forms-Drag-and-drop-ListView'}, {'sample_repo_name': 'AutoDo/AutoDo'}, {'sample_repo_name': 'noveogroup/android-logger'}, {'sample_repo_name': 'zverok/magic_cloud'}, {'sample_repo_name': 'TelerikAcademy/TelerikAcademyPlus'}, {'sample_repo_name': 'ha/doozerd'}, {'sample_repo_name': 'jcoppieters/cody-samples'}, {'sample_repo_name': 'Magnetme/consultant'}, {'sample_repo_name': 'blynkkk/blynk-server'}, {'sample_repo_name': 'polomoshnov/jQuery-UI-Resizable-Snap-extension'}, {'sample_repo_name': 'Microsoft/vsts-tasks'}, {'sample_repo_name': 'dikiaap/mangan'}, {'sample_repo_name': 'dblock/slack-google-bot'}, {'sample_repo_name': 'rofrischmann/fela'}, {'sample_repo_name': 'jzitelli/poolvr'}, {'sample_repo_name': 'rusty1s/koa2-rest-api'}, {'sample_repo_name': 'DUBULEE/FileCacheUtil'}, {'sample_repo_name': 'SuperID/super-cache'}, {'sample_repo_name': 'LI-COR/eddypro-engine'}, {'sample_repo_name': 'kluivers/jbw-builders'}, {'sample_repo_name': 'daemon3000/InputManager'}, {'sample_repo_name': 'selenith/plasmide'}, {'sample_repo_name': 'apache/stratos'}, {'sample_repo_name': 'jcinnamond/el-presenti'}, {'sample_repo_name': 'nodejs/node-gyp'}, {'sample_repo_name': 'rogpeppe/showdeps'}, {'sample_repo_name': 'CapsAdmin/goluwa'}, {'sample_repo_name': 'DMarby/Harpia'}, {'sample_repo_name': 'derrickburns/generalized-kmeans-clustering'}, {'sample_repo_name': 'johnhamelink/exrm_deb'}, {'sample_repo_name': 'Calinou/godot-snippets'}, {'sample_repo_name': 'digibyte/digibyte'}, {'sample_repo_name': 'opinkerfi/adagios'}, {'sample_repo_name': 'radare/radeco'}, {'sample_repo_name': 'Moq/moq'}, {'sample_repo_name': 'mojeda/ServerStatus'}, {'sample_repo_name': 'otoolep/gosf-rqlite'}, {'sample_repo_name': 'laxa1986/gulp-angular-embed-templates'}, {'sample_repo_name': 'analog-nico/passport-pinterest'}, {'sample_repo_name': 'landlab/landlab'}, {'sample_repo_name': 'zeroc-ice/ice-demos'}, {'sample_repo_name': 'bh107/bohrium'}, {'sample_repo_name': 'retep998/winapi-rs'}, {'sample_repo_name': 'whitepages/terraform-provider-stingray'}, {'sample_repo_name': 'google/traceur-compiler'}, {'sample_repo_name': 'rgardler/azure-quickstart-templates'}, {'sample_repo_name': 'mluisbrown/Memories'}, {'sample_repo_name': 'lucaspouzac/contiperf'}, {'sample_repo_name': 'rdebath/Brainfuck'}, {'sample_repo_name': 'JMPerez/beats-audio-api'}, {'sample_repo_name': 'paldepind/synceddb'}, {'sample_repo_name': 'wilsonmar/oss-perf'}, {'sample_repo_name': 'Nebulosus/shamir'}, {'sample_repo_name': 'brindille/brindille-component'}, {'sample_repo_name': 'sendgrid/python-http-client'}, {'sample_repo_name': 'richtr/plug.play.js'}, {'sample_repo_name': 'divmain/GitSavvy'}, {'sample_repo_name': 'airlift/airlift'}, {'sample_repo_name': 'devsoulwolf/ChatMessageView'}, {'sample_repo_name': 'dfletcher/tsws'}, {'sample_repo_name': 'andres-erbsen/dename'}, {'sample_repo_name': 'jconst/JCDialPad'}, {'sample_repo_name': 'MIT-LCP/mimic-code'}, {'sample_repo_name': 'yuvirajsinh/YCameraView'}, {'sample_repo_name': 'neophob/PixelController'}, {'sample_repo_name': 'cwilso/midi-synth'}, {'sample_repo_name': 'pezy/LeetCode'}, {'sample_repo_name': 'MaLeLabTs/RegexGenerator'}, {'sample_repo_name': 'mstevenson/AssetsWatcher'}, {'sample_repo_name': 'jails-org/Demos'}, {'sample_repo_name': 'krishkumar/BlockParty'}, {'sample_repo_name': 'mmerian/phpcrawl'}, {'sample_repo_name': 'gshopov/competitive-programming-archive'}, {'sample_repo_name': 'OfficeDev/Product-List-Code-Sample'}, {'sample_repo_name': 'chrisbarrett/emacs-refactor'}, {'sample_repo_name': 'zhufengnodejs/201602node_homework'}, {'sample_repo_name': 'swannodette/todomvc'}, {'sample_repo_name': 'xxtea/xxtea-php'}, {'sample_repo_name': 'Swader/diffbot-php-client'}, {'sample_repo_name': 'OscarES/Differential-Algebra-Tracker'}, {'sample_repo_name': 'AcyOrt/acyort'}, {'sample_repo_name': 'fdaciuk/ajax'}, {'sample_repo_name': 'rita-marylin-raquel/softbloks'}, {'sample_repo_name': 'ninibe/netlog'}, {'sample_repo_name': 'delight-im/OpenSoccer'}, {'sample_repo_name': 'jeffpar/pcjs'}, {'sample_repo_name': 'pouetnet/pouet2.0'}, {'sample_repo_name': 'webpack/webpack'}, {'sample_repo_name': 'tonioo/modoboa'}, {'sample_repo_name': 'Elemental-IRCd/elemental-ircd'}, {'sample_repo_name': 'uupaa/UserAgent.js'}, {'sample_repo_name': 'rafiuske/papergram'}, {'sample_repo_name': 'sakaal/service_platform_ansible'}, {'sample_repo_name': 'TelerikAcademy/SchoolAcademy'}, {'sample_repo_name': 'rluders/phaser-skeleton'}, {'sample_repo_name': 'himanshu-soni/image-intent-handler'}, {'sample_repo_name': 'google/libfuzzer-bot'}, {'sample_repo_name': 'edomaru/codeigniter_multilevel_menu'}, {'sample_repo_name': 'keithwhor/cmnd'}, {'sample_repo_name': 'qt-pods/qt-pods'}, {'sample_repo_name': 'rubylit/guevara'}, {'sample_repo_name': 'DaMSL/K3'}, {'sample_repo_name': 'alibaba/jstorm'}, {'sample_repo_name': 'openhab/openhab2'}, {'sample_repo_name': 'jeelabs/jet'}, {'sample_repo_name': 'Microsoft/WPF-Samples'}, {'sample_repo_name': 'yubinbai/leetcode'}, {'sample_repo_name': 'j-bennet/wharfee'}, {'sample_repo_name': 'supamii/QttpServer'}, {'sample_repo_name': 'jsonld-java/jsonld-java-tools'}, {'sample_repo_name': 'nictuku/stardew-rocks'}, {'sample_repo_name': 'lagopus/lagopus'}, {'sample_repo_name': 'lmammino/gulp-cozy'}, {'sample_repo_name': 'Flat/Konachan-for-Muzei'}, {'sample_repo_name': 'lowescott/learning-tools'}, {'sample_repo_name': 'docker-library/docs'}], 'var_functions.execute_python:20': {'non_python_repos': 0, 'readme_files': 0, 'copyright_found': 0, 'proportion': 0}, 'var_functions.execute_python:22': {'status': 'debug'}, 'var_functions.query_db:24': 'file_storage/functions.query_db:24.json'}
+
+exec(code, env_args)

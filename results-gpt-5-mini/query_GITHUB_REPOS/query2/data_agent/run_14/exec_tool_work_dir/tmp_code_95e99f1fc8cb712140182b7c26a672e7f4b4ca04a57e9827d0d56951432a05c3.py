@@ -1,0 +1,23 @@
+code = """import json
+# Prepare final output data
+languages = var_call_nvpDPTuIicd2JvphWr7JXlBy
+repos = var_call_IjXLFskxz9ftlQ4ypgV2yNvE
+watch = var_call_NCjgyZnkmedRyYj9agfmodth
+contents_rec = var_call_OyO7GTachQ9XLcS4vvFfxU2G
+
+out = {
+    'repository': 'uacaps/PageMenu',
+    'primary_language_hint': languages[0]['language_description'] if languages else None,
+    'watch_count': int(watch[0]['watch_count']) if watch and watch[0].get('watch_count') else None,
+    'file_id': contents_rec[0]['id'],
+    'file_path_in_sample_repo': contents_rec[0]['sample_path'],
+    'sample_repo_name_in_contents': contents_rec[0]['sample_repo_name'],
+    'repo_data_description': contents_rec[0]['repo_data_description']
+}
+
+print('__RESULT__:')
+print(json.dumps(out))"""
+
+env_args = {'var_call_4Lli0VwvimK3yhNbFzPxIx3w': [], 'var_call_IkcQkgcHm1L1a1uYPlBViuPg': ['commits', 'contents', 'files'], 'var_call_wiXK2dUnX8Nkr7ByfryAiyjH': 'file_storage/call_wiXK2dUnX8Nkr7ByfryAiyjH.json', 'var_call_9VQhqtQnbmz0F3KCW9Ac9Yyj': {'max_copies': 0, 'ids': [], 'candidate_sample_repos': []}, 'var_call_ihGPQCT0HWuEv3eQoftRROXR': {'total_records_in_result': 100, 'first_20_paths': ['5- Shared-CoreData/SharedKit/Record.swift', 'validation-test/compiler_crashers_fixed/27617-swift-markasobjc.swift', 'BusyNavigationBar/Example/AppDelegate.swift', 'crashes-duplicates/25255-swift-typechecker-checkinheritanceclause.swift', 'crashes-duplicates/26498-swift-sourcefile-lookupcache-lookupvalue.swift', 'admob/AdMobExampleSwiftTests/AdMobExampleSwiftTests.swift', 'MLSwiftBasic/Classes/ProgressHUD/MLProgressHUD.swift', 'crashes-duplicates/23648-swift-modulefile-maybereadpattern.swift', 'crashes-duplicates/16041-swift-sourcemanager-getmessage.swift', 'crashes-duplicates/07465-swift-printingdiagnosticconsumer-handlediagnostic.swift', 'fixed/01682-swift-parser-parsedecl.swift', 'crashes-duplicates/15025-swift-sourcemanager-getmessage.swift', 'crashes-duplicates/18368-swift-sourcemanager-getmessage.swift', 'fixed/01847-std-function-func-swift-type-subst.swift', 'crashes-duplicates/08505-swift-typechecker-conformstoprotocol.swift', 'fixed/00118-swift-dependentgenerictyperesolver-resolvegenerictypeparamtype.swift', 'crashes-duplicates/22401-llvm-foldingset-swift-tupletype-nodeequals.swift', 'crashes-duplicates/15704-no-stacktrace.swift', 'crashes-duplicates/04574-swift-sourcemanager-getmessage.swift', 'crashes-duplicates/02484-swift-sourcemanager-getmessage.swift'], 'count_swift': 100, 'count_nonbinary': 0, 'count_both': 0}, 'var_call_mJpAwwAsWBxxwvAgq2DN4tiH': {'max_copies': 38, 'max_ids': ['6f4cdb70f044b0486a24a07403600cb964a02672'], 'id_to_repos_sample': {'6f4cdb70f044b0486a24a07403600cb964a02672': ['uacaps/PageMenu']}}, 'var_call_HXpkm8QKBRbs4AAvamsPg8yw': {'count_records_with_id': 1, 'sample_records': [{'id': '6f4cdb70f044b0486a24a07403600cb964a02672', 'sample_repo_name': 'uacaps/PageMenu', 'sample_path': 'Demos/Demo 4/PageMenuDemoTabbar/PageMenuDemoTabbar/ContactTableViewCell.swift', 'repo_data_description': 'It is a non-binary file of 708 bytes, repeated 38 times in the dataset under mode 33188.', 'content': '//\n//  ContactTableViewCell.swift\n//  PageMenuDemoTabbar\n//\n//  Created by Niklas Fahl on 1/9/15.\n//  Copyright (c) 2015 Niklas Fahl. All rights reserved.\n//\n\nimport UIKit\n\nclass ContactTableViewCell: UITableViewCell {\n\n    @IBOutlet var photoImageView: UIImageView!\n    @IBOutlet var nameLabel: UILabel!\n    @IBOutlet weak var starButton: UIButton!\n    \n    override func awakeFromNib() {\n        super.awakeFromNib()\n        // Initialization code\n    \n        photoImageView.layer.cornerRadius = 15\n    }\n    \n    override func setSelected(selected: Bool, animated: Bool) {\n        super.setSelected(selected, animated: animated)\n        \n        // Configure the view for the selected state\n    }\n    \n}\n'}]}, 'var_call_IjXLFskxz9ftlQ4ypgV2yNvE': [{'repo_name': 'uacaps/PageMenu'}], 'var_call_ozZTzgDikQBIwlke8belWPj8': [], 'var_call_OyO7GTachQ9XLcS4vvFfxU2G': [{'id': '6f4cdb70f044b0486a24a07403600cb964a02672', 'sample_repo_name': 'uacaps/PageMenu', 'sample_path': 'Demos/Demo 4/PageMenuDemoTabbar/PageMenuDemoTabbar/ContactTableViewCell.swift', 'repo_data_description': 'It is a non-binary file of 708 bytes, repeated 38 times in the dataset under mode 33188.'}], 'var_call_JCoWpZgkfTfH3pnuGpaFWN4p': 'file_storage/call_JCoWpZgkfTfH3pnuGpaFWN4p.json', 'var_call_nvpDPTuIicd2JvphWr7JXlBy': [{'language_description': 'The codebase includes: Swift (56,461 bytes), Objective-C (51,756 bytes), Ruby (5,999 bytes).'}], 'var_call_NCjgyZnkmedRyYj9agfmodth': [{'watch_count': '487'}]}
+
+exec(code, env_args)

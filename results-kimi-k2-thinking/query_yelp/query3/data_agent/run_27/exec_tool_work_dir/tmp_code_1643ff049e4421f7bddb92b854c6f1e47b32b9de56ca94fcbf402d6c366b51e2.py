@@ -1,0 +1,89 @@
+code = """import json
+import pandas as pd
+
+# Get the complete business data from storage
+all_businesses = locals()['var_functions.query_db:26']
+
+# Get the list of business IDs from 2018 reviews
+business_ids_from_reviews = locals()['var_functions.execute_python:22']
+
+print(f"Total businesses in collection: {len(all_businesses)}")
+print(f"Businesses reviewed in 2018: {len(business_ids_from_reviews)}")
+print(f"Sample 2018 business IDs: {business_ids_from_reviews[:5]}")
+
+# Create a set for faster lookup
+business_ids_set = set(business_ids_from_reviews)
+
+# Function to check if a business has parking
+import ast
+
+def has_parking_service(attributes):
+    """Check if business offers either bike parking or business parking"""
+    if not attributes or attributes == "None":
+        return False
+    
+    if isinstance(attributes, str):
+        return False
+    
+    # Check BikeParking
+    bike_parking = attributes.get('BikeParking')
+    if bike_parking == 'True':
+        return True
+    
+    # Check BusinessParking
+    business_parking = attributes.get('BusinessParking')
+    if business_parking:
+        try:
+            # Parse the BusinessParking string which looks like a dict
+            if isinstance(business_parking, str):
+                # Try to parse it as a dict using ast.literal_eval
+                parking_dict = ast.literal_eval(business_parking)
+                # Check if any parking type is True
+                if isinstance(parking_dict, dict) and any(parking_dict.values()):
+                    return True
+        except:
+            # If parsing fails, check if it's a simple True/False value
+            if business_parking == 'True':
+                return True
+    
+    return False
+
+# Process businesses that were reviewed in 2018
+businesses_reviewed_in_2018 = []
+businesses_with_parking_count = 0
+parking_businesses = []
+
+for business in all_businesses:
+    business_id = business['business_id']
+    
+    # Check if this business was reviewed in 2018
+    if business_id in business_ids_set:
+        attributes = business.get('attributes', {})
+        has_park = has_parking_service(attributes)
+        
+        business_info = {
+            'business_id': business_id,
+            'has_parking': has_park,
+            'attributes': attributes
+        }
+        businesses_reviewed_in_2018.append(business_info)
+        
+        if has_park:
+            businesses_with_parking_count += 1
+            parking_businesses.append(business_id)
+
+print(f"Businesses reviewed in 2018 that we have data for: {len(businesses_reviewed_in_2018)}")
+print(f"Businesses with parking: {businesses_with_parking_count}")
+print(f"Business IDs with parking: {parking_businesses}")
+
+# __RESULT__:
+print("__RESULT__:")
+print(json.dumps({
+    'total_checked': len(businesses_reviewed_in_2018),
+    'businesses_with_parking': businesses_with_parking_count,
+    'parking_business_ids': parking_businesses
+}))"""
+
+env_args = {'var_functions.list_db:0': ['review', 'tip', 'user'], 'var_functions.query_db:2': 'file_storage/functions.query_db:2.json', 'var_functions.query_db:6': [{'business_ref': 'businessref_6'}, {'business_ref': 'businessref_47'}, {'business_ref': 'businessref_91'}, {'business_ref': 'businessref_71'}, {'business_ref': 'businessref_46'}, {'business_ref': 'businessref_73'}, {'business_ref': 'businessref_25'}, {'business_ref': 'businessref_66'}, {'business_ref': 'businessref_59'}, {'business_ref': 'businessref_29'}, {'business_ref': 'businessref_79'}, {'business_ref': 'businessref_13'}, {'business_ref': 'businessref_44'}, {'business_ref': 'businessref_67'}, {'business_ref': 'businessref_15'}, {'business_ref': 'businessref_81'}, {'business_ref': 'businessref_33'}, {'business_ref': 'businessref_43'}, {'business_ref': 'businessref_17'}, {'business_ref': 'businessref_24'}, {'business_ref': 'businessref_52'}, {'business_ref': 'businessref_89'}, {'business_ref': 'businessref_36'}, {'business_ref': 'businessref_60'}, {'business_ref': 'businessref_12'}, {'business_ref': 'businessref_99'}, {'business_ref': 'businessref_31'}, {'business_ref': 'businessref_80'}, {'business_ref': 'businessref_51'}, {'business_ref': 'businessref_86'}, {'business_ref': 'businessref_8'}, {'business_ref': 'businessref_72'}, {'business_ref': 'businessref_62'}, {'business_ref': 'businessref_85'}, {'business_ref': 'businessref_57'}, {'business_ref': 'businessref_56'}, {'business_ref': 'businessref_90'}, {'business_ref': 'businessref_97'}, {'business_ref': 'businessref_37'}, {'business_ref': 'businessref_40'}, {'business_ref': 'businessref_92'}, {'business_ref': 'businessref_83'}, {'business_ref': 'businessref_95'}, {'business_ref': 'businessref_61'}, {'business_ref': 'businessref_49'}, {'business_ref': 'businessref_10'}, {'business_ref': 'businessref_23'}, {'business_ref': 'businessref_45'}, {'business_ref': 'businessref_82'}, {'business_ref': 'businessref_35'}, {'business_ref': 'businessref_77'}, {'business_ref': 'businessref_50'}, {'business_ref': 'businessref_76'}, {'business_ref': 'businessref_27'}, {'business_ref': 'businessref_3'}, {'business_ref': 'businessref_20'}, {'business_ref': 'businessref_28'}, {'business_ref': 'businessref_22'}, {'business_ref': 'businessref_69'}, {'business_ref': 'businessref_14'}, {'business_ref': 'businessref_70'}, {'business_ref': 'businessref_18'}, {'business_ref': 'businessref_26'}, {'business_ref': 'businessref_68'}, {'business_ref': 'businessref_34'}, {'business_ref': 'businessref_21'}, {'business_ref': 'businessref_4'}], 'var_functions.execute_python:10': {'business_refs': ['businessref_6', 'businessref_47', 'businessref_91', 'businessref_71', 'businessref_46', 'businessref_73', 'businessref_25', 'businessref_66', 'businessref_59', 'businessref_29', 'businessref_79', 'businessref_13', 'businessref_44', 'businessref_67', 'businessref_15', 'businessref_81', 'businessref_33', 'businessref_43', 'businessref_17', 'businessref_24', 'businessref_52', 'businessref_89', 'businessref_36', 'businessref_60', 'businessref_12', 'businessref_99', 'businessref_31', 'businessref_80', 'businessref_51', 'businessref_86', 'businessref_8', 'businessref_72', 'businessref_62', 'businessref_85', 'businessref_57', 'businessref_56', 'businessref_90', 'businessref_97', 'businessref_37', 'businessref_40', 'businessref_92', 'businessref_83', 'businessref_95', 'businessref_61', 'businessref_49', 'businessref_10', 'businessref_23', 'businessref_45', 'businessref_82', 'businessref_35', 'businessref_77', 'businessref_50', 'businessref_76', 'businessref_27', 'businessref_3', 'businessref_20', 'businessref_28', 'businessref_22', 'businessref_69', 'businessref_14', 'businessref_70', 'businessref_18', 'businessref_26', 'businessref_68', 'businessref_34', 'businessref_21', 'businessref_4'], 'business_ids': ['6', '47', '91', '71', '46', '73', '25', '66', '59', '29', '79', '13', '44', '67', '15', '81', '33', '43', '17', '24', '52', '89', '36', '60', '12', '99', '31', '80', '51', '86', '8', '72', '62', '85', '57', '56', '90', '97', '37', '40', '92', '83', '95', '61', '49', '10', '23', '45', '82', '35', '77', '50', '76', '27', '3', '20', '28', '22', '69', '14', '70', '18', '26', '68', '34', '21', '4']}, 'var_functions.query_db:12': [{'_id': '6859a000fe8b31cd7362e2ab', 'business_id': 'businessid_49', 'attributes': {'BusinessAcceptsCreditCards': 'True', 'WiFi': "u'no'", 'BusinessAcceptsBitcoin': 'False'}}, {'_id': '6859a000fe8b31cd7362e2ac', 'business_id': 'businessid_47', 'attributes': {'ByAppointmentOnly': 'False', 'BusinessAcceptsCreditCards': 'True', 'GoodForKids': 'True', 'RestaurantsPriceRange2': '2', 'BikeParking': 'False', 'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': True, 'valet': False}"}}, {'_id': '6859a000fe8b31cd7362e2af', 'business_id': 'businessid_33', 'attributes': {'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'BusinessAcceptsCreditCards': 'True', 'AcceptsInsurance': 'False', 'ByAppointmentOnly': 'False', 'RestaurantsPriceRange2': '2', 'WheelchairAccessible': 'True', 'BikeParking': 'False'}}, {'_id': '6859a000fe8b31cd7362e2b1', 'business_id': 'businessid_92', 'attributes': {'ByAppointmentOnly': 'False', 'BusinessAcceptsCreditCards': 'True', 'BusinessParking': "{'garage': True, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'RestaurantsPriceRange2': '2', 'WheelchairAccessible': 'True', 'BikeParking': 'True', 'NoiseLevel': "u'quiet'", 'WiFi': "u'no'"}}, {'_id': '6859a000fe8b31cd7362e2b3', 'business_id': 'businessid_52', 'attributes': {'ByAppointmentOnly': 'False', 'BusinessAcceptsCreditCards': 'True', 'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'RestaurantsPriceRange2': '2', 'BikeParking': 'True'}}], 'var_functions.execute_python:14': {'total_businesses_checked': 5, 'businesses_with_parking': ['businessid_47', 'businessid_92', 'businessid_52'], 'count': 3}, 'var_functions.query_db:16': [{'_id': '6859a000fe8b31cd7362e2ab', 'business_id': 'businessid_49', 'attributes': {'BusinessAcceptsCreditCards': 'True', 'WiFi': "u'no'", 'BusinessAcceptsBitcoin': 'False'}}, {'_id': '6859a000fe8b31cd7362e2ac', 'business_id': 'businessid_47', 'attributes': {'ByAppointmentOnly': 'False', 'BusinessAcceptsCreditCards': 'True', 'GoodForKids': 'True', 'RestaurantsPriceRange2': '2', 'BikeParking': 'False', 'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': True, 'valet': False}"}}, {'_id': '6859a000fe8b31cd7362e2af', 'business_id': 'businessid_33', 'attributes': {'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'BusinessAcceptsCreditCards': 'True', 'AcceptsInsurance': 'False', 'ByAppointmentOnly': 'False', 'RestaurantsPriceRange2': '2', 'WheelchairAccessible': 'True', 'BikeParking': 'False'}}, {'_id': '6859a000fe8b31cd7362e2b1', 'business_id': 'businessid_92', 'attributes': {'ByAppointmentOnly': 'False', 'BusinessAcceptsCreditCards': 'True', 'BusinessParking': "{'garage': True, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'RestaurantsPriceRange2': '2', 'WheelchairAccessible': 'True', 'BikeParking': 'True', 'NoiseLevel': "u'quiet'", 'WiFi': "u'no'"}}, {'_id': '6859a000fe8b31cd7362e2b3', 'business_id': 'businessid_52', 'attributes': {'ByAppointmentOnly': 'False', 'BusinessAcceptsCreditCards': 'True', 'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'RestaurantsPriceRange2': '2', 'BikeParking': 'True'}}], 'var_functions.query_db:18': [{'_id': '6859a000fe8b31cd7362e2ab', 'business_id': 'businessid_49', 'attributes': {'BusinessAcceptsCreditCards': 'True', 'WiFi': "u'no'", 'BusinessAcceptsBitcoin': 'False'}}, {'_id': '6859a000fe8b31cd7362e2ac', 'business_id': 'businessid_47', 'attributes': {'ByAppointmentOnly': 'False', 'BusinessAcceptsCreditCards': 'True', 'GoodForKids': 'True', 'RestaurantsPriceRange2': '2', 'BikeParking': 'False', 'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': True, 'valet': False}"}}, {'_id': '6859a000fe8b31cd7362e2ad', 'business_id': 'businessid_88', 'attributes': {'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'GoodForKids': 'True', 'BusinessAcceptsCreditCards': 'True', 'ByAppointmentOnly': 'False', 'BikeParking': 'True'}}, {'_id': '6859a000fe8b31cd7362e2ae', 'business_id': 'businessid_41', 'attributes': 'None'}, {'_id': '6859a000fe8b31cd7362e2af', 'business_id': 'businessid_33', 'attributes': {'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'BusinessAcceptsCreditCards': 'True', 'AcceptsInsurance': 'False', 'ByAppointmentOnly': 'False', 'RestaurantsPriceRange2': '2', 'WheelchairAccessible': 'True', 'BikeParking': 'False'}}], 'var_functions.query_db:20': [{'business_ref': 'businessref_79'}, {'business_ref': 'businessref_13'}, {'business_ref': 'businessref_44'}, {'business_ref': 'businessref_25'}, {'business_ref': 'businessref_66'}, {'business_ref': 'businessref_67'}, {'business_ref': 'businessref_15'}, {'business_ref': 'businessref_81'}, {'business_ref': 'businessref_33'}, {'business_ref': 'businessref_24'}, {'business_ref': 'businessref_52'}, {'business_ref': 'businessref_89'}, {'business_ref': 'businessref_36'}, {'business_ref': 'businessref_60'}, {'business_ref': 'businessref_12'}, {'business_ref': 'businessref_43'}, {'business_ref': 'businessref_17'}, {'business_ref': 'businessref_99'}, {'business_ref': 'businessref_31'}, {'business_ref': 'businessref_59'}, {'business_ref': 'businessref_29'}, {'business_ref': 'businessref_80'}, {'business_ref': 'businessref_51'}, {'business_ref': 'businessref_86'}, {'business_ref': 'businessref_8'}, {'business_ref': 'businessref_72'}, {'business_ref': 'businessref_62'}, {'business_ref': 'businessref_85'}, {'business_ref': 'businessref_57'}, {'business_ref': 'businessref_56'}, {'business_ref': 'businessref_90'}, {'business_ref': 'businessref_97'}, {'business_ref': 'businessref_37'}, {'business_ref': 'businessref_40'}, {'business_ref': 'businessref_92'}, {'business_ref': 'businessref_83'}, {'business_ref': 'businessref_95'}, {'business_ref': 'businessref_61'}, {'business_ref': 'businessref_26'}, {'business_ref': 'businessref_68'}, {'business_ref': 'businessref_34'}, {'business_ref': 'businessref_21'}, {'business_ref': 'businessref_4'}, {'business_ref': 'businessref_49'}, {'business_ref': 'businessref_10'}, {'business_ref': 'businessref_23'}, {'business_ref': 'businessref_45'}, {'business_ref': 'businessref_82'}, {'business_ref': 'businessref_35'}, {'business_ref': 'businessref_77'}, {'business_ref': 'businessref_50'}, {'business_ref': 'businessref_76'}, {'business_ref': 'businessref_27'}, {'business_ref': 'businessref_3'}, {'business_ref': 'businessref_20'}, {'business_ref': 'businessref_28'}, {'business_ref': 'businessref_22'}, {'business_ref': 'businessref_69'}, {'business_ref': 'businessref_14'}, {'business_ref': 'businessref_70'}, {'business_ref': 'businessref_18'}, {'business_ref': 'businessref_6'}, {'business_ref': 'businessref_47'}, {'business_ref': 'businessref_91'}, {'business_ref': 'businessref_71'}, {'business_ref': 'businessref_46'}, {'business_ref': 'businessref_73'}], 'var_functions.execute_python:22': ['businessid_79', 'businessid_13', 'businessid_44', 'businessid_25', 'businessid_66', 'businessid_67', 'businessid_15', 'businessid_81', 'businessid_33', 'businessid_24', 'businessid_52', 'businessid_89', 'businessid_36', 'businessid_60', 'businessid_12', 'businessid_43', 'businessid_17', 'businessid_99', 'businessid_31', 'businessid_59', 'businessid_29', 'businessid_80', 'businessid_51', 'businessid_86', 'businessid_8', 'businessid_72', 'businessid_62', 'businessid_85', 'businessid_57', 'businessid_56', 'businessid_90', 'businessid_97', 'businessid_37', 'businessid_40', 'businessid_92', 'businessid_83', 'businessid_95', 'businessid_61', 'businessid_26', 'businessid_68', 'businessid_34', 'businessid_21', 'businessid_4', 'businessid_49', 'businessid_10', 'businessid_23', 'businessid_45', 'businessid_82', 'businessid_35', 'businessid_77', 'businessid_50', 'businessid_76', 'businessid_27', 'businessid_3', 'businessid_20', 'businessid_28', 'businessid_22', 'businessid_69', 'businessid_14', 'businessid_70', 'businessid_18', 'businessid_6', 'businessid_47', 'businessid_91', 'businessid_71', 'businessid_46', 'businessid_73'], 'var_functions.query_db:26': [{'_id': '6859a000fe8b31cd7362e2ab', 'business_id': 'businessid_49', 'attributes': {'BusinessAcceptsCreditCards': 'True', 'WiFi': "u'no'", 'BusinessAcceptsBitcoin': 'False'}}, {'_id': '6859a000fe8b31cd7362e2ac', 'business_id': 'businessid_47', 'attributes': {'ByAppointmentOnly': 'False', 'BusinessAcceptsCreditCards': 'True', 'GoodForKids': 'True', 'RestaurantsPriceRange2': '2', 'BikeParking': 'False', 'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': True, 'valet': False}"}}, {'_id': '6859a000fe8b31cd7362e2ad', 'business_id': 'businessid_88', 'attributes': {'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'GoodForKids': 'True', 'BusinessAcceptsCreditCards': 'True', 'ByAppointmentOnly': 'False', 'BikeParking': 'True'}}, {'_id': '6859a000fe8b31cd7362e2ae', 'business_id': 'businessid_41', 'attributes': 'None'}, {'_id': '6859a000fe8b31cd7362e2af', 'business_id': 'businessid_33', 'attributes': {'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'BusinessAcceptsCreditCards': 'True', 'AcceptsInsurance': 'False', 'ByAppointmentOnly': 'False', 'RestaurantsPriceRange2': '2', 'WheelchairAccessible': 'True', 'BikeParking': 'False'}}]}
+
+exec(code, env_args)

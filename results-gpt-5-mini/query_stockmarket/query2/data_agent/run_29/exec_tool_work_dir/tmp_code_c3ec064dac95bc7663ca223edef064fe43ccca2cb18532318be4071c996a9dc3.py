@@ -1,0 +1,13 @@
+code = """import json
+# gather the results keys from above multi call
+keys = ['var_call_rtxzHXVUxOZDC8s61Y708NqR','var_call_8KdULFaxYHzr0qVT97mDRtP9','var_call_D0s6ldMtI9AVp77kyAMQ4UdW','var_call_Qr44JxhsnyZepirJ6LMAvMTT','var_call_Nwuyztpox7l4Ai98474vxD66','var_call_Li32uE6AiTUasIPZVh1PB2Sx','var_call_77mfjBfKh17ySABZczUvzi2i','var_call_vR5CVHZ6koFvkUQpNcp5LZ3G','var_call_ulk87FEQFXeauwp9rPkhcNZA','var_call_ablRE6MwoIbMiH3GSPvKhTSm']
+results = []
+for k in keys:
+    with open(k, 'r') as f:
+        results.extend(json.load(f))
+print('__RESULT__:')
+print(json.dumps(results))"""
+
+env_args = {'var_call_tIp3uAHrqYsL9oZ7Zyo00Eyv': 'file_storage/call_tIp3uAHrqYsL9oZ7Zyo00Eyv.json', 'var_call_F8SrY8Nb3ckIzQWbP6D1vZEC': 'file_storage/call_F8SrY8Nb3ckIzQWbP6D1vZEC.json', 'var_call_Ti97GwP3KOtpGVOK9UyyqFym': 'file_storage/call_Ti97GwP3KOtpGVOK9UyyqFym.json', 'var_call_fleuqoTcRdlTxC1s1Wpo03qp': [], 'var_call_WFKhPaQE3fWUL9rt0ddw9oha': [{'mx': '193.3121490478516'}], 'var_call_IbSibmaYFzUgWYpD9zmx1PVj': 1435, 'var_call_o2X5fuRhW3zaGP3lQwVNg9eZ': [{'symbol': 'AAAU', 'mx': 'nan'}], 'var_call_O4jEVBbOcWDMeJiclWK9nGnL': [{'symbol': 'AADR', 'mx': '39.58057403564453'}], 'var_call_dtyIT1TK1OkU8HRwr3ojaL5M': [{'symbol': 'ABEQ', 'mx': 'nan'}], 'var_call_xJW30sgLziWjoWOunk8EWaLQ': [{'symbol': 'ACSG', 'mx': 'nan'}], 'var_call_6roRiKVpzONvnEMdSoWDLfnY': [{'symbol': 'ACWF', 'mx': '23.251304626464844'}], 'var_call_b9EEwU36EcQk2Y8KOgk0x98j': [{'symbol': 'AFK', 'mx': '23.345184326171875'}], 'var_call_ck1ADEdJmsa5nHU3NDEep9rv': [{'symbol': 'AFLG', 'mx': 'nan'}], 'var_call_d5q0HVSw12dDMrSMc701SAPw': [{'symbol': 'AFMC', 'mx': 'nan'}], 'var_call_7eSEq7Bs1plIxGaLkfpzKW8t': [{'symbol': 'AFSM', 'mx': 'nan'}], 'var_call_BeSPsuJ3t12bA4U2VkhEqjHJ': [{'symbol': 'AFTY', 'mx': '18.35982131958008'}], 'var_call_bII4uSRXbc6KQ18RxRply5yP': 'file_storage/call_bII4uSRXbc6KQ18RxRply5yP.json', 'var_call_rtxzHXVUxOZDC8s61Y708NqR': [{'symbol': 'VOO', 'mx': '177.17626953125'}], 'var_call_8KdULFaxYHzr0qVT97mDRtP9': [{'symbol': 'IVV', 'mx': '193.5270538330078'}], 'var_call_D0s6ldMtI9AVp77kyAMQ4UdW': [{'symbol': 'VTI', 'mx': '100.54161834716795'}], 'var_call_Qr44JxhsnyZepirJ6LMAvMTT': [{'symbol': 'QQQ', 'mx': '110.42893981933594'}], 'var_call_Nwuyztpox7l4Ai98474vxD66': [{'symbol': 'IWM', 'mx': '120.37349700927734'}], 'var_call_Li32uE6AiTUasIPZVh1PB2Sx': [{'symbol': 'DIA', 'mx': '163.6190185546875'}], 'var_call_77mfjBfKh17ySABZczUvzi2i': [{'symbol': 'MDY', 'mx': '263.76544189453125'}], 'var_call_vR5CVHZ6koFvkUQpNcp5LZ3G': [{'symbol': 'GLD', 'mx': '125.2300033569336'}], 'var_call_ulk87FEQFXeauwp9rPkhcNZA': [{'symbol': 'XLK', 'mx': '41.50289535522461'}], 'var_call_ablRE6MwoIbMiH3GSPvKhTSm': [{'symbol': 'XLF', 'mx': '14.538848876953123'}]}
+
+exec(code, env_args)

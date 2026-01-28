@@ -1,0 +1,59 @@
+code = """import json
+import pandas as pd
+
+# Load data from storage file paths
+tracks_file_path = var_functions.query_db:5
+sales_file_path = var_functions.query_db:6
+
+tracks_df = pd.read_json(tracks_file_path)
+sales_df = pd.read_json(sales_file_path)
+
+# Clean and convert revenue
+sales_df['revenue_usd'] = pd.to_numeric(sales_df['revenue_usd'])
+
+# Calculate revenue per track_id
+revenue_by_track = sales_df.groupby('track_id')['revenue_usd'].sum().reset_index()
+
+# Clean track data for entity resolution
+tracks_df['title_clean'] = tracks_df['title'].astype(str).str.lower().str.strip()
+tracks_df['artist_clean'] = tracks_df['artist'].astype(str).str.lower().str.strip()
+
+# Filter out invalid entries
+tracks_filtered = tracks_df[
+    (tracks_df['title_clean'] != 'none') & 
+    (tracks_df['artist_clean'] != 'none') & 
+    (tracks_df['title_clean'] != '') & 
+    (tracks_df['artist_clean'] != '') &
+    (tracks_df['title_clean'] != 'nan')
+]
+
+# Merge tracks with revenues
+merged = pd.merge(tracks_filtered, revenue_by_track, on='track_id', how='left')
+merged['revenue_usd'] = merged['revenue_usd'].fillna(0)
+
+# Group by entity (title + artist) and sum revenues
+revenue_by_entity = merged.groupby(['title_clean', 'artist_clean'])['revenue_usd'].sum().reset_index()
+
+# Sort by revenue descending
+revenue_by_entity = revenue_by_entity.sort_values('revenue_usd', ascending=False)
+
+# Get top entity
+top_entity = revenue_by_entity.iloc[0]
+
+# Verify it's not a grouping of "none" or empty values
+if top_entity['title_clean'] == 'none' or top_entity['artist_clean'] == 'none':
+    top_entity = revenue_by_entity.iloc[1]
+
+# Prepare result
+result_dict = {
+    'song_title': top_entity['title_clean'],
+    'artist_name': top_entity['artist_clean'],
+    'total_revenue': float(top_entity['revenue_usd'])
+}
+
+print('__RESULT__:')
+print(json.dumps(result_dict))"""
+
+env_args = {'var_functions.list_db:0': ['tracks'], 'var_functions.list_db:2': ['sales'], 'var_functions.query_db:5': 'file_storage/functions.query_db:5.json', 'var_functions.query_db:6': 'file_storage/functions.query_db:6.json', 'var_functions.query_db:18': [{'track_id': '1', 'source_id': '2', 'source_track_id': 'MBox7368722-HH', 'title': "Daniel Balavoine - L'enfant aux yeux d'Italie", 'artist': 'None', 'album': 'De vous à elle en passant par moi', 'year': '75', 'length': '219', 'language': 'French'}, {'track_id': '2', 'source_id': '4', 'source_track_id': '139137-A047', 'title': '007', 'artist': '[unknown]', 'album': 'Cantigas de roda (unknown)', 'year': 'None', 'length': '1m 58sec', 'language': 'Por.'}, {'track_id': '3', 'source_id': '2', 'source_track_id': 'MBox38440522-HH', 'title': 'Action PAINTING! - Mustard Gas', 'artist': 'None', 'album': 'There and Back Again Lane', 'year': '95', 'length': '129', 'language': 'English'}, {'track_id': '4', 'source_id': '5', 'source_track_id': '4489993', 'title': 'Your Grace', 'artist': 'Kathy Troccoli', 'album': 'Comfort', 'year': '2005', 'length': 'unk.', 'language': 'English'}, {'track_id': '5', 'source_id': '5', 'source_track_id': '10339621', 'title': "Well You Needn't", 'artist': 'Ernie Stadler Jazz Quintet', 'album': 'First Down', 'year': '2010', 'length': '321266', 'language': 'English'}, {'track_id': '6', 'source_id': '3', 'source_track_id': '49425110MB-01', 'title': 'Try (acoustic) - 2008-02-15: Le Grand Rex, Paris, France', 'artist': 'Neil Young', 'album': 'None', 'year': 'None', 'length': 'None', 'language': 'English'}, {'track_id': '7', 'source_id': '2', 'source_track_id': 'MBox28675636-HH', 'title': 'Bruce Maginnis - Sttreet Hype', 'artist': 'None', 'album': 'Groove City', 'year': '05', 'length': '177', 'language': 'English'}, {'track_id': '8', 'source_id': '2', 'source_track_id': 'MBox9589118-HH', 'title': 'Luce Dufault - Ballade à donner', 'artist': 'None', 'album': 'Luce Dufault', 'year': '96', 'length': '242', 'language': 'French'}, {'track_id': '9', 'source_id': '5', 'source_track_id': '10992441', 'title': "Just Like Tom Thumb's Blues (live)", 'artist': 'Wendy Saddington', 'album': 'Blues Women Anthology, Volume 7', 'year': '2007', 'length': '462000', 'language': 'English'}, {'track_id': '10', 'source_id': '5', 'source_track_id': '15761001', 'title': 'Στα καμένα', 'artist': 'Λαυρέντης Μαχαιρίίτσας', 'album': 'Συλλογή Δίφωνο, 22: Μουσικοί βιότοποι', 'year': '1997', 'length': '195000', 'language': 'Greek'}], 'var_functions.query_db:20': [{'sale_id': '1', 'track_id': '1', 'country': 'Canada', 'store': 'Google Play', 'units_sold': '349', 'revenue_usd': '408.0'}, {'sale_id': '2', 'track_id': '1', 'country': 'Canada', 'store': 'Apple Music', 'units_sold': '122', 'revenue_usd': '137.59'}, {'sale_id': '3', 'track_id': '1', 'country': 'Germany', 'store': 'Apple Music', 'units_sold': '373', 'revenue_usd': '371.57'}, {'sale_id': '4', 'track_id': '1', 'country': 'Germany', 'store': 'Spotify', 'units_sold': '258', 'revenue_usd': '269.49'}, {'sale_id': '5', 'track_id': '2', 'country': 'Germany', 'store': 'Spotify', 'units_sold': '161', 'revenue_usd': '184.74'}, {'sale_id': '6', 'track_id': '2', 'country': 'USA', 'store': 'iTunes', 'units_sold': '236', 'revenue_usd': '270.79'}, {'sale_id': '7', 'track_id': '2', 'country': 'Germany', 'store': 'Amazon Music', 'units_sold': '170', 'revenue_usd': '186.98'}, {'sale_id': '8', 'track_id': '2', 'country': 'Canada', 'store': 'Amazon Music', 'units_sold': '190', 'revenue_usd': '217.41'}, {'sale_id': '9', 'track_id': '2', 'country': 'USA', 'store': 'Apple Music', 'units_sold': '320', 'revenue_usd': '399.35'}, {'sale_id': '10', 'track_id': '3', 'country': 'UK', 'store': 'Amazon Music', 'units_sold': '329', 'revenue_usd': '418.71'}], 'var_functions.execute_python:24': {'title': 'none', 'artist': 'none', 'revenue': 14647.52}, 'var_functions.query_db:26': [{'track_id': '2', 'title': '007', 'artist': '[unknown]', 'album': 'Cantigas de roda (unknown)'}, {'track_id': '4', 'title': 'Your Grace', 'artist': 'Kathy Troccoli', 'album': 'Comfort'}, {'track_id': '5', 'title': "Well You Needn't", 'artist': 'Ernie Stadler Jazz Quintet', 'album': 'First Down'}, {'track_id': '6', 'title': 'Try (acoustic) - 2008-02-15: Le Grand Rex, Paris, France', 'artist': 'Neil Young', 'album': 'None'}, {'track_id': '9', 'title': "Just Like Tom Thumb's Blues (live)", 'artist': 'Wendy Saddington', 'album': 'Blues Women Anthology, Volume 7'}, {'track_id': '10', 'title': 'Στα καμένα', 'artist': 'Λαυρέντης Μαχαιρίίτσας', 'album': 'Συλλογή Δίφωνο, 22: Μουσικοί βιότοποι'}, {'track_id': '12', 'title': 'El Vaquero Chido (The Cool Cowboy)', 'artist': 'Byron Brizuela & Enrique Carbajal', 'album': 'Mexico'}, {'track_id': '13', 'title': '002-Particle/Wave', 'artist': 'Lunchbox', 'album': 'Evolver (2002)'}, {'track_id': '14', 'title': '001-Deja Vu', 'artist': 'Blanket', 'album': 'Nice (2000)'}, {'track_id': '15', 'title': '019-Feeling Good', 'artist': 'Andy Bey and the Bey Sisters', 'album': 'Andy Bey and the Bey Sisters (2000)'}, {'track_id': '16', 'title': 'Scottish Fantasy: Adagio cantabile (The Classical Album, Volume 1)', 'artist': 'Max Bruch', 'album': 'The Classical Album, Volume 1'}, {'track_id': '19', 'title': 'Gimme Dat (remix)', 'artist': 'Rye Rye', 'album': 'RYEot powRR'}, {'track_id': '20', 'title': "AmnerisIntro:EveryStoryIsaLoveStory/HeatherHeadley/It'sCheesy:EasyasLife(ForbiddenBroadway2001:ASpoofOdyssey(2001originaloffBroadwaycast))", 'artist': 'Gerard Alessandrini', 'album': 'Forbidden Broadway 2001: A Spoof Odyssey (2001 original off-Broadway cast)'}, {'track_id': '21', 'title': 'Cállate - Los vaqueros: el regreso: Deluxe Edition', 'artist': 'Wisin & Yandel', 'album': 'None'}, {'track_id': '22', 'title': 'Outro (Working Title)', 'artist': 'FeSo', 'album': 'Working Title'}, {'track_id': '23', 'title': '10cm', 'artist': 'Anemone', 'album': '10cm'}, {'track_id': '25', 'title': 'Fish Tail Blues - The King & Mister Jelly Lord', 'artist': 'Jelly Roll Morton', 'album': 'None'}, {'track_id': '28', 'title': 'Placebo Persuasion (More Specific, Less Pacific)', 'artist': 'Caesura', 'album': 'More Specific, Less Pacific'}, {'track_id': '29', 'title': 'En dless Love', 'artist': 'Diana Ross & Lionel Richie', 'album': 'Motown 50: Yesterday, Today, Forever (Japan Edition)'}, {'track_id': '30', 'title': '011- ', 'artist': '   ', 'album': '  (1973)'}]}
+
+exec(code, env_args)

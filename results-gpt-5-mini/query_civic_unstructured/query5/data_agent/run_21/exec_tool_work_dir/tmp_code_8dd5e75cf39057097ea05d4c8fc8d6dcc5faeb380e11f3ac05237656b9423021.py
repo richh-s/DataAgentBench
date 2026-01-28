@@ -1,0 +1,72 @@
+code = """import json
+
+# Load civic docs path and disaster funding records from storage
+civic_path = var_call_eA0xJZWygM8q62BlCiIPmWwv
+funding_disaster = var_call_njOPWUa96pPkx9OjTg00sUIJ
+
+# Read civic documents
+with open(civic_path, 'r', encoding='utf-8') as f:
+    civic_docs = json.load(f)
+
+# Combine all civic text for broad search
+combined_text = "\n".join([doc.get('text','') for doc in civic_docs]).lower()
+
+matches = []
+
+for rec in funding_disaster:
+    pname = (rec.get('Project_Name') or '').lower()
+    base = pname.split('(')[0].strip()
+    terms = [pname]
+    if base and base != pname:
+        terms.append(base)
+
+    found_2022 = False
+
+    # Search in combined text
+    for t in terms:
+        if not t:
+            continue
+        idx = combined_text.find(t)
+        if idx != -1:
+            window = combined_text[max(0, idx-250): idx+250]
+            if '2022' in window:
+                found_2022 = True
+                break
+
+    # If not found, search per document
+    if not found_2022:
+        for doc in civic_docs:
+            txt = (doc.get('text') or '').lower()
+            for t in terms:
+                if not t:
+                    continue
+                idx = txt.find(t)
+                if idx != -1:
+                    window = txt[max(0, idx-250): idx+250]
+                    if '2022' in window:
+                        found_2022 = True
+                        break
+            if found_2022:
+                break
+
+    if found_2022:
+        # parse amount to int
+        amt_raw = rec.get('Amount', 0)
+        try:
+            amt = int(str(amt_raw))
+        except:
+            try:
+                amt = int(float(str(amt_raw)))
+            except:
+                amt = 0
+        matches.append({'Funding_ID': rec.get('Funding_ID'), 'Project_Name': rec.get('Project_Name'), 'Amount': amt})
+
+total = sum(m['Amount'] for m in matches)
+result = {'total_funding': total, 'matched_projects_count': len(matches), 'matched_projects': matches}
+
+print('__RESULT__:')
+print(json.dumps(result))"""
+
+env_args = {'var_call_9m8TflfbCJWo96QQhMCIesyq': ['civic_docs'], 'var_call_eA0xJZWygM8q62BlCiIPmWwv': 'file_storage/call_eA0xJZWygM8q62BlCiIPmWwv.json', 'var_call_81lfzMGYLNjxzefeEW7o1uY3': ['Funding'], 'var_call_CVAV72xeKdGMECzEU9GvpR7x': 'file_storage/call_CVAV72xeKdGMECzEU9GvpR7x.json', 'var_call_yZiaFc25sB2M7suCKEOol9JH': {'v1': 'str', 'v2': 'str'}, 'var_call_njOPWUa96pPkx9OjTg00sUIJ': [{'Funding_ID': '6', 'Project_Name': 'Birdview Avenue Improvements (CalOES Project)', 'Funding_Source': 'International Aid', 'Amount': '85000'}, {'Funding_ID': '7', 'Project_Name': 'Birdview Avenue Improvements (FEMA/CalOES Project)', 'Funding_Source': 'Research Institution Funding', 'Amount': '14000'}, {'Funding_ID': '11', 'Project_Name': 'Broad Beach Road Water Quality Infrastructure Repairs (CalJPIA Project)', 'Funding_Source': 'Government Grant', 'Amount': '81000'}, {'Funding_ID': '22', 'Project_Name': 'Clover Heights Storm Drain (FEMA Project)', 'Funding_Source': 'Local NGO Fund', 'Amount': '21000'}, {'Funding_ID': '24', 'Project_Name': 'Corral Canyon Culvert Repairs', 'Funding_Source': 'Federal Assistance', 'Amount': '54000'}, {'Funding_ID': '25', 'Project_Name': 'Corral Canyon Culvert Repairs (FEMA Project)', 'Funding_Source': 'Municipal Fund', 'Amount': '43000'}, {'Funding_ID': '26', 'Project_Name': 'Corral Canyon Culvert Repairs (FEMA/CalOES Project)', 'Funding_Source': 'Taxpayer Contribution', 'Amount': '15000'}, {'Funding_ID': '28', 'Project_Name': 'Corral Canyon Road Bridge Repairs (FEMA Project)', 'Funding_Source': 'Local Business Support', 'Amount': '25000'}, {'Funding_ID': '29', 'Project_Name': 'Corral Canyon Road Bridge Repairs (FEMA/CalOES Project)', 'Funding_Source': 'Cultural Heritage Grant', 'Amount': '58000'}, {'Funding_ID': '34', 'Project_Name': 'Encinal Canyon Road Drainage Improvements (CalOES Project)', 'Funding_Source': 'Educational Sponsorship', 'Amount': '18000'}, {'Funding_ID': '35', 'Project_Name': 'Encinal Canyon Road Drainage Improvements (FEMA/CalOES Project)', 'Funding_Source': 'Private Sponsor', 'Amount': '94000'}, {'Funding_ID': '38', 'Project_Name': 'Guardrail Replacement Citywide (FEMA Project)', 'Funding_Source': 'Impact Investment Fund', 'Amount': '22000'}, {'Funding_ID': '39', 'Project_Name': 'Guardrail Replacement Citywide (FEMA/CalOES Project)', 'Funding_Source': 'Development Bank Loan', 'Amount': '45000'}, {'Funding_ID': '43', 'Project_Name': 'Latigo Canyon Road Culvert Repairs (FEMA Project)', 'Funding_Source': 'Federal Assistance', 'Amount': '36000'}, {'Funding_ID': '44', 'Project_Name': 'Latigo Canyon Road Culvert Repairs (FEMA/CalOES Project)', 'Funding_Source': 'National Foundation Fund', 'Amount': '44000'}, {'Funding_ID': '47', 'Project_Name': 'Latigo Canyon Road Roadway/Retaining Wall Improvements (FEMA Project)', 'Funding_Source': 'Municipal Fund', 'Amount': '91000'}, {'Funding_ID': '48', 'Project_Name': 'Latigo Canyon Road Roadway/Retaining Wall Improvements (FEMA/CalOES Project)', 'Funding_Source': 'Community Fund', 'Amount': '78000'}, {'Funding_ID': '59', 'Project_Name': 'Malibu Road Slope Repairs (CalOES Project)', 'Funding_Source': 'International Aid', 'Amount': '37000'}, {'Funding_ID': '66', 'Project_Name': 'Outdoor Warning Sirens (FEMA Project)', 'Funding_Source': 'Environmental Grant', 'Amount': '27000'}, {'Funding_ID': '67', 'Project_Name': 'Outdoor Warning Sirens (FEMA)', 'Funding_Source': 'State Development Grant', 'Amount': '81000'}, {'Funding_ID': '68', 'Project_Name': 'Outdoor Warning Sirens - Design (FEMA Project)', 'Funding_Source': 'Local Business Support', 'Amount': '43000'}, {'Funding_ID': '69', 'Project_Name': 'Outdoor Warningn Sirens - Design (FEMA Project)', 'Funding_Source': 'Technology Innovation Fund', 'Amount': '84000'}, {'Funding_ID': '82', 'Project_Name': 'Storm Drain Master Plan (FEMA Project)', 'Funding_Source': 'Environmental Grant', 'Amount': '80000'}, {'Funding_ID': '86', 'Project_Name': 'Trancas Canyon Park Planting and Irrigation Repairs (CalJPIA/FEMA Project)', 'Funding_Source': 'Infrastructure Bond', 'Amount': '44000'}, {'Funding_ID': '87', 'Project_Name': 'Trancas Canyon Park Planting and Irrigation Repairs (FEMA/CalOES Project)', 'Funding_Source': 'Infrastructure Bond', 'Amount': '92000'}, {'Funding_ID': '91', 'Project_Name': 'Trancas Canyon Park Slope Stabilization Project (CalJPIA Project)', 'Funding_Source': 'Government Grant', 'Amount': '43000'}, {'Funding_ID': '92', 'Project_Name': 'Trancas Canyon Park Slope Stabilization Project (CalOES Project)', 'Funding_Source': 'International Organization Grant', 'Amount': '32000'}, {'Funding_ID': '98', 'Project_Name': 'Westward Beach Road Repair Project', 'Funding_Source': 'Federal Assistance', 'Amount': '30000'}, {'Funding_ID': '99', 'Project_Name': 'Westward Beach Road Shoulder Repairs (CalOES Project)', 'Funding_Source': 'Local Business Support', 'Amount': '77000'}, {'Funding_ID': '222', 'Project_Name': 'project_227', 'Funding_Source': 'Federal Assistance', 'Amount': '78000'}, {'Funding_ID': '224', 'Project_Name': 'project_396', 'Funding_Source': 'Federal Assistance', 'Amount': '18000'}, {'Funding_ID': '230', 'Project_Name': 'project_425', 'Funding_Source': 'Federal Assistance', 'Amount': '91000'}, {'Funding_ID': '287', 'Project_Name': 'project_134', 'Funding_Source': 'Federal Assistance', 'Amount': '32000'}, {'Funding_ID': '373', 'Project_Name': 'project_412', 'Funding_Source': 'Federal Assistance', 'Amount': '62000'}, {'Funding_ID': '474', 'Project_Name': 'project_332', 'Funding_Source': 'Federal Assistance', 'Amount': '65000'}], 'var_call_40LU39ZvL5Cjx1VWDzjphwSb': [], 'var_call_CvMzpaoFMCFCdxct46xGDQLy': [], 'var_call_8ptA33ZeEEmSog5Y8IDVg8RU': [{'_id': '694eef5c4ec675b6b5f5a285', 'filename': 'malibucity_agenda_03222023-2060.txt'}, {'_id': '694eef5c4ec675b6b5f5a286', 'filename': 'malibucity_agenda__01262022-1835.txt'}, {'_id': '694eef5c4ec675b6b5f5a287', 'filename': 'malibucity_agenda__01272021-1626.txt'}, {'_id': '694eef5c4ec675b6b5f5a288', 'filename': 'malibucity_agenda__03022021-1648.txt'}, {'_id': '694eef5c4ec675b6b5f5a289', 'filename': 'malibucity_agenda__03232022-1869.txt'}, {'_id': '694eef5c4ec675b6b5f5a28a', 'filename': 'malibucity_agenda__03242021-1665.txt'}, {'_id': '694eef5c4ec675b6b5f5a28b', 'filename': 'malibucity_agenda__04282021-1687.txt'}, {'_id': '694eef5c4ec675b6b5f5a28c', 'filename': 'malibucity_agenda__05262021-1701.txt'}, {'_id': '694eef5c4ec675b6b5f5a28d', 'filename': 'malibucity_agenda__06222022-1919.txt'}, {'_id': '694eef5c4ec675b6b5f5a28e', 'filename': 'malibucity_agenda__06232021-1714.txt'}, {'_id': '694eef5c4ec675b6b5f5a28f', 'filename': 'malibucity_agenda__06282023-2116.txt'}, {'_id': '694eef5c4ec675b6b5f5a290', 'filename': 'malibucity_agenda__07272022-1939.txt'}, {'_id': '694eef5c4ec675b6b5f5a291', 'filename': 'malibucity_agenda__07282021-1732.txt'}, {'_id': '694eef5c4ec675b6b5f5a292', 'filename': 'malibucity_agenda__08252021-1746.txt'}, {'_id': '694eef5c4ec675b6b5f5a293', 'filename': 'malibucity_agenda__09222021-1765.txt'}, {'_id': '694eef5c4ec675b6b5f5a294', 'filename': 'malibucity_agenda__09272023-2155.txt'}, {'_id': '694eef5c4ec675b6b5f5a295', 'filename': 'malibucity_agenda__10272021-1779.txt'}, {'_id': '694eef5c4ec675b6b5f5a296', 'filename': 'malibucity_agenda__11102022-1995.txt'}, {'_id': '694eef5c4ec675b6b5f5a297', 'filename': 'malibucity_agenda__12142021-1808.txt'}], 'var_call_HeNQNEHEcjX5IbGGXQMOtKS7': 500, 'var_call_Kcjd9kbUYlpXJEiPYoI9aUNr': [{'Funding_ID': '6', 'Project_Name': 'Birdview Avenue Improvements (CalOES Project)', 'Amount': '85000'}, {'Funding_ID': '7', 'Project_Name': 'Birdview Avenue Improvements (FEMA/CalOES Project)', 'Amount': '14000'}, {'Funding_ID': '11', 'Project_Name': 'Broad Beach Road Water Quality Infrastructure Repairs (CalJPIA Project)', 'Amount': '81000'}, {'Funding_ID': '22', 'Project_Name': 'Clover Heights Storm Drain (FEMA Project)', 'Amount': '21000'}, {'Funding_ID': '24', 'Project_Name': 'Corral Canyon Culvert Repairs', 'Amount': '54000'}, {'Funding_ID': '25', 'Project_Name': 'Corral Canyon Culvert Repairs (FEMA Project)', 'Amount': '43000'}, {'Funding_ID': '26', 'Project_Name': 'Corral Canyon Culvert Repairs (FEMA/CalOES Project)', 'Amount': '15000'}, {'Funding_ID': '28', 'Project_Name': 'Corral Canyon Road Bridge Repairs (FEMA Project)', 'Amount': '25000'}, {'Funding_ID': '29', 'Project_Name': 'Corral Canyon Road Bridge Repairs (FEMA/CalOES Project)', 'Amount': '58000'}, {'Funding_ID': '34', 'Project_Name': 'Encinal Canyon Road Drainage Improvements (CalOES Project)', 'Amount': '18000'}, {'Funding_ID': '35', 'Project_Name': 'Encinal Canyon Road Drainage Improvements (FEMA/CalOES Project)', 'Amount': '94000'}, {'Funding_ID': '38', 'Project_Name': 'Guardrail Replacement Citywide (FEMA Project)', 'Amount': '22000'}, {'Funding_ID': '39', 'Project_Name': 'Guardrail Replacement Citywide (FEMA/CalOES Project)', 'Amount': '45000'}, {'Funding_ID': '43', 'Project_Name': 'Latigo Canyon Road Culvert Repairs (FEMA Project)', 'Amount': '36000'}, {'Funding_ID': '44', 'Project_Name': 'Latigo Canyon Road Culvert Repairs (FEMA/CalOES Project)', 'Amount': '44000'}, {'Funding_ID': '47', 'Project_Name': 'Latigo Canyon Road Roadway/Retaining Wall Improvements (FEMA Project)', 'Amount': '91000'}, {'Funding_ID': '48', 'Project_Name': 'Latigo Canyon Road Roadway/Retaining Wall Improvements (FEMA/CalOES Project)', 'Amount': '78000'}, {'Funding_ID': '59', 'Project_Name': 'Malibu Road Slope Repairs (CalOES Project)', 'Amount': '37000'}, {'Funding_ID': '66', 'Project_Name': 'Outdoor Warning Sirens (FEMA Project)', 'Amount': '27000'}, {'Funding_ID': '67', 'Project_Name': 'Outdoor Warning Sirens (FEMA)', 'Amount': '81000'}, {'Funding_ID': '68', 'Project_Name': 'Outdoor Warning Sirens - Design (FEMA Project)', 'Amount': '43000'}, {'Funding_ID': '69', 'Project_Name': 'Outdoor Warningn Sirens - Design (FEMA Project)', 'Amount': '84000'}, {'Funding_ID': '82', 'Project_Name': 'Storm Drain Master Plan (FEMA Project)', 'Amount': '80000'}, {'Funding_ID': '86', 'Project_Name': 'Trancas Canyon Park Planting and Irrigation Repairs (CalJPIA/FEMA Project)', 'Amount': '44000'}, {'Funding_ID': '87', 'Project_Name': 'Trancas Canyon Park Planting and Irrigation Repairs (FEMA/CalOES Project)', 'Amount': '92000'}, {'Funding_ID': '91', 'Project_Name': 'Trancas Canyon Park Slope Stabilization Project (CalJPIA Project)', 'Amount': '43000'}, {'Funding_ID': '92', 'Project_Name': 'Trancas Canyon Park Slope Stabilization Project (CalOES Project)', 'Amount': '32000'}, {'Funding_ID': '98', 'Project_Name': 'Westward Beach Road Repair Project', 'Amount': '30000'}, {'Funding_ID': '99', 'Project_Name': 'Westward Beach Road Shoulder Repairs (CalOES Project)', 'Amount': '77000'}, {'Funding_ID': '222', 'Project_Name': 'project_227', 'Amount': '78000'}, {'Funding_ID': '224', 'Project_Name': 'project_396', 'Amount': '18000'}, {'Funding_ID': '230', 'Project_Name': 'project_425', 'Amount': '91000'}, {'Funding_ID': '287', 'Project_Name': 'project_134', 'Amount': '32000'}, {'Funding_ID': '373', 'Project_Name': 'project_412', 'Amount': '62000'}, {'Funding_ID': '474', 'Project_Name': 'project_332', 'Amount': '65000'}]}
+
+exec(code, env_args)

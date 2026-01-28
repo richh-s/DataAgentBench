@@ -1,0 +1,67 @@
+code = """import json
+import os
+import sqlite3
+import duckdb
+
+# Step 1: Load NYSE non-ETF stock info
+nyse_path = locals()['var_functions.query_db:74']
+with open(nyse_path, 'r') as f:
+    nyse_data = json.load(f)
+
+symbol_to_name = {item['Symbol']: item['name'] for item in nyse_data}
+print(f"Loaded {len(symbol_to_name)} NYSE non-ETF stocks")
+
+# Step 2: Check a subset to find top candidates quickly
+test_symbols = ['AIN', 'CRM', 'AMP', 'CSL', 'CVX', 'DGX', 'EBS', 'ESS', 'GD', 'IBM']
+
+# Connect to DuckDB stocktrade database
+conn = duckdb.connect()
+conn.execute("ATTACH 'stocktrade_database' AS trade_db")
+
+results = []
+
+for symbol in test_symbols:
+    try:
+        query = f"""
+        SELECT 
+          SUM(CASE WHEN Close > Open THEN 1 ELSE 0 END) as up_days,
+          SUM(CASE WHEN Close < Open THEN 1 ELSE 0 END) as down_days
+        FROM trade_db."{symbol}"
+        WHERE Date >= '2017-01-01' AND Date <= '2017-12-31'
+        """
+        row = conn.execute(query).fetchone()
+        
+        if row and row[0] is not None:
+            up_days = int(row[0])
+            down_days = int(row[1]) if row[1] else 0
+            diff = up_days - down_days
+            
+            if up_days > down_days:
+                results.append({
+                    'symbol': symbol,
+                    'name': symbol_to_name[symbol],
+                    'up': up_days,
+                    'down': down_days,
+                    'diff': diff
+                })
+                print(f"{symbol}: {up_days} up, {down_days} down, diff: {diff}")
+                
+    except Exception as e:
+        print(f"Error with {symbol}: {e}")
+
+conn.close()
+
+# Sort by difference
+results.sort(key=lambda x: x['diff'], reverse=True)
+top_candidates = results[:5]
+
+print("__RESULT__:")
+print(json.dumps({
+    'candidates_tested': len(test_symbols),
+    'qualified': len(results),
+    'top_5': top_candidates
+}))"""
+
+env_args = {'var_functions.list_db:0': ['stockinfo'], 'var_functions.query_db:2': 'file_storage/functions.query_db:2.json', 'var_functions.list_db:6': 'file_storage/functions.list_db:6.json', 'var_functions.query_db:8': 'file_storage/functions.query_db:8.json', 'var_functions.query_db:12': [{'Symbol': 'AEFC'}, {'Symbol': 'AIN'}, {'Symbol': 'AIV'}, {'Symbol': 'AIZP'}, {'Symbol': 'AJRD'}, {'Symbol': 'AL'}, {'Symbol': 'AMN'}, {'Symbol': 'AMP'}, {'Symbol': 'AMT'}, {'Symbol': 'ARD'}, {'Symbol': 'ARGD'}, {'Symbol': 'ARLO'}, {'Symbol': 'ASG'}, {'Symbol': 'AVA'}, {'Symbol': 'BANC'}, {'Symbol': 'BBU'}, {'Symbol': 'BBVA'}, {'Symbol': 'BDXA'}, {'Symbol': 'BKH'}, {'Symbol': 'BKT'}, {'Symbol': 'BLD'}, {'Symbol': 'BNS'}, {'Symbol': 'BV'}, {'Symbol': 'BZH'}, {'Symbol': 'CADE'}, {'Symbol': 'CAE'}, {'Symbol': 'CAF'}, {'Symbol': 'CBT'}, {'Symbol': 'CCC'}, {'Symbol': 'CCZ'}, {'Symbol': 'CHAP'}, {'Symbol': 'CIA'}, {'Symbol': 'CMA'}, {'Symbol': 'CMI'}, {'Symbol': 'CMSA'}, {'Symbol': 'CNK'}, {'Symbol': 'COTY'}, {'Symbol': 'CRC'}, {'Symbol': 'CRM'}, {'Symbol': 'CRS'}, {'Symbol': 'CSL'}, {'Symbol': 'CTS'}, {'Symbol': 'CUBE'}, {'Symbol': 'CURO'}, {'Symbol': 'CVIA'}, {'Symbol': 'CVX'}, {'Symbol': 'CXH'}, {'Symbol': 'DAC'}, {'Symbol': 'DDS'}, {'Symbol': 'DDT'}, {'Symbol': 'DEO'}, {'Symbol': 'DGX'}, {'Symbol': 'DMB'}, {'Symbol': 'DTQ'}, {'Symbol': 'DXC'}, {'Symbol': 'EARN'}, {'Symbol': 'EBS'}, {'Symbol': 'EGO'}, {'Symbol': 'EGY'}, {'Symbol': 'EIG'}, {'Symbol': 'ELF'}, {'Symbol': 'EMP'}, {'Symbol': 'ENLC'}, {'Symbol': 'EPR'}, {'Symbol': 'EPRT'}, {'Symbol': 'ES'}, {'Symbol': 'ESRT'}, {'Symbol': 'ESS'}, {'Symbol': 'ETM'}, {'Symbol': 'EV'}, {'Symbol': 'EVT'}, {'Symbol': 'EXP'}, {'Symbol': 'FMN'}, {'Symbol': 'FPAC'}, {'Symbol': 'FSM'}, {'Symbol': 'GCO'}, {'Symbol': 'GD'}, {'Symbol': 'GDL'}, {'Symbol': 'GDV'}, {'Symbol': 'GEL'}, {'Symbol': 'GJP'}, {'Symbol': 'GLOB'}, {'Symbol': 'GLT'}, {'Symbol': 'GOL'}, {'Symbol': 'GSLD'}, {'Symbol': 'GTY'}, {'Symbol': 'GVA'}, {'Symbol': 'GWB'}, {'Symbol': 'H'}, {'Symbol': 'HBI'}, {'Symbol': 'HDB'}, {'Symbol': 'HEP'}, {'Symbol': 'HIL'}, {'Symbol': 'HIO'}, {'Symbol': 'HIX'}, {'Symbol': 'HLF'}, {'Symbol': 'HLT'}, {'Symbol': 'HNI'}, {'Symbol': 'HRB'}, {'Symbol': 'HTFA'}, {'Symbol': 'IBM'}, {'Symbol': 'IGR'}, {'Symbol': 'IHC'}, {'Symbol': 'IPG'}, {'Symbol': 'IRM'}, {'Symbol': 'IT'}, {'Symbol': 'JGH'}, {'Symbol': 'JHY'}, {'Symbol': 'JKS'}, {'Symbol': 'JMP'}, {'Symbol': 'JNPR'}, {'Symbol': 'KMB'}, {'Symbol': 'KNX'}, {'Symbol': 'KW'}, {'Symbol': 'KYN'}, {'Symbol': 'LB'}, {'Symbol': 'LDOS'}, {'Symbol': 'LHC'}, {'Symbol': 'LHX'}, {'Symbol': 'LOMA'}, {'Symbol': 'MANU'}, {'Symbol': 'MDLX'}, {'Symbol': 'MDLY'}, {'Symbol': 'MED'}, {'Symbol': 'MFO'}, {'Symbol': 'MGR'}, {'Symbol': 'MGU'}, {'Symbol': 'MHE'}, {'Symbol': 'MIY'}, {'Symbol': 'MKC'}, {'Symbol': 'MLI'}, {'Symbol': 'MNE'}, {'Symbol': 'MR'}, {'Symbol': 'MS'}, {'Symbol': 'MTD'}, {'Symbol': 'MYD'}, {'Symbol': 'NFH'}, {'Symbol': 'NGG'}, {'Symbol': 'NJV'}, {'Symbol': 'NNI'}, {'Symbol': 'NNY'}, {'Symbol': 'NRUC'}, {'Symbol': 'NUE'}, {'Symbol': 'NXN'}, {'Symbol': 'OCFT'}, {'Symbol': 'OEC'}, {'Symbol': 'ORA'}, {'Symbol': 'ORAN'}, {'Symbol': 'ORCL'}, {'Symbol': 'ORN'}, {'Symbol': 'PAG'}, {'Symbol': 'PBI'}, {'Symbol': 'PFE'}, {'Symbol': 'PFSI'}, {'Symbol': 'PGR'}, {'Symbol': 'PIM'}, {'Symbol': 'PKE'}, {'Symbol': 'PLAN'}, {'Symbol': 'PLNT'}, {'Symbol': 'PMT'}, {'Symbol': 'PNM'}, {'Symbol': 'PPG'}, {'Symbol': 'PRSP'}, {'Symbol': 'PRTY'}, {'Symbol': 'PSV'}, {'Symbol': 'PSXP'}, {'Symbol': 'QTS'}, {'Symbol': 'QUAD'}, {'Symbol': 'RBC'}, {'Symbol': 'RCB'}, {'Symbol': 'RCI'}, {'Symbol': 'RES'}, {'Symbol': 'REXR'}, {'Symbol': 'RH'}, {'Symbol': 'RMT'}, {'Symbol': 'ROG'}, {'Symbol': 'ROL'}, {'Symbol': 'RPAI'}, {'Symbol': 'RPM'}, {'Symbol': 'RQI'}, {'Symbol': 'RWT'}, {'Symbol': 'SAF'}, {'Symbol': 'SAIL'}, {'Symbol': 'SAM'}, {'Symbol': 'SBR'}, {'Symbol': 'SCU'}, {'Symbol': 'SFUN'}, {'Symbol': 'SHAK'}, {'Symbol': 'SI'}, {'Symbol': 'SITC'}, {'Symbol': 'SJM'}, {'Symbol': 'SJT'}, {'Symbol': 'SJW'}, {'Symbol': 'SLF'}, {'Symbol': 'SMP'}, {'Symbol': 'SOL'}, {'Symbol': 'SPOT'}, {'Symbol': 'SRC'}, {'Symbol': 'SRF'}, {'Symbol': 'SRT'}, {'Symbol': 'SSD'}, {'Symbol': 'STG'}, {'Symbol': 'STL'}, {'Symbol': 'STON'}, {'Symbol': 'SYX'}, {'Symbol': 'TBB'}, {'Symbol': 'TCP'}, {'Symbol': 'TDJ'}, {'Symbol': 'TGP'}, {'Symbol': 'TLYS'}, {'Symbol': 'TNC'}, {'Symbol': 'TPH'}, {'Symbol': 'TRV'}, {'Symbol': 'TTI'}, {'Symbol': 'TUFN'}, {'Symbol': 'TWTR'}, {'Symbol': 'UHT'}, {'Symbol': 'UIS'}, {'Symbol': 'USX'}, {'Symbol': 'UTL'}, {'Symbol': 'VET'}, {'Symbol': 'VGR'}, {'Symbol': 'VHI'}, {'Symbol': 'VIV'}, {'Symbol': 'VKQ'}, {'Symbol': 'VRT'}, {'Symbol': 'VVI'}, {'Symbol': 'WOR'}, {'Symbol': 'WPG'}, {'Symbol': 'WSM'}, {'Symbol': 'X'}, {'Symbol': 'YEXT'}, {'Symbol': 'ZNH'}, {'Symbol': 'ZTR'}], 'var_functions.query_db:18': 'file_storage/functions.query_db:18.json', 'var_functions.query_db:20': 'file_storage/functions.query_db:20.json', 'var_functions.query_db:22': [{'Date': '2017-01-03', 'Open': '167.0', 'High': '167.8699951171875', 'Low': '166.00999450683594', 'Close': '167.19000244140625', 'Adj Close': '145.4166259765625', 'Volume': '2934300'}, {'Date': '2017-01-04', 'Open': '167.77000427246094', 'High': '169.8699951171875', 'Low': '167.36000061035156', 'Close': '169.25999450683594', 'Adj Close': '147.217041015625', 'Volume': '3381400'}, {'Date': '2017-01-05', 'Open': '169.25', 'High': '169.38999938964844', 'Low': '167.25999450683594', 'Close': '168.6999969482422', 'Adj Close': '146.72994995117188', 'Volume': '2682300'}, {'Date': '2017-01-06', 'Open': '168.69000244140625', 'High': '169.9199981689453', 'Low': '167.52000427246094', 'Close': '169.52999877929688', 'Adj Close': '147.45184326171875', 'Volume': '2945500'}, {'Date': '2017-01-09', 'Open': '169.47000122070312', 'High': '169.8000030517578', 'Low': '167.6199951171875', 'Close': '167.64999389648438', 'Adj Close': '145.81668090820312', 'Volume': '3189900'}], 'var_functions.list_db:26': 'file_storage/functions.list_db:26.json', 'var_functions.query_db:30': 'file_storage/functions.query_db:30.json', 'var_functions.query_db:34': [{'total_days': '251'}], 'var_functions.query_db:36': 'file_storage/functions.query_db:36.json', 'var_functions.query_db:38': 'file_storage/functions.query_db:38.json', 'var_functions.execute_python:42': {'count': 234, 'sample': [['AEFC', 'Aegon Funding Company LLC is part of Aegon N.V., a global financial services group offering life insurance, pensions, and asset management solutions to help people achieve a lifetime of financial security.'], ['AIN', 'Albany International Corporation specializes in producing advanced materials and engineered components, serving industries such as aerospace and paper manufacturing with innovative solutions.'], ['AIV', 'Apartment Investment and Management Company specializes in owning and managing a diverse portfolio of apartment communities, offering quality rental housing across various regions.']]}, 'var_functions.query_db:48': 'file_storage/functions.query_db:48.json', 'var_functions.query_db:50': [{'up_days': '143.0', 'down_days': '101.0'}], 'var_functions.query_db:54': [{'up_days': '137.0', 'down_days': '113.0'}], 'var_functions.list_db:56': ['stockinfo'], 'var_functions.query_db:58': 'file_storage/functions.query_db:58.json', 'var_functions.query_db:60': 'file_storage/functions.query_db:60.json', 'var_functions.list_db:62': 'file_storage/functions.list_db:62.json', 'var_functions.list_db:64': 'file_storage/functions.list_db:64.json', 'var_functions.query_db:66': [{'up_days': '118.0', 'down_days': '128.0'}], 'var_functions.execute_python:68': {'total_nyse': 234, 'available': 234, 'sample_stocks': [['AEFC', 'Aegon Funding Company LLC is part of Aegon N.V., a global financial services group offering life insurance, pensions, and asset management solutions to help people achieve a lifetime of financial security.'], ['AIN', 'Albany International Corporation specializes in producing advanced materials and engineered components, serving industries such as aerospace and paper manufacturing with innovative solutions.'], ['AIV', 'Apartment Investment and Management Company specializes in owning and managing a diverse portfolio of apartment communities, offering quality rental housing across various regions.'], ['AIZP', 'Assurant, Inc. specializes in providing a diverse range of insurance products and services, focusing on lifestyle and housing solutions to protect what matters most to their customers.'], ['AJRD', 'Aerojet Rocketdyne Holdings, Inc. specializes in developing advanced propulsion systems and aerospace technologies, playing a crucial role in powering rockets and missiles for both defense and space exploration.']]}, 'var_functions.execute_python:70': {'total_stocks': 234, 'sample_symbols': ['AEFC', 'AIN', 'AIV', 'AIZP', 'AJRD']}, 'var_functions.query_db:74': 'file_storage/functions.query_db:74.json', 'var_functions.execute_python:76': {'total_filtered': 234, 'sample': [['AEFC', 'Aegon Funding Company LLC is part of Aegon N.V., a global financial services group offering life insurance, pensions, and asset management solutions to help people achieve a lifetime of financial security.'], ['AIN', 'Albany International Corporation specializes in producing advanced materials and engineered components, serving industries such as aerospace and paper manufacturing with innovative solutions.'], ['AIV', 'Apartment Investment and Management Company specializes in owning and managing a diverse portfolio of apartment communities, offering quality rental housing across various regions.']]}}
+
+exec(code, env_args)

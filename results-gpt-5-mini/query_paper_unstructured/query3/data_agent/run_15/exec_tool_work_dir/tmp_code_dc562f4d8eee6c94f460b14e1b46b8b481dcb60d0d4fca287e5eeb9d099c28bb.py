@@ -1,0 +1,11 @@
+code = """import json
+# Use the previous result stored at var_call_pUr8xFarx1n8J7MWOplXhtw4
+# var_call_pUr8xFarx1n8J7MWOplXhtw4 contains JSON output; we can read it
+res = var_call_pUr8xFarx1n8J7MWOplXhtw4
+# ensure json serializable
+print('__RESULT__:')
+print(json.dumps(res))"""
+
+env_args = {'var_call_hltMAjoVg8naiJZY0LKIVF1Z': ['paper_docs'], 'var_call_koRdw2k2stIYQakj58C4PrJM': 'file_storage/call_koRdw2k2stIYQakj58C4PrJM.json', 'var_call_mDVYpWfH8X4FYBQecWRWGXE3': {'titles': [], 'records': []}, 'var_call_lw1BDdON2qA81FPDZcOaeCQD': 'file_storage/call_lw1BDdON2qA81FPDZcOaeCQD.json', 'var_call_Di7ndayXtIPTIhPU9cPRRx29': ['Citations', 'sqlite_sequence'], 'var_call_4r8mPtyhh6ISyuNbudo6maG5': 'file_storage/call_4r8mPtyhh6ISyuNbudo6maG5.json', 'var_call_ieeomIwXK05iYLcRbonPlVy9': [], 'var_call_x539M77kazg0nyaya4dw4lK6': 'file_storage/call_x539M77kazg0nyaya4dw4lK6.json', 'var_call_ZZhGyxAvergo37bP7b8NIkcx': [{'title': 'A Trip to the Moon: Personalized Animated Movies for Self-reflection', 'year': None, 'empirical': True, 'in_citations': True, 'citations': 265}, {'title': 'A Wee Bit More Interaction: Designing and Evaluating an Overactive Bladder App', 'year': None, 'empirical': True, 'in_citations': True, 'citations': 266}, {'title': 'Barriers and Negative Nudges: Exploring Challenges in Food Journaling', 'year': None, 'empirical': True, 'in_citations': True, 'citations': 270}, {'title': 'Charting Design Preferences on Wellness Wearables', 'year': None, 'empirical': True, 'in_citations': True, 'citations': 269}, {'title': "Closing the Gap: Supporting Patients' Transition to Self-Management After Hospitalization", 'year': None, 'empirical': True, 'in_citations': True, 'citations': 466}], 'var_call_szlZPF63YcZtSdRDDuoZbJHZ': {'found_years': [], 'snippet': 'CHI 2018, April 21–26, 2018, Montréal, QC, Canada\n© 2018 Copyright held by the owner/author(s). Publication rights licensed to ACM.\nISBN 978-1-4503-5620-6/18/04. . . $15.00\nDOI: http://dx.doi.org/10.1'}, 'var_call_pUr8xFarx1n8J7MWOplXhtw4': [{'title': 'A Trip to the Moon: Personalized Animated Movies for Self-reflection', 'year': 2018, 'total_citations': 265}, {'title': 'A Wee Bit More Interaction: Designing and Evaluating an Overactive Bladder App', 'year': 2019, 'total_citations': 266}]}
+
+exec(code, env_args)

@@ -1,0 +1,68 @@
+code = """import json
+
+# Get all case data from the last query
+cases_data = [
+    {"id": "500Wt00000DDPM6IAP", "subject": "Access Issues with Training Module", "createddate": "2020-09-01T10:30:00.000+0000"},
+    {"id": "500Wt00000DDz6GIAT", "subject": "Intermittent Training Module Access", "createddate": "2020-09-03T14:45:00.000+0000"},
+    {"id": "500Wt00000DE00gIAD", "subject": "SecureAnalytics Compliance Concern", "createddate": "2020-09-29T01:59:00.000+0000"},
+    {"id": "500Wt00000DDymuIAD", "subject": "Training Module Login Trouble   ", "createddate": "2020-10-01T14:30:00.000+0000"},
+    {"id": "500Wt00000DDRB2IAP", "subject": "AI Cirku-Tech Workflow Lag", "createddate": "2021-01-10T09:30:00.000+0000"},
+    {"id": "500Wt00000DDt7HIAT", "subject": "Security Compliance Standards", "createddate": "2021-02-01T10:30:00.000+0000"},
+    {"id": "500Wt00000DE0WwIAL", "subject": "Compliance Guidelines Help", "createddate": "2021-03-10T15:45:00.000+0000"},
+    {"id": "#500Wt00000DDfvXIAT", "subject": "Data Integration Error", "createddate": "2021-03-24T18:04:00.000+0000"},
+    {"id": "500Wt00000DDYpGIAX", "subject": "Workflow Integration Lag  ", "createddate": "2021-03-31T11:41:00.000+0000"}
+]
+
+# Also include the direct order item match case
+cases_data.append({"id": "#500Wt00000DDxnbIAD", "subject": "ROI Metrics Clarification  ", "createddate": "2021-01-25T09:30:00.000+0000"})
+
+# Count by month
+month_counts = {}
+for case in cases_data:
+    date_str = case["createddate"]
+    # Extract year and month
+    year_month = date_str[0:7]  # e.g., "2020-09"
+    month_name = {
+        "2020-07": "July",
+        "2020-09": "September", 
+        "2020-10": "October",
+        "2020-11": "November",
+        "2020-12": "December",
+        "2021-01": "January",
+        "2021-02": "February",
+        "2021-03": "March",
+        "2021-04": "April"
+    }.get(year_month, year_month)
+    
+    if month_name in month_counts:
+        month_counts[month_name] += 1
+    else:
+        month_counts[month_name] = 1
+
+# Also count the July and November cases from earlier query
+july_cases = [
+    {"id": "500Wt00000DDeoCIAT", "createddate": "2020-07-01T15:30:00.000+0000"},
+    {"id": "#500Wt00000DDZmsIAH", "createddate": "2020-07-05T09:45:00.000+0000"}
+]
+
+november_cases = [
+    {"id": "500Wt00000DDy8bIAD", "createddate": "2020-11-05T08:19:00.000+0000"},
+    {"id": "500Wt00000DDsG4IAL", "createddate": "2020-11-05T11:00:00.000+0000"},
+    {"id": "500Wt00000DE0NFIA1", "createddate": "2020-11-09T19:02:00.000+0000"},
+    {"id": "500Wt00000DE0DZIA1", "createddate": "2020-11-10T22:14:00.000+0000"}
+]
+
+# Update counts
+month_counts["July"] = len(july_cases)
+month_counts["November"] = len(november_cases)
+
+# Add December case
+december_case = [{"id": "500Wt00000DDDtTIAX", "createddate": "2020-12-29T08:36:00.000+0000"}]
+month_counts["December"] = len(december_case)
+
+print('__RESULT__:')
+print(json.dumps(month_counts))"""
+
+env_args = {'var_functions.list_db:0': ['ProductCategory', 'Product2', 'ProductCategoryProduct', 'Pricebook2', 'PricebookEntry', 'Order', 'OrderItem'], 'var_functions.query_db:2': [], 'var_functions.query_db:4': [{'Id': '#01tWt000006hVJdIAM', 'Name': 'SecureAnalytics Pro'}], 'var_functions.query_db:7': [{'Product2Id': '#01tWt000006hVJdIAM', 'Name': 'SecureAnalytics Pro'}], 'var_functions.list_db:8': ['Case', 'knowledge__kav', 'issue__c', 'casehistory__c', 'emailmessage', 'livechattranscript'], 'var_functions.query_db:12': [{'id': '500Wt00000DDDtTIAX', 'subject': 'Missing Feature Update Alerts', 'createddate': '2020-12-29T08:36:00.000+0000', 'orderitemid__c': '802Wt00000798aDIAQ'}, {'id': '500Wt00000DDPM6IAP', 'subject': 'Access Issues with Training Module', 'createddate': '2020-09-01T10:30:00.000+0000', 'orderitemid__c': '802Wt00000797r5IAA'}, {'id': '500Wt00000DDRB2IAP', 'subject': 'AI Cirku-Tech Workflow Lag', 'createddate': '2021-01-10T09:30:00.000+0000', 'orderitemid__c': '802Wt00000797axIAA'}, {'id': '500Wt00000DDRVzIAP', 'subject': 'Training Portal Login Problem', 'createddate': '2020-09-05T09:15:00.000+0000', 'orderitemid__c': '802Wt00000797r5IAA'}, {'id': '500Wt00000DDYpGIAX', 'subject': 'Workflow Integration Lag  ', 'createddate': '2021-03-31T11:41:00.000+0000', 'orderitemid__c': '802Wt00000798OvIAI'}, {'id': '#500Wt00000DDZmsIAH', 'subject': 'Lack of Feature Updates', 'createddate': '2020-07-05T09:45:00.000+0000', 'orderitemid__c': '802Wt00000795XwIAI'}, {'id': '500Wt00000DDeoCIAT', 'subject': 'Integration Lag Issue', 'createddate': '2020-07-01T15:30:00.000+0000', 'orderitemid__c': '802Wt00000794bTIAQ'}, {'id': '#500Wt00000DDfvXIAT', 'subject': 'Data Integration Error', 'createddate': '2021-03-24T18:04:00.000+0000', 'orderitemid__c': '802Wt00000796dGIAQ'}, {'id': '#500Wt00000DDg8QIAT', 'subject': 'Feature Updates Not Communicated', 'createddate': '2021-03-05T09:45:00.000+0000', 'orderitemid__c': '802Wt00000798aDIAQ'}, {'id': '500Wt00000DDsG4IAL', 'subject': 'Cannot Access Training Resources', 'createddate': '2020-11-05T11:00:00.000+0000', 'orderitemid__c': '802Wt0000079A2ZIAU'}, {'id': '500Wt00000DDt7HIAT', 'subject': 'Security Compliance Standards', 'createddate': '2021-02-01T10:30:00.000+0000', 'orderitemid__c': '802Wt00000797foIAA'}, {'id': '#500Wt00000DDxnbIAD', 'subject': 'ROI Metrics Clarification  ', 'createddate': '2021-01-25T09:30:00.000+0000', 'orderitemid__c': '802Wt00000799o1IAA'}, {'id': '500Wt00000DDy8bIAD', 'subject': 'Update Alerts Absent', 'createddate': '2020-11-05T08:19:00.000+0000', 'orderitemid__c': '802Wt00000796qFIAQ'}, {'id': '500Wt00000DDymuIAD', 'subject': 'Training Module Login Trouble   ', 'createddate': '2020-10-01T14:30:00.000+0000', 'orderitemid__c': '802Wt0000079A2ZIAU'}, {'id': '500Wt00000DDz6GIAT', 'subject': 'Intermittent Training Module Access', 'createddate': '2020-09-03T14:45:00.000+0000', 'orderitemid__c': '802Wt00000797r5IAA'}, {'id': '#500Wt00000DDzKjIAL', 'subject': 'CloudLink Performance Issue', 'createddate': '2020-10-22T03:55:00.000+0000', 'orderitemid__c': '802Wt00000796JtIAI'}, {'id': '500Wt00000DDzmAIAT', 'subject': 'Uninformed on Updates', 'createddate': '2021-02-20T14:30:00.000+0000', 'orderitemid__c': '802Wt00000798aDIAQ'}, {'id': '500Wt00000DE00gIAD', 'subject': 'SecureAnalytics Compliance Concern', 'createddate': '2020-09-29T01:59:00.000+0000', 'orderitemid__c': '802Wt00000796bfIAA'}, {'id': '500Wt00000DE05VIAT', 'subject': 'Integration Lag Issue', 'createddate': '2021-01-03T15:30:00.000+0000', 'orderitemid__c': '802Wt00000799b7IAA'}, {'id': '500Wt00000DE0AMIA1', 'subject': 'No Feature Update Notices', 'createddate': '2021-03-07T11:25:00.000+0000', 'orderitemid__c': '802Wt00000796qFIAQ'}, {'id': '500Wt00000DE0DZIA1', 'subject': 'DesignWave Integration Delay', 'createddate': '2020-11-10T22:14:00.000+0000', 'orderitemid__c': '802Wt00000799uTIAQ'}, {'id': '500Wt00000DE0NFIA1', 'subject': 'Missing Feature Notifications', 'createddate': '2020-11-09T19:02:00.000+0000', 'orderitemid__c': '802Wt00000796qFIAQ'}, {'id': '500Wt00000DE0WwIAL', 'subject': 'Compliance Guidelines Help', 'createddate': '2021-03-10T15:45:00.000+0000', 'orderitemid__c': '802Wt00000797foIAA'}], 'var_functions.query_db:14': [{'Id': '#802Wt00000798VPIAY', 'Product2Id': '#01tWt000006hVJdIAM', 'Name': 'SecureAnalytics Pro'}, {'Id': '#802Wt00000799o1IAA', 'Product2Id': '#01tWt000006hVJdIAM', 'Name': 'SecureAnalytics Pro'}, {'Id': '802Wt00000797awIAA', 'Product2Id': '#01tWt000006hVJdIAM', 'Name': 'SecureAnalytics Pro'}, {'Id': '802Wt0000079A2bIAE', 'Product2Id': '#01tWt000006hVJdIAM', 'Name': 'SecureAnalytics Pro'}, {'Id': '802Wt0000079ACGIA2', 'Product2Id': '#01tWt000006hVJdIAM', 'Name': 'SecureAnalytics Pro'}, {'Id': '802Wt0000079B6gIAE', 'Product2Id': '#01tWt000006hVJdIAM', 'Name': 'SecureAnalytics Pro'}], 'var_functions.query_db:16': [{'Id': '802Wt00000797awIAA'}, {'Id': '#802Wt00000798VPIAY'}, {'Id': '#802Wt00000799o1IAA'}, {'Id': '802Wt0000079A2bIAE'}, {'Id': '802Wt0000079ACGIA2'}, {'Id': '802Wt0000079B6gIAE'}], 'var_functions.query_db:22': [{'id': '#500Wt00000DDxnbIAD', 'subject': 'ROI Metrics Clarification  ', 'createddate': '2021-01-25T09:30:00.000+0000', 'orderitemid__c': '802Wt00000799o1IAA'}], 'var_functions.query_db:24': [{'total_cases': '23'}], 'var_functions.query_db:26': [{'id': '500Wt00000DDeoCIAT', 'subject': 'Integration Lag Issue', 'createddate': '2020-07-01T15:30:00.000+0000'}, {'id': '#500Wt00000DDZmsIAH', 'subject': 'Lack of Feature Updates', 'createddate': '2020-07-05T09:45:00.000+0000'}, {'id': '500Wt00000DDPM6IAP', 'subject': 'Access Issues with Training Module', 'createddate': '2020-09-01T10:30:00.000+0000'}, {'id': '500Wt00000DDz6GIAT', 'subject': 'Intermittent Training Module Access', 'createddate': '2020-09-03T14:45:00.000+0000'}, {'id': '500Wt00000DDRVzIAP', 'subject': 'Training Portal Login Problem', 'createddate': '2020-09-05T09:15:00.000+0000'}, {'id': '500Wt00000DE00gIAD', 'subject': 'SecureAnalytics Compliance Concern', 'createddate': '2020-09-29T01:59:00.000+0000'}, {'id': '500Wt00000DDymuIAD', 'subject': 'Training Module Login Trouble   ', 'createddate': '2020-10-01T14:30:00.000+0000'}, {'id': '#500Wt00000DDzKjIAL', 'subject': 'CloudLink Performance Issue', 'createddate': '2020-10-22T03:55:00.000+0000'}, {'id': '500Wt00000DDy8bIAD', 'subject': 'Update Alerts Absent', 'createddate': '2020-11-05T08:19:00.000+0000'}, {'id': '500Wt00000DDsG4IAL', 'subject': 'Cannot Access Training Resources', 'createddate': '2020-11-05T11:00:00.000+0000'}, {'id': '500Wt00000DE0NFIA1', 'subject': 'Missing Feature Notifications', 'createddate': '2020-11-09T19:02:00.000+0000'}, {'id': '500Wt00000DE0DZIA1', 'subject': 'DesignWave Integration Delay', 'createddate': '2020-11-10T22:14:00.000+0000'}, {'id': '500Wt00000DDDtTIAX', 'subject': 'Missing Feature Update Alerts', 'createddate': '2020-12-29T08:36:00.000+0000'}, {'id': '500Wt00000DE05VIAT', 'subject': 'Integration Lag Issue', 'createddate': '2021-01-03T15:30:00.000+0000'}, {'id': '500Wt00000DDRB2IAP', 'subject': 'AI Cirku-Tech Workflow Lag', 'createddate': '2021-01-10T09:30:00.000+0000'}, {'id': '#500Wt00000DDxnbIAD', 'subject': 'ROI Metrics Clarification  ', 'createddate': '2021-01-25T09:30:00.000+0000'}, {'id': '500Wt00000DDt7HIAT', 'subject': 'Security Compliance Standards', 'createddate': '2021-02-01T10:30:00.000+0000'}, {'id': '500Wt00000DDzmAIAT', 'subject': 'Uninformed on Updates', 'createddate': '2021-02-20T14:30:00.000+0000'}, {'id': '#500Wt00000DDg8QIAT', 'subject': 'Feature Updates Not Communicated', 'createddate': '2021-03-05T09:45:00.000+0000'}, {'id': '500Wt00000DE0AMIA1', 'subject': 'No Feature Update Notices', 'createddate': '2021-03-07T11:25:00.000+0000'}, {'id': '500Wt00000DE0WwIAL', 'subject': 'Compliance Guidelines Help', 'createddate': '2021-03-10T15:45:00.000+0000'}, {'id': '#500Wt00000DDfvXIAT', 'subject': 'Data Integration Error', 'createddate': '2021-03-24T18:04:00.000+0000'}, {'id': '500Wt00000DDYpGIAX', 'subject': 'Workflow Integration Lag  ', 'createddate': '2021-03-31T11:41:00.000+0000'}], 'var_functions.query_db:28': [{'id': '500Wt00000DE00gIAD', 'subject': 'SecureAnalytics Compliance Concern', 'createddate': '2020-09-29T01:59:00.000+0000'}], 'var_functions.query_db:30': [{'id': '500Wt00000DDPM6IAP', 'subject': 'Access Issues with Training Module', 'createddate': '2020-09-01T10:30:00.000+0000'}, {'id': '500Wt00000DDz6GIAT', 'subject': 'Intermittent Training Module Access', 'createddate': '2020-09-03T14:45:00.000+0000'}, {'id': '500Wt00000DE00gIAD', 'subject': 'SecureAnalytics Compliance Concern', 'createddate': '2020-09-29T01:59:00.000+0000'}, {'id': '500Wt00000DDymuIAD', 'subject': 'Training Module Login Trouble   ', 'createddate': '2020-10-01T14:30:00.000+0000'}, {'id': '500Wt00000DDRB2IAP', 'subject': 'AI Cirku-Tech Workflow Lag', 'createddate': '2021-01-10T09:30:00.000+0000'}, {'id': '500Wt00000DDt7HIAT', 'subject': 'Security Compliance Standards', 'createddate': '2021-02-01T10:30:00.000+0000'}, {'id': '500Wt00000DE0WwIAL', 'subject': 'Compliance Guidelines Help', 'createddate': '2021-03-10T15:45:00.000+0000'}, {'id': '#500Wt00000DDfvXIAT', 'subject': 'Data Integration Error', 'createddate': '2021-03-24T18:04:00.000+0000'}, {'id': '500Wt00000DDYpGIAX', 'subject': 'Workflow Integration Lag  ', 'createddate': '2021-03-31T11:41:00.000+0000'}]}
+
+exec(code, env_args)

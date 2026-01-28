@@ -1,0 +1,85 @@
+code = """import json
+import re
+
+# Load all 2015 article metadata
+with open('file_storage/functions.query_db:14.json', 'r') as f:
+    metadata = json.load(f)
+
+# Create lookup for region by article_id
+region_lookup = {int(item['article_id']): item['region'] for item in metadata}
+all_article_ids = list(region_lookup.keys())
+
+# Categorization function
+def categorize_article(title, description):
+    if not title or not description:
+        return 'Unknown'
+    
+    text = f"{title} {description}".lower()
+    
+    # World indicators
+    world_indicators = [
+        'world', 'global', 'international', 'nation', 'country', 'countries',
+        'conflict', 'war', 'peace', 'treaty', 'diplomatic', 'diplomacy',
+        'united nations', 'un', 'eu', 'european union', 'nato',
+        'foreign', 'abroad', 'overseas', 'embassy', 'ambassador',
+        'terrorist', 'terrorism', 'isis', 'taliban', 'al qaeda',
+        'refugee', 'migrant', 'immigration', 'border',
+        'sanction', 'summit', 'negotiation'
+    ]
+    
+    # Sports indicators
+    sports_indicators = [
+        'olympic', 'olympics', 'world cup', 'championship', 'tournament',
+        'football', 'soccer', 'basketball', 'baseball', 'tennis', 'golf',
+        'fifa', 'uefa', 'nfl', 'nba', 'mlb', 'nhl',
+        'athlete', 'coach', 'medal', 'game', 'match', 'score'
+    ]
+    
+    # Business indicators
+    business_indicators = [
+        'stock', 'market', 'economy', 'economic', 'finance', 'financial',
+        'wall street', 'investment', 'investor', 'profit', 'loss', 'revenue',
+        'earnings', 'quarterly', 'shares', 'trading', 'ipo',
+        'merger', 'acquisition', 'bankruptcy', 'bank', 'banking',
+        'gdp', 'inflation', 'unemployment', 'jobs', 'employment',
+        'company', 'corporation', 'business', 'industry', 'sector'
+    ]
+    
+    # Science/Tech indicators
+    tech_indicators = [
+        'technology', 'tech', 'science', 'scientific', 'research', 'study',
+        'digital', 'internet', 'online', 'software', 'hardware', 'computer',
+        'artificial intelligence', 'ai', 'machine learning', 'robot', 'robotics',
+        'space', 'nasa', 'spacex', 'satellite', 'rocket', 'mars', 'moon',
+        'climate', 'environment', 'energy', 'renewable', 'solar', 'wind',
+        'biotech', 'genetic', 'dna', 'medical', 'medicine', 'health',
+        'vaccine', 'disease', 'virus'
+    ]
+    
+    # Score each category
+    world_score = sum(1 for indicator in world_indicators if indicator in text)
+    sports_score = sum(1 for indicator in sports_indicators if indicator in indicator in text)
+    business_score = sum(1 for indicator in business_indicators if indicator in text)
+    tech_score = sum(1 for indicator in tech_indicators if indicator in text)
+    
+    # Decision logic
+    scores = {'World': world_score, 'Sports': sports_score, 'Business': business_score, 'Science/Technology': tech_score}
+    max_category = max(scores, key=scores.get)
+    
+    if scores[max_category] > 0:
+        return max_category
+    return 'Unknown'
+
+# Initialize region counts for World articles
+world_counts = {'Europe': 0, 'South America': 0, 'Africa': 0, 'Asia': 0, 'North America': 0}
+
+print('__RESULT__:')
+print(json.dumps({
+    'status': 'ready_to_process',
+    'total_articles': len(all_article_ids),
+    'region_counts_preliminary': world_counts
+}))"""
+
+env_args = {'var_functions.list_db:0': ['articles'], 'var_functions.query_db:2': 'file_storage/functions.query_db:2.json', 'var_functions.execute_python:6': {'type': 'str', 'value': 'file_storage/functions.query_db:2.json'}, 'var_functions.execute_python:8': {'count_2015': 6696, 'sample_ids': [13, 18, 26, 51, 52, 67, 70, 74, 86, 97]}, 'var_functions.query_db:12': [{'_id': '6969ee90d879a09892c35643', 'article_id': '13', 'title': 'Google IPO Auction Off to Rocky Start', 'description': " WASHINGTON/NEW YORK (Reuters) - The auction for Google  Inc.'s highly anticipated initial public offering got off to a  rocky start on Friday after the Web search company sidestepped  a bullet from U.S. securities regulators."}, {'_id': '6969ee90d879a09892c35648', 'article_id': '18', 'title': 'US trade deficit swells in June', 'description': 'The US trade deficit has exploded 19 to a record \\$55.8bn as oil costs drove imports higher, according to a latest figures.'}, {'_id': '6969ee90d879a09892c35650', 'article_id': '26', 'title': 'Google auction begins on Friday', 'description': 'An auction of shares in Google, the web search engine which could be floated for as much as \\$36bn, takes place on Friday.'}, {'_id': '6969ee90d879a09892c35669', 'article_id': '51', 'title': 'Delightful Dell', 'description': "The company's results show that it's not grim all over tech world. Just all of it that isn't Dell."}, {'_id': '6969ee90d879a09892c3566a', 'article_id': '52', 'title': "Chrysler's Bling King", 'description': "After a tough year, Detroit's troubled carmaker is back -- thanks to a maverick designer and a car that is dazzling the hip-hop crowd"}], 'var_functions.query_db:14': 'file_storage/functions.query_db:14.json', 'var_functions.execute_python:16': {'total_articles': 6696, 'num_batches': 7, 'batch_size': 1000}, 'var_functions.execute_python:22': {'Europe': 1357, 'South America': 1332, 'Africa': 1345, 'Asia': 1333, 'North America': 1329}, 'var_functions.query_db:24': [{'_id': '6969ee90d879a09892c35643', 'article_id': '13', 'title': 'Google IPO Auction Off to Rocky Start', 'description': " WASHINGTON/NEW YORK (Reuters) - The auction for Google  Inc.'s highly anticipated initial public offering got off to a  rocky start on Friday after the Web search company sidestepped  a bullet from U.S. securities regulators."}, {'_id': '6969ee90d879a09892c35648', 'article_id': '18', 'title': 'US trade deficit swells in June', 'description': 'The US trade deficit has exploded 19 to a record \\$55.8bn as oil costs drove imports higher, according to a latest figures.'}, {'_id': '6969ee90d879a09892c35650', 'article_id': '26', 'title': 'Google auction begins on Friday', 'description': 'An auction of shares in Google, the web search engine which could be floated for as much as \\$36bn, takes place on Friday.'}, {'_id': '6969ee90d879a09892c35669', 'article_id': '51', 'title': 'Delightful Dell', 'description': "The company's results show that it's not grim all over tech world. Just all of it that isn't Dell."}, {'_id': '6969ee90d879a09892c3566a', 'article_id': '52', 'title': "Chrysler's Bling King", 'description': "After a tough year, Detroit's troubled carmaker is back -- thanks to a maverick designer and a car that is dazzling the hip-hop crowd"}, {'_id': '6969ee90d879a09892c35679', 'article_id': '67', 'title': 'IT Myth 5: Most IT projects fail', 'description': 'Do most IT projects fail? Some point to the number of giant consultancies such as IBM Global Services, Capgemini, and Sapient, who feed off bad experiences encountered by enterprises. Sapient is a company founded on the realization that IT projects are not successful, says Sapient CTO Ben Gaucherin.'}, {'_id': '6969ee90d879a09892c3567c', 'article_id': '70', 'title': "U.K.'s NHS taps Gartner to help plan \\$9B IT overhaul", 'description': "LONDON -- The U.K.'s National Health Service (NHS) has tapped IT researcher Gartner Inc. to provide market intelligence services as the health organization forges ahead with a mammoth, 5 billion (\\$9.2 billion) project to upgrade its information technology infrastructure."}, {'_id': '6969ee90d879a09892c35680', 'article_id': '74', 'title': 'HP to Buy Synstar', 'description': 'Hewlett-Packard will pay \\$297 million for the British company. Also: TiVo goes all out to attract customers   hellip;. Sprint offers service guarantees for business wireless subscribers   hellip;. and more.'}]}
+
+exec(code, env_args)

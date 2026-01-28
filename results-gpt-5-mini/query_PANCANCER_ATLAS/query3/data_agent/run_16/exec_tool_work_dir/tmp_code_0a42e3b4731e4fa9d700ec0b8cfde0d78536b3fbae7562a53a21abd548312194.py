@@ -1,0 +1,122 @@
+code = """import json
+import pandas as pd
+import re
+
+# Load clinical data (may be stored as a file path)
+clinical_data_src = var_call_VfZdTDtLSPmRfcLOpaYTv9PK
+mutation_data_src = var_call_5lsx8vQzN5egRJ52Jxuum8zv
+
+def load_var(src):
+    if isinstance(src, str) and src.endswith('.json'):
+        with open(src, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    return src
+
+clinical = load_var(clinical_data_src)
+mutations = load_var(mutation_data_src)
+
+# Convert to DataFrame
+df_clin = pd.DataFrame(clinical)
+df_mut = pd.DataFrame(mutations)
+
+# Extract ParticipantBarcode from Patient_description using regex
+def extract_barcode(text):
+    if not isinstance(text, str):
+        return None
+    m = re.search(r'(TCGA-[^\s,;]+)', text)
+    if not m:
+        return None
+    bc = m.group(1)
+    # strip trailing punctuation
+    bc = bc.rstrip('.,;')
+    return bc
+
+if 'Patient_description' in df_clin.columns:
+    df_clin['ParticipantBarcode'] = df_clin['Patient_description'].apply(extract_barcode)
+else:
+    df_clin['ParticipantBarcode'] = None
+
+# Filter to FEMALE entries only
+mask_female = df_clin['Patient_description'].str.contains('FEMALE', case=False, na=False)
+df_clin = df_clin[mask_female].copy()
+
+# Keep only rows with a known histological_type
+df_clin = df_clin[df_clin['histological_type'].notnull()]
+# Remove empty or generic 'Other' types
+df_clin = df_clin[~df_clin['histological_type'].str.strip().eq('')]
+# Exclude entries where histological_type contains 'Other' (case-insensitive)
+df_clin = df_clin[~df_clin['histological_type'].str.contains('other', case=False, na=False)]
+
+# Ensure ParticipantBarcode available
+df_clin = df_clin[df_clin['ParticipantBarcode'].notnull()]
+
+# Prepare mutation set: unique ParticipantBarcode with PASS for CDH1
+mut_set = set(df_mut['ParticipantBarcode'].dropna().unique())
+
+# For each patient in clinical, determine mutation presence
+# There may be multiple clinical rows per patient; deduplicate by ParticipantBarcode keeping histological_type (if multiple, keep first)
+df_clin_unique = df_clin.drop_duplicates(subset=['ParticipantBarcode']).set_index('ParticipantBarcode')
+
+# Build contingency counts per histological_type
+contingency = {}
+for bc, row in df_clin_unique.iterrows():
+    hist = row['histological_type']
+    mutated = 1 if bc in mut_set else 0
+    if hist not in contingency:
+        contingency[hist] = {'mutated': 0, 'not_mutated': 0}
+    if mutated:
+        contingency[hist]['mutated'] += 1
+    else:
+        contingency[hist]['not_mutated'] += 1
+
+# Remove histological categories with marginal total <= 10
+filtered_contingency = {}
+for hist, counts in contingency.items():
+    total = counts['mutated'] + counts['not_mutated']
+    if total > 10:
+        filtered_contingency[hist] = {**counts, 'total': total}
+
+# If no categories remain, prepare result indicating insufficient data
+if len(filtered_contingency) == 0:
+    result = {'error': 'No histological categories with total > 10 after filtering or no female BRCA patients with known histology.'}
+    print("__RESULT__:")
+    print(json.dumps(result))
+else:
+    # Build observed matrix and compute chi-square
+    hist_types = sorted(filtered_contingency.keys())
+    observed = []
+    for h in hist_types:
+        observed.append([filtered_contingency[h]['mutated'], filtered_contingency[h]['not_mutated']])
+    import math
+    # convert to numeric
+    obs = [[int(x) for x in row] for row in observed]
+    # totals
+    row_totals = [sum(r) for r in obs]
+    col_totals = [sum(obs[r][c] for r in range(len(obs))) for c in range(2)]
+    grand_total = sum(row_totals)
+    # compute chi-square
+    chi2 = 0.0
+    expected = []
+    for i in range(len(obs)):
+        expected_row = []
+        for j in range(2):
+            E = (row_totals[i] * col_totals[j]) / grand_total if grand_total>0 else 0
+            expected_row.append(E)
+            O = obs[i][j]
+            if E>0:
+                chi2 += (O - E) ** 2 / E
+        expected.append(expected_row)
+
+    # Prepare result
+    result = {
+        'chi2': chi2,
+        'grand_total': grand_total,
+        'histological_types_included': hist_types,
+        'contingency_table': {h: {'mutated': filtered_contingency[h]['mutated'], 'not_mutated': filtered_contingency[h]['not_mutated'], 'total': filtered_contingency[h]['total']} for h in hist_types}
+    }
+    print("__RESULT__:")
+    print(json.dumps(result))"""
+
+env_args = {'var_call_zFAoL1siNi2Il1mWRE5dpLAc': [{'column_name': 'stopped_smoking_year'}, {'column_name': 'days_to_initial_pathologic_diagnosis'}, {'column_name': 'number_of_lymphnodes_positive_by_he'}, {'column_name': 'age_at_initial_pathologic_diagnosis'}, {'column_name': 'year_of_tobacco_smoking_onset'}, {'column_name': 'year_of_initial_pathologic_diagnosis'}, {'column_name': 'height'}, {'column_name': 'weight'}, {'column_name': 'number_of_lymphnodes_positive_by_ihc'}, {'column_name': 'days_to_birth'}, {'column_name': 'total_pelv_lnr'}, {'column_name': 'total_aor_lnr'}, {'column_name': 'number_pack_years_smoked'}, {'column_name': 'prior_dx'}, {'column_name': 'ethnicity'}, {'column_name': 'informed_consent_verified'}, {'column_name': 'person_neoplasm_cancer_status'}, {'column_name': 'patient_id'}, {'column_name': 'histological_type'}, {'column_name': 'tissue_source_site'}, {'column_name': 'form_completion_date'}, {'column_name': 'pathologic_T'}, {'column_name': 'pathologic_M'}, {'column_name': 'clinical_M'}, {'column_name': 'pathologic_N'}, {'column_name': 'system_version'}, {'column_name': 'pathologic_stage'}, {'column_name': 'clinical_stage'}, {'column_name': 'clinical_T'}, {'column_name': 'clinical_N'}, {'column_name': 'extranodal_involvement'}, {'column_name': 'postoperative_rx_tx'}, {'column_name': 'primary_therapy_outcome_success'}, {'column_name': 'lymph_node_examined_count'}, {'column_name': 'primary_lymph_node_presentation_assessment'}, {'column_name': 'initial_pathologic_diagnosis_method'}, {'column_name': 'eastern_cancer_oncology_group'}, {'column_name': 'anatomic_neoplasm_subdivision'}, {'column_name': 'residual_tumor'}, {'column_name': 'histological_type_other'}, {'column_name': 'init_pathology_dx_method_other'}, {'column_name': 'karnofsky_performance_score'}, {'column_name': 'neoplasm_histologic_grade'}, {'column_name': 'tobacco_smoking_history'}, {'column_name': 'performance_status_scale_timing'}, {'column_name': 'laterality'}, {'column_name': 'targeted_molecular_therapy'}, {'column_name': 'anatomic_neoplasm_subdivision_other'}, {'column_name': 'patient_death_reason'}, {'column_name': 'tumor_tissue_site_other'}, {'column_name': 'menopause_status'}, {'column_name': 'margin_status'}, {'column_name': 'kras_gene_analysis_performed'}, {'column_name': 'venous_invasion'}, {'column_name': 'lymphatic_invasion'}, {'column_name': 'perineural_invasion_present'}, {'column_name': 'her2_immunohistochemistry_level_result'}, {'column_name': 'breast_carcinoma_progesterone_receptor_status'}, {'column_name': 'breast_carcinoma_surgical_procedure_name'}, {'column_name': 'breast_neoplasm_other_surgical_procedure_descriptive_text'}, {'column_name': 'axillary_lymph_node_stage_method_type'}, {'column_name': 'breast_carcinoma_estrogen_receptor_status'}, {'column_name': 'cytokeratin_immunohistochemistry_staining_method_micrometastasi'}, {'column_name': 'lab_proc_her2_neu_immunohistochemistry_receptor_status'}, {'column_name': 'lab_procedure_her2_neu_in_situ_hybrid_outcome_type'}, {'column_name': 'additional_pharmaceutical_therapy'}, {'column_name': 'additional_radiation_therapy'}, {'column_name': 'lymphovascular_invasion_present'}, {'column_name': 'location_in_lung_parenchyma'}, {'column_name': 'pulmonary_function_test_performed'}, {'column_name': 'egfr_mutation_performed'}, {'column_name': 'diagnosis'}, {'column_name': 'eml4_alk_translocation_performed'}, {'column_name': 'days_to_new_tumor_event_after_initial_treatment'}, {'column_name': 'hemoglobin_result'}, {'column_name': 'serum_calcium_result'}, {'column_name': 'platelet_qualitative_result'}, {'column_name': 'number_of_lymphnodes_positive'}, {'column_name': 'white_cell_count_result'}, {'column_name': 'alcohol_history_documented'}, {'column_name': 'family_history_of_cancer'}, {'column_name': 'braf_gene_analysis_performed'}, {'column_name': 'city_of_procurement'}, {'column_name': 'surgical_approach'}, {'column_name': 'peritoneal_wash'}, {'column_name': 'Patient_description'}, {'column_name': 'prior_glioma'}, {'column_name': 'days_to_death'}, {'column_name': 'days_to_last_followup'}, {'column_name': 'icd_10'}, {'column_name': 'tissue_retrospective_collection_indicator'}, {'column_name': 'icd_o_3_histology'}, {'column_name': 'tissue_prospective_collection_indicator'}, {'column_name': 'history_of_neoadjuvant_treatment'}, {'column_name': 'icd_o_3_site'}, {'column_name': 'tumor_tissue_site'}, {'column_name': 'new_tumor_event_after_initial_treatment'}, {'column_name': 'radiation_therapy'}, {'column_name': 'race'}], 'var_call_vDm5zBHJ4sorZeI5SfjYqbIq': [], 'var_call_ruOFitLp9JemMC36osHQwSBa': [{'Patient_description': 'In the Ovarian serous cystadenocarcinoma dataset, patient TCGA-31-1953 (UUID 61feee94-3ac9-42fe-aaa3-dc6a3efe563c) is recorded as a FEMALE with vital status: Alive.'}, {'Patient_description': 'Patient TCGA-36-1576 (UUID 3445c524-5a37-40b6-8614-956d76eed939) is a FEMALE diagnosed with Ovarian serous cystadenocarcinoma. Current vital status: Alive.'}, {'Patient_description': 'Record fdd4adb8-9295-480a-9352-305b5eb51187 refers to patient TCGA-25-2408, a FEMALE diagnosed with Ovarian serous cystadenocarcinoma. Vital status recorded as Dead.'}, {'Patient_description': 'Record 6f25001a-f890-4fd0-a994-e62a9ea5c6f3 refers to patient TCGA-29-2427, a FEMALE diagnosed with Ovarian serous cystadenocarcinoma. Vital status recorded as Alive.'}, {'Patient_description': 'Case 9446e349-71e6-455a-aa8f-53ec96597146, linked to barcode TCGA-10-0933, corresponds to a FEMALE patient diagnosed with Ovarian serous cystadenocarcinoma, with vital status Dead.'}, {'Patient_description': "Patient TCGA-23-1124, registered under UUID 8a6d2ce3-cc57-451b-9b07-8263782aa23f, belongs to the Ovarian serous cystadenocarcinoma cohort. This FEMALE patient's vital status is Dead."}, {'Patient_description': 'In the Ovarian serous cystadenocarcinoma dataset, patient TCGA-23-2641 (UUID 49e5ee61-a1c9-4038-84ac-92683e573a65) is recorded as a FEMALE with vital status: Alive.'}, {'Patient_description': 'Patient TCGA-23-1118 (FEMALE, UUID 700e91bb-d675-41b2-bbbd-935767c7b447) is enrolled in the study of Ovarian serous cystadenocarcinoma. Vital status: Alive.'}, {'Patient_description': 'In the Ovarian serous cystadenocarcinoma dataset, patient TCGA-23-1120 (UUID fdf83fdf-dfbb-4306-9a1b-b4487d18b402) is recorded as a FEMALE with vital status: Alive.'}, {'Patient_description': 'The individual with barcode TCGA-23-2081 and UUID 41178cbc-db73-4007-b5d8-febebf7f578d is a FEMALE case of Ovarian serous cystadenocarcinoma, documented with vital status = Dead.'}, {'Patient_description': 'Case 1db60f09-7f5a-4f21-8003-06a6abc781db, linked to barcode TCGA-29-1694, corresponds to a FEMALE patient diagnosed with Ovarian serous cystadenocarcinoma, with vital status Dead.'}, {'Patient_description': 'In the Ovarian serous cystadenocarcinoma dataset, patient TCGA-WR-A838 (UUID B8023162-5E82-40E6-AD8C-8ACF81821F01) is recorded as a FEMALE with vital status: Dead.'}, {'Patient_description': "Patient TCGA-31-1955, registered under UUID cce34351-1700-405b-818f-a598f63a33e8, belongs to the Ovarian serous cystadenocarcinoma cohort. This FEMALE patient's vital status is Alive."}, {'Patient_description': 'Patient TCGA-32-4209 (MALE, UUID 5438322c-9db0-4974-ba01-801020559f97) is enrolled in the study of Glioblastoma multiforme. Vital status: Dead.'}, {'Patient_description': 'In the Ovarian serous cystadenocarcinoma dataset, patient TCGA-29-1696 (UUID 8a98a6e6-b763-4824-858b-fd2738e6c9a3) is recorded as a FEMALE with vital status: Dead.'}, {'Patient_description': 'Record 40635bf3-d8ba-4833-b623-547e55e5d07e refers to patient TCGA-29-2425, a FEMALE diagnosed with Ovarian serous cystadenocarcinoma. Vital status recorded as Alive.'}, {'Patient_description': 'Case 05019013-7ea5-4905-ac79-901146ba2ee2, linked to barcode TCGA-29-1688, corresponds to a FEMALE patient diagnosed with Ovarian serous cystadenocarcinoma, with vital status Dead.'}, {'Patient_description': 'Record 13319c20-02f6-4b5f-b24f-3d8f4084094c refers to patient TCGA-25-1318, a FEMALE diagnosed with Ovarian serous cystadenocarcinoma. Vital status recorded as Dead.'}, {'Patient_description': 'Record 79fd602b-3e8e-4353-aa78-4f5f170b607d refers to patient TCGA-25-1328, a FEMALE diagnosed with Ovarian serous cystadenocarcinoma. Vital status recorded as Dead.'}, {'Patient_description': 'The individual with barcode TCGA-57-1584 and UUID ed21615c-0de3-421c-9e8d-8996026c4431 is a FEMALE case of Ovarian serous cystadenocarcinoma, documented with vital status = Alive.'}], 'var_call_VfZdTDtLSPmRfcLOpaYTv9PK': 'file_storage/call_VfZdTDtLSPmRfcLOpaYTv9PK.json', 'var_call_5lsx8vQzN5egRJ52Jxuum8zv': 'file_storage/call_5lsx8vQzN5egRJ52Jxuum8zv.json'}
+
+exec(code, env_args)

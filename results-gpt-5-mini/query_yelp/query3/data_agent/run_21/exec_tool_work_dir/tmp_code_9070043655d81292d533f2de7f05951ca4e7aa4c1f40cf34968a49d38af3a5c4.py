@@ -1,0 +1,133 @@
+code = """import pandas as pd
+# load the query results stored in variables from previous tool calls
+# var_call_5cXZ8JJZqgRgpbT9c0Sf32fs, var_call_B09V9IF7C6cu1lXlfSaVFWpq, var_call_KFDMfuKT89G8n54ZqUpjynNe, var_call_4dDF7l7oWV0PlObaxUx0nAsd, var_call_Vxo61dqybqUVby4aLvEOUfcO
+reviews = pd.DataFrame(var_call_5cXZ8JJZqgRgpbT9c0Sf32fs)
+# combine all business query results
+b1 = pd.DataFrame(var_call_B09V9IF7C6cu1lXlfSaVFWpq)
+b2 = pd.DataFrame(var_call_KFDMfuKT89G8n54ZqUpjynNe)
+b3 = pd.DataFrame(var_call_4dDF7l7oWV0PlObaxUx0nAsd)
+b4 = pd.DataFrame(var_call_Vxo61dqybqUVby4aLvEOUfcO)
+business = pd.concat([b1,b2,b3,b4], ignore_index=True)
+
+# standardize ids: convert businessref_X to businessid_X
+reviews['business_id'] = reviews['business_ref'].str.replace('businessref_','businessid_')
+
+# merge to get attributes for reviewed businesses
+merged = pd.merge(reviews, business, on='business_id', how='left')
+
+# function to check if attributes indicate parking or bike parking
+import ast
+
+def has_parking(attrs):
+    if attrs is None:
+        return False
+    if isinstance(attrs, str):
+        # sometimes 'None' string
+        if attrs == 'None':
+            return False
+    # attrs may be dict-like but with string representations inside; handle both
+    bp = False
+    try:
+        if isinstance(attrs, dict):
+            # check BikeParking key
+            if 'BikeParking' in attrs and attrs['BikeParking'] not in [None, 'None', 'False', "'False", 'False']:
+                if str(attrs['BikeParking']).lower().strip("u'\"") in ['true', 'True', "'true'", 'True'] or 'true' in str(attrs['BikeParking']).lower():
+                    bp = True
+            # check BusinessParking key
+            if 'BusinessParking' in attrs and attrs['BusinessParking'] not in [None, 'None']:
+                # parse the inner string to dict
+                try:
+                    inner = attrs['BusinessParking']
+                    if isinstance(inner, str):
+                        inner_d = ast.literal_eval(inner)
+                    else:
+                        inner_d = inner
+                    # if any parking type is True
+                    for v in inner_d.values():
+                        if v in [True, 'True', "'True'", "u'True'", 'true', "'true'",  'True']:
+                            return True
+                    # also check for 'True' textual
+                    if any(str(v).lower().strip("u'\"") == 'true' for v in inner_d.values()):
+                        return True
+                except Exception:
+                    pass
+        else:
+            # attrs is string representing a dict
+            s = attrs
+            if 'BikeParking' in s:
+                if "BikeParking': 'True'" in s or 'BikeParking": "True"' in s or 'BikeParking": True' in s or 'BikeParking': True in s:
+                    bp = True
+                if "BikeParking": "True" in s or "BikeParking': True" in s or "BikeParking': 'True'" in s:
+                    bp = True
+            if "BusinessParking" in s:
+                # try to find True in BusinessParking
+                try:
+                    # find the substring after BusinessParking:
+                    idx = s.find('BusinessParking')
+                    sub = s[idx:idx+200]
+                    if "True" in sub or "'lot': True" in sub or "lot': True" in sub:
+                        return True
+                except Exception:
+                    pass
+    except Exception:
+        return False
+    return bp
+
+# apply to merged
+merged['has_parking'] = merged['attributes'].apply(has_parking)
+
+# also check BusinessParking specifically by parsing attribute strings
+
+def has_business_or_bike(attrs):
+    if attrs is None:
+        return False
+    # if dict
+    try:
+        if isinstance(attrs, dict):
+            bike = False
+            bus = False
+            if 'BikeParking' in attrs and attrs['BikeParking'] not in [None, 'None', 'False']:
+                if 'true' in str(attrs['BikeParking']).lower():
+                    bike = True
+            if 'BusinessParking' in attrs and attrs['BusinessParking'] not in [None, 'None']:
+                try:
+                    inner = attrs['BusinessParking']
+                    if isinstance(inner, str):
+                        inner_d = ast.literal_eval(inner)
+                    else:
+                        inner_d = inner
+                    for v in inner_d.values():
+                        if str(v).lower() == 'true':
+                            bus = True
+                except Exception:
+                    # fallback: look for 'lot': True etc in string
+                    if "True" in str(attrs['BusinessParking']):
+                        bus = True
+            return bike or bus
+        else:
+            s = attrs
+            if s == 'None':
+                return False
+            if 'BikeParking' in s and 'True' in s:
+                return True
+            if 'BusinessParking' in s and 'True' in s:
+                return True
+            return False
+    except Exception:
+        return False
+
+merged['has_parking2'] = merged['attributes'].apply(has_business_or_bike)
+
+# decide final: consider has_parking2
+merged['has_parking_final'] = merged['has_parking2']
+
+# count unique businesses (by business_id) that have parking among those reviewed in 2018
+res = merged[merged['has_parking_final']].business_id.nunique()
+
+import json
+print("__RESULT__:")
+print(json.dumps(str(res)))"""
+
+env_args = {'var_call_5cXZ8JJZqgRgpbT9c0Sf32fs': [{'business_ref': 'businessref_13'}, {'business_ref': 'businessref_79'}, {'business_ref': 'businessref_66'}, {'business_ref': 'businessref_25'}, {'business_ref': 'businessref_59'}, {'business_ref': 'businessref_67'}, {'business_ref': 'businessref_15'}, {'business_ref': 'businessref_24'}, {'business_ref': 'businessref_36'}, {'business_ref': 'businessref_17'}, {'business_ref': 'businessref_43'}, {'business_ref': 'businessref_91'}, {'business_ref': 'businessref_46'}, {'business_ref': 'businessref_47'}, {'business_ref': 'businessref_73'}, {'business_ref': 'businessref_99'}, {'business_ref': 'businessref_80'}, {'business_ref': 'businessref_86'}, {'business_ref': 'businessref_62'}, {'business_ref': 'businessref_8'}, {'business_ref': 'businessref_57'}, {'business_ref': 'businessref_37'}, {'business_ref': 'businessref_40'}, {'business_ref': 'businessref_83'}, {'business_ref': 'businessref_26'}, {'business_ref': 'businessref_4'}, {'business_ref': 'businessref_68'}, {'business_ref': 'businessref_77'}, {'business_ref': 'businessref_27'}, {'business_ref': 'businessref_20'}, {'business_ref': 'businessref_22'}, {'business_ref': 'businessref_14'}, {'business_ref': 'businessref_28'}, {'business_ref': 'businessref_82'}, {'business_ref': 'businessref_35'}, {'business_ref': 'businessref_45'}], 'var_call_MHPOKIOP4sEoMi7XfjbZrZ9R': ['checkin', 'business'], 'var_call_B09V9IF7C6cu1lXlfSaVFWpq': [{'business_id': 'businessid_79', 'attributes': 'None'}, {'business_id': 'businessid_66', 'attributes': {'BusinessAcceptsCreditCards': 'True', 'RestaurantsReservations': 'False', 'RestaurantsGoodForGroups': 'True', 'NoiseLevel': "u'average'", 'RestaurantsAttire': "'casual'", 'OutdoorSeating': 'True', 'Alcohol': "u'none'", 'GoodForKids': 'True', 'RestaurantsPriceRange2': '1', 'Ambience': "{'touristy': False, 'hipster': False, 'romantic': False, 'divey': False, 'intimate': False, 'trendy': False, 'upscale': False, 'classy': False, 'casual': False}", 'RestaurantsTakeOut': 'True', 'BikeParking': 'True', 'GoodForMeal': "{'dessert': False, 'latenight': False, 'lunch': False, 'dinner': False, 'brunch': False, 'breakfast': False}", 'HasTV': 'True', 'RestaurantsDelivery': 'True', 'DriveThru': 'False', 'Caters': 'True', 'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': True, 'valet': False}"}}, {'business_id': 'businessid_13', 'attributes': {'RestaurantsPriceRange2': '2', 'RestaurantsTakeOut': 'True', 'ByAppointmentOnly': 'False', 'BusinessAcceptsCreditCards': 'True', 'GoodForKids': 'False', 'BusinessParking': "{'garage': False, 'street': True, 'validated': False, 'lot': True, 'valet': False}"}}], 'var_call_KFDMfuKT89G8n54ZqUpjynNe': [{'business_id': 'businessid_59', 'attributes': {'BusinessParking': "{'garage': False, 'street': True, 'validated': False, 'lot': False, 'valet': False}", 'RestaurantsTakeOut': 'None', 'RestaurantsDelivery': 'None', 'HasTV': 'True', 'Ambience': "{'touristy': False, 'hipster': None, 'romantic': None, 'divey': None, 'intimate': None, 'trendy': None, 'upscale': False, 'classy': None, 'casual': True}", 'GoodForMeal': "{'dessert': False, 'latenight': False, 'lunch': False, 'dinner': False, 'brunch': False, 'breakfast': False}"}}, {'business_id': 'businessid_91', 'attributes': {'BusinessParking': "{'garage': False, 'street': True, 'validated': False, 'lot': False, 'valet': False}", 'WiFi': "u'free'", 'WheelchairAccessible': 'True', 'Caters': 'True', 'HasTV': 'True', 'HappyHour': 'False', 'Ambience': "{'touristy': None, 'hipster': None, 'romantic': None, 'divey': None, 'intimate': True, 'trendy': None, 'upscale': None, 'classy': True, 'casual': True}", 'RestaurantsDelivery': 'True', 'RestaurantsPriceRange2': '2', 'GoodForKids': 'True', 'RestaurantsAttire': "u'casual'", 'BikeParking': 'True', 'OutdoorSeating': 'True', 'NoiseLevel': "u'quiet'", 'RestaurantsGoodForGroups': 'True', 'RestaurantsTakeOut': 'True', 'BusinessAcceptsCreditCards': 'True', 'RestaurantsReservations': 'False', 'GoodForMeal': "{'dessert': None, 'latenight': None, 'lunch': True, 'dinner': None, 'brunch': True, 'breakfast': True}", 'Alcohol': "u'beer_and_wine'", 'RestaurantsTableService': 'True', 'Corkage': 'False', 'BYOB': 'True'}}, {'business_id': 'businessid_24', 'attributes': {'BusinessAcceptsCreditCards': 'True', 'RestaurantsPriceRange2': '1', 'WiFi': "u'no'", 'BikeParking': 'True', 'BusinessParking': "{'garage': False, 'street': True, 'validated': False, 'lot': False, 'valet': False}", 'RestaurantsTakeOut': 'True'}}, {'business_id': 'businessid_67', 'attributes': {'WheelchairAccessible': 'True', 'DogsAllowed': 'False', 'RestaurantsTakeOut': 'True', 'HappyHour': 'False', 'RestaurantsDelivery': 'True', 'BusinessAcceptsCreditCards': 'True', 'Corkage': 'False', 'HasTV': 'True', 'BusinessAcceptsBitcoin': 'False', 'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': True, 'valet': False}", 'RestaurantsTableService': 'True', 'Alcohol': "u'none'", 'RestaurantsGoodForGroups': 'True', 'WiFi': "u'free'", 'NoiseLevel': "u'average'", 'RestaurantsReservations': 'True', 'BYOB': 'True', 'OutdoorSeating': 'False', 'GoodForMeal': "{'dessert': False, 'latenight': False, 'lunch': False, 'dinner': False, 'brunch': False, 'breakfast': False}", 'BikeParking': 'True', 'Ambience': "{u'divey': False, u'hipster': None, u'casual': True, u'touristy': None, u'trendy': None, u'intimate': None, u'romantic': False, u'classy': None, u'upscale': None}", 'Caters': 'True'}}, {'business_id': 'businessid_79', 'attributes': 'None'}, {'business_id': 'businessid_66', 'attributes': {'BusinessAcceptsCreditCards': 'True', 'RestaurantsReservations': 'False', 'RestaurantsGoodForGroups': 'True', 'NoiseLevel': "u'average'", 'RestaurantsAttire': "'casual'", 'OutdoorSeating': 'True', 'Alcohol': "u'none'", 'GoodForKids': 'True', 'RestaurantsPriceRange2': '1', 'Ambience': "{'touristy': False, 'hipster': False, 'romantic': False, 'divey': False, 'intimate': False, 'trendy': False, 'upscale': False, 'classy': False, 'casual': False}", 'RestaurantsTakeOut': 'True', 'BikeParking': 'True', 'GoodForMeal': "{'dessert': False, 'latenight': False, 'lunch': False, 'dinner': False, 'brunch': False, 'breakfast': False}", 'HasTV': 'True', 'RestaurantsDelivery': 'True', 'DriveThru': 'False', 'Caters': 'True', 'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': True, 'valet': False}"}}, {'business_id': 'businessid_15', 'attributes': {'BusinessAcceptsCreditCards': 'True'}}, {'business_id': 'businessid_43', 'attributes': {'RestaurantsGoodForGroups': 'True', 'BikeParking': 'False', 'RestaurantsReservations': 'False', 'Ambience': "{'touristy': False, 'hipster': False, 'romantic': False, 'divey': False, 'intimate': False, 'trendy': False, 'upscale': False, 'classy': False, 'casual': False}", 'WiFi': "'free'", 'Alcohol': "u'none'", 'OutdoorSeating': 'None', 'GoodForKids': 'True', 'HasTV': 'True', 'RestaurantsAttire': "'casual'", 'BusinessAcceptsCreditCards': 'True', 'RestaurantsPriceRange2': '1', 'RestaurantsTakeOut': 'True', 'RestaurantsDelivery': 'True', 'DriveThru': 'True', 'BusinessParking': "{u'valet': False, u'garage': False, u'street': None, u'lot': None, u'validated': None}"}}, {'business_id': 'businessid_25', 'attributes': {'Alcohol': "'none'", 'RestaurantsDelivery': 'True', 'RestaurantsReservations': 'False', 'Ambience': "{'romantic': False, 'intimate': False, 'classy': False, 'hipster': False, 'divey': False, 'touristy': False, 'trendy': False, 'upscale': False, 'casual': False}", 'RestaurantsAttire': "'casual'", 'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': True, 'valet': False}", 'GoodForKids': 'True', 'BusinessAcceptsCreditCards': 'True', 'RestaurantsTakeOut': 'True', 'OutdoorSeating': 'True', 'Caters': 'True', 'DogsAllowed': 'False', 'RestaurantsTableService': 'False', 'WheelchairAccessible': 'True', 'HappyHour': 'False', 'NoiseLevel': "u'average'", 'HasTV': 'False', 'RestaurantsPriceRange2': '1', 'BusinessAcceptsBitcoin': 'False', 'BikeParking': 'True', 'RestaurantsGoodForGroups': 'False', 'GoodForMeal': "{'dessert': False, 'latenight': False, 'lunch': True, 'dinner': False, 'brunch': True, 'breakfast': False}", 'WiFi': "u'free'"}}, {'business_id': 'businessid_36', 'attributes': {'GoodForKids': 'True', 'RestaurantsGoodForGroups': 'True', 'BusinessAcceptsCreditCards': 'True', 'Alcohol': "u'none'", 'RestaurantsAttire': "u'casual'", 'RestaurantsTakeOut': 'True', 'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': True, 'valet': False}", 'WiFi': "u'no'", 'RestaurantsPriceRange2': '2', 'OutdoorSeating': 'False', 'BikeParking': 'False', 'Caters': 'False', 'NoiseLevel': "u'average'", 'Ambience': "{u'divey': False, u'hipster': False, u'casual': True, u'touristy': False, u'trendy': False, u'intimate': False, u'romantic': False, u'classy': False, u'upscale': False}", 'GoodForMeal': "{'dessert': False, 'latenight': False, 'lunch': True, 'dinner': True, 'brunch': False, 'breakfast': False}", 'RestaurantsReservations': 'False', 'RestaurantsDelivery': 'None', 'RestaurantsTableService': 'True', 'HasTV': 'True'}}, {'business_id': 'businessid_13', 'attributes': {'RestaurantsPriceRange2': '2', 'RestaurantsTakeOut': 'True', 'ByAppointmentOnly': 'False', 'BusinessAcceptsCreditCards': 'True', 'GoodForKids': 'False', 'BusinessParking': "{'garage': False, 'street': True, 'validated': False, 'lot': True, 'valet': False}"}}, {'business_id': 'businessid_17', 'attributes': {'ByAppointmentOnly': 'False', 'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': True, 'valet': False}", 'RestaurantsPriceRange2': '2', 'BusinessAcceptsCreditCards': 'True'}}], 'var_call_4dDF7l7oWV0PlObaxUx0nAsd': [{'business_id': 'businessid_47', 'attributes': {'ByAppointmentOnly': 'False', 'BusinessAcceptsCreditCards': 'True', 'GoodForKids': 'True', 'RestaurantsPriceRange2': '2', 'BikeParking': 'False', 'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': True, 'valet': False}"}}, {'business_id': 'businessid_8', 'attributes': {'BusinessAcceptsCreditCards': 'True'}}, {'business_id': 'businessid_83', 'attributes': {'RestaurantsPriceRange2': '2', 'AcceptsInsurance': 'True', 'BusinessAcceptsCreditCards': 'True', 'BusinessParking': 'None', 'ByAppointmentOnly': 'False'}}, {'business_id': 'businessid_57', 'attributes': {'BusinessAcceptsCreditCards': 'False', 'BusinessAcceptsBitcoin': 'False', 'ByAppointmentOnly': 'False'}}, {'business_id': 'businessid_80', 'attributes': {'ByAppointmentOnly': 'True'}}, {'business_id': 'businessid_73', 'attributes': {'BusinessAcceptsBitcoin': 'False', 'ByAppointmentOnly': 'False', 'BusinessAcceptsCreditCards': 'True'}}, {'business_id': 'businessid_86', 'attributes': {'RestaurantsTakeOut': 'True', 'BusinessAcceptsBitcoin': 'False', 'OutdoorSeating': 'True', 'Caters': 'True', 'WheelchairAccessible': 'True', 'WiFi': "u'free'", 'HappyHour': 'False', 'Alcohol': "u'none'", 'RestaurantsDelivery': 'True', 'NoiseLevel': "'quiet'", 'RestaurantsTableService': 'False', 'BikeParking': 'True', 'GoodForKids': 'True', 'RestaurantsReservations': 'False', 'BusinessAcceptsCreditCards': 'True', 'RestaurantsPriceRange2': '2', 'GoodForMeal': "{'dessert': False, 'latenight': False, 'lunch': True, 'dinner': True, 'brunch': False, 'breakfast': False}", 'Ambience': "{'touristy': False, 'hipster': False, 'romantic': False, 'divey': False, 'intimate': False, 'trendy': True, 'upscale': False, 'classy': False, 'casual': True}", 'HasTV': 'False', 'RestaurantsGoodForGroups': 'False', 'BusinessParking': "{'garage': False, 'street': True, 'validated': False, 'lot': True, 'valet': False}", 'RestaurantsAttire': "'casual'"}}, {'business_id': 'businessid_40', 'attributes': {'BusinessAcceptsCreditCards': 'True', 'WheelchairAccessible': 'True', 'WiFi': "u'free'"}}, {'business_id': 'businessid_37', 'attributes': {'BusinessAcceptsCreditCards': 'True', 'GoodForKids': 'False', 'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'ByAppointmentOnly': 'True', 'BikeParking': 'False'}}, {'business_id': 'businessid_62', 'attributes': {'BikeParking': 'True', 'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': True, 'valet': False}", 'BusinessAcceptsCreditCards': 'True', 'RestaurantsPriceRange2': '2', 'RestaurantsTakeOut': 'False'}}, {'business_id': 'businessid_99', 'attributes': {'OutdoorSeating': 'False', 'Caters': 'True', 'RestaurantsReservations': 'False', 'RestaurantsTakeOut': 'True', 'WheelchairAccessible': 'True', 'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': True, 'valet': False}", 'RestaurantsDelivery': 'True', 'RestaurantsTableService': 'False', 'BikeParking': 'True'}}, {'business_id': 'businessid_46', 'attributes': {'Smoking': "u'outdoor'", 'RestaurantsReservations': 'False', 'WiFi': "u'free'", 'WheelchairAccessible': 'True', 'HappyHour': 'True', 'RestaurantsTakeOut': 'True', 'RestaurantsAttire': "'casual'", 'Music': "{'dj': False}", 'DogsAllowed': 'True', 'RestaurantsGoodForGroups': 'True', 'Caters': 'True', 'RestaurantsPriceRange2': '2', 'CoatCheck': 'False', 'BusinessParking': "{'garage': False, 'street': True, 'validated': False, 'lot': False, 'valet': False}", 'OutdoorSeating': 'True', 'BusinessAcceptsCreditCards': 'True', 'RestaurantsTableService': 'True', 'BikeParking': 'True', 'BusinessAcceptsBitcoin': 'False', 'GoodForKids': 'True', 'Alcohol': "u'full_bar'", 'GoodForDancing': 'False', 'HasTV': 'True', 'BestNights': "{'monday': False, 'tuesday': False, 'friday': True, 'wednesday': False, 'thursday': False, 'sunday': True, 'saturday': True}", 'Ambience': "{'touristy': False, 'hipster': False, 'romantic': False, 'divey': False, 'intimate': False, 'trendy': False, 'upscale': False, 'classy': True, 'casual': True}", 'NoiseLevel': "u'average'", 'Corkage': 'True', 'RestaurantsDelivery': 'True', 'GoodForMeal': "{'dessert': None, 'latenight': False, 'lunch': True, 'dinner': True, 'brunch': False, 'breakfast': False}"}}], 'var_call_Vxo61dqybqUVby4aLvEOUfcO': [{'business_id': 'businessid_26', 'attributes': {'WiFi': "u'free'", 'RestaurantsReservations': 'False', 'GoodForKids': 'True', 'Caters': 'False', 'RestaurantsPriceRange2': '1', 'OutdoorSeating': 'False', 'RestaurantsAttire': "u'casual'", 'HasTV': 'True', 'Alcohol': "u'none'", 'RestaurantsTakeOut': 'True', 'RestaurantsTableService': 'False', 'DriveThru': 'True', 'RestaurantsGoodForGroups': 'False', 'BusinessAcceptsCreditCards': 'True', 'BikeParking': 'True', 'RestaurantsDelivery': 'True', 'NoiseLevel': "u'average'", 'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'Ambience': "{'romantic': False, 'intimate': False, 'touristy': False, 'hipster': False, 'divey': False, 'classy': False, 'trendy': False, 'upscale': False, 'casual': False}", 'GoodForMeal': "{'dessert': False, 'latenight': False, 'lunch': False, 'dinner': False, 'brunch': False, 'breakfast': False}"}}, {'business_id': 'businessid_14', 'attributes': {'BikeParking': 'False', 'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': True, 'valet': False}", 'BusinessAcceptsCreditCards': 'True', 'RestaurantsPriceRange2': '1'}}, {'business_id': 'businessid_35', 'attributes': {'NoiseLevel': "u'quiet'", 'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'RestaurantsAttire': "u'casual'", 'RestaurantsPriceRange2': '2', 'RestaurantsTakeOut': 'True'}}, {'business_id': 'businessid_28', 'attributes': 'None'}, {'business_id': 'businessid_27', 'attributes': {'RestaurantsAttire': "u'casual'", 'Alcohol': "u'none'", 'OutdoorSeating': 'False', 'RestaurantsGoodForGroups': 'True', 'WiFi': "u'no'", 'RestaurantsTakeOut': 'True', 'RestaurantsPriceRange2': '1', 'BusinessAcceptsCreditCards': 'True', 'RestaurantsDelivery': 'False', 'BikeParking': 'True', 'NoiseLevel': "u'average'", 'GoodForKids': 'True', 'Caters': 'True', 'RestaurantsReservations': 'False', 'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'GoodForMeal': "{'dessert': False, 'latenight': None, 'lunch': True, 'dinner': None, 'brunch': None, 'breakfast': None}", 'HasTV': 'True', 'Ambience': "{'touristy': False, 'hipster': False, 'romantic': False, 'divey': None, 'intimate': False, 'trendy': False, 'upscale': False, 'classy': False, 'casual': None}"}}, {'business_id': 'businessid_45', 'attributes': {'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': True, 'valet': False}", 'RestaurantsPriceRange2': '2', 'BikeParking': 'True', 'BusinessAcceptsCreditCards': 'True', 'RestaurantsTakeOut': 'True', 'DogsAllowed': 'False', 'Caters': 'True', 'NoiseLevel': "u'quiet'", 'GoodForKids': 'True', 'RestaurantsDelivery': 'True'}}, {'business_id': 'businessid_68', 'attributes': {'RestaurantsPriceRange2': '2', 'BusinessParking': "{'valet': False, 'garage': False, 'street': False, 'lot': False, 'validated': False}", 'BusinessAcceptsCreditCards': 'True', 'ByAppointmentOnly': 'False', 'BikeParking': 'True'}}, {'business_id': 'businessid_4', 'attributes': {'ByAppointmentOnly': 'True', 'BusinessAcceptsCreditCards': 'True', 'AcceptsInsurance': 'True'}}, {'business_id': 'businessid_77', 'attributes': {'RestaurantsPriceRange2': '2', 'BusinessAcceptsCreditCards': 'True', 'WiFi': "u'free'"}}, {'business_id': 'businessid_20', 'attributes': {'RestaurantsTableService': 'False', 'RestaurantsPriceRange2': '1', 'RestaurantsAttire': "u'casual'", 'BikeParking': 'True', 'OutdoorSeating': 'True', 'WheelchairAccessible': 'True', 'RestaurantsGoodForGroups': 'True', 'RestaurantsReservations': 'False', 'WiFi': "'free'", 'GoodForMeal': "{'dessert': False, 'latenight': False, 'lunch': True, 'dinner': False, 'brunch': True, 'breakfast': True}", 'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': True, 'valet': False}", 'GoodForKids': 'True', 'DriveThru': 'True', 'HasTV': 'True', 'Caters': 'True', 'Ambience': "{'touristy': False, 'hipster': False, 'romantic': False, 'divey': False, 'intimate': False, 'trendy': False, 'upscale': False, 'classy': False, 'casual': False}", 'BusinessAcceptsCreditCards': 'True', 'RestaurantsDelivery': 'False', 'RestaurantsTakeOut': 'True', 'Alcohol': "u'none'"}}, {'business_id': 'businessid_82', 'attributes': {'BusinessParking': "{'garage': False, 'street': True, 'validated': False, 'lot': False, 'valet': False}", 'WiFi': "u'free'", 'OutdoorSeating': 'True', 'Alcohol': "'beer_and_wine'", 'BikeParking': 'True', 'RestaurantsDelivery': 'True', 'RestaurantsGoodForGroups': 'True', 'NoiseLevel': "u'average'", 'BYOBCorkage': "u'yes_free'", 'Ambience': "{'touristy': False, 'hipster': False, 'romantic': False, 'divey': False, 'intimate': False, 'trendy': False, 'upscale': False, 'classy': True, 'casual': True}", 'RestaurantsAttire': "u'casual'", 'GoodForMeal': "{'dessert': False, 'latenight': False, 'lunch': True, 'dinner': False, 'brunch': True, 'breakfast': True}", 'Caters': 'True', 'RestaurantsReservations': 'False', 'ByAppointmentOnly': 'False', 'GoodForKids': 'True', 'HasTV': 'False', 'RestaurantsPriceRange2': '2', 'DogsAllowed': 'False', 'RestaurantsTableService': 'True', 'BYOB': 'True', 'BusinessAcceptsCreditCards': 'True', 'HappyHour': 'False', 'WheelchairAccessible': 'False', 'Corkage': 'False', 'RestaurantsTakeOut': 'True'}}, {'business_id': 'businessid_22', 'attributes': {'ByAppointmentOnly': 'True', 'BusinessAcceptsCreditCards': 'True'}}]}
+
+exec(code, env_args)

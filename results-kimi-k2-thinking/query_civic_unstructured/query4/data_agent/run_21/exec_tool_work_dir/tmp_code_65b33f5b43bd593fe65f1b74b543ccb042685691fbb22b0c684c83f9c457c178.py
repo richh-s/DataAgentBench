@@ -1,0 +1,77 @@
+code = """import json
+import re
+
+# Load funding data
+funding_path = locals()['var_functions.query_db:12']
+with open(funding_path, 'r') as f:
+    funding_records = json.load(f)
+
+# Load civic documents
+ civic_path = locals()['var_functions.query_db:2']
+with open(civic_path, 'r') as f:
+    civic_docs = json.load(f)
+
+print('Funding records:', len(funding_records))
+print('Civic documents:', len(civic_docs))
+
+# Create funding lookup
+funding_lookup = {}
+for record in funding_records:
+    proj_name = record['Project_Name']
+    funding_lookup[proj_name] = int(record['Amount'])
+
+# Function to find Spring 2022 projects
+spring_2022_projects = set()
+
+for doc in civic_docs:
+    text = doc.get('text', '')
+    lines = text.split('\n')
+    
+    for i, line in enumerate(lines):
+        line = line.strip().replace('•', '')
+        
+        # Check for Spring 2022 mentions
+        if 'Spring 2022' in line or '2022-Spring' in line:
+            # Look backwards for project name
+            for j in range(i-1, max(0, i-3), -1):
+                prev_line = lines[j].strip().replace('•', '')
+                if prev_line and len(prev_line) < 100:
+                    # Check if this looks like a project name
+                    if any(keyword in prev_line.lower() for keyword in ['project', 'improvements', 'repairs', 'repaving', 'installation', 'construction', 'upgrades', 'development', 'replacement', 'renovation']):
+                        spring_2022_projects.add(prev_line)
+                        break
+
+spring_list = list(spring_2022_projects)
+print('Spring 2022 projects found:', len(spring_list))
+
+# Match with funding
+matched = []
+total_funding = 0
+
+for proj in spring_list:
+    if proj in funding_lookup:
+        amount = funding_lookup[proj]
+        matched.append({'name': proj, 'amount': amount})
+        total_funding += amount
+    else:
+        # Try to find similar names
+        for fund_proj, amount in funding_lookup.items():
+            if (f'({proj})' in fund_proj or 
+                proj in fund_proj or 
+                fund_proj.split('(')[0].strip() == proj):
+                matched.append({'name': fund_proj, 'amount': amount})
+                total_funding += amount
+                break
+
+output = {
+    'total_projects': len(matched),
+    'total_funding': total_funding,
+    'projects': matched
+}
+
+print('__RESULT__:')
+print(json.dumps(output))"""
+
+env_args = {'var_functions.query_db:0': 'file_storage/functions.query_db:0.json', 'var_functions.query_db:2': 'file_storage/functions.query_db:2.json', 'var_functions.query_db:10': [{'Funding_ID': '1', 'Project_Name': '2021 Annual Street Maintenance', 'Funding_Source': 'Public-Private Partnership (PPP)', 'Amount': '24000'}, {'Funding_ID': '2', 'Project_Name': '2022 Annual Street Maintenance', 'Funding_Source': 'Government Grant', 'Amount': '45000'}, {'Funding_ID': '3', 'Project_Name': '2022 Morning View Resurfacing & Storm Drain Improvements', 'Funding_Source': 'State Development Grant', 'Amount': '38000'}, {'Funding_ID': '4', 'Project_Name': 'Annual Street Maintenance', 'Funding_Source': 'Corporate Sponsorship', 'Amount': '23000'}, {'Funding_ID': '5', 'Project_Name': 'Birdview Avenue Improvements', 'Funding_Source': 'National Foundation Fund', 'Amount': '79000'}, {'Funding_ID': '6', 'Project_Name': 'Birdview Avenue Improvements (CalOES Project)', 'Funding_Source': 'International Aid', 'Amount': '85000'}, {'Funding_ID': '7', 'Project_Name': 'Birdview Avenue Improvements (FEMA/CalOES Project)', 'Funding_Source': 'Research Institution Funding', 'Amount': '14000'}, {'Funding_ID': '8', 'Project_Name': 'Bluffs Park Shade Structure', 'Funding_Source': 'Government Grant', 'Amount': '21000'}, {'Funding_ID': '9', 'Project_Name': 'Bluffs Park Workout Station', 'Funding_Source': 'University Research Fund', 'Amount': '39000'}, {'Funding_ID': '10', 'Project_Name': 'Broad Beach Road Water Quality Infrastructure Repairs', 'Funding_Source': 'International Organization Grant', 'Amount': '87000'}], 'var_functions.query_db:12': 'file_storage/functions.query_db:12.json', 'var_functions.execute_python:20': 'Loaded 500 funding records'}
+
+exec(code, env_args)

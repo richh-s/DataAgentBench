@@ -1,0 +1,35 @@
+code = """import json
+import os
+import sys
+
+# Load NYSE non-ETF stocks with company names
+nyse_file = locals()['var_functions.query_db:36']
+with open(nyse_file, 'r') as f:
+    nyse_data = json.load(f)
+
+# Create mapping of symbol to company name
+symbol_to_name = {item['Symbol']: item['company_name'] for item in nyse_data}
+nyse_symbols = list(symbol_to_name.keys())
+
+# Debug info
+print(f'Found {len(nyse_symbols)} NYSE non-ETF symbols')
+print(f'First few symbols: {nyse_symbols[:5]}')
+
+# We'll need to query each symbol's data from stocktrade_database
+# Since we can't directly call query_db from Python, let's prepare the data structure
+symbol_info = []
+for symbol in nyse_symbols:
+    symbol_info.append({
+        'symbol': symbol,
+        'name': symbol_to_name[symbol]
+    })
+
+print('__RESULT__:')
+print(json.dumps({
+    'total_symbols': len(symbol_info),
+    'sample': symbol_info[:3]
+}))"""
+
+env_args = {'var_functions.list_db:0': ['stockinfo'], 'var_functions.query_db:2': 'file_storage/functions.query_db:2.json', 'var_functions.execute_python:6': {'count': 234, 'first_10': [['AEFC', 'Aegon Funding Company LLC is part of Aegon N.V., a global financial services group offering life insurance, pensions, and asset management solutions to help people achieve a lifetime of financial security.'], ['AIN', 'Albany International Corporation specializes in producing advanced materials and engineered components, serving industries such as aerospace and paper manufacturing with innovative solutions.'], ['AIV', 'Apartment Investment and Management Company specializes in owning and managing a diverse portfolio of apartment communities, offering quality rental housing across various regions.'], ['AIZP', 'Assurant, Inc. specializes in providing a diverse range of insurance products and services, focusing on lifestyle and housing solutions to protect what matters most to their customers.'], ['AJRD', 'Aerojet Rocketdyne Holdings, Inc. specializes in developing advanced propulsion systems and aerospace technologies, playing a crucial role in powering rockets and missiles for both defense and space exploration.'], ['AL', 'Air Lease Corporation specializes in leasing commercial aircraft to airlines worldwide, providing them with flexible fleet solutions and financial support.'], ['AMN', 'AMN Healthcare Services Inc. specializes in providing workforce solutions and staffing services to healthcare facilities, ensuring they have access to the skilled professionals necessary for quality patient care.'], ['AMP', 'Ameriprise Financial, Inc. offers comprehensive financial services, specializing in wealth management, asset management, and insurance solutions to help clients plan and achieve their financial goals.'], ['AMT', 'American Tower Corporation is a leading real estate investment trust that specializes in owning, operating, and developing wireless and broadcast communication towers across the globe.'], ['ARD', 'Ardagh Group S.A. specializes in manufacturing and supplying sustainable packaging solutions, with a focus on glass and metal containers for leading brands across various industries.']]}, 'var_functions.execute_python:12': {'total_count': 234}, 'var_functions.query_db:14': 'file_storage/functions.query_db:14.json', 'var_functions.execute_python:16': {'total_nyse_stocks': 234, 'available_in_trade_db': 234, 'sample_symbols': ['AEFC', 'AIN', 'AIV', 'AIZP', 'AJRD', 'AL', 'AMN', 'AMP', 'AMT', 'ARD']}, 'var_functions.execute_python:18': {'total_stocks': 234, 'sample_symbols': ['AEFC', 'AIN', 'AIV', 'AIZP', 'AJRD']}, 'var_functions.query_db:22': [{'Date': '2017-01-03', 'Open': '46.900001525878906', 'Close': '47.150001525878906'}, {'Date': '2017-01-04', 'Open': '47.29999923706055', 'Close': '48.150001525878906'}, {'Date': '2017-01-05', 'Open': '47.95000076293945', 'Close': '47.75'}, {'Date': '2017-01-06', 'Open': '47.75', 'Close': '46.59999847412109'}, {'Date': '2017-01-09', 'Open': '46.5', 'Close': '45.54999923706055'}], 'var_functions.execute_python:24': {'total_symbols': 234, 'sample_data': {'AEFC': 'Aegon Funding Company LLC is part of Aegon N.V., a global financial services group offering life insurance, pensions, and asset management solutions to help people achieve a lifetime of financial security.', 'AIN': 'Albany International Corporation specializes in producing advanced materials and engineered components, serving industries such as aerospace and paper manufacturing with innovative solutions.', 'AIV': 'Apartment Investment and Management Company specializes in owning and managing a diverse portfolio of apartment communities, offering quality rental housing across various regions.', 'AIZP': 'Assurant, Inc. specializes in providing a diverse range of insurance products and services, focusing on lifestyle and housing solutions to protect what matters most to their customers.', 'AJRD': 'Aerojet Rocketdyne Holdings, Inc. specializes in developing advanced propulsion systems and aerospace technologies, playing a crucial role in powering rockets and missiles for both defense and space exploration.'}}, 'var_functions.query_db:26': [{'up_days': '143'}], 'var_functions.execute_python:28': {'total_stocks': 234, 'sample_processed': 10, 'success': 10, 'errors': 0, 'sample': [{'symbol': 'AEFC', 'name': 'Aegon Funding Company LLC is part of Aegon N.V., a'}, {'symbol': 'AIN', 'name': 'Albany International Corporation specializes in pr'}, {'symbol': 'AIV', 'name': 'Apartment Investment and Management Company specia'}, {'symbol': 'AIZP', 'name': 'Assurant, Inc. specializes in providing a diverse '}, {'symbol': 'AJRD', 'name': 'Aerojet Rocketdyne Holdings, Inc. specializes in d'}, {'symbol': 'AL', 'name': 'Air Lease Corporation specializes in leasing comme'}, {'symbol': 'AMN', 'name': 'AMN Healthcare Services Inc. specializes in provid'}, {'symbol': 'AMP', 'name': 'Ameriprise Financial, Inc. offers comprehensive fi'}, {'symbol': 'AMT', 'name': 'American Tower Corporation is a leading real estat'}, {'symbol': 'ARD', 'name': 'Ardagh Group S.A. specializes in manufacturing and'}]}, 'var_functions.query_db:30': 'file_storage/functions.query_db:30.json', 'var_functions.execute_python:34': {'total_nyse_stocks': 234, 'sample_symbols': ['AEFC', 'AIN', 'AIV', 'AIZP', 'AJRD'], 'sample_names': {'AEFC': 'Aegon Funding Company LLC is part of Aegon N.V., a global fi', 'AIN': 'Albany International Corporation specializes in producing ad', 'AIV': 'Apartment Investment and Management Company specializes in o', 'AIZP': 'Assurant, Inc. specializes in providing a diverse range of i', 'AJRD': 'Aerojet Rocketdyne Holdings, Inc. specializes in developing '}}, 'var_functions.query_db:36': 'file_storage/functions.query_db:36.json'}
+
+exec(code, env_args)

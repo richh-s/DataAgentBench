@@ -1,0 +1,38 @@
+code = """import json
+
+# Load the 2015 article metadata from the file file path stored in var_functions.query_db:4
+metadata_file_path = var_functions.query_db:4
+with open(metadata_file_path, 'r') as f:
+    metadata_2015 = json.load(f)
+
+# Load the articles collection from the file stored in var_functions.query_db:6
+articles_file_path = var_functions.query_db:6
+with open(articles_file_path, 'r') as f:
+    articles = json.load(f)
+
+# Create a dictionary of articles for easy lookup by article_id
+articles_dict = {int(article['article_id']): article for article in articles}
+
+# Create a list of 2015 articles with their metadata and content
+articles_2015 = []
+for meta in metadata_2015:
+    article_id = int(meta['article_id'])
+    if article_id in articles_dict:
+        article_info = {
+            'article_id': article_id,
+            'region': meta['region'],
+            'title': articles_dict[article_id]['title'],
+            'description': articles_dict[article_id]['description']
+        }
+        articles_2015.append(article_info)
+
+# Print the number of articles from 2015 to verify
+print('__RESULT__:')
+print(json.dumps({
+    'total_2015_articles': len(articles_2015),
+    'sample_articles': articles_2015[:5]
+}))"""
+
+env_args = {'var_functions.list_db:0': ['articles'], 'var_functions.list_db:1': ['authors', 'article_metadata'], 'var_functions.query_db:4': 'file_storage/functions.query_db:4.json', 'var_functions.query_db:6': [{'_id': '6969e10e4c4e890ccbefaf21', 'article_id': '0', 'title': 'Wall St. Bears Claw Back Into the Black (Reuters)', 'description': "Reuters - Short-sellers, Wall Street's dwindling\\band of ultra-cynics, are seeing green again."}, {'_id': '6969e10e4c4e890ccbefaf22', 'article_id': '1', 'title': 'Carlyle Looks Toward Commercial Aerospace (Reuters)', 'description': 'Reuters - Private investment firm Carlyle Group,\\which has a reputation for making well-timed and occasionally\\controversial plays in the defense industry, has quietly placed\\its bets on another part of the market.'}, {'_id': '6969e10e4c4e890ccbefaf23', 'article_id': '2', 'title': "Oil and Economy Cloud Stocks' Outlook (Reuters)", 'description': 'Reuters - Soaring crude prices plus worries\\about the economy and the outlook for earnings are expected to\\hang over the stock market next week during the depth of the\\summer doldrums.'}, {'_id': '6969e10e4c4e890ccbefaf24', 'article_id': '3', 'title': 'Iraq Halts Oil Exports from Main Southern Pipeline (Reuters)', 'description': 'Reuters - Authorities have halted oil export\\flows from the main pipeline in southern Iraq after\\intelligence showed a rebel militia could strike\\infrastructure, an oil official said on Saturday.'}, {'_id': '6969e10e4c4e890ccbefaf25', 'article_id': '4', 'title': 'Oil prices soar to all-time record, posing new menace to US economy (AFP)', 'description': 'AFP - Tearaway world oil prices, toppling records and straining wallets, present a new economic menace barely three months before the US presidential elections.'}]}
+
+exec(code, env_args)

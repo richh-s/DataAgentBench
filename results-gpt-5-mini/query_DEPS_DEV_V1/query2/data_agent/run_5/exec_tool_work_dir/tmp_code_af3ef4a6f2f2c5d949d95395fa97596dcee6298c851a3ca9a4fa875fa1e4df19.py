@@ -1,0 +1,13 @@
+code = """import json
+path = var_call_DV7tnZrNxTfdsBAONGERY0y1
+# path is a file path to JSON content
+with open(path, 'r', encoding='utf-8') as f:
+    top5 = json.load(f)
+lines = [f"{i+1}. {r['ProjectName']} — {r['Forks']} forks" for i, r in enumerate(top5)]
+answer = "\n".join(lines)
+print("__RESULT__:")
+print(json.dumps(answer))"""
+
+env_args = {'var_call_SPpf6OTIy2suP5I0T2HqEXjg': ['packageinfo'], 'var_call_i6hRKgFEWzpOJz5Z6LugaNNc': ['project_info', 'project_packageversion'], 'var_call_4QBHnENUNKnmttDHTGhGVb3H': 'file_storage/call_4QBHnENUNKnmttDHTGhGVb3H.json', 'var_call_0WCxbMuTxQGRvEiIxdI5oYtN': 'file_storage/call_0WCxbMuTxQGRvEiIxdI5oYtN.json', 'var_call_j0C5oPHpfXCyprf5Yum5tvPX': 'file_storage/call_j0C5oPHpfXCyprf5Yum5tvPX.json', 'var_call_Jk6uPPy5uSFPQDeh4DmIsxXL': 'file_storage/call_Jk6uPPy5uSFPQDeh4DmIsxXL.json', 'var_call_SZIO9aOUgv3xJGHCzyw21vx4': {'total_mappings': 5477, 'unique_projects': 5477, 'sample_projects': ['/crislin2046', '/robpethick', '0x1ance/soulbound', '0x1ance/wishport', '0xsalah/tete', '1394/manipula', '1728954833/project-manager', '20lives/scad-js', '286810/react-native-switch-box', '431910864/dumi-antd-components', '4catalyzer/theme', '4x-sas/create-react-app', '6km/minify-css', '776a0a/dus', '7rulnik/postcss-flexibility', 'a5hik/ng-sortable', 'a7650/vue3-draggable-resizable', 'a916856595/react-dropdown', 'aareksio/koa-history-api-fallback', 'aareksio/node-steam-client', 'aaronjwang/redux-websocket', 'abacritt/angularx-social-login', 'abrcdf1023/egroup-material', 'abrcdf1023/egroup-redux', 'abrcdf1023/egroup-utils', 'abuinitski/redux-bundler-async-resources', 'accenture/sfpowerscripts', 'actorapp/react-scroll', 'adamhalasz/uniqid', 'aduth/preact-jsx-runtime', 'adyatlov/behold', 'aeb-labs/graphql-weaver', 'aelbore/esbuild-jest', 'age-bijkaart/cbuf', 'agenciaed3/event-emitter', 'agenciaed3/helix-hooks', 'agenciaed3/helix-style', 'agenciaed3/utils', 'agenciaed3/vtex-api', 'agtenr/typescript-storagefactory', 'agustinramos/react-orgchart', 'aheckmann/mquery', 'aheissenberger/serverless-appsync-offline', 'ahmadnassri/node-har-validator', 'ahmadreza-s/dotlottie-player', 'ahmadreza-s/xmlparser', 'ahomu/grunt-data-uri', 'ahram-dolphin/cli', 'ai/audio-recorder-polyfill', 'ai/browserslist']}, 'var_call_dzlLeQmV4zwL14SNAEQQZdbW': 'file_storage/call_dzlLeQmV4zwL14SNAEQQZdbW.json', 'var_call_DV7tnZrNxTfdsBAONGERY0y1': [{'ProjectName': 'mui-org/material-ui', 'Forks': 30522}, {'ProjectName': 'moment/moment', 'Forks': 7201}, {'ProjectName': 'lodash/lodash', 'Forks': 7109}, {'ProjectName': 'semantic-org/semantic-ui', 'Forks': 4955}, {'ProjectName': 'react-native-elements/react-native-elements', 'Forks': 4623}]}
+
+exec(code, env_args)

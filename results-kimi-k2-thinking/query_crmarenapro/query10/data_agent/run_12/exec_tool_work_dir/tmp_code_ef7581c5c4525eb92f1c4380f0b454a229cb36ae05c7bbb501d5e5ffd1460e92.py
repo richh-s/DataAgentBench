@@ -1,0 +1,28 @@
+code = """import pandas as pd
+import json
+
+# Load the data from storage
+result = var_functions.query_db:8
+
+# Convert to list if it's a string path, else use directly
+if isinstance(result, str) and '.json' in result:
+    with open(result, 'r') as f:
+        data = json.load(f)
+else:
+    data = result
+
+# Create DataFrame
+df = pd.DataFrame(data)
+
+# Debug info
+print(f"Total rows: {len(df)}")
+print(f"Columns: {list(df.columns)}")
+print(df.head())
+
+# Check assignment_count unique values
+assignment_values = df['assignment_count'].unique()
+print(f"Assignment count values: {assignment_values}")"""
+
+env_args = {'var_functions.query_db:0': [{'field__c': 'Case Creation'}, {'field__c': 'Case Closed'}, {'field__c': 'Owner Assignment'}], 'var_functions.query_db:2': [{'oldvalue__c': 'None', 'newvalue__c': '005Wt000003NFKpIAO'}, {'oldvalue__c': 'None', 'newvalue__c': '005Wt000003NJrRIAW'}, {'oldvalue__c': '005Wt000003NFhOIAW', 'newvalue__c': '005Wt000003NHuUIAW'}, {'oldvalue__c': 'None', 'newvalue__c': '005Wt000003NDqEIAW'}, {'oldvalue__c': 'None', 'newvalue__c': '005Wt000003NIVZIA4'}, {'oldvalue__c': 'None', 'newvalue__c': '005Wt000003NInJIAW'}, {'oldvalue__c': 'None', 'newvalue__c': '005Wt000003NDu7IAG'}, {'oldvalue__c': 'None', 'newvalue__c': '005Wt000003NHpeIAG'}, {'oldvalue__c': 'None', 'newvalue__c': '005Wt000003NJD9IAO'}, {'oldvalue__c': 'None', 'newvalue__c': '005Wt000003NJQ1IAO'}, {'oldvalue__c': 'None', 'newvalue__c': '005Wt000003NJ3RIAW'}, {'oldvalue__c': '005Wt000003NJ6gIAG', 'newvalue__c': '005Wt000003NJLBIA4'}, {'oldvalue__c': 'None', 'newvalue__c': '005Wt000003NFr4IAG'}, {'oldvalue__c': 'None', 'newvalue__c': '005Wt000003NHsrIAG'}, {'oldvalue__c': 'None', 'newvalue__c': '005Wt000003NJhlIAG'}, {'oldvalue__c': 'None', 'newvalue__c': '005Wt000003NJTFIA4'}, {'oldvalue__c': 'None', 'newvalue__c': '005Wt000003NFhOIAW'}, {'oldvalue__c': 'None', 'newvalue__c': '005Wt000003NIXBIA4'}, {'oldvalue__c': 'None', 'newvalue__c': '005Wt000003NJLBIA4'}, {'oldvalue__c': 'None', 'newvalue__c': '005Wt000003NH3GIAW'}], 'var_functions.query_db:5': [{'id': '#500Wt00000DDDfwIAH', 'createddate': '2023-07-02T11:00:00.000+0000', 'closeddate': 'None', 'ownerid': '005Wt000003NJ0DIAW'}, {'id': '500Wt00000DDTxbIAH', 'createddate': '2023-08-15T14:30:00.000+0000', 'closeddate': 'None', 'ownerid': '#005Wt000003NIfFIAW'}, {'id': '500Wt00000DDepmIAD', 'createddate': '2023-07-01T10:30:00.000+0000', 'closeddate': '2023-07-01T19:41:08.000+0000', 'ownerid': '005Wt000003NJufIAG'}, {'id': '500Wt00000DDflsIAD', 'createddate': '2023-06-12T09:45:00.000+0000', 'closeddate': 'None', 'ownerid': '005Wt000003NJppIAG'}, {'id': '#500Wt00000DDsG3IAL', 'createddate': '2023-08-10T14:20:00.000+0000', 'closeddate': 'None', 'ownerid': '005Wt000003NI5mIAG'}, {'id': '500Wt00000DDyzpIAD', 'createddate': '2023-08-15T14:30:00.000+0000', 'closeddate': '2023-08-15T14:54:02.000+0000', 'ownerid': '005Wt000003NJGLIA4'}, {'id': '500Wt00000DDzUPIA1', 'createddate': '2023-05-10T14:45:00.000+0000', 'closeddate': '2023-05-10T14:59:42.000+0000', 'ownerid': '005Wt000003NDqDIAW'}, {'id': '500Wt00000DDzXdIAL', 'createddate': '2023-06-22T11:00:00.000+0000', 'closeddate': 'None', 'ownerid': '#005Wt000003NJUrIAO'}, {'id': '500Wt00000DDzZHIA1', 'createddate': '2023-07-02T09:30:00.000+0000', 'closeddate': 'None', 'ownerid': '005Wt000003NDqDIAW'}, {'id': '#500Wt00000DDzivIAD', 'createddate': '2023-06-05T11:15:00.000+0000', 'closeddate': 'None', 'ownerid': '005Wt000003NDqDIAW'}], 'var_functions.query_db:6': [{'caseid__c': '500Wt00000DDzZHIA1', 'assignment_count': '1'}, {'caseid__c': '500Wt00000DDzr0IAD', 'assignment_count': '1'}, {'caseid__c': '500Wt00000DDflsIAD', 'assignment_count': '2'}, {'caseid__c': '500Wt00000DDzuEIAT', 'assignment_count': '1'}, {'caseid__c': '500Wt00000DDzkXIAT', 'assignment_count': '1'}, {'caseid__c': '500Wt00000DDzUPIA1', 'assignment_count': '1'}, {'caseid__c': '500Wt00000DDyzpIAD', 'assignment_count': '1'}, {'caseid__c': '500Wt00000DDzXdIAL', 'assignment_count': '1'}, {'caseid__c': '500Wt00000DDzsbIAD', 'assignment_count': '1'}, {'caseid__c': '500Wt00000DDTxbIAH', 'assignment_count': '1'}, {'caseid__c': '500Wt00000DDepmIAD', 'assignment_count': '1'}], 'var_functions.query_db:8': [{'id': '#500Wt00000DDzscIAD', 'ownerid': '005Wt000003NEtOIAW', 'createddate': '2023-05-02T23:55:00.000+0000', 'closeddate': '2023-05-03T00:11:47.000+0000', 'assignment_count': '0'}, {'id': '#500Wt00000DE02HIAT', 'ownerid': '005Wt000003NIddIAG', 'createddate': '2023-06-03T14:45:00.000+0000', 'closeddate': '2023-06-03T15:21:34.000+0000', 'assignment_count': '0'}, {'id': '500Wt00000DDepmIAD', 'ownerid': '005Wt000003NJufIAG', 'createddate': '2023-07-01T10:30:00.000+0000', 'closeddate': '2023-07-01T19:41:08.000+0000', 'assignment_count': '1'}, {'id': '500Wt00000DDyzpIAD', 'ownerid': '005Wt000003NJGLIA4', 'createddate': '2023-08-15T14:30:00.000+0000', 'closeddate': '2023-08-15T14:54:02.000+0000', 'assignment_count': '1'}, {'id': '500Wt00000DDzUPIA1', 'ownerid': '005Wt000003NDqDIAW', 'createddate': '2023-05-10T14:45:00.000+0000', 'closeddate': '2023-05-10T14:59:42.000+0000', 'assignment_count': '1'}, {'id': '500Wt00000DDzsbIAD', 'ownerid': '005Wt000003NJD9IAO', 'createddate': '2023-06-30T13:03:00.000+0000', 'closeddate': '2023-06-30T19:03:08.000+0000', 'assignment_count': '1'}, {'id': '500Wt00000DDzuEIAT', 'ownerid': '005Wt000003NJJaIAO', 'createddate': '2023-06-02T09:30:00.000+0000', 'closeddate': '2023-06-02T13:35:12.000+0000', 'assignment_count': '1'}]}
+
+exec(code, env_args)

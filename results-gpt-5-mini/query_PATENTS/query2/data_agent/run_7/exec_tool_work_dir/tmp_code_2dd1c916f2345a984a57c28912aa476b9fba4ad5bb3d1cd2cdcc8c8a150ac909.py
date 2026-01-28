@@ -1,0 +1,100 @@
+code = """import json, re
+import pandas as pd
+
+# load data
+pubs_path = var_call_6s1Hx5RlvxTCOOHk3gPsx0tp
+with open(pubs_path, 'r', encoding='utf-8') as f:
+    records = json.load(f)
+
+cpc_defs_path = var_call_A9wpvoxhstAfCpfAVll0D2La
+with open(cpc_defs_path, 'r', encoding='utf-8') as f:
+    cpc_defs = json.load(f)
+
+cpc_map = {d['symbol']: d.get('titleFull','') for d in cpc_defs}
+
+# helpers
+import datetime
+
+def clean_date(s):
+    if not s or not isinstance(s, str):
+        return None
+    s2 = s
+    s2 = s2.replace('on ', ' ')
+    s2 = s2.replace('dated ', ' ')
+    s2 = s2.replace('the ', ' ')
+    s2 = re.sub(r"(\d+)(st|nd|rd|th)", r"\1", s2)
+    s2 = s2.replace(',', ' ')
+    s2 = s2.strip()
+    return pd.to_datetime(s2, dayfirst=True, errors='coerce')
+
+def is_germany(pi):
+    if not pi: return False
+    s = pi.upper()
+    if 'GERMANY' in s: return True
+    if re.search(r'\bDE\b', s): return True
+    if re.search(r'DE[-_]\d', s): return True
+    if re.search(r'IN DE,', s): return True
+    return False
+
+rows = []
+for r in records:
+    gd = clean_date(r.get('grant_date'))
+    if gd is None:
+        continue
+    if not (pd.Timestamp('2019-07-01') <= gd <= pd.Timestamp('2019-12-31')):
+        continue
+    if not is_germany(r.get('Patents_info','')):
+        continue
+    cpc_field = r.get('cpc')
+    try:
+        cpcs = json.loads(cpc_field)
+    except Exception:
+        cpcs = []
+    fd = clean_date(r.get('filing_date'))
+    if fd is None:
+        continue
+    filing_year = int(fd.year)
+    for item in cpcs:
+        if isinstance(item, dict):
+            code = item.get('code')
+        else:
+            code = None
+        if not code:
+            continue
+        code = str(code).strip()
+        # level-4 symbol appears to be 3-char codes in cpc_definition
+        # take first 3 chars (Letter + 2 digits)
+        if len(code) >= 3:
+            group = code[:3]
+        else:
+            continue
+        rows.append({'group': group, 'filing_year': filing_year})
+
+if not rows:
+    out = {'results': []}
+    print('__RESULT__:')
+    print(json.dumps(out))
+else:
+    df = pd.DataFrame(rows)
+    counts = df.groupby(['group','filing_year']).size().reset_index(name='count')
+    results = []
+    for group, grp in counts.groupby('group'):
+        # only include if group exists in cpc_map
+        title = cpc_map.get(group)
+        if not title:
+            continue
+        grp_sorted = grp.sort_values('filing_year')
+        years = list(grp_sorted['filing_year'])
+        vals = list(grp_sorted['count'])
+        s = pd.Series(vals, index=years)
+        ema = s.ewm(alpha=0.1, adjust=False).mean()
+        best_year = int(ema.idxmax())
+        best_ema = float(ema.max())
+        results.append({'symbol': group, 'titleFull': title, 'best_year': best_year, 'best_ema': best_ema})
+    results = sorted(results, key=lambda x: x['best_ema'], reverse=True)
+    print('__RESULT__:')
+    print(json.dumps({'results': results}, ensure_ascii=False))"""
+
+env_args = {'var_call_DOJ8NTBO8k3pUFTiKas6Zehx': 'file_storage/call_DOJ8NTBO8k3pUFTiKas6Zehx.json', 'var_call_3x0kyDCCcHjS363jdKiOeLf0': {'groups': []}, 'var_call_6s1Hx5RlvxTCOOHk3gPsx0tp': 'file_storage/call_6s1Hx5RlvxTCOOHk3gPsx0tp.json', 'var_call_B7VsHRM5f0Jdk9w0iMgkWsUb': {'symbols': [], 'groups': []}, 'var_call_0HrkzCcWSYJ9t2FzyfChU10r': {'count': 69, 'examples': [{'id': '199', 'Patents_info': 'Patent application (no. DE-102013211266-A) from DE, assigned to IBM, with publication number DE-102013211266-B4.', 'grant_date': '14th Mar 2019'}, {'id': '9322', 'Patents_info': 'In DE, the application (number DE-102007032978-A) is held by HEIDELBERGER DRUCKMASCH AG and has publication number DE-102007032978-B4.', 'grant_date': 'dated 21st November 2019'}, {'id': '9333', 'Patents_info': 'The DE application (number DE-102009046500-A) is owned by LEAR CORP and has publication number DE-102009046500-B4.', 'grant_date': 'Mar 21st, 2019'}, {'id': '9335', 'Patents_info': 'The DE patent application (no. DE-102010042467-A) is owned by CONTINENTAL AUTOMOTIVE GMBH and has pub. number DE-102010042467-B4.', 'grant_date': '5th of December, 2019'}, {'id': '9348', 'Patents_info': 'In DE, the patent filing (application no. DE-112014003420-T) is assigned to TOYOTA MOTOR CO LTD and has publication number DE-112014003420-B4.', 'grant_date': '22nd of August, 2019'}, {'id': '9350', 'Patents_info': 'In DE, the patent filing (application number DE-102015221196-A) is owned by SCHOTT AG and has pub. number DE-102015221196-B4.', 'grant_date': 'September the 19th, 2019'}, {'id': '9352', 'Patents_info': 'DIEFFENBACHER GMBH MASCHINEN holds the DE patent application (number DE-102016119956-A), with publication number DE-102016119956-B4.', 'grant_date': 'on March 14th, 2019'}, {'id': '10786', 'Patents_info': 'The DE patent filing (application number DE-102018102700-A) is assigned to DIOGO CARLOS ALBERTO RAMOS and has pub. number DE-102018102700-B3.', 'grant_date': '28th Feb 2019'}, {'id': '10828', 'Patents_info': 'The DE application (number DE-102014111322-A) is owned by LEMKE SEBASTIAN and has publication no. DE-102014111322-B4.', 'grant_date': '17th of October, 2019'}, {'id': '10829', 'Patents_info': 'In DE, the patent application (no. DE-102014209298-A) is held by DENSO CORP and has publication number DE-102014209298-B4.', 'grant_date': 'on March 21st, 2019'}, {'id': '12407', 'Patents_info': 'SCHNEIDER KUNSTSTOFFWERKE GMBH holds the DE patent application (no. DE-102014112758-A), with publication number DE-102014112758-B4.', 'grant_date': '7th March 2019'}, {'id': '12410', 'Patents_info': 'BRUKER BIOSPIN GMBH holds the DE application (number DE-102015218019-A), with publication no. DE-102015218019-B4.', 'grant_date': 'February 28th, 2019'}, {'id': '12411', 'Patents_info': 'Application (no. DE-112015005888-T) from DE, belonging to APPLE INC, with publication number DE-112015005888-B4.', 'grant_date': 'August the 29th, 2019'}, {'id': '12412', 'Patents_info': 'The DE application (ID DE-102016102746-A) is belonging to HAWE Altenstadt Holding GmbH and has pub. number DE-102016102746-B4.', 'grant_date': 'dated 4th July 2019'}, {'id': '35820', 'Patents_info': 'FORD GLOBAL TECH LLC holds the DE application (number DE-102014217501-A), with publication no. DE-102014217501-B4.', 'grant_date': '28th March 2019'}, {'id': '35825', 'Patents_info': 'Patent application (number DE-102017201883-A) from DE, belonging to SIEMENS HEALTHCARE GMBH, with publication no. DE-102017201883-B4.', 'grant_date': '2019 on Mar 28th'}, {'id': '60947', 'Patents_info': 'The DE patent filing (application no. DE-102018213557-A) is assigned to BAYERISCHE MOTOREN WERKE AG and has publication number DE-102018213557-B3.', 'grant_date': '26th September 2019'}, {'id': '60978', 'Patents_info': 'In DE, the patent application (number DE-102011108701-A) is belonging to SUMITOMO HEAVY INDUSTRIES and has pub. number DE-102011108701-B4.', 'grant_date': '2019, December 24th'}, {'id': '60982', 'Patents_info': 'The DE patent filing (application no. DE-102014012543-A) is held by IFA TECH GMBH and has pub. number DE-102014012543-B4.', 'grant_date': '21st of February, 2019'}, {'id': '60983', 'Patents_info': 'The DE application (number DE-102015121777-A) is held by BOHNERTH OTTO and has publication no. DE-102015121777-B4.', 'grant_date': '2nd Oct 2019'}]}, 'var_call_MacNnjIdOlPDAmCselOw2rSL': {'groups': []}, 'var_call_gpw6VOcoT3WNxrFZAngh6UXn': [{'id': '199', 'Patents_info': 'Patent application (no. DE-102013211266-A) from DE, assigned to IBM, with publication number DE-102013211266-B4.', 'filing_date': '2013, June 17th', 'grant_date': '14th Mar 2019', 'cpc': '[\n  {\n    "code": "G06F9/45533",\n    "first": true,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "G06F9/45533",\n    "first": true,\n    "inventive": true,\n    "tree": []\n  }\n]'}, {'id': '9348', 'Patents_info': 'In DE, the patent filing (application no. DE-112014003420-T) is assigned to TOYOTA MOTOR CO LTD and has publication number DE-112014003420-B4.', 'filing_date': 'July 21st, 2014', 'grant_date': '22nd of August, 2019', 'cpc': '[\n  {\n    "code": "F02M59/102",\n    "first": false,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "F02M55/04",\n    "first": true,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "F02M55/04",\n    "first": true,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "F02M59/102",\n    "first": false,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "F02M59/44",\n    "first": false,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "F02M59/06",\n    "first": false,\n    "inventive": false,\n    "tree": []\n  },\n  {\n    "code": "F04B53/001",\n    "first": false,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "F02M59/368",\n    "first": false,\n    "inventive": false,\n    "tree": []\n  },\n  {\n    "code": "F04B53/001",\n    "first": false,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "F02M59/44",\n    "first": false,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "F02M59/368",\n    "first": false,\n    "inventive": false,\n    "tree": []\n  },\n  {\n    "code": "F02M59/06",\n    "first": false,\n    "inventive": false,\n    "tree": []\n  }\n]'}, {'id': '9350', 'Patents_info': 'In DE, the patent filing (application number DE-102015221196-A) is owned by SCHOTT AG and has pub. number DE-102015221196-B4.', 'filing_date': 'on October 29th, 2015', 'grant_date': 'September the 19th, 2019', 'cpc': '[\n  {\n    "code": "G01D11/24",\n    "first": false,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "B23K1/0016",\n    "first": true,\n    "inventive": true,\n    "tree": []\n  }\n]'}, {'id': '60947', 'Patents_info': 'The DE patent filing (application no. DE-102018213557-A) is assigned to BAYERISCHE MOTOREN WERKE AG and has publication number DE-102018213557-B3.', 'filing_date': 'dated 10th August 2018', 'grant_date': '26th September 2019', 'cpc': '[\n  {\n    "code": "F02D41/0087",\n    "first": false,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "F02D15/00",\n    "first": false,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "F02D13/06",\n    "first": true,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "Y02T10/12",\n    "first": false,\n    "inventive": false,\n    "tree": []\n  }\n]'}, {'id': '60978', 'Patents_info': 'In DE, the patent application (number DE-102011108701-A) is belonging to SUMITOMO HEAVY INDUSTRIES and has pub. number DE-102011108701-B4.', 'filing_date': 'Jul 27th, 2011', 'grant_date': '2019, December 24th', 'cpc': '[\n  {\n    "code": "F16C33/4676",\n    "first": false,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "F16C33/4682",\n    "first": false,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "F16C33/4635",\n    "first": true,\n    "inventive": true,\n    "tree": []\n  }\n]'}, {'id': '60983', 'Patents_info': 'The DE application (number DE-102015121777-A) is held by BOHNERTH OTTO and has publication no. DE-102015121777-B4.', 'filing_date': 'December 15th, 2015', 'grant_date': '2nd Oct 2019', 'cpc': '[\n  {\n    "code": "A47J37/01",\n    "first": false,\n    "inventive": true,\n    "tree": []\n  },\n  {\n    "code": "A21C9/00",\n    "first": true,\n    "inventive": true,\n    "tree": []\n  }\n]'}], 'var_call_aug9iYFiMk4XoFO2UdyfypWt': ['cpc_definition'], 'var_call_A9wpvoxhstAfCpfAVll0D2La': 'file_storage/call_A9wpvoxhstAfCpfAVll0D2La.json', 'var_call_AzsDdqVMuXyEqDMATlP00jSW': {'num': 137, 'sample': [{'symbol': 'B04', 'titleFull': 'CENTRIFUGAL APPARATUS OR MACHINES FOR CARRYING-OUT PHYSICAL OR CHEMICAL PROCESSES'}, {'symbol': 'B23', 'titleFull': 'MACHINE TOOLS; METAL-WORKING NOT OTHERWISE PROVIDED FOR'}, {'symbol': 'B99', 'titleFull': 'SUBJECT MATTER NOT OTHERWISE PROVIDED FOR IN THIS SECTION'}, {'symbol': 'B29', 'titleFull': 'WORKING OF PLASTICS; WORKING OF SUBSTANCES IN A PLASTIC STATE IN GENERAL'}, {'symbol': 'B33', 'titleFull': 'ADDITIVE MANUFACTURING TECHNOLOGY'}, {'symbol': 'C22', 'titleFull': 'METALLURGY; FERROUS OR NON-FERROUS ALLOYS; TREATMENT OF ALLOYS OR NON-FERROUS METALS'}, {'symbol': 'D99', 'titleFull': 'SUBJECT MATTER NOT OTHERWISE PROVIDED FOR IN THIS SECTION'}, {'symbol': 'A45', 'titleFull': 'HAND OR TRAVELLING ARTICLES'}, {'symbol': 'A24', 'titleFull': "TOBACCO; CIGARS; CIGARETTES; SIMULATED SMOKING DEVICES; SMOKERS' REQUISITES"}, {'symbol': 'A61', 'titleFull': 'MEDICAL OR VETERINARY SCIENCE; HYGIENE'}]}, 'var_call_B92rC2EG0Cyg2FIrXqCvmYJ2': {'groups': []}, 'var_call_B7sAOG9vRL06schHfzct16QN': {'count': 0, 'samples': []}, 'var_call_Cawz9A07oyuMDrsEAlnn3AAV': {'results': []}, 'var_call_DjIRIzTphXoPv2JYVVGcAuGY': {'has_G06': True, 'has_G06F': False, 'some_symbols_sample': ['B04', 'B23', 'B99', 'B29', 'B33', 'C22', 'D99', 'A45', 'A24', 'A61', 'A63', 'A22', 'A42', 'A99', 'A43', 'A01', 'A62', 'A23', 'A47', 'A46', 'A44', 'A21', 'A41', 'B27', 'B68', 'B31', 'B26', 'B66', 'B02', 'B65', 'B61', 'B24', 'B06', 'B43', 'B62', 'B64', 'B22', 'B28', 'B09', 'B01', 'B63', 'B60', 'B44', 'B07', 'B08', 'B82', 'B42', 'B32', 'B81', 'B05']}}
+
+exec(code, env_args)

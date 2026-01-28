@@ -1,0 +1,80 @@
+code = """import json
+
+# Load files
+with open(var_call_3V3LBuTrnTf5FD8CAnAfAlHL, 'r', encoding='utf-8') as f:
+    civic_docs = json.load(f)
+with open(var_call_NT3Q3dsTFn3mJHGGbLBIEHZH, 'r', encoding='utf-8') as f:
+    funding = json.load(f)
+
+# normalize amounts
+for r in funding:
+    try:
+        r['Amount'] = int(r.get('Amount', 0))
+    except:
+        r['Amount'] = 0
+
+all_text = '\n'.join(doc.get('text', '') for doc in civic_docs)
+all_text_low = all_text.lower()
+
+# keywords
+disaster_keywords = ['fema', 'caloes', 'caljpia', 'caloja', 'disaster', 'recovery', 'fire', 'woolsey', 'emergency']
+start_indicators = ['begin construction', 'advertise', 'begin:', 'begin', 'start', 'started', 'construction was', 'complete construction']
+
+matched = {}
+
+for rec in funding:
+    proj = rec.get('Project_Name', '')
+    proj_low = proj.lower()
+    base = proj_low.split(' (')[0].strip()
+    variants = [proj_low]
+    if base and base != proj_low:
+        variants.append(base)
+    is_disaster_by_name = any(kw in proj_low for kw in disaster_keywords)
+
+    found = False
+    for name_variant in variants:
+        if not name_variant:
+            continue
+        start_pos = 0
+        while True:
+            idx = all_text_low.find(name_variant, start_pos)
+            if idx == -1:
+                break
+            ctx_start = max(0, idx - 200)
+            ctx_end = min(len(all_text_low), idx + len(name_variant) + 200)
+            context = all_text_low[ctx_start:ctx_end]
+            if '2022' in context and (any(si in context for si in start_indicators) or any(kw in context for kw in disaster_keywords) or is_disaster_by_name):
+                matched[rec['Project_Name']] = rec
+                found = True
+                break
+            start_pos = idx + 1
+        if found:
+            break
+
+# additional fallback: if project name contains disaster keyword and appears anywhere with 2022 nearby
+for rec in funding:
+    if rec['Project_Name'] in matched:
+        continue
+    proj_low = rec.get('Project_Name','').lower()
+    if any(kw in proj_low for kw in ['fema','caloes','caljpia','caloja']):
+        base = proj_low.split(' (')[0].strip()
+        idx = all_text_low.find(base)
+        if idx != -1:
+            ctx_start = max(0, idx - 200)
+            ctx_end = min(len(all_text_low), idx + len(base) + 200)
+            context = all_text_low[ctx_start:ctx_end]
+            if '2022' in context:
+                matched[rec['Project_Name']] = rec
+
+matched_list = list(matched.values())
+
+total = sum(r['Amount'] for r in matched_list)
+
+output = {'total_funding': total, 'matched_projects': [{'Project_Name': r['Project_Name'], 'Amount': r['Amount']} for r in matched_list]}
+
+print('__RESULT__:')
+print(json.dumps(output))"""
+
+env_args = {'var_call_ewZx9GEvkYHuhFSdepF0EpJu': ['civic_docs'], 'var_call_P0nG1k5Ak7Vdxl9PloiZ7Cjc': ['Funding'], 'var_call_3V3LBuTrnTf5FD8CAnAfAlHL': 'file_storage/call_3V3LBuTrnTf5FD8CAnAfAlHL.json', 'var_call_NT3Q3dsTFn3mJHGGbLBIEHZH': 'file_storage/call_NT3Q3dsTFn3mJHGGbLBIEHZH.json', 'var_call_4Yfs9I5iEcW8QJz9OXfc3Bde': 500}
+
+exec(code, env_args)

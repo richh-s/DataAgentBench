@@ -1,0 +1,30 @@
+code = """# Load the query results
+import json
+
+# Get high rating review counts from storage
+high_rating_data = locals()['var_functions.query_db:6']
+
+# Get business names from storage  
+business_names_data = locals()['var_functions.query_db:8']
+
+# Create a mapping of gmap_id to business name
+business_map = {item['gmap_id']: item['name'] for item in business_names_data}
+
+# Prepare the final answer
+result = []
+for item in high_rating_data[:3]:  # Get top 3
+    gmap_id = item['gmap_id']
+    count = item['high_rating_count']
+    name = business_map.get(gmap_id, 'Unknown Business')
+    result.append({
+        'business_name': name,
+        'high_rating_review_count': count
+    })
+
+# Print in the required format
+print('__RESULT__:')
+print(json.dumps(result))"""
+
+env_args = {'var_functions.list_db:0': ['review'], 'var_functions.query_db:2': [{'time': 'September 03, 2020 at 04:15 PM', 'rating': '5', 'gmap_id': 'gmap_44'}, {'time': '2021-04-12 17:07:52', 'rating': '5', 'gmap_id': 'gmap_44'}, {'time': '2018-04-23 16:24:26', 'rating': '5', 'gmap_id': 'gmap_44'}, {'time': '2017-07-10 22:12:19', 'rating': '5', 'gmap_id': 'gmap_44'}, {'time': 'May 19, 2021 at 03:55 AM', 'rating': '3', 'gmap_id': 'gmap_44'}], 'var_functions.query_db:5': [{'time': 'March 07, 2019 at 12:56 AM', 'rating': '5', 'gmap_id': 'gmap_41'}, {'time': '18 Jan 2019, 03:19', 'rating': '5', 'gmap_id': 'gmap_41'}, {'time': '06 Jan 2019, 02:45', 'rating': '5', 'gmap_id': 'gmap_41'}, {'time': '10 Jul 2019, 18:22', 'rating': '1', 'gmap_id': 'gmap_43'}, {'time': '14 Jan 2019, 18:29', 'rating': '5', 'gmap_id': 'gmap_43'}, {'time': 'November 07, 2019 at 04:55 PM', 'rating': '5', 'gmap_id': 'gmap_38'}, {'time': 'June 21, 2019 at 10:02 AM', 'rating': '5', 'gmap_id': 'gmap_38'}, {'time': 'October 24, 2019 at 08:55 PM', 'rating': '4', 'gmap_id': 'gmap_38'}, {'time': '2019-01-20 15:48:33', 'rating': '1', 'gmap_id': 'gmap_45'}, {'time': '2019-03-27 20:30:42', 'rating': '5', 'gmap_id': 'gmap_17'}], 'var_functions.query_db:6': [{'gmap_id': 'gmap_35', 'high_rating_count': '19'}, {'gmap_id': 'gmap_53', 'high_rating_count': '17'}, {'gmap_id': 'gmap_20', 'high_rating_count': '14'}, {'gmap_id': 'gmap_40', 'high_rating_count': '13'}, {'gmap_id': 'gmap_72', 'high_rating_count': '12'}, {'gmap_id': 'gmap_62', 'high_rating_count': '12'}, {'gmap_id': 'gmap_46', 'high_rating_count': '12'}, {'gmap_id': 'gmap_47', 'high_rating_count': '11'}, {'gmap_id': 'gmap_17', 'high_rating_count': '8'}, {'gmap_id': 'gmap_7', 'high_rating_count': '7'}, {'gmap_id': 'gmap_57', 'high_rating_count': '7'}, {'gmap_id': 'gmap_56', 'high_rating_count': '7'}, {'gmap_id': 'gmap_11', 'high_rating_count': '7'}, {'gmap_id': 'gmap_69', 'high_rating_count': '6'}, {'gmap_id': 'gmap_65', 'high_rating_count': '6'}, {'gmap_id': 'gmap_29', 'high_rating_count': '6'}, {'gmap_id': 'gmap_64', 'high_rating_count': '5'}, {'gmap_id': 'gmap_51', 'high_rating_count': '5'}, {'gmap_id': 'gmap_2', 'high_rating_count': '5'}, {'gmap_id': 'gmap_59', 'high_rating_count': '4'}, {'gmap_id': 'gmap_5', 'high_rating_count': '4'}, {'gmap_id': 'gmap_30', 'high_rating_count': '4'}, {'gmap_id': 'gmap_3', 'high_rating_count': '4'}, {'gmap_id': 'gmap_15', 'high_rating_count': '4'}, {'gmap_id': 'gmap_41', 'high_rating_count': '3'}, {'gmap_id': 'gmap_34', 'high_rating_count': '3'}, {'gmap_id': 'gmap_26', 'high_rating_count': '3'}, {'gmap_id': 'gmap_14', 'high_rating_count': '3'}, {'gmap_id': 'gmap_13', 'high_rating_count': '3'}, {'gmap_id': 'gmap_61', 'high_rating_count': '2'}, {'gmap_id': 'gmap_58', 'high_rating_count': '2'}, {'gmap_id': 'gmap_38', 'high_rating_count': '2'}, {'gmap_id': 'gmap_0', 'high_rating_count': '2'}, {'gmap_id': 'gmap_78', 'high_rating_count': '1'}, {'gmap_id': 'gmap_71', 'high_rating_count': '1'}, {'gmap_id': 'gmap_67', 'high_rating_count': '1'}, {'gmap_id': 'gmap_63', 'high_rating_count': '1'}, {'gmap_id': 'gmap_60', 'high_rating_count': '1'}, {'gmap_id': 'gmap_49', 'high_rating_count': '1'}, {'gmap_id': 'gmap_43', 'high_rating_count': '1'}, {'gmap_id': 'gmap_39', 'high_rating_count': '1'}, {'gmap_id': 'gmap_33', 'high_rating_count': '1'}, {'gmap_id': 'gmap_31', 'high_rating_count': '1'}, {'gmap_id': 'gmap_28', 'high_rating_count': '1'}, {'gmap_id': 'gmap_25', 'high_rating_count': '1'}, {'gmap_id': 'gmap_19', 'high_rating_count': '1'}, {'gmap_id': 'gmap_16', 'high_rating_count': '1'}, {'gmap_id': 'gmap_12', 'high_rating_count': '1'}, {'gmap_id': 'gmap_1', 'high_rating_count': '1'}], 'var_functions.query_db:8': [{'gmap_id': 'gmap_20', 'name': 'Aurora Massage'}, {'gmap_id': 'gmap_53', 'name': 'The Boochyard @ Local Roots'}, {'gmap_id': 'gmap_35', 'name': 'Encino Dermatology & Laser: Alex Khadavi MD'}]}
+
+exec(code, env_args)

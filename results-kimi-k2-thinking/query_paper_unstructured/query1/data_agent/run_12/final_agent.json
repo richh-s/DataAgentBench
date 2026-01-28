@@ -1,0 +1,600 @@
+{
+  "timestamp": "20260117_153016",
+  "start_time": 1768692550.2168894,
+  "end_time": 1768692616.9581897,
+  "duration": 66.74130034446716,
+  "final_result": "1593",
+  "terminate_reason": "return_answer",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a data analysis agent. Use only the tools listed below to answer the user's query, based on the provided DATABASE DESCRIPTION for logical database names and their types (SQL or MongoDB), and the results of previous tool calls.\n\nTOOLS (system will execute):\n- query_db: run a SQL or Mongo query. Returns a list of JSON-serializable records or an error string.\n  Required args: {\"db_name\": \"<logical_db_name>\", \"query\": \"<SQL or Mongo query>\"}\n- list_db: list tables or collections for a given database.\n  Required args: {\"db_name\": \"<logical_db_name>\"}\n- execute_python: run Python code.\n  Required args: {\"code\": \"<python_code>\"}\n- return_answer: finish and return the final answer (plain text).\n  Required args: {\"answer\": \"<final plain-text answer>\"}\n\nINSTRUCTIONS:\n1. After each tool call, its result will be stored in a storage under a key named after the tool call id (you will be told the key name). The next message will include both the result (or a preview if it's large) and the storage key name.\n2. Inside execute_python code you may read storage entries using the provided key names, e.g., if the tool call id is 'functions.tool:id', you can access its result via `locals()['var_functions.tool:id']` in your code.\n3. You cannot modify or reassign those storage-provided variables; you may read them and create new variables as needed.\n4. If a tool result is large, the next message will include a preview (first 10000 characters) and the storage entry will be the .json file path (a string) where the full result is stored. To access the full result, your execute_python code must open and read that .json file.\n\nKEY RULES (must follow exactly):\n1. Always use tool calls. Do not output plain text, explanations, or reasoning.\n2. Include all required arguments for the tool you call.\n3. For query_db, always specify db_name and query. Refer the DATABASE DESCRIPTION for db_name and query format.\n4. For PostgreSQL, wrap mixed-case or uppercase column names in double quotes.\n5. For list_db, refer the DATABASE DESCRIPTION to specify db_name.\n6. Use execute_python for data processing as needed. \n7. When using execute_python, your code will be quoted by triple double-quotes and passed as a string to `exec(...)` for execution in a Python 3.12 environment with only pandas and pyarrow installed. So you must ensure your code is compatible with this execution method. For exampe, do not use triple double-quotes in your code, as they may interfere with parsing. Do not use non-built-in or non-installed packages.\n8. When using execute_python, your code must print the result at the end exactly as shown in the PRINT FORMAT section below. The printed result must be a string that can be successfully parsed by json.loads() without errors.\n\nPRINT FORMAT (must match exactly):\n----BEGIN PRINT FORMAT----\nprint(\"__RESULT__:\")\nprint(your_json_serializable_string_here)\n----END PRINT FORMAT----\n\nFor simple types (int, float, str, bool, None), you may use json.dumps() to produce a valid JSON string.\nFor complex or non-JSON-serializable types, you must convert them into JSON-compatible forms before printing.\nFor lists or dictionaries, you must ensure that all nested elements are also converted into JSON-serializable types.\n9. Return the final answer only via a single return_answer tool call. Do not include extra text, explanation, or formatting.\n\nEXAMPLES:\n- query_db:\n{\"tool\": \"query_db\", \"args\": {\"db_name\": \"some_db_name\", \"query\": \"SELECT * FROM some_table LIMIT some_limit;\"}} # for SQL databases\n{\"tool\": \"query_db\", \"args\": {\"db_name\": \"some_db_name\", \"query\": \"{\"collection\": \"some_collection\", \"filter\": {some_filter}, \"projection\": {some_projection}, \"limit\": some_limit}\"}} # for MongoDB databases\n\n- list_db:\n{\"tool\": \"list_db\", \"args\": {\"db_name\": \"some_db_name\"}}\n\n- execute_python:\n{\"tool\": \"execute_python\", \"args\": {\"code\": \"import pandas as pd\n# rl1 and rl2 are the keys of two JSON-serializable record lists in storage\ndf1 = pd.DataFrame(rl1)\ndf2 = pd.DataFrame(rl2)\nresult = pd.merge(df1, df2, on='id').head(10).to_json(orient='records')\nprint('__RESULT__:')\nprint(result)\"}}\n\n- return_answer:\n{\"tool\": \"return_answer\", \"args\": {\"answer\": \"\u2026final plain-text answer\u2026\"}}\n\nIf you cannot proceed, call return_answer with a short explanatory message.\n\nDo not output explanations, reasoning, or any natural language outside of the required tool calls."
+    },
+    {
+      "role": "user",
+      "content": "QUERY:\nWhat is the total citation count for papers in the 'food' domain?\n\nDATABASE DESCRIPTION:\nYou are working with two databases to solve this query.\n\nHere are the descriptions of these two databases:\n\n1. paper_docs_database\n   - This database is stored in a MongoDB database and contains unstructured text documents about academic papers from HCI research venues.\n   - This database consists of one collection:\n     - paper_docs\n       - This collection contains full text content of academic papers. Each document represents a single paper with its complete text.\n       - Fields:\n         - _id: Unique document identifier\n         - filename (str): Name of the source file (e.g., \"A Lived Informatics Model of Personal Informatics.txt\")\n         - text (str): Full text content of the paper\n\n   - Each document contains the full text of an academic paper. For each paper, you may need to extract:\n     - title: The title of the paper (matches the filename without .txt extension)\n     - year: Publication year\n     - venue: Conference or journal venue (e.g., \"CHI\", \"Ubicomp\", \"CSCW\")\n     - source: Publisher (e.g., \"ACM\", \"IEEE\")\n     - domain: Research domain/topic (e.g., \"food\", \"physical activity\", \"sleep\", \"mental\")\n     - contribution: Type of contribution (e.g., \"empirical\", \"artifact\", \"theoretical\", \"survey\")\n\n2. citations_database\n   - This database is stored in a SQLite database and contains structured citation information for papers.\n   - This database consists of one table:\n     - Citations\n       - This table contains citation records for papers by year. Paper titles can be joined with paper information extracted from the paper documents.\n       - Fields:\n         - id (int): Unique identifier for the citation record\n         - title (str): Title of the paper (joining key with paper_docs)\n         - citation_count (int): Number of citations received in that year\n         - citation_year (int): Year the citations were received\n\nTo answer queries, you will typically need to:\n1. Query the Citations table from the SQLite database\n2. Read the paper documents from MongoDB to extract paper information (domain, venue, source, contribution, year)\n3. Join the citation data with the extracted paper information based on title\n\nHINTS:\n- The paper title in the Citations SQLite table matches the filename (without .txt extension) of documents in MongoDB.\n- Common venues include: \"CHI\", \"Ubicomp\", \"CSCW\", \"DIS\", \"PervasiveHealth\", \"WWW\", \"IUI\", \"OzCHI\", \"TEI\", \"AH\".\n- Common sources (publishers) include: \"ACM\", \"IEEE\", \"PubMed\".\n- Common domains include: \"food\", \"physical activity\", \"sleep\", \"mental\", \"finances\", \"productivity\", \"screen time\", \"social interactions\", \"location\", \"chronic\", \"diabetes\", \"health_behavior\".\n- Contribution types include: \"empirical\", \"artifact\", \"theoretical\", \"survey\", \"methodological\".\n- Fields like domain, source, venue, and contribution may contain multiple values (e.g., a paper can be in multiple domains or have multiple contribution types).\n- The citation_year in the Citations table represents when citations were received, which is after the paper's publication year.\n- When matching domains or contributions, use substring/contains matching since values may be part of a list."
+    },
+    {
+      "role": "assistant",
+      "tool_calls": []
+    },
+    {
+      "role": "assistant",
+      "tool_calls": []
+    },
+    {
+      "role": "assistant",
+      "tool_calls": []
+    },
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "id": "functions.list_db:0",
+          "function": {
+            "arguments": "{\"db_name\": \"paper_docs_database\"}",
+            "name": "list_db"
+          },
+          "type": "function",
+          "index": 0
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "functions.list_db:0",
+      "name": "list_db",
+      "content": "\nThe tool list_db was executed successfully.\n\nThe result is stored under key:\nvar_functions.list_db:0\n\nThe result is:\n[\"paper_docs\"]\n"
+    },
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "id": "functions.list_db:2",
+          "function": {
+            "arguments": "{\"db_name\": \"citations_database\"}",
+            "name": "list_db"
+          },
+          "type": "function",
+          "index": 1
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "functions.list_db:2",
+      "name": "list_db",
+      "content": "\nThe tool list_db was executed successfully.\n\nThe result is stored under key:\nvar_functions.list_db:2\n\nThe result is:\n[\"Citations\", \"sqlite_sequence\"]\n"
+    },
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "id": "functions.query_db:5",
+          "function": {
+            "arguments": "{\"db_name\": \"paper_docs_database\", \"query\": \"{\\\"collection\\\": \\\"paper_docs\\\", \\\"filter\\\": {}, \\\"projection\\\": {\\\"filename\\\": 1, \\\"text\\\": 1, \\\"_id\\\": 1}}\"}",
+            "name": "query_db"
+          },
+          "type": "function",
+          "index": 3
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "functions.query_db:5",
+      "name": "query_db",
+      "content": "\nThe tool query_db was executed successfully.\n\nThe result is too large, so it is stored in a file. The file path is stored under key: \nvar_functions.query_db:5\n\nThe preview (first 10000 characters) of the result is:\n[{\"_id\": \"694f5530284b10b11dc0a869\", \"filename\": \"A Lived Informatics Model of Personal Informatics.txt\", \"text\": \"UBICOMP '15, SEPTEMBER 7\\u201311, 2015, OSAKA, JAPAN\\n\\nA Lived Informatics Model of Personal Informatics \\n\\nDaniel A. Epstein1, An Ping2, James Fogarty1, Sean A. Munson2 \\n1Computer Science & Engineering, 2Human Centered Design & Engineering \\nDUB Group, University of Washington \\n{depstein, jfogarty}@cs.washington.edu, {anping, smunson}@uw.edu \\n\\nABSTRACT \\nCurrent  models  of  how  people  use  personal  informatics \\nsystems are largely based in behavior change goals. They do \\nnot  adequately  characterize  the  integration  of  self-tracking \\ninto  everyday  life  by  people  with  varying  goals.  We  build \\nupon  prior  work  by  embracing  the  perspective  of  lived \\ninformatics to propose a new model of personal informatics. \\nWe examine how lived informatics manifests in the habits of \\nself-trackers across a variety of domains, first by surveying \\n105, 99, and 83 past and present trackers of physical activity, \\nfinances, and location and then by interviewing 22 trackers \\nregarding their lived informatics experiences. We develop a \\nmodel characterizing tracker processes of deciding to track \\nand selecting a tool, elaborate on tool usage during collection, \\nintegration,  and  reflection  as  components  of  tracking  and \\nacting,  and  discuss  the  lapsing  and  potential  resuming  of \\ntracking.  We  use  our  model  to  surface  underexplored \\nchallenges  in  lived  informatics,  thus  identifying  future \\ndirections for personal informatics design and research.  \\n\\nAuthor Keywords \\nLived Informatics; Personal Informatics; Self-Tracking; \\nLapsing; Physical Activity; Finances; Location. \\n\\nACM Classification Keywords \\nH.5.m. Information interfaces and presentation (e.g., HCI). \\n\\nINTRODUCTION \\nPersonal informatics, or collecting and reflecting on personal \\ninformation,  has  become  increasingly  prevalent.  Personal \\ninformatics can serve a goal-driven purpose, such as tracking \\nweight loss, increasing physical activity, having a record of \\nplaces  visited,  or  tracking  student  loan  payments.  Beyond \\nthese goal-driven motivations, self-tracking tools are now a \\npart  of  everyday  life,  or  \\u201clived  informatics\\u201d,  with  people \\ntracking out of curiosity or a fascination with numbers [34]. \\nThe pervasiveness of self-tracking tools has led researchers \\nto  study  people\\u2019s  use  of  commercial  tools  for  tracking \\nlocation  [24,30],  finances  [20],  food  [11],  weight  [19,25], \\nand  physical  activity  [16,34]  and  to  develop  research \\nprototypes to expand our understanding of usage [3,8,12,40]. \\n\\nPermission  to  make  digital  or  hard  copies  of  all  or  part  of  this  work  for\\npersonal or classroom use is granted without fee provided that copies are \\nnot made or distributed for profit or commercial advantage and that copies\\nbear  this  notice  and  the  full  citation  on  the  first  page.  Copyrights  for\\ncomponents  of  this  work  owned  by  others  than  ACM  must  be  honored.\\nAbstracting  with  credit  is  permitted.  To  copy  otherwise,  or  republish,  to\\npost on servers or to redistribute to lists, requires prior specific permission\\nand/or a fee. Request permissions from permissions@acm.org. \\nUbiComp '15, September 7-11, 2015, Osaka, Japan. \\nCopyright 2015 \\u00a9 ACM 978-1-4503-3574-4/15/09...$15.00. \\nhttp://dx.doi.org/10.1145/2750858.2804250 \\n\\nThe first and most commonly used model for understanding \\nhow  people  use  personal  informatics  tools  is  Li  et  al.\\u2019s \\nfive-stage model [21]. The model characterizes how people \\ntransition  between  preparation,  collection,  integration, \\nreflection, and action, describing the iterative nature of these \\nstages  and  the  barriers  that  prevent  transitions.  The  model \\nemphasizes an end goal of knowledge supporting behavior \\nchange.  The  model  has  since  been  expanded  and  clarified, \\ndividing  and  combining  stages.  For  goal-oriented  trackers, \\nreflection  can  be  divided  into  maintenance  and  discovery \\n[22].  For  some  trackers,  engagement  with  and  gaining  an \\nunderstanding  of  personal  data  may  be  the  goal  in  itself, \\ncausing the action stage to be foregone [41]. Reflection often \\noccurs  during  collection  rather  than  being  a  separate  stage \\n[6], which leads to an alternative three-stage iterative model \\nof configuration, data capture, and feedback [7]. \\n\\nHowever,  research  on  everyday  self-tracking  behavior \\nidentifies several uses of personal informatics not described \\nby  current  models.  For  example,  the  five-stage  model \\ndescribes  self-trackers  switching  tools  to  better  fit  their \\ninformation  needs  [21].  People  also  switch  tools  because \\ntheir  devices  break  [16,34],  they  change  phones  [34],  or \\nbecause \\n[34]. \\nSelf-trackers also fail to sustain the habit or get frustrated and \\ngive up on tools [11]. Articulating a model that encompasses \\nthese behaviors can offer better guidance to designers.  \\n\\nreceive  a  new \\n\\nrecommendation \\n\\nthey \\n\\nTo develop this model, we studied self-tracking of a variety \\nof behaviors to understand how lived informatics manifests \\nin the habits of self-trackers. Specifically, we surveyed 105, \\n99,  and  83  past  and  present  trackers  of  physical  activity, \\nfinances,  and  location  on  their  habits  and  conducted  22 \\ninterviews. We report on how people decide to start tracking \\nand pick a tool, how they use that tool, how and why people \\nswitch  between  tools,  and  why  people  stop  tracking.  We \\ndevelop  an  expanded  model  that  captures  the  practices  of \\nself-trackers  motivated  to  track  to  change  behaviors, \\ninstrumenting an activity, and curiosity. \\n\\nSpecifically, we find: \\n\\u2022  In  addition  to  being  motivated  to  track  in  support  of \\nbehavior change goals, people start tracking to instrument \\nan activity or out of pure curiosity. \\n\\n\\u2022  People\\u2019s  motivations  for  tracking  guide  the  selection  of \\ntracking  tools.  Behavior-change  trackers  do  substantial \\nbackground  research  and  optimize  a  tool  for  their  goal, \\ninstrumental  trackers  try  to  maximize  their  benefit  from \\nthe  tools,  and  curiosity-driven  trackers  often  do  not \\nactively consider tool selection. \\n\\n731\\n\\n \\n \\n \\n \\n\\f\\u2022  Usage of tools varies by domain and reason for tracking, \\nprimarily  because  people\\u2019s  motivations  are  different  in \\neach domain. Behavior change trackers collect and review \\ndata  frequently  and  are  bothered  by  inaccurate  logs, \\ninstrumental trackers track when the benefits outweigh the \\neffort, and curiosity-driven trackers are motivated by how \\ninteresting they find the data they are tracking. \\n\\n\\u2022  People frequently switch tools, and in doing so learn about \\n\\nwhat and how they are interested in tracking.  \\n\\n\\u2022  People  lapse  in  their  tool  use  in  four  different  ways: \\ntrack,  difficulty  managing  upkeep, \\n\\nforgetting \\nintentionally skipping entries, and suspending tracking. \\n\\nto \\n\\nThese  findings  inform  a  revised  model  of  how  people  use \\nself-tracking  tools,  independent  of  original  motivation, \\nsupplementing  the  stage-based  model  for  behavior-change \\ntracking. This informs a set of open design problems: \\n\\u2022  Designing to resume tracking after a lapse, including how \\nto use historical data collected before, or even during, the \\nlapse.  For  example,  should  a  food  journal  present \\nsomeone\\u2019s  previous  eating  habits  when  they  decide  to \\nresume tracking to aid in weight loss? If so, how? \\n\\n\\u2022  Designing to avoid inertia around a long-used tool that no \\nlonger  supports  a  self-tracker\\u2019s  goal.  For  example,  how \\ncan a financial tracking tool integrate historical data and \\nprovide an intuitive interface to a person who has managed \\ntheir finances with a custom spreadsheet for years? \\n\\n\\u2022  Designing to support people\\u2019s various goals and transitions \\nbetween  them.  How can the design of a location-tracking \\napplication  like  Foursquare  support  someone  who,  upon \\nreceiving a badge for frequent check-ins, becomes curious \\nor  even  concerned  about  how  much  they  spend  at \\nrestaurants?  Can  a  location  diary  like  Moves  show \\nsomeone who tries the application out of curiosity how it \\ncan help them achieve their fitness goals? \\n\\nBACKGROUND \\nThis  section  reviews  prior  work  on  models  of  personal \\ninformatics  use,  research  examining  how  people  use  tools, \\nand how that use changes over time. \\n\\nModels of Personal Informatics \\nLi et al. develop a stage-based model of personal informatics \\nsystems  and  describe  barriers  people  face  in  each  stage \\n(Figure 1) [21]. The model has five stages: 1) preparation, or \\nstarting to collect data and thinking about what information \\nto  record  and  how  to  collect  it;  2)  collection,  or  gathering \\ndata;  3)  integration,  or  preparing  data  to  reflect  upon; \\n4) reflection, or examining and exploring data; and 5) action, \\nor  taking  one\\u2019s  newfound  understanding  of  themselves  to \\ninform changes. Motivated by the Transtheoretical Model of \\nBehavior  Change  (TTM)  [32],  Li  et  al.  later  identify  two \\nphases  of  reflection,  discovery  and  maintenance,  and  note \\npeople ask different types of questions in each phase [22]. \\n\\nFrom  studying  practices  of  the  Quantified  Self  movement, \\nChoe  et  al.  learn  that  reflection  often  occurs  when  data  is \\ncaptured  [6]  and  propose  a  new  model  for  self-monitoring \\n\\n732\\n\\nUBICOMP '15, SEPTEMBER 7\\u201311, 2015, OSAKA, JAPAN\\n\\nFigure 1. Li et al.\\u2019s five-stage model of personal informatics,\\nreprinted  with  permission  [21].  Pri\n"
+    },
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "id": "functions.query_db:8",
+          "function": {
+            "arguments": "{\"db_name\": \"citations_database\", \"query\": \"SELECT * FROM Citations;\"}",
+            "name": "query_db"
+          },
+          "type": "function",
+          "index": 5
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "functions.query_db:8",
+      "name": "query_db",
+      "content": "\nThe tool query_db was executed successfully.\n\nThe result is too large, so it is stored in a file. The file path is stored under key: \nvar_functions.query_db:8\n\nThe preview (first 10000 characters) of the result is:\n[{\"id\": \"1\", \"title\": \"Expense Control: A Gamified, Semi-Automated, Crowd-Based Approach For Receipt Capturing\", \"citation_count\": \"4\", \"citation_year\": \"2017\"}, {\"id\": \"2\", \"title\": \"Expense Control: A Gamified, Semi-Automated, Crowd-Based Approach For Receipt Capturing\", \"citation_count\": \"95\", \"citation_year\": \"2018\"}, {\"id\": \"3\", \"title\": \"Understanding My Data, Myself: Supporting Self-reflection with Ubicomp Technologies\", \"citation_count\": \"32\", \"citation_year\": \"2012\"}, {\"id\": \"4\", \"title\": \"Understanding My Data, Myself: Supporting Self-reflection with Ubicomp Technologies\", \"citation_count\": \"29\", \"citation_year\": \"2013\"}, {\"id\": \"5\", \"title\": \"Understanding My Data, Myself: Supporting Self-reflection with Ubicomp Technologies\", \"citation_count\": \"18\", \"citation_year\": \"2014\"}, {\"id\": \"6\", \"title\": \"Understanding My Data, Myself: Supporting Self-reflection with Ubicomp Technologies\", \"citation_count\": \"95\", \"citation_year\": \"2015\"}, {\"id\": \"7\", \"title\": \"Understanding My Data, Myself: Supporting Self-reflection with Ubicomp Technologies\", \"citation_count\": \"14\", \"citation_year\": \"2016\"}, {\"id\": \"8\", \"title\": \"Sundroid: Solar Radiation Awareness with Smartphones\", \"citation_count\": \"12\", \"citation_year\": \"2012\"}, {\"id\": \"9\", \"title\": \"Sundroid: Solar Radiation Awareness with Smartphones\", \"citation_count\": \"76\", \"citation_year\": \"2013\"}, {\"id\": \"10\", \"title\": \"Sundroid: Solar Radiation Awareness with Smartphones\", \"citation_count\": \"55\", \"citation_year\": \"2014\"}, {\"id\": \"11\", \"title\": \"Sundroid: Solar Radiation Awareness with Smartphones\", \"citation_count\": \"5\", \"citation_year\": \"2015\"}, {\"id\": \"12\", \"title\": \"Sundroid: Solar Radiation Awareness with Smartphones\", \"citation_count\": \"4\", \"citation_year\": \"2016\"}, {\"id\": \"13\", \"title\": \"Sundroid: Solar Radiation Awareness with Smartphones\", \"citation_count\": \"12\", \"citation_year\": \"2017\"}, {\"id\": \"14\", \"title\": \"Sundroid: Solar Radiation Awareness with Smartphones\", \"citation_count\": \"28\", \"citation_year\": \"2018\"}, {\"id\": \"15\", \"title\": \"Sundroid: Solar Radiation Awareness with Smartphones\", \"citation_count\": \"30\", \"citation_year\": \"2019\"}, {\"id\": \"16\", \"title\": \"Sundroid: Solar Radiation Awareness with Smartphones\", \"citation_count\": \"65\", \"citation_year\": \"2020\"}, {\"id\": \"17\", \"title\": \"A Quantified-Self Framework for Exploring and Enhancing Personal Productivity\", \"citation_count\": \"4\", \"citation_year\": \"2020\"}, {\"id\": \"18\", \"title\": \"A Quantified-Self Framework for Exploring and Enhancing Personal Productivity\", \"citation_count\": \"72\", \"citation_year\": \"2021\"}, {\"id\": \"19\", \"title\": \"A Quantified-Self Framework for Exploring and Enhancing Personal Productivity\", \"citation_count\": \"26\", \"citation_year\": \"2022\"}, {\"id\": \"20\", \"title\": \"A Quantified-Self Framework for Exploring and Enhancing Personal Productivity\", \"citation_count\": \"92\", \"citation_year\": \"2023\"}, {\"id\": \"21\", \"title\": \"A Quantified-Self Framework for Exploring and Enhancing Personal Productivity\", \"citation_count\": \"84\", \"citation_year\": \"2024\"}, {\"id\": \"22\", \"title\": \"A Quantified-Self Framework for Exploring and Enhancing Personal Productivity\", \"citation_count\": \"90\", \"citation_year\": \"2025\"}, {\"id\": \"23\", \"title\": \"Why We Use and Abandon Smart Devices\", \"citation_count\": \"54\", \"citation_year\": \"2016\"}, {\"id\": \"24\", \"title\": \"Why We Use and Abandon Smart Devices\", \"citation_count\": \"29\", \"citation_year\": \"2017\"}, {\"id\": \"25\", \"title\": \"Why We Use and Abandon Smart Devices\", \"citation_count\": \"58\", \"citation_year\": \"2018\"}, {\"id\": \"26\", \"title\": \"Why We Use and Abandon Smart Devices\", \"citation_count\": \"76\", \"citation_year\": \"2019\"}, {\"id\": \"27\", \"title\": \"Why We Use and Abandon Smart Devices\", \"citation_count\": \"36\", \"citation_year\": \"2020\"}, {\"id\": \"28\", \"title\": \"Why We Use and Abandon Smart Devices\", \"citation_count\": \"1\", \"citation_year\": \"2021\"}, {\"id\": \"29\", \"title\": \"Why We Use and Abandon Smart Devices\", \"citation_count\": \"98\", \"citation_year\": \"2022\"}, {\"id\": \"30\", \"title\": \"Why We Use and Abandon Smart Devices\", \"citation_count\": \"21\", \"citation_year\": \"2023\"}, {\"id\": \"31\", \"title\": \"Why We Use and Abandon Smart Devices\", \"citation_count\": \"90\", \"citation_year\": \"2024\"}, {\"id\": \"32\", \"title\": \"One Step Forward, Two Steps Back: The Key to Wearables in the Field is the App\", \"citation_count\": \"44\", \"citation_year\": \"2016\"}, {\"id\": \"33\", \"title\": \"One Step Forward, Two Steps Back: The Key to Wearables in the Field is the App\", \"citation_count\": \"36\", \"citation_year\": \"2017\"}, {\"id\": \"34\", \"title\": \"One Step Forward, Two Steps Back: The Key to Wearables in the Field is the App\", \"citation_count\": \"20\", \"citation_year\": \"2018\"}, {\"id\": \"35\", \"title\": \"One Step Forward, Two Steps Back: The Key to Wearables in the Field is the App\", \"citation_count\": \"28\", \"citation_year\": \"2019\"}, {\"id\": \"36\", \"title\": \"One Step Forward, Two Steps Back: The Key to Wearables in the Field is the App\", \"citation_count\": \"98\", \"citation_year\": \"2020\"}, {\"id\": \"37\", \"title\": \"One Step Forward, Two Steps Back: The Key to Wearables in the Field is the App\", \"citation_count\": \"44\", \"citation_year\": \"2021\"}, {\"id\": \"38\", \"title\": \"One Step Forward, Two Steps Back: The Key to Wearables in the Field is the App\", \"citation_count\": \"14\", \"citation_year\": \"2022\"}, {\"id\": \"39\", \"title\": \"Nurturing wearable and mHealth technologies for self-care: Mindset, tool set and skill set\", \"citation_count\": \"49\", \"citation_year\": \"2017\"}, {\"id\": \"40\", \"title\": \"Nurturing wearable and mHealth technologies for self-care: Mindset, tool set and skill set\", \"citation_count\": \"13\", \"citation_year\": \"2018\"}, {\"id\": \"41\", \"title\": \"I'Ll Be Back: On the Multiple Lives of Users of a Mobile Activity Tracking Application\", \"citation_count\": \"45\", \"citation_year\": \"2019\"}, {\"id\": \"42\", \"title\": \"I'Ll Be Back: On the Multiple Lives of Users of a Mobile Activity Tracking Application\", \"citation_count\": \"78\", \"citation_year\": \"2020\"}, {\"id\": \"43\", \"title\": \"I'Ll Be Back: On the Multiple Lives of Users of a Mobile Activity Tracking Application\", \"citation_count\": \"34\", \"citation_year\": \"2021\"}, {\"id\": \"44\", \"title\": \"I'Ll Be Back: On the Multiple Lives of Users of a Mobile Activity Tracking Application\", \"citation_count\": \"6\", \"citation_year\": \"2022\"}, {\"id\": \"45\", \"title\": \"I'Ll Be Back: On the Multiple Lives of Users of a Mobile Activity Tracking Application\", \"citation_count\": \"94\", \"citation_year\": \"2023\"}, {\"id\": \"46\", \"title\": \"I'Ll Be Back: On the Multiple Lives of Users of a Mobile Activity Tracking Application\", \"citation_count\": \"59\", \"citation_year\": \"2024\"}, {\"id\": \"47\", \"title\": \"A Wee Bit More Interaction: Designing and Evaluating an Overactive Bladder App\", \"citation_count\": \"16\", \"citation_year\": \"2020\"}, {\"id\": \"48\", \"title\": \"A Wee Bit More Interaction: Designing and Evaluating an Overactive Bladder App\", \"citation_count\": \"49\", \"citation_year\": \"2021\"}, {\"id\": \"49\", \"title\": \"A Wee Bit More Interaction: Designing and Evaluating an Overactive Bladder App\", \"citation_count\": \"11\", \"citation_year\": \"2022\"}, {\"id\": \"50\", \"title\": \"A Wee Bit More Interaction: Designing and Evaluating an Overactive Bladder App\", \"citation_count\": \"71\", \"citation_year\": \"2023\"}, {\"id\": \"51\", \"title\": \"A Wee Bit More Interaction: Designing and Evaluating an Overactive Bladder App\", \"citation_count\": \"38\", \"citation_year\": \"2024\"}, {\"id\": \"52\", \"title\": \"A Wee Bit More Interaction: Designing and Evaluating an Overactive Bladder App\", \"citation_count\": \"81\", \"citation_year\": \"2025\"}, {\"id\": \"53\", \"title\": \"Closing the Gap: Supporting Patients' Transition to Self-Management After Hospitalization\", \"citation_count\": \"47\", \"citation_year\": \"2017\"}, {\"id\": \"54\", \"title\": \"Closing the Gap: Supporting Patients' Transition to Self-Management After Hospitalization\", \"citation_count\": \"74\", \"citation_year\": \"2018\"}, {\"id\": \"55\", \"title\": \"Closing the Gap: Supporting Patients' Transition to Self-Management After Hospitalization\", \"citation_count\": \"25\", \"citation_year\": \"2019\"}, {\"id\": \"56\", \"title\": \"Closing the Gap: Supporting Patients' Transition to Self-Management After Hospitalization\", \"citation_count\": \"91\", \"citation_year\": \"2020\"}, {\"id\": \"57\", \"title\": \"Closing the Gap: Supporting Patients' Transition to Self-Management After Hospitalization\", \"citation_count\": \"9\", \"citation_year\": \"2021\"}, {\"id\": \"58\", \"title\": \"Closing the Gap: Supporting Patients' Transition to Self-Management After Hospitalization\", \"citation_count\": \"6\", \"citation_year\": \"2022\"}, {\"id\": \"59\", \"title\": \"Closing the Gap: Supporting Patients' Transition to Self-Management After Hospitalization\", \"citation_count\": \"85\", \"citation_year\": \"2023\"}, {\"id\": \"60\", \"title\": \"Closing the Gap: Supporting Patients' Transition to Self-Management After Hospitalization\", \"citation_count\": \"30\", \"citation_year\": \"2024\"}, {\"id\": \"61\", \"title\": \"Closing the Gap: Supporting Patients' Transition to Self-Management After Hospitalization\", \"citation_count\": \"99\", \"citation_year\": \"2025\"}, {\"id\": \"62\", \"title\": \"Reviewing Reflection: On the Use of Reflection in Interactive System Design\", \"citation_count\": \"11\", \"citation_year\": \"2015\"}, {\"id\": \"63\", \"title\": \"Reviewing Reflection: On the Use of Reflection in Interactive System Design\", \"citation_count\": \"30\", \"citation_year\": \"2016\"}, {\"id\": \"64\", \"title\": \"Reviewing Reflection: On the Use of Reflection in Interactive System Design\", \"citation_count\": \"13\", \"citation_year\": \"2017\"}, {\"id\": \"65\", \"title\": \"Reviewing Reflection: On the Use of Reflection in Interactive System Design\", \"citation_count\": \"49\", \"citation_year\": \"2018\"}, {\"id\": \"66\", \"title\": \"Reviewing Reflection: On the Use of Reflection in Interactive System Design\", \"citation_count\": \"36\", \"citation_year\": \"2019\"}, {\"id\": \"67\", \"title\": \"Beyond Behavior: The Coach's Perspective on Technology in Health Coaching\", \"citation_count\": \"82\", \"citation_year\": \"2020\"}, {\"id\": \"68\", \"title\": \"Beyond Behavior: The Coach's Perspective on Technology in Health Coaching\", \"citation_count\": \"47\",\n"
+    },
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "id": "functions.execute_python:8",
+          "function": {
+            "arguments": "{\"code\": \"import json\\n\\n# Load the paper_docs data (stored in a file path)\\npaper_docs_path = var_functions.query_db:5\\nwith open(paper_docs_path, 'r') as f:\\n    paper_docs = json.load(f)\\n\\n# Load the citations data\\ncitations_path = var_functions.query_db:8\\nwith open(citations_path, 'r') as f:\\n    citations = json.load(f)\\n\\n# Print summary of data for inspection\\nprint('__RESULT__:')\\nprint(json.dumps({\\n    'paper_docs_count': len(paper_docs),\\n    'citations_count': len(citations),\\n    'sample_paper': paper_docs[0] if paper_docs else None,\\n    'sample_citation': citations[0] if citations else None\\n}))\"}",
+            "name": "execute_python"
+          },
+          "type": "function",
+          "index": 4
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "functions.execute_python:8",
+      "name": "execute_python",
+      "content": "\nThe tool execute_python execution failed. The error message is:\n\"Execution failed with exit code 1\\nSyntaxError: invalid syntax\"\n"
+    },
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "id": "functions.execute_python:10",
+          "function": {
+            "arguments": "{\"code\": \"import json\\n\\n# Load the paper_docs data\\npaper_docs_data = locals()['var_functions.query_db:5']\\nif isinstance(paper_docs_data, str):  # It's a file path\\n    with open(paper_docs_data, 'r') as f:\\n        paper_docs = json.load(f)\\nelse:\\n    paper_docs = paper_docs_data\\n\\n# Load the citations data\\ncitations_data = locals()['var_functions.query_db:8']\\nif isinstance(citations_data, str):  # It's a file path\\n    with open(citations_data, 'r') as f:\\n        citations = json.load(f)\\nelse:\\n    citations = citations_data\\n\\nprint('__RESULT__:')\\nprint(json.dumps({\\n    'paper_docs_count': len(paper_docs),\\n    'citations_count': len(citations),\\n    'sample_paper': paper_docs[0] if paper_docs else None,\\n    'sample_citation': citations[0] if citations else None\\n}))\"}",
+            "name": "execute_python"
+          },
+          "type": "function",
+          "index": 5
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "functions.execute_python:10",
+      "name": "execute_python",
+      "content": "\nThe tool execute_python was executed successfully.\n\nThe result is too large, so it is stored in a file. The file path is stored under key: \nvar_functions.execute_python:10\n\nThe preview (first 10000 characters) of the result is:\n{\"paper_docs_count\": 5, \"citations_count\": 1405, \"sample_paper\": {\"_id\": \"694f5530284b10b11dc0a869\", \"filename\": \"A Lived Informatics Model of Personal Informatics.txt\", \"text\": \"UBICOMP '15, SEPTEMBER 7\\u201311, 2015, OSAKA, JAPAN\\n\\nA Lived Informatics Model of Personal Informatics \\n\\nDaniel A. Epstein1, An Ping2, James Fogarty1, Sean A. Munson2 \\n1Computer Science & Engineering, 2Human Centered Design & Engineering \\nDUB Group, University of Washington \\n{depstein, jfogarty}@cs.washington.edu, {anping, smunson}@uw.edu \\n\\nABSTRACT \\nCurrent  models  of  how  people  use  personal  informatics \\nsystems are largely based in behavior change goals. They do \\nnot  adequately  characterize  the  integration  of  self-tracking \\ninto  everyday  life  by  people  with  varying  goals.  We  build \\nupon  prior  work  by  embracing  the  perspective  of  lived \\ninformatics to propose a new model of personal informatics. \\nWe examine how lived informatics manifests in the habits of \\nself-trackers across a variety of domains, first by surveying \\n105, 99, and 83 past and present trackers of physical activity, \\nfinances, and location and then by interviewing 22 trackers \\nregarding their lived informatics experiences. We develop a \\nmodel characterizing tracker processes of deciding to track \\nand selecting a tool, elaborate on tool usage during collection, \\nintegration,  and  reflection  as  components  of  tracking  and \\nacting,  and  discuss  the  lapsing  and  potential  resuming  of \\ntracking.  We  use  our  model  to  surface  underexplored \\nchallenges  in  lived  informatics,  thus  identifying  future \\ndirections for personal informatics design and research.  \\n\\nAuthor Keywords \\nLived Informatics; Personal Informatics; Self-Tracking; \\nLapsing; Physical Activity; Finances; Location. \\n\\nACM Classification Keywords \\nH.5.m. Information interfaces and presentation (e.g., HCI). \\n\\nINTRODUCTION \\nPersonal informatics, or collecting and reflecting on personal \\ninformation,  has  become  increasingly  prevalent.  Personal \\ninformatics can serve a goal-driven purpose, such as tracking \\nweight loss, increasing physical activity, having a record of \\nplaces  visited,  or  tracking  student  loan  payments.  Beyond \\nthese goal-driven motivations, self-tracking tools are now a \\npart  of  everyday  life,  or  \\u201clived  informatics\\u201d,  with  people \\ntracking out of curiosity or a fascination with numbers [34]. \\nThe pervasiveness of self-tracking tools has led researchers \\nto  study  people\\u2019s  use  of  commercial  tools  for  tracking \\nlocation  [24,30],  finances  [20],  food  [11],  weight  [19,25], \\nand  physical  activity  [16,34]  and  to  develop  research \\nprototypes to expand our understanding of usage [3,8,12,40]. \\n\\nPermission  to  make  digital  or  hard  copies  of  all  or  part  of  this  work  for\\npersonal or classroom use is granted without fee provided that copies are \\nnot made or distributed for profit or commercial advantage and that copies\\nbear  this  notice  and  the  full  citation  on  the  first  page.  Copyrights  for\\ncomponents  of  this  work  owned  by  others  than  ACM  must  be  honored.\\nAbstracting  with  credit  is  permitted.  To  copy  otherwise,  or  republish,  to\\npost on servers or to redistribute to lists, requires prior specific permission\\nand/or a fee. Request permissions from permissions@acm.org. \\nUbiComp '15, September 7-11, 2015, Osaka, Japan. \\nCopyright 2015 \\u00a9 ACM 978-1-4503-3574-4/15/09...$15.00. \\nhttp://dx.doi.org/10.1145/2750858.2804250 \\n\\nThe first and most commonly used model for understanding \\nhow  people  use  personal  informatics  tools  is  Li  et  al.\\u2019s \\nfive-stage model [21]. The model characterizes how people \\ntransition  between  preparation,  collection,  integration, \\nreflection, and action, describing the iterative nature of these \\nstages  and  the  barriers  that  prevent  transitions.  The  model \\nemphasizes an end goal of knowledge supporting behavior \\nchange.  The  model  has  since  been  expanded  and  clarified, \\ndividing  and  combining  stages.  For  goal-oriented  trackers, \\nreflection  can  be  divided  into  maintenance  and  discovery \\n[22].  For  some  trackers,  engagement  with  and  gaining  an \\nunderstanding  of  personal  data  may  be  the  goal  in  itself, \\ncausing the action stage to be foregone [41]. Reflection often \\noccurs  during  collection  rather  than  being  a  separate  stage \\n[6], which leads to an alternative three-stage iterative model \\nof configuration, data capture, and feedback [7]. \\n\\nHowever,  research  on  everyday  self-tracking  behavior \\nidentifies several uses of personal informatics not described \\nby  current  models.  For  example,  the  five-stage  model \\ndescribes  self-trackers  switching  tools  to  better  fit  their \\ninformation  needs  [21].  People  also  switch  tools  because \\ntheir  devices  break  [16,34],  they  change  phones  [34],  or \\nbecause \\n[34]. \\nSelf-trackers also fail to sustain the habit or get frustrated and \\ngive up on tools [11]. Articulating a model that encompasses \\nthese behaviors can offer better guidance to designers.  \\n\\nreceive  a  new \\n\\nrecommendation \\n\\nthey \\n\\nTo develop this model, we studied self-tracking of a variety \\nof behaviors to understand how lived informatics manifests \\nin the habits of self-trackers. Specifically, we surveyed 105, \\n99,  and  83  past  and  present  trackers  of  physical  activity, \\nfinances,  and  location  on  their  habits  and  conducted  22 \\ninterviews. We report on how people decide to start tracking \\nand pick a tool, how they use that tool, how and why people \\nswitch  between  tools,  and  why  people  stop  tracking.  We \\ndevelop  an  expanded  model  that  captures  the  practices  of \\nself-trackers  motivated  to  track  to  change  behaviors, \\ninstrumenting an activity, and curiosity. \\n\\nSpecifically, we find: \\n\\u2022  In  addition  to  being  motivated  to  track  in  support  of \\nbehavior change goals, people start tracking to instrument \\nan activity or out of pure curiosity. \\n\\n\\u2022  People\\u2019s  motivations  for  tracking  guide  the  selection  of \\ntracking  tools.  Behavior-change  trackers  do  substantial \\nbackground  research  and  optimize  a  tool  for  their  goal, \\ninstrumental  trackers  try  to  maximize  their  benefit  from \\nthe  tools,  and  curiosity-driven  trackers  often  do  not \\nactively consider tool selection. \\n\\n731\\n\\n \\n \\n \\n \\n\\f\\u2022  Usage of tools varies by domain and reason for tracking, \\nprimarily  because  people\\u2019s  motivations  are  different  in \\neach domain. Behavior change trackers collect and review \\ndata  frequently  and  are  bothered  by  inaccurate  logs, \\ninstrumental trackers track when the benefits outweigh the \\neffort, and curiosity-driven trackers are motivated by how \\ninteresting they find the data they are tracking. \\n\\n\\u2022  People frequently switch tools, and in doing so learn about \\n\\nwhat and how they are interested in tracking.  \\n\\n\\u2022  People  lapse  in  their  tool  use  in  four  different  ways: \\ntrack,  difficulty  managing  upkeep, \\n\\nforgetting \\nintentionally skipping entries, and suspending tracking. \\n\\nto \\n\\nThese  findings  inform  a  revised  model  of  how  people  use \\nself-tracking  tools,  independent  of  original  motivation, \\nsupplementing  the  stage-based  model  for  behavior-change \\ntracking. This informs a set of open design problems: \\n\\u2022  Designing to resume tracking after a lapse, including how \\nto use historical data collected before, or even during, the \\nlapse.  For  example,  should  a  food  journal  present \\nsomeone\\u2019s  previous  eating  habits  when  they  decide  to \\nresume tracking to aid in weight loss? If so, how? \\n\\n\\u2022  Designing to avoid inertia around a long-used tool that no \\nlonger  supports  a  self-tracker\\u2019s  goal.  For  example,  how \\ncan a financial tracking tool integrate historical data and \\nprovide an intuitive interface to a person who has managed \\ntheir finances with a custom spreadsheet for years? \\n\\n\\u2022  Designing to support people\\u2019s various goals and transitions \\nbetween  them.  How can the design of a location-tracking \\napplication  like  Foursquare  support  someone  who,  upon \\nreceiving a badge for frequent check-ins, becomes curious \\nor  even  concerned  about  how  much  they  spend  at \\nrestaurants?  Can  a  location  diary  like  Moves  show \\nsomeone who tries the application out of curiosity how it \\ncan help them achieve their fitness goals? \\n\\nBACKGROUND \\nThis  section  reviews  prior  work  on  models  of  personal \\ninformatics  use,  research  examining  how  people  use  tools, \\nand how that use changes over time. \\n\\nModels of Personal Informatics \\nLi et al. develop a stage-based model of personal informatics \\nsystems  and  describe  barriers  people  face  in  each  stage \\n(Figure 1) [21]. The model has five stages: 1) preparation, or \\nstarting to collect data and thinking about what information \\nto  record  and  how  to  collect  it;  2)  collection,  or  gathering \\ndata;  3)  integration,  or  preparing  data  to  reflect  upon; \\n4) reflection, or examining and exploring data; and 5) action, \\nor  taking  one\\u2019s  newfound  understanding  of  themselves  to \\ninform changes. Motivated by the Transtheoretical Model of \\nBehavior  Change  (TTM)  [32],  Li  et  al.  later  identify  two \\nphases  of  reflection,  discovery  and  maintenance,  and  note \\npeople ask different types of questions in each phase [22]. \\n\\nFrom  studying  practices  of  the  Quantified  Self  movement, \\nChoe  et  al.  learn  that  reflection  often  occurs  when  data  is \\ncaptured  [6]  and  propose  a  new  model  for  self-monitoring \\n\\n732\\n\\nUBICOMP '15, SEPTEMBER 7\\u201311, 2015, OSAKA, JAPAN\\n\\nFigure 1. Li et al.\\u2019s five-stage model o\n"
+    },
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "id": "functions.execute_python:12",
+          "function": {
+            "arguments": "{\"code\": \"import json\\nimport re\\n\\n# Load the paper_docs data\\npaper_docs_data = locals()['var_functions.query_db:5']\\nif isinstance(paper_docs_data, str):  # It's a file path\\n    with open(paper_docs_data, 'r') as f:\\n        paper_docs = json.load(f)\\nelse:\\n    paper_docs = paper_docs_data\\n\\n# Load the citations data\\ncitations_data = locals()['var_functions.query_db:8']\\nif isinstance(citations_data, str):  # It's a file path\\n    with open(citations_data, 'r') as f:\\n        citations = json.load(f)\\nelse:\\n    citations = citations_data\\n\\n# Process paper documents to extract title and domain\\npapers_info = []\\n\\ndomain_keywords = [\\n    'food', 'nutrition', 'diet', 'eating', 'meal', 'calorie',\\n    'physical activity', 'exercise', 'fitness', 'sleep', 'mental',\\n    'finances', 'productivity', 'screen time', 'social interactions',\\n    'location', 'chronic', 'diabetes', 'health_behavior'\\n]\\n\\nfor doc in paper_docs:\\n    filename = doc.get('filename', '')\\n    text = doc.get('text', '')\\n    \\n    # Extract title from filename (remove .txt extension)\\n    title = filename.replace('.txt', '') if filename else ''\\n    \\n    # Extract domains from text\\n    domains = []\\n    text_lower = text.lower()\\n    \\n    for keyword in domain_keywords:\\n        if keyword in text_lower:\\n            domains.append(keyword)\\n    \\n    papers_info.append({\\n        'title': title,\\n        'domains': domains,\\n        'text': text[:1000]  # Store first 1000 chars for debugging\\n    })\\n\\n# Convert citations to a more usable format\\ncitations_list = []\\nfor cit in citations:\\n    citations_list.append({\\n        'title': cit.get('title', ''),\\n        'citation_count': int(cit.get('citation_count', 0)),\\n        'citation_year': int(cit.get('citation_year', 0))\\n    })\\n\\nprint('__RESULT__:')\\nprint(json.dumps({\\n    'papers_processed': len(papers_info),\\n    'citations_processed': len(citations_list),\\n    'sample_papers': papers_info[:3],\\n    'sample_citations': citations_list[:3]\\n}))\"}",
+            "name": "execute_python"
+          },
+          "type": "function",
+          "index": 6
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "functions.execute_python:12",
+      "name": "execute_python",
+      "content": "\nThe tool execute_python was executed successfully.\n\nThe result is stored under key:\nvar_functions.execute_python:12\n\nThe result is:\n{\"papers_processed\": 5, \"citations_processed\": 1405, \"sample_papers\": [{\"title\": \"A Lived Informatics Model of Personal Informatics\", \"domains\": [\"food\", \"eating\", \"meal\", \"calorie\", \"physical activity\", \"exercise\", \"fitness\", \"mental\", \"finances\", \"location\", \"chronic\"], \"text\": \"UBICOMP '15, SEPTEMBER 7\\u201311, 2015, OSAKA, JAPAN\\n\\nA Lived Informatics Model of Personal Informatics \\n\\nDaniel A. Epstein1, An Ping2, James Fogarty1, Sean A. Munson2 \\n1Computer Science & Engineering, 2Human Centered Design & Engineering \\nDUB Group, University of Washington \\n{depstein, jfogarty}@cs.washington.edu, {anping, smunson}@uw.edu \\n\\nABSTRACT \\nCurrent  models  of  how  people  use  personal  informatics \\nsystems are largely based in behavior change goals. They do \\nnot  adequately  characterize  the  integration  of  self-tracking \\ninto  everyday  life  by  people  with  varying  goals.  We  build \\nupon  prior  work  by  embracing  the  perspective  of  lived \\ninformatics to propose a new model of personal informatics. \\nWe examine how lived informatics manifests in the habits of \\nself-trackers across a variety of domains, first by surveying \\n105, 99, and 83 past and present trackers of physical activity, \\nfinances, and location and then by interviewing 22 trackers \\nregarding their li\"}, {\"title\": \"A Stage-based Model of Personal Informatics Systems\", \"domains\": [\"food\", \"eating\", \"meal\", \"calorie\", \"physical activity\", \"exercise\", \"sleep\", \"finances\", \"productivity\", \"location\", \"diabetes\"], \"text\": \"A Stage-Based Model of Personal Informatics Systems \\nIan Li1, Anind Dey1, and Jodi Forlizzi1,2 \\n1Human Computer Interaction Institute, 2School of Design \\nCarnegie Mellon University, Pittsburgh, PA 15213 \\nianli@cmu.edu, {anind, forlizzi}@cs.cmu.edu \\n\\nABSTRACT \\nPeople  strive  to  obtain  self-knowledge.  A  class  of  systems \\ncalled  personal  informatics  is  appearing  that  help  people \\ncollect and reflect on personal information. However, there \\nis no comprehensive list of problems that users experience \\nusing  these  systems,  and  no  guidance  for  making  these \\nsystems  more  effective.  To  address  this,  we  conducted \\nsurveys and interviews with people who collect and reflect \\non  personal  information.  We  derived  a  stage-based  model \\nof  personal  informatics  systems  composed  of  five  stages  \\n(preparation, collection, integration, reflection, and action) \\nand  identified  barriers  in  each  of  the  stages.  These  stages \\nhave  four  essential  properties:  b\"}, {\"title\": \"A Trip to the Moon: Personalized Animated Movies for Self-reflection\", \"domains\": [\"eating\", \"physical activity\", \"exercise\", \"sleep\", \"mental\", \"social interactions\"], \"text\": \"Fengjiao Peng\\nMIT Media Lab\\nCambridge, MA, USA\\nfpeng@mit.edu\\n\\nA Trip to the Moon: Personalized Animated Movies for\\nSelf-re\\ufb02ection\\nVeronica Crista LaBelle\\nMIT\\nCambridge, MA, USA\\nvlabelle@mit.edu\\nRosalind W. Picard\\nMIT Media Lab\\nCambridge, MA, USA\\npicard@media.mit.edu\\n\\nEmily Christen Yue\\nHarvard University\\nCambridge, MA, USA\\neyue@college.harvard.edu\\n\\nABSTRACT\\nSelf-tracking physiological and psychological data poses the\\nchallenge of presentation and interpretation. Insightful nar-\\nratives for self-tracking data can motivate the user towards\\nconstructive self-re\\ufb02ection. One powerful form of narrative\\nthat engages audience across various culture and age groups\\nis animated movies. We collected a week of self-reported\\nmood and behavior data from each user and created in Unity a\\npersonalized animation based on their data. We evaluated the\\nimpact of their video in a randomized control trial with a non-\\npersonalized animated video as control. We found that person-\\nalized videos tend to be more e\"}], \"sample_citations\": [{\"title\": \"Expense Control: A Gamified, Semi-Automated, Crowd-Based Approach For Receipt Capturing\", \"citation_count\": 4, \"citation_year\": 2017}, {\"title\": \"Expense Control: A Gamified, Semi-Automated, Crowd-Based Approach For Receipt Capturing\", \"citation_count\": 95, \"citation_year\": 2018}, {\"title\": \"Understanding My Data, Myself: Supporting Self-reflection with Ubicomp Technologies\", \"citation_count\": 32, \"citation_year\": 2012}]}\n"
+    },
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "id": "functions.query_db:14",
+          "function": {
+            "arguments": "{\"db_name\": \"paper_docs_database\", \"query\": \"{}\"}",
+            "name": "query_db"
+          },
+          "type": "function",
+          "index": 7
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "functions.query_db:14",
+      "name": "query_db",
+      "content": "\nThe tool query_db execution failed. The error message is:\n\"Invalid Mongo query: missing required field `collection`\"\n"
+    },
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "id": "functions.execute_python:16",
+          "function": {
+            "arguments": "{\"code\": \"import json\\nimport re\\n\\n# Load paper documents data\\npaper_docs_data = locals()['var_functions.query_db:5']\\nif isinstance(paper_docs_data, str):\\n    with open(paper_docs_data, 'r') as f:\\n        paper_docs = json.load(f)\\nelse:\\n    paper_docs = paper_docs_data\\n\\n# Load citations data\\ncitations_data = locals()['var_functions.query_db:8']\\nif isinstance(citations_data, str):\\n    with open(citations_data, 'r') as f:\\n        citations = json.load(f)\\nelse:\\n    citations = citations_data\\n\\n# Process paper documents to extract title and domains\\ndomain_keywords = [\\n    'food', 'nutrition', 'diet', 'eating', 'meal', 'calorie',\\n    'physical activity', 'exercise', 'fitness', 'sleep', 'mental',\\n    'finances', 'productivity', 'screen time', 'social interactions',\\n    'location', 'chronic', 'diabetes', 'health_behavior'\\n]\\n\\npapers_with_domains = []\\n\\nfor doc in paper_docs:\\n    filename = doc.get('filename', '')\\n    text = doc.get('text', '')\\n    \\n    # Extract title from filename\\n    title = filename.replace('.txt', '') if filename else ''\\n    \\n    # Extract domains from text\\n    domains = []\\n    text_lower = text.lower()\\n    \\n    # Look for domain keywords\\n    for keyword in domain_keywords:\\n        if keyword in text_lower:\\n            domains.append(keyword)\\n    \\n    papers_with_domains.append({\\n        'title': title,\\n        'domains': domains,\\n        'filename': filename\\n    })\\n\\n# Filter papers in 'food' domain\\nfood_papers = [p for p in papers_with_domains if 'food' in p['domains']]\\n\\n# Process citations\\ncitations_processed = []\\nfor cit in citations:\\n    citations_processed.append({\\n        'title': cit.get('title', ''),\\n        'citation_count': int(cit.get('citation_count', 0)),\\n        'citation_year': int(cit.get('citation_year', 0))\\n    })\\n\\nprint('__RESULT__:')\\nprint(json.dumps({\\n    'total_papers': len(papers_with_domains),\\n    'food_papers': len(food_papers),\\n    'food_paper_titles': [p['title'] for p in food_papers],\\n    'total_citations_records': len(citations_processed),\\n    'sample_food_papers': food_papers\\n}))\"}",
+            "name": "execute_python"
+          },
+          "type": "function",
+          "index": 8
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "functions.execute_python:16",
+      "name": "execute_python",
+      "content": "\nThe tool execute_python was executed successfully.\n\nThe result is stored under key:\nvar_functions.execute_python:16\n\nThe result is:\n{\"total_papers\": 5, \"food_papers\": 3, \"food_paper_titles\": [\"A Lived Informatics Model of Personal Informatics\", \"A Stage-based Model of Personal Informatics Systems\", \"A Wee Bit More Interaction: Designing and Evaluating an Overactive Bladder App\"], \"total_citations_records\": 1405, \"sample_food_papers\": [{\"title\": \"A Lived Informatics Model of Personal Informatics\", \"domains\": [\"food\", \"eating\", \"meal\", \"calorie\", \"physical activity\", \"exercise\", \"fitness\", \"mental\", \"finances\", \"location\", \"chronic\"], \"filename\": \"A Lived Informatics Model of Personal Informatics.txt\"}, {\"title\": \"A Stage-based Model of Personal Informatics Systems\", \"domains\": [\"food\", \"eating\", \"meal\", \"calorie\", \"physical activity\", \"exercise\", \"sleep\", \"finances\", \"productivity\", \"location\", \"diabetes\"], \"filename\": \"A Stage-based Model of Personal Informatics Systems.txt\"}, {\"title\": \"A Wee Bit More Interaction: Designing and Evaluating an Overactive Bladder App\", \"domains\": [\"food\", \"diet\", \"meal\", \"physical activity\", \"exercise\", \"fitness\", \"mental\", \"productivity\", \"location\", \"chronic\"], \"filename\": \"A Wee Bit More Interaction: Designing and Evaluating an Overactive Bladder App.txt\"}]}\n"
+    },
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "id": "functions.query_db:18",
+          "function": {
+            "arguments": "{\"db_name\": \"paper_docs_database\", \"query\": \"{\\\"collection\\\": \\\"paper_docs\\\", \\\"projection\\\": {\\\"filename\\\": 1, \\\"text\\\": 1}}\"}",
+            "name": "query_db"
+          },
+          "type": "function",
+          "index": 9
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "functions.query_db:18",
+      "name": "query_db",
+      "content": "\nThe tool query_db was executed successfully.\n\nThe result is too large, so it is stored in a file. The file path is stored under key: \nvar_functions.query_db:18\n\nThe preview (first 10000 characters) of the result is:\n[{\"_id\": \"694f5530284b10b11dc0a869\", \"filename\": \"A Lived Informatics Model of Personal Informatics.txt\", \"text\": \"UBICOMP '15, SEPTEMBER 7\\u201311, 2015, OSAKA, JAPAN\\n\\nA Lived Informatics Model of Personal Informatics \\n\\nDaniel A. Epstein1, An Ping2, James Fogarty1, Sean A. Munson2 \\n1Computer Science & Engineering, 2Human Centered Design & Engineering \\nDUB Group, University of Washington \\n{depstein, jfogarty}@cs.washington.edu, {anping, smunson}@uw.edu \\n\\nABSTRACT \\nCurrent  models  of  how  people  use  personal  informatics \\nsystems are largely based in behavior change goals. They do \\nnot  adequately  characterize  the  integration  of  self-tracking \\ninto  everyday  life  by  people  with  varying  goals.  We  build \\nupon  prior  work  by  embracing  the  perspective  of  lived \\ninformatics to propose a new model of personal informatics. \\nWe examine how lived informatics manifests in the habits of \\nself-trackers across a variety of domains, first by surveying \\n105, 99, and 83 past and present trackers of physical activity, \\nfinances, and location and then by interviewing 22 trackers \\nregarding their lived informatics experiences. We develop a \\nmodel characterizing tracker processes of deciding to track \\nand selecting a tool, elaborate on tool usage during collection, \\nintegration,  and  reflection  as  components  of  tracking  and \\nacting,  and  discuss  the  lapsing  and  potential  resuming  of \\ntracking.  We  use  our  model  to  surface  underexplored \\nchallenges  in  lived  informatics,  thus  identifying  future \\ndirections for personal informatics design and research.  \\n\\nAuthor Keywords \\nLived Informatics; Personal Informatics; Self-Tracking; \\nLapsing; Physical Activity; Finances; Location. \\n\\nACM Classification Keywords \\nH.5.m. Information interfaces and presentation (e.g., HCI). \\n\\nINTRODUCTION \\nPersonal informatics, or collecting and reflecting on personal \\ninformation,  has  become  increasingly  prevalent.  Personal \\ninformatics can serve a goal-driven purpose, such as tracking \\nweight loss, increasing physical activity, having a record of \\nplaces  visited,  or  tracking  student  loan  payments.  Beyond \\nthese goal-driven motivations, self-tracking tools are now a \\npart  of  everyday  life,  or  \\u201clived  informatics\\u201d,  with  people \\ntracking out of curiosity or a fascination with numbers [34]. \\nThe pervasiveness of self-tracking tools has led researchers \\nto  study  people\\u2019s  use  of  commercial  tools  for  tracking \\nlocation  [24,30],  finances  [20],  food  [11],  weight  [19,25], \\nand  physical  activity  [16,34]  and  to  develop  research \\nprototypes to expand our understanding of usage [3,8,12,40]. \\n\\nPermission  to  make  digital  or  hard  copies  of  all  or  part  of  this  work  for\\npersonal or classroom use is granted without fee provided that copies are \\nnot made or distributed for profit or commercial advantage and that copies\\nbear  this  notice  and  the  full  citation  on  the  first  page.  Copyrights  for\\ncomponents  of  this  work  owned  by  others  than  ACM  must  be  honored.\\nAbstracting  with  credit  is  permitted.  To  copy  otherwise,  or  republish,  to\\npost on servers or to redistribute to lists, requires prior specific permission\\nand/or a fee. Request permissions from permissions@acm.org. \\nUbiComp '15, September 7-11, 2015, Osaka, Japan. \\nCopyright 2015 \\u00a9 ACM 978-1-4503-3574-4/15/09...$15.00. \\nhttp://dx.doi.org/10.1145/2750858.2804250 \\n\\nThe first and most commonly used model for understanding \\nhow  people  use  personal  informatics  tools  is  Li  et  al.\\u2019s \\nfive-stage model [21]. The model characterizes how people \\ntransition  between  preparation,  collection,  integration, \\nreflection, and action, describing the iterative nature of these \\nstages  and  the  barriers  that  prevent  transitions.  The  model \\nemphasizes an end goal of knowledge supporting behavior \\nchange.  The  model  has  since  been  expanded  and  clarified, \\ndividing  and  combining  stages.  For  goal-oriented  trackers, \\nreflection  can  be  divided  into  maintenance  and  discovery \\n[22].  For  some  trackers,  engagement  with  and  gaining  an \\nunderstanding  of  personal  data  may  be  the  goal  in  itself, \\ncausing the action stage to be foregone [41]. Reflection often \\noccurs  during  collection  rather  than  being  a  separate  stage \\n[6], which leads to an alternative three-stage iterative model \\nof configuration, data capture, and feedback [7]. \\n\\nHowever,  research  on  everyday  self-tracking  behavior \\nidentifies several uses of personal informatics not described \\nby  current  models.  For  example,  the  five-stage  model \\ndescribes  self-trackers  switching  tools  to  better  fit  their \\ninformation  needs  [21].  People  also  switch  tools  because \\ntheir  devices  break  [16,34],  they  change  phones  [34],  or \\nbecause \\n[34]. \\nSelf-trackers also fail to sustain the habit or get frustrated and \\ngive up on tools [11]. Articulating a model that encompasses \\nthese behaviors can offer better guidance to designers.  \\n\\nreceive  a  new \\n\\nrecommendation \\n\\nthey \\n\\nTo develop this model, we studied self-tracking of a variety \\nof behaviors to understand how lived informatics manifests \\nin the habits of self-trackers. Specifically, we surveyed 105, \\n99,  and  83  past  and  present  trackers  of  physical  activity, \\nfinances,  and  location  on  their  habits  and  conducted  22 \\ninterviews. We report on how people decide to start tracking \\nand pick a tool, how they use that tool, how and why people \\nswitch  between  tools,  and  why  people  stop  tracking.  We \\ndevelop  an  expanded  model  that  captures  the  practices  of \\nself-trackers  motivated  to  track  to  change  behaviors, \\ninstrumenting an activity, and curiosity. \\n\\nSpecifically, we find: \\n\\u2022  In  addition  to  being  motivated  to  track  in  support  of \\nbehavior change goals, people start tracking to instrument \\nan activity or out of pure curiosity. \\n\\n\\u2022  People\\u2019s  motivations  for  tracking  guide  the  selection  of \\ntracking  tools.  Behavior-change  trackers  do  substantial \\nbackground  research  and  optimize  a  tool  for  their  goal, \\ninstrumental  trackers  try  to  maximize  their  benefit  from \\nthe  tools,  and  curiosity-driven  trackers  often  do  not \\nactively consider tool selection. \\n\\n731\\n\\n \\n \\n \\n \\n\\f\\u2022  Usage of tools varies by domain and reason for tracking, \\nprimarily  because  people\\u2019s  motivations  are  different  in \\neach domain. Behavior change trackers collect and review \\ndata  frequently  and  are  bothered  by  inaccurate  logs, \\ninstrumental trackers track when the benefits outweigh the \\neffort, and curiosity-driven trackers are motivated by how \\ninteresting they find the data they are tracking. \\n\\n\\u2022  People frequently switch tools, and in doing so learn about \\n\\nwhat and how they are interested in tracking.  \\n\\n\\u2022  People  lapse  in  their  tool  use  in  four  different  ways: \\ntrack,  difficulty  managing  upkeep, \\n\\nforgetting \\nintentionally skipping entries, and suspending tracking. \\n\\nto \\n\\nThese  findings  inform  a  revised  model  of  how  people  use \\nself-tracking  tools,  independent  of  original  motivation, \\nsupplementing  the  stage-based  model  for  behavior-change \\ntracking. This informs a set of open design problems: \\n\\u2022  Designing to resume tracking after a lapse, including how \\nto use historical data collected before, or even during, the \\nlapse.  For  example,  should  a  food  journal  present \\nsomeone\\u2019s  previous  eating  habits  when  they  decide  to \\nresume tracking to aid in weight loss? If so, how? \\n\\n\\u2022  Designing to avoid inertia around a long-used tool that no \\nlonger  supports  a  self-tracker\\u2019s  goal.  For  example,  how \\ncan a financial tracking tool integrate historical data and \\nprovide an intuitive interface to a person who has managed \\ntheir finances with a custom spreadsheet for years? \\n\\n\\u2022  Designing to support people\\u2019s various goals and transitions \\nbetween  them.  How can the design of a location-tracking \\napplication  like  Foursquare  support  someone  who,  upon \\nreceiving a badge for frequent check-ins, becomes curious \\nor  even  concerned  about  how  much  they  spend  at \\nrestaurants?  Can  a  location  diary  like  Moves  show \\nsomeone who tries the application out of curiosity how it \\ncan help them achieve their fitness goals? \\n\\nBACKGROUND \\nThis  section  reviews  prior  work  on  models  of  personal \\ninformatics  use,  research  examining  how  people  use  tools, \\nand how that use changes over time. \\n\\nModels of Personal Informatics \\nLi et al. develop a stage-based model of personal informatics \\nsystems  and  describe  barriers  people  face  in  each  stage \\n(Figure 1) [21]. The model has five stages: 1) preparation, or \\nstarting to collect data and thinking about what information \\nto  record  and  how  to  collect  it;  2)  collection,  or  gathering \\ndata;  3)  integration,  or  preparing  data  to  reflect  upon; \\n4) reflection, or examining and exploring data; and 5) action, \\nor  taking  one\\u2019s  newfound  understanding  of  themselves  to \\ninform changes. Motivated by the Transtheoretical Model of \\nBehavior  Change  (TTM)  [32],  Li  et  al.  later  identify  two \\nphases  of  reflection,  discovery  and  maintenance,  and  note \\npeople ask different types of questions in each phase [22]. \\n\\nFrom  studying  practices  of  the  Quantified  Self  movement, \\nChoe  et  al.  learn  that  reflection  often  occurs  when  data  is \\ncaptured  [6]  and  propose  a  new  model  for  self-monitoring \\n\\n732\\n\\nUBICOMP '15, SEPTEMBER 7\\u201311, 2015, OSAKA, JAPAN\\n\\nFigure 1. Li et al.\\u2019s five-stage model of personal informatics,\\nreprinted  with  permission  [21].  Pri\n"
+    },
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "id": "functions.execute_python:20",
+          "function": {
+            "arguments": "{\"code\": \"import json\\n\\n# Load paper documents data\\npaper_docs_data = locals()['var_functions.query_db:18']\\nif isinstance(paper_docs_data, str):\\n    with open(paper_docs_data, 'r') as f:\\n        paper_docs = json.load(f)\\nelse:\\n    paper_docs = paper_docs_data\\n\\n# Load citations data\\ncitations_data = locals()['var_functions.query_db:8']\\nif isinstance(citations_data, str):\\n    with open(citations_data, 'r') as f:\\n        citations = json.load(f)\\nelse:\\n    citations = citations_data\\n\\n# Process paper documents to identify food papers\\nprint(\\\"Processing paper documents...\\\")\\ndomain_keywords = ['food', 'nutrition', 'diet', 'eating', 'meal', 'calorie']\\n\\nfood_papers = []\\npaper_lookup = {}\\n\\nfor doc in paper_docs:\\n    filename = doc.get('filename', '')\\n    text = doc.get('text', '')\\n    \\n    # Extract title from filename\\n    title = filename.replace('.txt', '') if filename else ''\\n    \\n    # Check if paper is in food domain\\n    text_lower = text.lower()\\n    is_food_paper = any(keyword in text_lower for keyword in domain_keywords)\\n    \\n    if is_food_paper:\\n        food_papers.append(title)\\n        \\n    paper_lookup[title] = {\\n        'filename': filename,\\n        'is_food': is_food_paper\\n    }\\n\\nprint(f\\\"Found {len(food_papers)} food domain papers:\\\")\\nfor fp in food_papers:\\n    print(f\\\"  - {fp}\\\")\\n\\n# Find citations for food papers\\nfood_citations = []\\n\\ncitations_processed = []\\nfor cit in citations:\\n    cit_title = cit.get('title', '')\\n    cit_count = int(cit.get('citation_count', 0))\\n    cit_year = int(cit.get('citation_year', 0))\\n    \\n    citations_processed.append({\\n        'title': cit_title,\\n        'count': cit_count,\\n        'year': cit_year\\n    })\\n    \\n    # Check if this citation belongs to a food paper\\n    for food_title in food_papers:\\n        if food_title.lower() == cit_title.lower():\\n            food_citations.append({\\n                'title': food_title,\\n                'count': cit_count,\\n                'year': cit_year\\n            })\\n            print(f\\\"  Found citation: {food_title} ({cit_year}): {cit_count}\\\")\\n\\n# Calculate total citations for food papers\\ntotal_citations = sum(c['count'] for c in food_citations)\\n\\nprint('__RESULT__:')\\nprint(json.dumps({\\n    'food_papers': food_papers,\\n    'food_citations': food_citations,\\n    'total_food_citations': total_citations,\\n    'total_citation_records': len(citations_processed)\\n}))\"}",
+            "name": "execute_python"
+          },
+          "type": "function",
+          "index": 10
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "functions.execute_python:20",
+      "name": "execute_python",
+      "content": "\nThe tool execute_python was executed successfully.\n\nThe result is stored under key:\nvar_functions.execute_python:20\n\nThe result is:\n{\"food_papers\": [\"A Lived Informatics Model of Personal Informatics\", \"A Stage-based Model of Personal Informatics Systems\", \"A Trip to the Moon: Personalized Animated Movies for Self-reflection\", \"A Wee Bit More Interaction: Designing and Evaluating an Overactive Bladder App\", \"ArmSleeve: A Patient Monitoring System to Support Occupational Therapists in Stroke Rehabilitation\"], \"food_citations\": [{\"title\": \"A Wee Bit More Interaction: Designing and Evaluating an Overactive Bladder App\", \"count\": 16, \"year\": 2020}, {\"title\": \"A Wee Bit More Interaction: Designing and Evaluating an Overactive Bladder App\", \"count\": 49, \"year\": 2021}, {\"title\": \"A Wee Bit More Interaction: Designing and Evaluating an Overactive Bladder App\", \"count\": 11, \"year\": 2022}, {\"title\": \"A Wee Bit More Interaction: Designing and Evaluating an Overactive Bladder App\", \"count\": 71, \"year\": 2023}, {\"title\": \"A Wee Bit More Interaction: Designing and Evaluating an Overactive Bladder App\", \"count\": 38, \"year\": 2024}, {\"title\": \"A Wee Bit More Interaction: Designing and Evaluating an Overactive Bladder App\", \"count\": 81, \"year\": 2025}, {\"title\": \"A Lived Informatics Model of Personal Informatics\", \"count\": 77, \"year\": 2016}, {\"title\": \"A Lived Informatics Model of Personal Informatics\", \"count\": 9, \"year\": 2017}, {\"title\": \"A Lived Informatics Model of Personal Informatics\", \"count\": 50, \"year\": 2018}, {\"title\": \"A Lived Informatics Model of Personal Informatics\", \"count\": 49, \"year\": 2019}, {\"title\": \"A Lived Informatics Model of Personal Informatics\", \"count\": 77, \"year\": 2020}, {\"title\": \"A Lived Informatics Model of Personal Informatics\", \"count\": 60, \"year\": 2021}, {\"title\": \"A Lived Informatics Model of Personal Informatics\", \"count\": 68, \"year\": 2022}, {\"title\": \"A Trip to the Moon: Personalized Animated Movies for Self-reflection\", \"count\": 65, \"year\": 2019}, {\"title\": \"A Trip to the Moon: Personalized Animated Movies for Self-reflection\", \"count\": 98, \"year\": 2020}, {\"title\": \"A Trip to the Moon: Personalized Animated Movies for Self-reflection\", \"count\": 23, \"year\": 2021}, {\"title\": \"A Trip to the Moon: Personalized Animated Movies for Self-reflection\", \"count\": 65, \"year\": 2022}, {\"title\": \"A Trip to the Moon: Personalized Animated Movies for Self-reflection\", \"count\": 14, \"year\": 2023}, {\"title\": \"ArmSleeve: A Patient Monitoring System to Support Occupational Therapists in Stroke Rehabilitation\", \"count\": 9, \"year\": 2017}, {\"title\": \"ArmSleeve: A Patient Monitoring System to Support Occupational Therapists in Stroke Rehabilitation\", \"count\": 87, \"year\": 2018}, {\"title\": \"ArmSleeve: A Patient Monitoring System to Support Occupational Therapists in Stroke Rehabilitation\", \"count\": 31, \"year\": 2019}, {\"title\": \"ArmSleeve: A Patient Monitoring System to Support Occupational Therapists in Stroke Rehabilitation\", \"count\": 52, \"year\": 2020}, {\"title\": \"ArmSleeve: A Patient Monitoring System to Support Occupational Therapists in Stroke Rehabilitation\", \"count\": 16, \"year\": 2021}, {\"title\": \"ArmSleeve: A Patient Monitoring System to Support Occupational Therapists in Stroke Rehabilitation\", \"count\": 73, \"year\": 2022}, {\"title\": \"ArmSleeve: A Patient Monitoring System to Support Occupational Therapists in Stroke Rehabilitation\", \"count\": 32, \"year\": 2023}, {\"title\": \"ArmSleeve: A Patient Monitoring System to Support Occupational Therapists in Stroke Rehabilitation\", \"count\": 75, \"year\": 2024}, {\"title\": \"ArmSleeve: A Patient Monitoring System to Support Occupational Therapists in Stroke Rehabilitation\", \"count\": 77, \"year\": 2025}, {\"title\": \"A Stage-based Model of Personal Informatics Systems\", \"count\": 88, \"year\": 2011}, {\"title\": \"A Stage-based Model of Personal Informatics Systems\", \"count\": 32, \"year\": 2012}, {\"title\": \"A Stage-based Model of Personal Informatics Systems\", \"count\": 86, \"year\": 2013}, {\"title\": \"A Stage-based Model of Personal Informatics Systems\", \"count\": 14, \"year\": 2014}], \"total_food_citations\": 1593, \"total_citation_records\": 1405}\n"
+    },
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "id": "functions.return_answer:22",
+          "function": {
+            "arguments": "{\"answer\": \"1593\"}",
+            "name": "return_answer"
+          },
+          "type": "function",
+          "index": 11
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "functions.return_answer:22",
+      "name": "return_answer",
+      "content": "\nThe tool return_answer was executed successfully.\n\nThe result is stored under key:\nvar_functions.return_answer:22\n\nThe result is:\n\"1593\"\n"
+    }
+  ],
+  "result_storage": {
+    "var_functions.list_db:0": [
+      "paper_docs"
+    ],
+    "var_functions.list_db:2": [
+      "Citations",
+      "sqlite_sequence"
+    ],
+    "var_functions.query_db:5": "file_storage/functions.query_db:5.json",
+    "var_functions.query_db:8": "file_storage/functions.query_db:8.json",
+    "var_functions.execute_python:10": "file_storage/functions.execute_python:10.json",
+    "var_functions.execute_python:12": {
+      "papers_processed": 5,
+      "citations_processed": 1405,
+      "sample_papers": [
+        {
+          "title": "A Lived Informatics Model of Personal Informatics",
+          "domains": [
+            "food",
+            "eating",
+            "meal",
+            "calorie",
+            "physical activity",
+            "exercise",
+            "fitness",
+            "mental",
+            "finances",
+            "location",
+            "chronic"
+          ],
+          "text": "UBICOMP '15, SEPTEMBER 7\u201311, 2015, OSAKA, JAPAN\n\nA Lived Informatics Model of Personal Informatics \n\nDaniel A. Epstein1, An Ping2, James Fogarty1, Sean A. Munson2 \n1Computer Science & Engineering, 2Human Centered Design & Engineering \nDUB Group, University of Washington \n{depstein, jfogarty}@cs.washington.edu, {anping, smunson}@uw.edu \n\nABSTRACT \nCurrent  models  of  how  people  use  personal  informatics \nsystems are largely based in behavior change goals. They do \nnot  adequately  characterize  the  integration  of  self-tracking \ninto  everyday  life  by  people  with  varying  goals.  We  build \nupon  prior  work  by  embracing  the  perspective  of  lived \ninformatics to propose a new model of personal informatics. \nWe examine how lived informatics manifests in the habits of \nself-trackers across a variety of domains, first by surveying \n105, 99, and 83 past and present trackers of physical activity, \nfinances, and location and then by interviewing 22 trackers \nregarding their li"
+        },
+        {
+          "title": "A Stage-based Model of Personal Informatics Systems",
+          "domains": [
+            "food",
+            "eating",
+            "meal",
+            "calorie",
+            "physical activity",
+            "exercise",
+            "sleep",
+            "finances",
+            "productivity",
+            "location",
+            "diabetes"
+          ],
+          "text": "A Stage-Based Model of Personal Informatics Systems \nIan Li1, Anind Dey1, and Jodi Forlizzi1,2 \n1Human Computer Interaction Institute, 2School of Design \nCarnegie Mellon University, Pittsburgh, PA 15213 \nianli@cmu.edu, {anind, forlizzi}@cs.cmu.edu \n\nABSTRACT \nPeople  strive  to  obtain  self-knowledge.  A  class  of  systems \ncalled  personal  informatics  is  appearing  that  help  people \ncollect and reflect on personal information. However, there \nis no comprehensive list of problems that users experience \nusing  these  systems,  and  no  guidance  for  making  these \nsystems  more  effective.  To  address  this,  we  conducted \nsurveys and interviews with people who collect and reflect \non  personal  information.  We  derived  a  stage-based  model \nof  personal  informatics  systems  composed  of  five  stages  \n(preparation, collection, integration, reflection, and action) \nand  identified  barriers  in  each  of  the  stages.  These  stages \nhave  four  essential  properties:  b"
+        },
+        {
+          "title": "A Trip to the Moon: Personalized Animated Movies for Self-reflection",
+          "domains": [
+            "eating",
+            "physical activity",
+            "exercise",
+            "sleep",
+            "mental",
+            "social interactions"
+          ],
+          "text": "Fengjiao Peng\nMIT Media Lab\nCambridge, MA, USA\nfpeng@mit.edu\n\nA Trip to the Moon: Personalized Animated Movies for\nSelf-re\ufb02ection\nVeronica Crista LaBelle\nMIT\nCambridge, MA, USA\nvlabelle@mit.edu\nRosalind W. Picard\nMIT Media Lab\nCambridge, MA, USA\npicard@media.mit.edu\n\nEmily Christen Yue\nHarvard University\nCambridge, MA, USA\neyue@college.harvard.edu\n\nABSTRACT\nSelf-tracking physiological and psychological data poses the\nchallenge of presentation and interpretation. Insightful nar-\nratives for self-tracking data can motivate the user towards\nconstructive self-re\ufb02ection. One powerful form of narrative\nthat engages audience across various culture and age groups\nis animated movies. We collected a week of self-reported\nmood and behavior data from each user and created in Unity a\npersonalized animation based on their data. We evaluated the\nimpact of their video in a randomized control trial with a non-\npersonalized animated video as control. We found that person-\nalized videos tend to be more e"
+        }
+      ],
+      "sample_citations": [
+        {
+          "title": "Expense Control: A Gamified, Semi-Automated, Crowd-Based Approach For Receipt Capturing",
+          "citation_count": 4,
+          "citation_year": 2017
+        },
+        {
+          "title": "Expense Control: A Gamified, Semi-Automated, Crowd-Based Approach For Receipt Capturing",
+          "citation_count": 95,
+          "citation_year": 2018
+        },
+        {
+          "title": "Understanding My Data, Myself: Supporting Self-reflection with Ubicomp Technologies",
+          "citation_count": 32,
+          "citation_year": 2012
+        }
+      ]
+    },
+    "var_functions.execute_python:16": {
+      "total_papers": 5,
+      "food_papers": 3,
+      "food_paper_titles": [
+        "A Lived Informatics Model of Personal Informatics",
+        "A Stage-based Model of Personal Informatics Systems",
+        "A Wee Bit More Interaction: Designing and Evaluating an Overactive Bladder App"
+      ],
+      "total_citations_records": 1405,
+      "sample_food_papers": [
+        {
+          "title": "A Lived Informatics Model of Personal Informatics",
+          "domains": [
+            "food",
+            "eating",
+            "meal",
+            "calorie",
+            "physical activity",
+            "exercise",
+            "fitness",
+            "mental",
+            "finances",
+            "location",
+            "chronic"
+          ],
+          "filename": "A Lived Informatics Model of Personal Informatics.txt"
+        },
+        {
+          "title": "A Stage-based Model of Personal Informatics Systems",
+          "domains": [
+            "food",
+            "eating",
+            "meal",
+            "calorie",
+            "physical activity",
+            "exercise",
+            "sleep",
+            "finances",
+            "productivity",
+            "location",
+            "diabetes"
+          ],
+          "filename": "A Stage-based Model of Personal Informatics Systems.txt"
+        },
+        {
+          "title": "A Wee Bit More Interaction: Designing and Evaluating an Overactive Bladder App",
+          "domains": [
+            "food",
+            "diet",
+            "meal",
+            "physical activity",
+            "exercise",
+            "fitness",
+            "mental",
+            "productivity",
+            "location",
+            "chronic"
+          ],
+          "filename": "A Wee Bit More Interaction: Designing and Evaluating an Overactive Bladder App.txt"
+        }
+      ]
+    },
+    "var_functions.query_db:18": "file_storage/functions.query_db:18.json",
+    "var_functions.execute_python:20": {
+      "food_papers": [
+        "A Lived Informatics Model of Personal Informatics",
+        "A Stage-based Model of Personal Informatics Systems",
+        "A Trip to the Moon: Personalized Animated Movies for Self-reflection",
+        "A Wee Bit More Interaction: Designing and Evaluating an Overactive Bladder App",
+        "ArmSleeve: A Patient Monitoring System to Support Occupational Therapists in Stroke Rehabilitation"
+      ],
+      "food_citations": [
+        {
+          "title": "A Wee Bit More Interaction: Designing and Evaluating an Overactive Bladder App",
+          "count": 16,
+          "year": 2020
+        },
+        {
+          "title": "A Wee Bit More Interaction: Designing and Evaluating an Overactive Bladder App",
+          "count": 49,
+          "year": 2021
+        },
+        {
+          "title": "A Wee Bit More Interaction: Designing and Evaluating an Overactive Bladder App",
+          "count": 11,
+          "year": 2022
+        },
+        {
+          "title": "A Wee Bit More Interaction: Designing and Evaluating an Overactive Bladder App",
+          "count": 71,
+          "year": 2023
+        },
+        {
+          "title": "A Wee Bit More Interaction: Designing and Evaluating an Overactive Bladder App",
+          "count": 38,
+          "year": 2024
+        },
+        {
+          "title": "A Wee Bit More Interaction: Designing and Evaluating an Overactive Bladder App",
+          "count": 81,
+          "year": 2025
+        },
+        {
+          "title": "A Lived Informatics Model of Personal Informatics",
+          "count": 77,
+          "year": 2016
+        },
+        {
+          "title": "A Lived Informatics Model of Personal Informatics",
+          "count": 9,
+          "year": 2017
+        },
+        {
+          "title": "A Lived Informatics Model of Personal Informatics",
+          "count": 50,
+          "year": 2018
+        },
+        {
+          "title": "A Lived Informatics Model of Personal Informatics",
+          "count": 49,
+          "year": 2019
+        },
+        {
+          "title": "A Lived Informatics Model of Personal Informatics",
+          "count": 77,
+          "year": 2020
+        },
+        {
+          "title": "A Lived Informatics Model of Personal Informatics",
+          "count": 60,
+          "year": 2021
+        },
+        {
+          "title": "A Lived Informatics Model of Personal Informatics",
+          "count": 68,
+          "year": 2022
+        },
+        {
+          "title": "A Trip to the Moon: Personalized Animated Movies for Self-reflection",
+          "count": 65,
+          "year": 2019
+        },
+        {
+          "title": "A Trip to the Moon: Personalized Animated Movies for Self-reflection",
+          "count": 98,
+          "year": 2020
+        },
+        {
+          "title": "A Trip to the Moon: Personalized Animated Movies for Self-reflection",
+          "count": 23,
+          "year": 2021
+        },
+        {
+          "title": "A Trip to the Moon: Personalized Animated Movies for Self-reflection",
+          "count": 65,
+          "year": 2022
+        },
+        {
+          "title": "A Trip to the Moon: Personalized Animated Movies for Self-reflection",
+          "count": 14,
+          "year": 2023
+        },
+        {
+          "title": "ArmSleeve: A Patient Monitoring System to Support Occupational Therapists in Stroke Rehabilitation",
+          "count": 9,
+          "year": 2017
+        },
+        {
+          "title": "ArmSleeve: A Patient Monitoring System to Support Occupational Therapists in Stroke Rehabilitation",
+          "count": 87,
+          "year": 2018
+        },
+        {
+          "title": "ArmSleeve: A Patient Monitoring System to Support Occupational Therapists in Stroke Rehabilitation",
+          "count": 31,
+          "year": 2019
+        },
+        {
+          "title": "ArmSleeve: A Patient Monitoring System to Support Occupational Therapists in Stroke Rehabilitation",
+          "count": 52,
+          "year": 2020
+        },
+        {
+          "title": "ArmSleeve: A Patient Monitoring System to Support Occupational Therapists in Stroke Rehabilitation",
+          "count": 16,
+          "year": 2021
+        },
+        {
+          "title": "ArmSleeve: A Patient Monitoring System to Support Occupational Therapists in Stroke Rehabilitation",
+          "count": 73,
+          "year": 2022
+        },
+        {
+          "title": "ArmSleeve: A Patient Monitoring System to Support Occupational Therapists in Stroke Rehabilitation",
+          "count": 32,
+          "year": 2023
+        },
+        {
+          "title": "ArmSleeve: A Patient Monitoring System to Support Occupational Therapists in Stroke Rehabilitation",
+          "count": 75,
+          "year": 2024
+        },
+        {
+          "title": "ArmSleeve: A Patient Monitoring System to Support Occupational Therapists in Stroke Rehabilitation",
+          "count": 77,
+          "year": 2025
+        },
+        {
+          "title": "A Stage-based Model of Personal Informatics Systems",
+          "count": 88,
+          "year": 2011
+        },
+        {
+          "title": "A Stage-based Model of Personal Informatics Systems",
+          "count": 32,
+          "year": 2012
+        },
+        {
+          "title": "A Stage-based Model of Personal Informatics Systems",
+          "count": 86,
+          "year": 2013
+        },
+        {
+          "title": "A Stage-based Model of Personal Informatics Systems",
+          "count": 14,
+          "year": 2014
+        }
+      ],
+      "total_food_citations": 1593,
+      "total_citation_records": 1405
+    },
+    "var_functions.return_answer:22": "1593"
+  },
+  "llm_call_count": 15,
+  "tools": {
+    "query_db": null,
+    "list_db": null,
+    "execute_python": null,
+    "return_answer": {
+      "name": "return_answer",
+      "log_path": "/home/ruiying/DataAgentBench-local/query_paper_unstructured/query1/logs/data_agent/run_12/tool_calls.jsonl"
+    }
+  },
+  "query_dir": "/home/ruiying/DataAgentBench-local/query_paper_unstructured/query1",
+  "max_iterations": 100,
+  "deployment_name": "moonshotai/Kimi-K2-Thinking",
+  "file_storage_dir": "/home/ruiying/DataAgentBench-local/query_paper_unstructured/query1/logs/data_agent/run_12/exec_tool_work_dir/file_storage",
+  "llm_log_path": "/home/ruiying/DataAgentBench-local/query_paper_unstructured/query1/logs/data_agent/run_12/llm_calls.jsonl",
+  "validation_log_path": "/home/ruiying/DataAgentBench-local/query_paper_unstructured/query1/logs/data_agent/run_12/validation.jsonl",
+  "tool_log_path": "/home/ruiying/DataAgentBench-local/query_paper_unstructured/query1/logs/data_agent/run_12/tool_calls.jsonl"
+}

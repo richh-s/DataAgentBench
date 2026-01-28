@@ -1,0 +1,41 @@
+code = """import json
+import re
+
+# Read the MongoDB results file
+with open('/tmp/tmpa8i6hpt8.json', 'r') as f:
+    papers_data = json.load(f)
+
+print(f"Total papers with 'physical activity' found: {len(papers_data)}")
+
+papers_2016 = []
+
+for paper in papers_data:
+    text = paper['text']
+    # Check if text contains 2016
+    if '2016' in text:
+        # Also check if it mentions physical activity in a meaningful way
+        if re.search(r'physical\s+activity', text, re.IGNORECASE):
+            filename = paper['filename']
+            title = filename.replace('.txt', '')
+            papers_2016.append(title)
+
+print(f"\nPapers from 2016 mentioning physical activity: {len(papers_2016)}")
+if papers_2016:
+    print("\nPaper titles:")
+    for title in papers_2016:
+        print(f"  - {title}")
+else:
+    print("No 2016 papers found")
+
+# Save results to a file or prepare for next step
+result = {
+    'papers_2016': [{'title': title} for title in papers_2016],
+    'count': len(papers_2016)
+}
+
+print('__RESULT__:')
+print(json.dumps(result))"""
+
+env_args = {'var_functions.query_db:0': 'file_storage/functions.query_db:0.json', 'var_functions.query_db:2': 'file_storage/functions.query_db:2.json', 'var_functions.execute_python:9': {'status': 'debugging'}, 'var_functions.query_db:14': 'file_storage/functions.query_db:14.json'}
+
+exec(code, env_args)

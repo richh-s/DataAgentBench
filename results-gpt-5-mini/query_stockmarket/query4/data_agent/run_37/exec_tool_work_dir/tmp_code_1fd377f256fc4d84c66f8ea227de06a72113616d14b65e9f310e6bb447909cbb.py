@@ -1,0 +1,61 @@
+code = """import json, math
+with open(var_call_gS4FSnUcnhKgrZzAmEzsMtuc, 'r') as f:
+    stockinfo = json.load(f)
+mapping = {rec['Symbol']: rec.get('Company Description','') for rec in stockinfo}
+
+# Manually list the var_call keys we know from multi_tool_use output
+keys = [
+'var_call_fDMc62Vg49BfhGLh1JiOlhiO','var_call_bJZlz75E94pNuLxGaOiHGN0D','var_call_f2ntI2EJn8heyocEKBpwrh5V','var_call_1c8Y2YN4uOpzmhCskqsmbVlJ','var_call_aSAawJhNqxtKy1XWcgGEK7nK','var_call_TIOXkIULUrbHCc43axCrgd6b','var_call_k3fUMuGGdlnnsiW5xJxagkvl','var_call_jGQRLgTjhVuKYrE5Oq1isMfy','var_call_bNBPSSqshO0t99XOZ9GT1m3k','var_call_8cPADodXNi5roqmyUbCfmC5D','var_call_...'
+]
+# But we cannot rely on unknown keys; instead, read all variables via provided storage keys list in earlier outputs isn't available.
+# As a fallback, we'll read the combined results we earlier successfully stored in var_call_oXVCb3OKjyhRkTCgKdVFJwnZ and var_call_qsaCVwPAN0nazJrxnaV5eOjq
+with open(var_call_oXVCb3OKjyhRkTCgKdVFJwnZ, 'r') as f:
+    summary = json.load(f)
+with open(var_call_qsaCVwPAN0nazJrxnaV5eOjq, 'r') as f:
+    avail = json.load(f)
+
+# Now, we will manually query a smaller subset: ask for all available symbols at once using a single UNION ALL built from avail['available']
+avail_list = avail['available']
+# Build SQL in chunks to avoid extremely long queries. We'll do chunks of 50 symbols per query and collect results.
+chunks = [avail_list[i:i+50] for i in range(0, len(avail_list), 50)]
+results = []
+import math
+from functions import query_db
+for chunk in chunks:
+    selects = []
+    for s in chunk:
+        sel = ("SELECT '{s}' AS symbol, SUM(CASE WHEN \"Close\">\"Open\" THEN 1 ELSE 0 END) AS up_count, "
+               "SUM(CASE WHEN \"Close\"<\"Open\" THEN 1 ELSE 0 END) AS down_count "
+               "FROM \"{s}\" WHERE \"Date\">='2017-01-01' AND \"Date\"<='2017-12-31'").format(s=s)
+        selects.append(sel)
+    union_sql = '\nUNION ALL\n'.join(selects)
+    sql = 'SELECT symbol, up_count, down_count FROM (\n' + union_sql + '\n)\nWHERE up_count IS NOT NULL;'
+    res = query_db(db_name='stocktrade_database', query=sql)
+    # res is a list of dicts
+    if isinstance(res, str):
+        raise RuntimeError('query_db error: ' + res)
+    results.extend(res)
+
+# Process results
+processed = []
+for r in results:
+    try:
+        up = float(r.get('up_count'))
+        down = float(r.get('down_count'))
+    except Exception:
+        continue
+    if math.isnan(up) or math.isnan(down):
+        continue
+    processed.append({'symbol': r.get('symbol'), 'up': up, 'down': down})
+
+filtered = [p for p in processed if p['up'] > p['down']]
+filtered.sort(key=lambda x: x['up'], reverse=True)
+top5 = filtered[:5]
+result = [mapping.get(p['symbol'], p['symbol']) for p in top5]
+
+print('__RESULT__:')
+print(json.dumps(result))"""
+
+env_args = {'var_call_gS4FSnUcnhKgrZzAmEzsMtuc': 'file_storage/call_gS4FSnUcnhKgrZzAmEzsMtuc.json', 'var_call_Ddl9uDLtMJpf1r6JrUODvNuK': 'file_storage/call_Ddl9uDLtMJpf1r6JrUODvNuK.json', 'var_call_oXVCb3OKjyhRkTCgKdVFJwnZ': {'available_count': 234, 'sample_symbols': ['AEFC', 'AIN', 'AIV', 'AIZP', 'AJRD', 'AL', 'AMN', 'AMP', 'AMT', 'ARD']}, 'var_call_qsaCVwPAN0nazJrxnaV5eOjq': {'available': ['AEFC', 'AIN', 'AIV', 'AIZP', 'AJRD', 'AL', 'AMN', 'AMP', 'AMT', 'ARD', 'ARGD', 'ARLO', 'ASG', 'AVA', 'BANC', 'BBU', 'BBVA', 'BDXA', 'BKH', 'BKT', 'BLD', 'BNS', 'BV', 'BZH', 'CADE', 'CAE', 'CAF', 'CBT', 'CCC', 'CCZ', 'CHAP', 'CIA', 'CMA', 'CMI', 'CMSA', 'CNK', 'COTY', 'CRC', 'CRM', 'CRS', 'CSL', 'CTS', 'CUBE', 'CURO', 'CVIA', 'CVX', 'CXH', 'DAC', 'DDS', 'DDT', 'DEO', 'DGX', 'DMB', 'DTQ', 'DXC', 'EARN', 'EBS', 'EGO', 'EGY', 'EIG', 'ELF', 'EMP', 'ENLC', 'EPR', 'EPRT', 'ES', 'ESRT', 'ESS', 'ETM', 'EV', 'EVT', 'EXP', 'FMN', 'FPAC', 'FSM', 'GCO', 'GD', 'GDL', 'GDV', 'GEL', 'GJP', 'GLOB', 'GLT', 'GOL', 'GSLD', 'GTY', 'GVA', 'GWB', 'H', 'HBI', 'HDB', 'HEP', 'HIL', 'HIO', 'HIX', 'HLF', 'HLT', 'HNI', 'HRB', 'HTFA', 'IBM', 'IGR', 'IHC', 'IPG', 'IRM', 'IT', 'JGH', 'JHY', 'JKS', 'JMP', 'JNPR', 'KMB', 'KNX', 'KW', 'KYN', 'LB', 'LDOS', 'LHC', 'LHX', 'LOMA', 'MANU', 'MDLX', 'MDLY', 'MED', 'MFO', 'MGR', 'MGU', 'MHE', 'MIY', 'MKC', 'MLI', 'MNE', 'MR', 'MS', 'MTD', 'MYD', 'NFH', 'NGG', 'NJV', 'NNI', 'NNY', 'NRUC', 'NUE', 'NXN', 'OCFT', 'OEC', 'ORA', 'ORAN', 'ORCL', 'ORN', 'PAG', 'PBI', 'PFE', 'PFSI', 'PGR', 'PIM', 'PKE', 'PLAN', 'PLNT', 'PMT', 'PNM', 'PPG', 'PRSP', 'PRTY', 'PSV', 'PSXP', 'QTS', 'QUAD', 'RBC', 'RCB', 'RCI', 'RES', 'REXR', 'RH', 'RMT', 'ROG', 'ROL', 'RPAI', 'RPM', 'RQI', 'RWT', 'SAF', 'SAIL', 'SAM', 'SBR', 'SCU', 'SFUN', 'SHAK', 'SI', 'SITC', 'SJM', 'SJT', 'SJW', 'SLF', 'SMP', 'SOL', 'SPOT', 'SRC', 'SRF', 'SRT', 'SSD', 'STG', 'STL', 'STON', 'SYX', 'TBB', 'TCP', 'TDJ', 'TGP', 'TLYS', 'TNC', 'TPH', 'TRV', 'TTI', 'TUFN', 'TWTR', 'UHT', 'UIS', 'USX', 'UTL', 'VET', 'VGR', 'VHI', 'VIV', 'VKQ', 'VRT', 'VVI', 'WOR', 'WPG', 'WSM', 'X', 'YEXT', 'ZNH', 'ZTR']}, 'var_call_fDMc62Vg49BfhGLh1JiOlhiO': [{'symbol': 'AEFC', 'up_count': 'nan', 'down_count': 'nan'}], 'var_call_bJZlz75E94pNuLxGaOiHGN0D': [{'symbol': 'AIN', 'up_count': '143.0', 'down_count': '101.0'}], 'var_call_f2ntI2EJn8heyocEKBpwrh5V': [{'symbol': 'AIV', 'up_count': '118.0', 'down_count': '128.0'}], 'var_call_1c8Y2YN4uOpzmhCskqsmbVlJ': [{'symbol': 'AIZP', 'up_count': 'nan', 'down_count': 'nan'}], 'var_call_aSAawJhNqxtKy1XWcgGEK7nK': [{'symbol': 'AJRD', 'up_count': '123.0', 'down_count': '123.0'}], 'var_call_TIOXkIULUrbHCc43axCrgd6b': [{'symbol': 'AL', 'up_count': '131.0', 'down_count': '117.0'}], 'var_call_k3fUMuGGdlnnsiW5xJxagkvl': [{'symbol': 'AMN', 'up_count': '134.0', 'down_count': '111.0'}], 'var_call_jGQRLgTjhVuKYrE5Oq1isMfy': [{'symbol': 'AMP', 'up_count': '141.0', 'down_count': '110.0'}], 'var_call_bNBPSSqshO0t99XOZ9GT1m3k': [{'symbol': 'AMT', 'up_count': '128.0', 'down_count': '123.0'}], 'var_call_8cPADodXNi5roqmyUbCfmC5D': [{'symbol': 'ARD', 'up_count': '80.0', 'down_count': '119.0'}], 'var_call_BBrb8bPLcmqmpCVQIKwpqlCk': [{'symbol': 'ARGD', 'up_count': '133.0', 'down_count': '82.0'}], 'var_call_jI5iOCw4OSn08qQJJcCf7IH9': [{'symbol': 'ARLO', 'up_count': 'nan', 'down_count': 'nan'}], 'var_call_WvQiKlOEK7gEc4tCWkdvheTc': [{'symbol': 'ASG', 'up_count': '110.0', 'down_count': '110.0'}], 'var_call_mRX4MAuTYDdYE2DQEaLNgdpY': [{'symbol': 'AVA', 'up_count': '134.0', 'down_count': '112.0'}], 'var_call_1aSkcDucOmcVhkS2DGyp0ioH': [{'symbol': 'BANC', 'up_count': '108.0', 'down_count': '119.0'}], 'var_call_NZGQrVb3tWG1IL195wbJerd5': [{'symbol': 'BBU', 'up_count': '129.0', 'down_count': '120.0'}], 'var_call_NJiZ6hhD6ML0uyX4no9v9pNN': [{'symbol': 'BBVA', 'up_count': '126.0', 'down_count': '104.0'}], 'var_call_lEFpyTCd70y4Cvhm5noFIUMl': [{'symbol': 'BDXA', 'up_count': '83.0', 'down_count': '77.0'}], 'var_call_5Kzwp8KtalxIvgvkvfgwcRm3': [{'symbol': 'BKH', 'up_count': '134.0', 'down_count': '115.0'}], 'var_call_E5F573nlNCu5LRxiDoR2p6yn': [{'symbol': 'BKT', 'up_count': '105.0', 'down_count': '97.0'}], 'var_call_igBFGzfcPFbrHguDXKgdHOSs': [{'symbol': 'BLD', 'up_count': '131.0', 'down_count': '120.0'}], 'var_call_w3jfpV2HcWMpVpfM4hZ5QW8p': [{'symbol': 'BNS', 'up_count': '132.0', 'down_count': '117.0'}], 'var_call_Pvd4Hqplzt4HitG1eZQ6w7j3': [{'symbol': 'BV', 'up_count': 'nan', 'down_count': 'nan'}], 'var_call_qTimDrUIHsALDGK03zxUcKZj': [{'symbol': 'BZH', 'up_count': '127.0', 'down_count': '123.0'}], 'var_call_VUrY70vy8GetiWMf78OdWDP7': [{'symbol': 'CADE', 'up_count': '88.0', 'down_count': '83.0'}], 'var_call_oV1YaoMllcD79FcAxgofwx9A': [{'symbol': 'CAE', 'up_count': '122.0', 'down_count': '117.0'}], 'var_call_rV1EzzuAACmF1QP77HH15bfb': [{'symbol': 'CAF', 'up_count': '131.0', 'down_count': '113.0'}], 'var_call_7c9gE3ECX9JQCAEB6HMe0SVx': [{'symbol': 'CBT', 'up_count': '128.0', 'down_count': '122.0'}], 'var_call_LvJG4kmyEVODY88JGZJ90W0X': [{'symbol': 'CCC', 'up_count': 'nan', 'down_count': 'nan'}], 'var_call_g4pWI7FGX9fyT2fbhGFy7Xfj': [{'symbol': 'CCZ', 'up_count': '17.0', 'down_count': '10.0'}], 'var_call_fry9wKkmI919DlLLsSPLqQid': [{'symbol': 'CHAP', 'up_count': '34.0', 'down_count': '23.0'}], 'var_call_HXCQjJkSLOzWo5uR4lmX4Vky': [{'symbol': 'CIA', 'up_count': '130.0', 'down_count': '112.0'}], 'var_call_aq0RjCGJQ67ubJObpgQWoODb': [{'symbol': 'CMA', 'up_count': '124.0', 'down_count': '124.0'}], 'var_call_B4WMFnO3yXSXCiuMumWDXDyx': [{'symbol': 'CMI', 'up_count': '127.0', 'down_count': '123.0'}], 'var_call_IymiOCqun4IForonRHmjU55n': [{'symbol': 'CMSA', 'up_count': 'nan', 'down_count': 'nan'}], 'var_call_2H04IIq5nScFnpXA7Kd3p7Ql': [{'symbol': 'CNK', 'up_count': '128.0', 'down_count': '122.0'}], 'var_call_yFIW7i9My1aPmlfU5UHDgbCC': [{'symbol': 'COTY', 'up_count': '124.0', 'down_count': '123.0'}], 'var_call_P5q5DXbOGcdRSr16P6ikpfqw': [{'symbol': 'CRC', 'up_count': '121.0', 'down_count': '128.0'}], 'var_call_E92RuGhbWqEBEtWv9xELNYop': [{'symbol': 'CRM', 'up_count': '137.0', 'down_count': '113.0'}], 'var_call_LOqWZHSbaza8SPMldyg7TLBJ': [{'symbol': 'CRS', 'up_count': '121.0', 'down_count': '128.0'}], 'var_call_nMeJWfNgbbqJuOLTeDpr8fSI': [{'symbol': 'CSL', 'up_count': '131.0', 'down_count': '119.0'}], 'var_call_XzAiXpSn6hoyJuOS1SBUHp5j': [{'symbol': 'CTS', 'up_count': '113.0', 'down_count': '122.0'}], 'var_call_04xCO7sqQe4Hkxe4bScSDa31': [{'symbol': 'CUBE', 'up_count': '133.0', 'down_count': '113.0'}], 'var_call_oNPmEJQttwW6ykMvImdMmm34': [{'symbol': 'CURO', 'up_count': '9.0', 'down_count': '7.0'}], 'var_call_jVL8eLRKLsvNT36cUO5Se49c': [{'symbol': 'CVIA', 'up_count': 'nan', 'down_count': 'nan'}], 'var_call_jIBLH2xDBzV7ZQeI6OeOIblC': [{'symbol': 'CVX', 'up_count': '118.0', 'down_count': '132.0'}], 'var_call_sdnf59hmhjieICyGk4cGQZt4': [{'symbol': 'CXH', 'up_count': '126.0', 'down_count': '91.0'}], 'var_call_WoQsktdGeSKymAMoDRWTYFf1': [{'symbol': 'DAC', 'up_count': '66.0', 'down_count': '115.0'}], 'var_call_5qW9L2STO1LtoEuP5AGuhevA': [{'symbol': 'DDS', 'up_count': '128.0', 'down_count': '123.0'}]}
+
+exec(code, env_args)

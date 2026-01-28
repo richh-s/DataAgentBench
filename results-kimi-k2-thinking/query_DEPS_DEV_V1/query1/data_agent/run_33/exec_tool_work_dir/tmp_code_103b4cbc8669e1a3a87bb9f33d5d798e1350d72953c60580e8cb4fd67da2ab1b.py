@@ -1,0 +1,105 @@
+code = """import json
+import pandas as pd
+import re
+
+# File paths from previous queries
+package_file_path = locals()['var_functions.query_db:24']
+project_pv_file_path = locals()['var_functions.query_db:12']
+project_info_file_path = locals()['var_functions.query_db:22']
+
+# Load data
+with open(package_file_path, 'r') as f:
+    package_data = json.load(f)
+
+with open(project_pv_file_path, 'r') as f:
+    project_pv_data = json.load(f)
+
+with open(project_info_file_path, 'r') as f:
+    project_info_data = json.load(f)
+
+# Process package data to get latest release version for each package
+latest_packages = {}
+for pkg in package_data:
+    try:
+        version_info = json.loads(pkg['VersionInfo'])
+        if version_info.get('IsRelease', False):
+            name = pkg['Name']
+            ordinal = version_info.get('Ordinal', 0)
+            if name not in latest_packages or ordinal > latest_packages[name]['Ordinal']:
+                latest_packages[name] = {
+                    'Name': name,
+                    'Version': pkg['Version'],
+                    'Ordinal': ordinal
+                }
+    except:
+        continue
+
+latest_package_list = list(latest_packages.values())
+
+# Create DataFrames
+package_df = pd.DataFrame(latest_package_list)
+project_pv_df = pd.DataFrame(project_pv_data)
+
+# Filter project_pv for NPM packages
+project_pv_npm_df = project_pv_df[project_pv_df['System'] == 'NPM']
+
+# Join packages with project_packageversion (this finds which packages have GitHub repos)
+joined_df = pd.merge(
+    package_df, 
+    project_pv_npm_df, 
+    on=['Name', 'Version'], 
+    how='inner'
+)
+
+# Extract ProjectName from project info and extract stars
+def extract_stars(text):
+    if not text:
+        return 0
+    match = re.search(r'(\d+,?\d*)\s+stars?', str(text))
+    if match:
+        try:
+            return int(match.group(1).replace(',', ''))
+        except:
+            return 0
+    return 0
+
+def extract_project_name(text):
+    if not text:
+        return None
+    # Pattern: "project X/Y" or "project X/Y "
+    match = re.search(r'project\s+([\w\-]+/[\w\-]+)', str(text), re.IGNORECASE)
+    if match:
+        return match.group(1)
+    return None
+
+project_info_df = pd.DataFrame(project_info_data)
+project_info_df['ProjectName'] = project_info_df['Project_Information'].apply(extract_project_name)
+project_info_df['Stars'] = project_info_df['Project_Information'].apply(extract_stars)
+
+# Filter out null project names
+project_info_clean_df = project_info_df.dropna(subset=['ProjectName'])
+
+# Join with project info to get stars
+final_df = pd.merge(
+    joined_df,
+    project_info_clean_df[['ProjectName', 'Stars']],
+    on='ProjectName',
+    how='inner'
+)
+
+# Remove duplicates - keep only one entry per package name
+# (there might be duplicates due to multiple versions mapping to same project)
+final_df = final_df.drop_duplicates(subset=['Name'], keep='first')
+
+# Sort by stars and get top 5
+top_5_df = final_df.nlargest(5, 'Stars')[['Name', 'Version', 'ProjectName', 'Stars']]
+
+# Convert to list of dicts
+result = top_5_df.to_dict('records')
+
+print("__RESULT__:")
+print(json.dumps(result, indent=2))"""
+
+env_args = {'var_functions.list_db:0': ['packageinfo'], 'var_functions.query_db:2': [{'Name': '@ecl/twig-component-carousel', 'Version': '3.11.1', 'VersionInfo': '{\n  "IsRelease": true,\n  "Ordinal": 29\n}'}, {'Name': '@douganderson444/panzoom-node', 'Version': '1.1.5', 'VersionInfo': '{\n  "IsRelease": true,\n  "Ordinal": 18\n}'}, {'Name': '@douganderson444/panzoom-node', 'Version': '1.1.1', 'VersionInfo': '{\n  "IsRelease": true,\n  "Ordinal": 14\n}'}, {'Name': '@dreamworld/dw-select', 'Version': '3.1.2-fix-double-click-issue.1', 'VersionInfo': '{\n  "IsRelease": false,\n  "Ordinal": 129\n}'}, {'Name': '@discue/ui-components', 'Version': '0.13.0', 'VersionInfo': '{\n  "IsRelease": true,\n  "Ordinal": 12\n}'}, {'Name': '@dvcol/web-extension-utils', 'Version': '1.1.1', 'VersionInfo': '{\n  "IsRelease": true,\n  "Ordinal": 7\n}'}, {'Name': '@dxos/client', 'Version': '2.28.20-dev.a2e143d3', 'VersionInfo': '{\n  "IsRelease": false,\n  "Ordinal": 1514\n}'}, {'Name': '@dxos/client', 'Version': '2.28.20-dev.a2e143d3', 'VersionInfo': '{\n  "IsRelease": false,\n  "Ordinal": 1514\n}'}, {'Name': '@edgedev/firebase', 'Version': '1.0.12', 'VersionInfo': '{\n  "IsRelease": true,\n  "Ordinal": 13\n}'}, {'Name': '@eden-network/data', 'Version': '1.0.9-sev.5', 'VersionInfo': '{\n  "IsRelease": false,\n  "Ordinal": 14\n}'}], 'var_functions.list_db:5': ['project_info', 'project_packageversion'], 'var_functions.query_db:6': [{'Project_Information': 'The project lberrocal/npm-packages-template is hosted on GitHub and currently has 0 open issues, 0 stars, and 0 forks.', 'Licenses': '[]', 'Description': 'Template for npm package library configured to be used with CI/CD', 'Homepage': 'None', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project leaflet/leaflet on GitHub is a popular open-source library that currently has 521 open issues, 38715 stars, and 5782 forks, making it a widely recognized tool in the developer community.', 'Licenses': '[\n  "non-standard"\n]', 'Description': '🍃 JavaScript library for mobile-friendly interactive maps 🇺🇦', 'Homepage': 'https://leafletjs.com', 'OSSFuzz': 'nan'}, {'Project_Information': 'The project leaflet/leaflet.fullscreen on GitHub currently has 29 open issues, 417 stars, and 118 forks, making it a noteworthy contribution to the Leaflet ecosystem.', 'Licenses': '[\n  "ISC"\n]', 'Description': 'A fullscreen control for Leaflet', 'Homepage': 'http://leaflet.github.io/Leaflet.fullscreen/', 'OSSFuzz': 'nan'}], 'var_functions.query_db:8': [{'System': 'NPM', 'Name': '@dms/io', 'Version': '0.9.0', 'ProjectName': 'dataminingsupply/dms-io'}, {'System': 'NPM', 'Name': '@dvo/fc', 'Version': '0.0.4', 'ProjectName': 'isacvale/fc'}, {'System': 'NPM', 'Name': '@djie/ui', 'Version': '1.0.17', 'ProjectName': 'laihaojie/jie'}, {'System': 'NPM', 'Name': '@djie/ui', 'Version': '1.0.16', 'ProjectName': 'laihaojie/jie'}, {'System': 'NPM', 'Name': '@djie/ws', 'Version': '1.0.8', 'ProjectName': 'laihaojie/jie'}, {'System': 'NPM', 'Name': '@djie/ws', 'Version': '1.0.10', 'ProjectName': 'laihaojie/jie'}, {'System': 'NPM', 'Name': '@djie/ws', 'Version': '1.0.17', 'ProjectName': 'laihaojie/jie'}, {'System': 'NPM', 'Name': '@dlcs/ng', 'Version': '1.0.0', 'ProjectName': 'winup/dlcs-ng'}, {'System': 'NPM', 'Name': '@dms/cli', 'Version': '1.0.1', 'ProjectName': 'dataminingsupply/dms-cli'}, {'System': 'NPM', 'Name': '@dms/cli', 'Version': '1.0.0', 'ProjectName': 'dataminingsupply/dms-cli'}], 'var_functions.query_db:10': 'file_storage/functions.query_db:10.json', 'var_functions.query_db:12': 'file_storage/functions.query_db:12.json', 'var_functions.query_db:14': 'file_storage/functions.query_db:14.json', 'var_functions.execute_python:18': {'total_packages': 661372, 'release_packages': 337844, 'project_pv_count': 597602}, 'var_functions.execute_python:20': {'total_latest_release_packages': 15811, 'sample': [{'Name': '@ecl/twig-component-carousel', 'Version': '3.11.1', 'Ordinal': 29}, {'Name': '@douganderson444/panzoom-node', 'Version': '1.2.2', 'Ordinal': 25}, {'Name': '@discue/ui-components', 'Version': '0.38.2', 'Ordinal': 45}, {'Name': '@dvcol/web-extension-utils', 'Version': '2.3.4', 'Ordinal': 27}, {'Name': '@edgedev/firebase', 'Version': '2.0.20', 'Ordinal': 133}]}, 'var_functions.query_db:22': 'file_storage/functions.query_db:22.json', 'var_functions.query_db:24': 'file_storage/functions.query_db:24.json', 'var_functions.execute_python:26': [{'Name': '@dylanvann/svelte', 'Version': '3.25.4', 'ProjectName': 'sveltejs/svelte', 'Stars': 73499}, {'Name': '@dylanvann/svelte', 'Version': '3.25.4', 'ProjectName': 'sveltejs/svelte', 'Stars': 73499}, {'Name': '@dumc11/tailwindcss', 'Version': '0.4.0', 'ProjectName': 'tailwindcss/tailwindcss', 'Stars': 73464}, {'Name': '@dumc11/tailwindcss', 'Version': '0.4.0', 'ProjectName': 'tailwindcss/tailwindcss', 'Stars': 73464}, {'Name': '@dman777/shadow-dom-quill-temp', 'Version': '1.0.0', 'ProjectName': 'quilljs/quill', 'Stars': 42407}]}
+
+exec(code, env_args)

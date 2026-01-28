@@ -10,6 +10,8 @@ GEMINI_25FLASH_WARNING = """WARNING (must follow exactly):
 - Do not generate code for tool calling. Always generate the tool call JSON.
 When calling tools, output the tool name exactly as defined. Do not prepend 'default_api.' or any other namespace to the tool name."""
 
+KIMI_TOOL_CALL_INSTRUCTINOS = """2. Inside execute_python code you may read storage entries using the provided key names, e.g., if the tool call id is 'functions.tool:id', you can access its result via `locals()['var_functions.tool:id']` in your code."""
+
 SYSTEM_PROMPT = """
 You are a data analysis agent. Use only the tools listed below to answer the user's query, based on the provided DATABASE DESCRIPTION for logical database names and their types (SQL or MongoDB), and the results of previous tool calls.
 
@@ -79,6 +81,8 @@ def init_messages(user_query: str, db_description: str, deployment_name: str, sy
             system_prompt_suffix = "\n\n" + GEMINI_25FLASH_WARNING # MALFORMED_FUCTION_CALL fix: https://www.linkedin.com/pulse/3-step-fix-persistent-malformedfunctioncall-error-production-gupta-fssne/
     elif "gpt" in deployment_name.lower():
         tool_call_instructions = GPT_TOOL_CALL_INSTRUCTIONS
+    elif "kimi" in deployment_name.lower():
+        tool_call_instructions = KIMI_TOOL_CALL_INSTRUCTINOS
     else:
         raise ValueError(f"Unknown deployment_name: {deployment_name}")
     

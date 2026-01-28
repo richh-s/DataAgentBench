@@ -1,0 +1,108 @@
+code = """import json
+import pandas as pd
+
+business_data = var_functions.query_db_10
+review_data = var_functions.query_db_12
+
+with open(business_data, 'r') as f:
+    businesses = json.load(f)
+
+with open(review_data, 'r') as f:
+    reviews = json.load(f)
+
+df_business = pd.DataFrame(businesses)
+df_reviews = pd.DataFrame(reviews)
+
+# Clean IDs
+df_business['business_id_clean'] = df_business['business_id'].str.replace('businessid_', '')
+df_reviews['business_id_clean'] = df_reviews['business_ref'].str.replace('businessref_', '')
+
+# Filter credit card accepting businesses
+credit_card_businesses = []
+for idx, row in df_business.iterrows():
+    attrs = row['attributes']
+    accepts_cards = False
+    if isinstance(attrs, dict):
+        card_attr = attrs.get('BusinessAcceptsCreditCards')
+        if card_attr and str(card_attr).lower() == 'true':
+            accepts_cards = True
+    credit_card_businesses.append(accepts_cards)
+
+df_business['accepts_credit_cards'] = credit_card_businesses
+
+df_cc_businesses = df_business[df_business['accepts_credit_cards']].copy()
+
+# Extract categories from descriptions
+import re
+
+def extract_categories(description):
+    if not description or pd.isna(description):
+        return []
+    
+    categories = []
+    
+    # Pattern 1: services in ...
+    match1 = re.search(r'services in (.+?)(?:\.|, providing|$)', description, re.IGNORECASE)
+    if match1:
+        text = match1.group(1)
+        parts = re.split(r',\s*|\sand\s', text)
+        categories.extend([p.strip() for p in parts if p.strip()])
+    
+    # Pattern 2: category of '...'
+    match2 = re.search(r"category of '(.+?)'", description, re.IGNORECASE)
+    if match2:
+        text = match2.group(1)
+        parts = re.split(r',\s*', text)
+        categories.extend([p.strip() for p in parts if p.strip()])
+    
+    # Pattern 3: fields of ...
+    match3 = re.search(r'fields of (.+?)(?:\.|, making|$)', description, re.IGNORECASE)
+    if match3:
+        text = match3.group(1)
+        parts = re.split(r',\s*', text)
+        categories.extend([p.strip() for p in parts if p.strip()])
+    
+    # Clean up
+    categories = [cat for cat in categories if cat and len(cat) > 2]
+    return categories
+
+df_cc_businesses['categories'] = df_cc_businesses['description'].apply(extract_categories)
+
+# Count categories
+category_counts = {}
+category_business_ids = {}
+
+for idx, row in df_cc_businesses.iterrows():
+    bid = row['business_id_clean']
+    cats = row['categories']
+    for cat in cats:
+        if cat not in category_counts:
+            category_counts[cat] = 0
+            category_business_ids[cat] = []
+        category_counts[cat] += 1
+        category_business_ids[cat].append(bid)
+
+# Find top category
+top_category = max(category_counts.items(), key=lambda x: x[1])
+top_category_name = top_category[0]
+top_category_count = top_category[1]
+
+# Get business IDs for top category
+top_business_ids = category_business_ids[top_category_name]
+
+# Calculate average rating for businesses in this category
+df_top_business_ratings = df_reviews[df_reviews['business_id_clean'].isin(top_business_ids)]
+avg_rating = df_top_business_ratings['rating'].astype(float).mean()
+
+result = {
+    'top_category': top_category_name,
+    'business_count': top_category_count,
+    'average_rating': round(avg_rating, 2)
+}
+
+print('__RESULT__:')
+print(json.dumps(result, indent=2))"""
+
+env_args = {'var_functions.list_db:0': ['business', 'checkin'], 'var_functions.query_db:2': [{'_id': '6859a000fe8b31cd7362e2ab', 'business_id': 'businessid_49', 'name': 'Steps to Learning Montessori Preschool', 'attributes': {'BusinessAcceptsCreditCards': 'True', 'WiFi': "u'no'", 'BusinessAcceptsBitcoin': 'False'}}, {'_id': '6859a000fe8b31cd7362e2ac', 'business_id': 'businessid_47', 'name': 'Breeze Blow Dry Bar', 'attributes': {'ByAppointmentOnly': 'False', 'BusinessAcceptsCreditCards': 'True', 'GoodForKids': 'True', 'RestaurantsPriceRange2': '2', 'BikeParking': 'False', 'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': True, 'valet': False}"}}, {'_id': '6859a000fe8b31cd7362e2ad', 'business_id': 'businessid_88', 'name': 'Impact Guns', 'attributes': {'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'GoodForKids': 'True', 'BusinessAcceptsCreditCards': 'True', 'ByAppointmentOnly': 'False', 'BikeParking': 'True'}}, {'_id': '6859a000fe8b31cd7362e2ae', 'business_id': 'businessid_41', 'name': 'Palms Primary Care', 'attributes': 'None'}, {'_id': '6859a000fe8b31cd7362e2af', 'business_id': 'businessid_33', 'name': 'J&Q Nails', 'attributes': {'BusinessParking': "{'garage': False, 'street': False, 'validated': False, 'lot': False, 'valet': False}", 'BusinessAcceptsCreditCards': 'True', 'AcceptsInsurance': 'False', 'ByAppointmentOnly': 'False', 'RestaurantsPriceRange2': '2', 'WheelchairAccessible': 'True', 'BikeParking': 'False'}}], 'var_functions.query_db:5': 'file_storage/functions.query_db:5.json', 'var_functions.list_db:6': ['review', 'tip', 'user'], 'var_functions.query_db:8': [{'review_id': 'reviewid_135', 'user_id': 'userid_548', 'business_ref': 'businessref_34', 'rating': '2', 'useful': '0', 'funny': '0', 'cool': '0', 'text': "Sure, it's cheap, but there isn't much to see. I think you'd have to have a big interest in the topic to find it exciting, and kids would be bored. I think it only lasted maybe 10-15 minutes. Our tour person was somewhat knowledgeable and seemed into it, but he didn't give us much time to read the information on each level. I had to take photos of the plaques to read later, and half of them need replacing, as they are so sun-bleached they're virtually unreadable (tour guide said they're being replaced soon and that the other half were already replaced). I really thought it needed to be higher up to give a good view. The Lewis and Clark State Historic Site just down the road was more interesting and free. If you live around here like I do and have nothing better to do, you might want to give it a go if the topic interests you, but if you're a tourist, this is not something you should waste your time on.", 'date': 'August 01, 2016 at 03:44 AM'}, {'review_id': 'reviewid_1067', 'user_id': 'userid_213', 'business_ref': 'businessref_89', 'rating': '5', 'useful': '2', 'funny': '0', 'cool': '0', 'text': 'Very good service but a little pricey for the services your receive. Clean and sanitary too', 'date': 'June 14, 2021 at 11:39 AM'}, {'review_id': 'reviewid_871', 'user_id': 'userid_616', 'business_ref': 'businessref_82', 'rating': '4', 'useful': '0', 'funny': '0', 'cool': '0', 'text': 'My friend and I enjoyed a fantastic meal at Miles Table and I can\'t wait to return! Given that it was half-price-burger-day, I felt the need to give the falafel burger a shot. It was delicious! I\'m not always a falafel fan, but this "burger" was awesome. The brioche bun was the perfect consistency and the portion of fries was plentiful. My friend enjoyed the cobb salad (though she requested balsamic dressing instead of buttermilk and she received buttermilk). The restaurant is quaint and has ample seating. While you order at the counter, our "server" (I believe her name was Sarah) was fantastic and made sure we had everything we needed. Overall, this is a great spot and I will be back soon...I may have to make it a weekly lunch staple!', 'date': '29 May 2013, 23:01'}, {'review_id': 'reviewid_314', 'user_id': 'userid_1903', 'business_ref': 'businessref_66', 'rating': '2', 'useful': '1', 'funny': '2', 'cool': '1', 'text': "This location is not one of my favorites people here get pretty rude sometimes no one looks happy it's hit or miss with the food sometimes it's awesome other times terrible I always get honey walnut shrimp for an extra 1.25 which is retarded and Beijing beef I enjoy the rice n the noodles but idk do if u dare", 'date': '21 May 2016, 18:48'}, {'review_id': 'reviewid_487', 'user_id': 'None', 'business_ref': 'businessref_95', 'rating': '1', 'useful': '0', 'funny': '0', 'cool': '0', 'text': 'Terrible service. I was charged twice for online order and they refused to refund me. Numerous times this has happened', 'date': 'November 01, 2021 at 05:11 PM'}], 'var_functions.query_db:10': 'file_storage/functions.query_db:10.json', 'var_functions.query_db:12': 'file_storage/functions.query_db:12.json'}
+
+exec(code, env_args)

@@ -1,0 +1,42 @@
+code = """import json
+import sys
+# Collect all storage variables available in this execution environment
+storage_vars = {k: v for k, v in globals().items() if k.startswith('var_call_')}
+
+# Filter those that look like query_db results: list with dicts containing 'cnt' and 'symbol'
+counts = {}
+for name, val in storage_vars.items():
+    try:
+        if isinstance(val, list) and len(val) > 0 and isinstance(val[0], dict) and 'cnt' in val[0] and 'symbol' in val[0]:
+            for rec in val:
+                sym = rec.get('symbol')
+                cnt = int(rec.get('cnt') if rec.get('cnt') is not None else 0)
+                counts[sym] = counts.get(sym, 0) + cnt
+    except Exception:
+        pass
+
+# Load stockinfo records to map symbol to company name
+# var_call_EKRU21kFKQskSEPzlers6tXc is a path to the JSON file
+stockinfo = []
+if 'var_call_EKRU21kFKQskSEPzlers6tXc' in globals():
+    path = var_call_EKRU21kFKQskSEPzlers6tXc
+    with open(path, 'r') as f:
+        stockinfo = json.load(f)
+
+symbol_to_company = {rec['Symbol']: rec['company'] for rec in stockinfo}
+
+# Get top 5 symbols by count
+sorted_syms = sorted(counts.items(), key=lambda x: x[1], reverse=True)
+top5 = sorted_syms[:5]
+
+# Map to company names, if not found use symbol
+top5_companies = [symbol_to_company.get(sym, sym) for sym, cnt in top5]
+
+# Prepare output as JSON array string
+output = json.dumps(top5_companies)
+print('__RESULT__:')
+print(output)"""
+
+env_args = {'var_call_EKRU21kFKQskSEPzlers6tXc': 'file_storage/call_EKRU21kFKQskSEPzlers6tXc.json', 'var_call_VxyFnrgSSAtrWjzbvtTu7TAz': 'file_storage/call_VxyFnrgSSAtrWjzbvtTu7TAz.json', 'var_call_TzCDBGqL2K92lh6SKr5fKSPt': ['AGMH', 'ALACU', 'AMHC', 'ANDA', 'APEX', 'BCLI', 'BHAT', 'BIOC', 'BKYI', 'BLFS', 'BOSC', 'BOTJ', 'BWEN', 'CBAT', 'CCCL', 'CDMOP', 'CEMI', 'CFBK', 'CFFA', 'CLRB', 'CORV', 'CPAAU', 'CPAH', 'CUBA', 'CVV', 'DZSI', 'ELSE', 'EXPC', 'EYEG', 'FAMI', 'FNCB', 'FSBW', 'FTFT', 'GDYN', 'GLG', 'GRNVU', 'GTEC', 'HCCOU', 'HNNA', 'HQI', 'HRTX', 'IDEX', 'IGIC', 'IOTS', 'ISNS', 'ITI', 'LACQ', 'MBCN', 'MBNKP', 'MCEP', 'MLND', 'MMAC', 'MNCLU', 'MNPR', 'NVEE', 'NXTD', 'OPOF', 'OPTT', 'ORGO', 'ORSNU', 'OTEL', 'PBFS', 'PBTS', 'PCSB', 'PECK', 'PEIX', 'PFIE', 'PLIN', 'POPE', 'QRHC', 'SES', 'SHSP', 'SNSS', 'SSNT', 'STKS', 'TGLS', 'TMSR', 'VERB', 'VMD', 'VRRM', 'VTIQW', 'VVPR', 'WHLM', 'WHLR', 'XBIOW', 'XPEL'], 'var_call_wYFeFqERjmwewrXsv1f16zr9': [{'cnt': '13', 'symbol': 'AGMH'}], 'var_call_JxhdQoiLAF1CC8N0THOjUcR8': [{'cnt': '0', 'symbol': 'ALACU'}], 'var_call_hU2dy07H8kfD2xz86GECwn9o': [{'cnt': '0', 'symbol': 'AMHC'}], 'var_call_gEmeO5eRcSo0FJxQwJVBQ83y': [{'cnt': '0', 'symbol': 'ANDA'}], 'var_call_vf97TjHssc23uLlAMxfaJ2Rg': [{'cnt': '15', 'symbol': 'APEX'}], 'var_call_HREpdXvX9CUUAkJSNXTWqKco': [{'cnt': '0', 'symbol': 'BCLI'}], 'var_call_GofX3oBHEdz4FP7kdfmc0eVl': [{'cnt': '10', 'symbol': 'BHAT'}], 'var_call_trcZURA9Sb0sucvypnLr7hDV': [{'cnt': '21', 'symbol': 'BIOC'}], 'var_call_3thvOfbvhT8s31XMrheVexCK': [{'cnt': '16', 'symbol': 'BKYI'}], 'var_call_v9ZRv9c0dm71UGTTUQP1SGsR': [{'cnt': '0', 'symbol': 'BLFS'}], 'var_call_FS2fz64duAmMLLkoBEzeETme': [{'cnt': '3', 'symbol': 'BOSC'}], 'var_call_3oe8JUx3AOaFpudmM7Y54YUz': [{'cnt': '0', 'symbol': 'BOTJ'}], 'var_call_axGGziGYVKcAkY1OJeONnvWr': [{'cnt': '5', 'symbol': 'BWEN'}], 'var_call_Y3Yz0WNxIEkOBhm8uQT6O2TS': [{'cnt': '23', 'symbol': 'CBAT'}], 'var_call_ecyrP7YKYv1XzEIYWruEgLLy': [{'cnt': '13', 'symbol': 'CCCL'}], 'var_call_knjApFyWhMNdB4zEHNxeDaPt': [{'cnt': '0', 'symbol': 'CDMOP'}], 'var_call_p4UxacL9JJxaDwm0ttkDIjXL': [{'cnt': '3', 'symbol': 'CEMI'}], 'var_call_I8T5Bsyoi6fLitQcoYDSy6Cb': [{'cnt': '0', 'symbol': 'CFBK'}], 'var_call_cY8VXe37a0N3vt70OTnj8Tbp': [{'cnt': '0', 'symbol': 'CFFA'}], 'var_call_jK4XzRfUo7zz2b0MybCqN1i7': [{'cnt': '14', 'symbol': 'CLRB'}], 'var_call_wXfCLhTzJJqlOydveWaRm1a9': [{'cnt': '10', 'symbol': 'CORV'}], 'var_call_8iLNVQbumdtCNMNHsytEvs9s': [{'cnt': '0', 'symbol': 'CPAAU'}], 'var_call_9TpEQrjK2keviWT2VfumbzcA': [{'cnt': '16', 'symbol': 'CPAH'}], 'var_call_piLKNNZqki3XTaHRKrmqGXgY': [{'cnt': '0', 'symbol': 'CUBA'}], 'var_call_XA6C8EQ4ZUM19RQTr2PHJBBG': [{'cnt': '0', 'symbol': 'CVV'}], 'var_call_7Kn8O9yA6VP6TFinQ5o3oS1w': [{'cnt': '1', 'symbol': 'DZSI'}], 'var_call_9u4oasyEYOXnFbpf6ZFS4LJB': [{'cnt': '0', 'symbol': 'ELSE'}], 'var_call_gaWaw8guFD2hJCQ3iECKF9ar': [{'cnt': '0', 'symbol': 'EXPC'}], 'var_call_WeyVu0kiWHtpLOyYyK4CN5Cq': [{'cnt': '18', 'symbol': 'EYEG'}], 'var_call_ZztnJZLvRiz5hybiLbQr4Grn': [{'cnt': '23', 'symbol': 'FAMI'}], 'var_call_7XXGu7q2wZgDAvVV82Dt3j6N': [{'cnt': '1', 'symbol': 'FNCB'}], 'var_call_3LBK3qnIjFNmrkzX4A4IlYou': [{'cnt': '0', 'symbol': 'FSBW'}], 'var_call_Udj9TFc3dlEluojHYcih6mRc': [{'cnt': '21', 'symbol': 'FTFT'}], 'var_call_Lq7Ugw262zwDj8SqMqOQz34a': [{'cnt': '0', 'symbol': 'GDYN'}], 'var_call_szmbqQCvZrsvnV0PFpu7M1kV': [{'cnt': '42', 'symbol': 'GLG'}], 'var_call_Ylax14lVWxx5y0Nxnx5yguPL': [{'cnt': '0', 'symbol': 'GRNVU'}], 'var_call_D90RG5E04Dcgflk8sQJUK3gU': [{'cnt': '0', 'symbol': 'GTEC'}], 'var_call_QrGvmS4ZrN1TSGHkxZuPFvkR': [{'cnt': '0', 'symbol': 'HCCOU'}], 'var_call_QwZ0msKllWLcqmDd6s1JalUy': [{'cnt': '0', 'symbol': 'HNNA'}], 'var_call_Su6xd2LWi5O2M1kapxCAbxzJ': [{'cnt': '2', 'symbol': 'HQI'}], 'var_call_9j7I8mgdzOOZtuA49QHjjOAR': [{'cnt': '1', 'symbol': 'HRTX'}], 'var_call_KCCagCut5e3rwo4MpHkrS0I2': [{'cnt': '15', 'symbol': 'IDEX'}], 'var_call_hUthjykVQjS8O4BG2XpJUa0O': [{'cnt': '0', 'symbol': 'IGIC'}], 'var_call_6IFE3ESpYOx8sYL19aXHv2rC': [{'cnt': '1', 'symbol': 'IOTS'}], 'var_call_znbhE5hNxiPo7PNxc8m5HOAR': [{'cnt': '0', 'symbol': 'ISNS'}], 'var_call_VGRJqeWCujA8wIzmzUrCXpLh': [{'cnt': '0', 'symbol': 'ITI'}], 'var_call_mQ49BCvhRgnEjJ5grsixzSc6': [{'cnt': '0', 'symbol': 'LACQ'}], 'var_call_0BP3cFyc9M6EFMYmXO6blnHq': [{'cnt': '0', 'symbol': 'MBCN'}], 'var_call_H0awUNILgDElqmZc2WG52Uvs': [{'cnt': '0', 'symbol': 'MBNKP'}], 'var_call_SoQR6XO7t1T58vzRsNkNbaYH': [{'cnt': '14', 'symbol': 'MCEP'}], 'var_call_1ZZlRHemGxp80jQ6me6PmGum': [{'cnt': '3', 'symbol': 'MLND'}], 'var_call_oRinaxu4Irs0ccJ2chbc5IB9': [{'cnt': '1', 'symbol': 'MMAC'}], 'var_call_Vsk4dmNAM1VG4J6qlhMGhjPG': [{'cnt': '0', 'symbol': 'MNCLU'}], 'var_call_VhOAp50z2sTqNPE3fjehAFEs': [{'cnt': '4', 'symbol': 'MNPR'}], 'var_call_gLcywjD4OhyzmG4K0a8TX0oY': [{'cnt': '1', 'symbol': 'NVEE'}], 'var_call_v5JSmM54zKzibKkxLlA8dZ8r': [{'cnt': '15', 'symbol': 'NXTD'}], 'var_call_ClBusWVxu0XyuDOx69RDqT7n': [{'cnt': '0', 'symbol': 'OPOF'}], 'var_call_o5qt0Om7ZbKpzdO8PguWT54S': [{'cnt': '12', 'symbol': 'OPTT'}], 'var_call_TXjW1oCy7rjk92bgAwMWLkX2': [{'cnt': '15', 'symbol': 'ORGO'}], 'var_call_YbSgVgAYPisYKi8b8F8ElLuj': [{'cnt': '0', 'symbol': 'ORSNU'}], 'var_call_J9sluAKRxsm3G8oCdDl9Reoh': [{'cnt': '1', 'symbol': 'OTEL'}], 'var_call_bFW4MxiKDoZebijrXEKx8XG0': [{'cnt': '0', 'symbol': 'PBFS'}], 'var_call_0HDXXlo2POc1XnvaJhgGPMsY': [{'cnt': '8', 'symbol': 'PBTS'}], 'var_call_opIbtZ7qeDRmyr1PaPnxNSJT': [{'cnt': '0', 'symbol': 'PCSB'}], 'var_call_co16xqdDVscUnfy8uEH9s4Vf': [{'cnt': '19', 'symbol': 'PECK'}], 'var_call_jNaK3CoppzetA1rzUVLZDbql': [{'cnt': '12', 'symbol': 'PEIX'}], 'var_call_qW95YcYym7Lz5gXhq6n1tmku': [{'cnt': '2', 'symbol': 'PFIE'}], 'var_call_Q0OEVqf9n0o29NLrThcyesZT': [{'cnt': '1', 'symbol': 'PLIN'}], 'var_call_TRSP4K6pFmPiDjOiUZDYDL2Z': [{'cnt': '0', 'symbol': 'POPE'}], 'var_call_Vq6ut3sbkQTI47dfvYKLDeMK': [{'cnt': '3', 'symbol': 'QRHC'}], 'var_call_I1R4mbF6w9KybjRtW2doOCho': [{'cnt': '51', 'symbol': 'SES'}], 'var_call_AycGq1GT3uBitKwjHSGtWrkz': [{'cnt': '1', 'symbol': 'SHSP'}], 'var_call_WZibKnM6TkqSDiSHG35Rdtnx': [{'cnt': '32', 'symbol': 'SNSS'}], 'var_call_CYj3XhxzCx7rVeToYd3H1rft': [{'cnt': '11', 'symbol': 'SSNT'}], 'var_call_PrhgSOF790wCxMEr6TT9dnz7': [{'cnt': '0', 'symbol': 'STKS'}], 'var_call_0b1IMlztEZ218XjsDdra2jEe': [{'cnt': '0', 'symbol': 'TGLS'}], 'var_call_CyYSHsogDezyMqDGsM836c1b': [{'cnt': '40', 'symbol': 'TMSR'}], 'var_call_kwq4feo1jGFaOj5hy7HYvfdf': [{'cnt': '38', 'symbol': 'VERB'}], 'var_call_UKV7rKauKXheMe6DG4pt1iQS': [{'cnt': '1', 'symbol': 'VMD'}], 'var_call_b5q4GQvPIHXv6tzTb2kIIFxZ': [{'cnt': '0', 'symbol': 'VRRM'}], 'var_call_mHMw2TKYpv0Y78WBpCqWjwvp': [{'cnt': '6', 'symbol': 'VTIQW'}], 'var_call_9uTqsiHqkqxIOCkPssH0FHDP': [{'cnt': '14', 'symbol': 'VVPR'}], 'var_call_tm4V2zCnA1G2bJbh4ElBJkMm': [{'cnt': '0', 'symbol': 'WHLM'}], 'var_call_VsXN5rblTTKSHJ9e4XZV1kgH': [{'cnt': '15', 'symbol': 'WHLR'}], 'var_call_OaCa1sE4vwzncBUmOrLmBboI': [{'cnt': '7', 'symbol': 'XBIOW'}], 'var_call_oY47iiQO8lntH1UWYcjINr57': [{'cnt': '4', 'symbol': 'XPEL'}]}
+
+exec(code, env_args)

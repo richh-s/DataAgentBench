@@ -1,0 +1,140 @@
+code = """import json
+import re
+import os
+
+# Find and load all available JSON files from queries
+base_path = '/tmp'
+all_files = []
+if os.path.exists(base_path):
+    all_files = [os.path.join(base_path, f) for f in os.listdir(base_path) if f.startswith('tmp') and f.endswith('.json')]
+
+print("Found " + str(len(all_files)) + " temporary files")
+female_bladder_clinical = []
+cdh1_mutations = []
+
+# Load all files and determine what they contain
+for file_path in all_files:
+    try:
+        with open(file_path, 'r') as f:
+            data = json.load(f)
+        
+        if len(data) > 0:
+            # Check what this file contains
+            first_item = data[0]
+            
+            # If it has Patient_description and histological_type, it's clinical data
+            if 'Patient_description' in first_item and 'histological_type' in first_item:
+                female_bladder_clinical = data  # Use assignment instead of extend to avoid duplicates
+                print("Loaded clinical data from " + os.path.basename(file_path) + ": " + str(len(data)) + " records")
+            
+            # If it has ParticipantBarcode, it's mutation data
+            elif 'ParticipantBarcode' in first_item:
+                cdh1_mutations = data  # Use assignment instead of extend
+                print("Loaded CDH1 mutation data from " + os.path.basename(file_path) + ": " + str(len(data)) + " records")
+                
+    except Exception as e:
+        continue
+
+print("\nTotal clinical records: " + str(len(female_bladder_clinical)))
+print("Total CDH1 mutation records: " + str(len(cdh1_mutations)))
+
+# Process clinical data to extract patient barcodes and histological types
+if female_bladder_clinical and cdh1_mutations:
+    patient_histology = {}
+    for record in female_bladder_clinical:
+        desc = record.get('Patient_description', '')
+        hist_type = record.get('histological_type', '')
+        
+        match = re.search(r'(TCGA-\w{2}-\w{4})', desc)
+        if match and hist_type and hist_type not in ['None', '[Not Applicable]', '']:
+            barcode = match.group(1)
+            patient_histology[barcode] = hist_type.strip()
+    
+    print("Processed " + str(len(patient_histology)) + " patients with valid histological types")
+    
+    # Get unique CDH1 mutation patients
+    cdh1_patients = set()
+    for rec in cdh1_mutations:
+        if isinstance(rec, dict) and 'ParticipantBarcode' in rec:
+            cdh1_patients.add(rec['ParticipantBarcode'])
+    print("Found " + str(len(cdh1_patients)) + " unique patients with CDH1 mutations")
+    
+    # Build contingency table
+    contingency_table = {}
+    for barcode, hist_type in patient_histology.items():
+        if hist_type not in contingency_table:
+            contingency_table[hist_type] = [0, 0]  # [mutated, not mutated]
+        
+        if barcode in cdh1_patients:
+            contingency_table[hist_type][0] += 1  # has mutation
+        else:
+            contingency_table[hist_type][1] += 1  # no mutation
+    
+    print("Built contingency table with " + str(len(contingency_table)) + " histological types")
+    
+    # Filter out categories with marginal totals <= 10
+    filtered_table = {}
+    for hist_type, counts in contingency_table.items():
+        total = counts[0] + counts[1]
+        if total > 10:
+            filtered_table[hist_type] = counts
+        else:
+            print("Excluding " + hist_type + ": total = " + str(total))
+    
+    print("After filtering: " + str(len(filtered_table)) + " histological types remain")
+    
+    # Calculate chi-square statistic
+    chi_square = 0.0
+    if len(filtered_table) >= 2:  # Need at least 2 categories for chi-square
+        
+        # Calculate marginal totals
+        row_totals = {}
+        col_totals = [0, 0]  # Column totals: [mutated, not mutated]
+        
+        for hist_type, counts in filtered_table.items():
+            row_totals[hist_type] = counts[0] + counts[1]
+            col_totals[0] += counts[0]  # Total with mutations
+            col_totals[1] += counts[1]  # Total without mutations
+        
+        grand_total = col_totals[0] + col_totals[1]
+        
+        print("Row totals: " + str(row_totals))
+        print("Column totals: " + str(col_totals))
+        print("Grand total: " + str(grand_total))
+        
+        # Calculate chi-square
+        for hist_type, counts in filtered_table.items():
+            for j in range(2):  # j=0 for mutated, j=1 for not mutated
+                observed = counts[j]
+                expected = (row_totals[hist_type] * col_totals[j]) / grand_total
+                
+                if expected > 0:
+                    chi_square += ((observed - expected) ** 2) / expected
+                    print("Type: " + hist_type + ", col: " + str(j) + ", obs: " + str(observed) + ", exp: " + str(round(expected, 2)))
+        
+        print("Chi-square statistic: " + str(round(chi_square, 4)))
+        
+        # Degrees of freedom
+        df = (len(filtered_table) - 1) * (2 - 1)
+        print("Degrees of freedom: " + str(df))
+    
+    result = {
+        "total_patients": len(patient_histology),
+        "histological_types_analyzed": len(filtered_table),
+        "contingency_table": filtered_table,
+        "chi_square_statistic": round(chi_square, 4) if chi_square > 0 else 0,
+        "degrees_of_freedom": df if 'df' in locals() else 0
+    }
+else:
+    result = {
+        "clinical_records": len(female_bladder_clinical),
+        "mutation_records": len(cdh1_mutations),
+        "error": "Missing required data to build contingency table"
+    }
+
+print("__RESULT__:")
+print(json.dumps(result))"""
+
+env_args = {'var_functions.list_db:0': ['clinical_info'], 'var_functions.list_db:2': ['Mutation_Data', 'RNASeq_Expression'], 'var_functions.query_db:6': [{'Patient_description': 'In the Ovarian serous cystadenocarcinoma dataset, patient TCGA-31-1953 (UUID 61feee94-3ac9-42fe-aaa3-dc6a3efe563c) is recorded as a FEMALE with vital status: Alive.', 'days_to_birth': '-19064.0', 'days_to_death': '[Not Applicable]', 'days_to_last_followup': '204.0', 'days_to_initial_pathologic_diagnosis': '0.0', 'age_at_initial_pathologic_diagnosis': '52.0', 'icd_10': 'C56.9', 'tissue_retrospective_collection_indicator': 'None', 'icd_o_3_histology': '8441/3', 'tissue_prospective_collection_indicator': 'None', 'history_of_neoadjuvant_treatment': 'No', 'icd_o_3_site': 'C56.9', 'tumor_tissue_site': 'Ovary', 'new_tumor_event_after_initial_treatment': 'None', 'radiation_therapy': 'NO', 'race': 'ASIAN', 'prior_dx': 'None', 'ethnicity': 'NOT HISPANIC OR LATINO', 'informed_consent_verified': 'YES', 'person_neoplasm_cancer_status': 'WITH TUMOR', 'patient_id': '1953', 'year_of_initial_pathologic_diagnosis': '2008.0', 'histological_type': 'Serous Cystadenocarcinoma', 'tissue_source_site': '31', 'form_completion_date': '2009-10-20', 'pathologic_T': '[Not Applicable]', 'pathologic_M': '[Not Applicable]', 'clinical_M': '[Not Applicable]', 'pathologic_N': '[Not Applicable]', 'system_version': 'None', 'pathologic_stage': '[Not Applicable]', 'clinical_stage': 'Stage IIIC', 'clinical_T': '[Not Applicable]', 'clinical_N': '[Not Applicable]', 'extranodal_involvement': '[Not Applicable]', 'postoperative_rx_tx': 'None', 'primary_therapy_outcome_success': 'None', 'lymph_node_examined_count': 'None', 'primary_lymph_node_presentation_assessment': 'None', 'initial_pathologic_diagnosis_method': 'Tumor resection', 'number_of_lymphnodes_positive_by_he': 'None', 'eastern_cancer_oncology_group': '1', 'anatomic_neoplasm_subdivision': 'Bilateral', 'residual_tumor': 'None', 'histological_type_other': 'None', 'init_pathology_dx_method_other': '[Not Applicable]', 'karnofsky_performance_score': 'None', 'neoplasm_histologic_grade': 'G3', 'height': 'None', 'weight': 'None', 'number_of_lymphnodes_positive_by_ihc': 'None', 'tobacco_smoking_history': 'None', 'number_pack_years_smoked': 'None', 'stopped_smoking_year': 'None', 'performance_status_scale_timing': 'Pre-Adjuvant Therapy', 'laterality': 'None', 'targeted_molecular_therapy': 'None', 'year_of_tobacco_smoking_onset': 'None', 'anatomic_neoplasm_subdivision_other': 'None', 'patient_death_reason': 'None', 'tumor_tissue_site_other': 'None', 'menopause_status': 'None', 'margin_status': 'None', 'kras_gene_analysis_performed': 'None', 'venous_invasion': 'NO', 'lymphatic_invasion': 'NO', 'perineural_invasion_present': 'None', 'her2_immunohistochemistry_level_result': 'None', 'breast_carcinoma_progesterone_receptor_status': 'None', 'breast_carcinoma_surgical_procedure_name': 'None', 'breast_neoplasm_other_surgical_procedure_descriptive_text': 'None', 'axillary_lymph_node_stage_method_type': 'None', 'breast_carcinoma_estrogen_receptor_status': 'None', 'cytokeratin_immunohistochemistry_staining_method_micrometastasi': 'None', 'lab_proc_her2_neu_immunohistochemistry_receptor_status': 'None', 'lab_procedure_her2_neu_in_situ_hybrid_outcome_type': 'None', 'additional_pharmaceutical_therapy': 'None', 'additional_radiation_therapy': 'None', 'lymphovascular_invasion_present': 'None', 'location_in_lung_parenchyma': 'None', 'pulmonary_function_test_performed': 'None', 'egfr_mutation_performed': 'None', 'diagnosis': 'None', 'eml4_alk_translocation_performed': 'None', 'days_to_new_tumor_event_after_initial_treatment': 'None', 'hemoglobin_result': 'None', 'serum_calcium_result': 'None', 'platelet_qualitative_result': 'None', 'number_of_lymphnodes_positive': 'None', 'white_cell_count_result': 'None', 'alcohol_history_documented': 'None', 'family_history_of_cancer': 'None', 'braf_gene_analysis_performed': 'None', 'city_of_procurement': 'None', 'surgical_approach': 'None', 'peritoneal_wash': 'None', 'total_pelv_lnr': 'None', 'total_aor_lnr': 'None', 'prior_glioma': 'None'}], 'var_functions.query_db:8': 'file_storage/functions.query_db:8.json', 'var_functions.query_db:10': [], 'var_functions.query_db:12': 'file_storage/functions.query_db:12.json', 'var_functions.query_db:14': [{'ParticipantBarcode': 'TCGA-A8-A091', 'Tumor_SampleBarcode': 'TCGA-A8-A091-01A', 'Tumor_AliquotBarcode': 'TCGA-A8-A091-01A-11W-A019-09', 'Normal_SampleBarcode': 'TCGA-A8-A091-10A', 'Normal_AliquotBarcode': 'TCGA-A8-A091-10A-01W-A021-09', 'Normal_SampleTypeLetterCode': 'NB', 'Hugo_Symbol': 'CDH1', 'HGVSp_Short': 'p.E243K', 'Variant_Classification': 'Missense_Mutation', 'HGVSc': 'c.727G>A', 'CENTERS': 'MUTECT|RADIA|SOMATICSNIPER|MUSE|VARSCANS', 'FILTER': 'wga'}, {'ParticipantBarcode': 'TCGA-A8-A0A1', 'Tumor_SampleBarcode': 'TCGA-A8-A0A1-01A', 'Tumor_AliquotBarcode': 'TCGA-A8-A0A1-01A-11W-A019-09', 'Normal_SampleBarcode': 'TCGA-A8-A0A1-10A', 'Normal_AliquotBarcode': 'TCGA-A8-A0A1-10A-01W-A021-09', 'Normal_SampleTypeLetterCode': 'NB', 'Hugo_Symbol': 'CDH1', 'HGVSp_Short': 'p.Q307Hfs*2', 'Variant_Classification': 'Frame_Shift_Del', 'HGVSc': 'c.921_955delAGATCCTGAGCTCCCTGACAAAAATATGTTCACCA', 'CENTERS': 'INDELOCATOR*|VARSCANI*|PINDEL', 'FILTER': 'wga'}, {'ParticipantBarcode': 'TCGA-A8-A0A9', 'Tumor_SampleBarcode': 'TCGA-A8-A0A9-01A', 'Tumor_AliquotBarcode': 'TCGA-A8-A0A9-01A-11W-A019-09', 'Normal_SampleBarcode': 'TCGA-A8-A0A9-10A', 'Normal_AliquotBarcode': 'TCGA-A8-A0A9-10A-01W-A021-09', 'Normal_SampleTypeLetterCode': 'NB', 'Hugo_Symbol': 'CDH1', 'HGVSp_Short': 'p.Q503*', 'Variant_Classification': 'Nonsense_Mutation', 'HGVSc': 'c.1507C>T', 'CENTERS': 'SOMATICSNIPER|RADIA|MUTECT|MUSE|VARSCANS', 'FILTER': 'wga'}, {'ParticipantBarcode': 'TCGA-AA-3821', 'Tumor_SampleBarcode': 'TCGA-AA-3821-01A', 'Tumor_AliquotBarcode': 'TCGA-AA-3821-01A-01W-0995-10', 'Normal_SampleBarcode': 'TCGA-AA-3821-10A', 'Normal_AliquotBarcode': 'TCGA-AA-3821-10A-01W-0995-10', 'Normal_SampleTypeLetterCode': 'NB', 'Hugo_Symbol': 'CDH1', 'HGVSp_Short': 'p.V365I', 'Variant_Classification': 'Missense_Mutation', 'HGVSc': 'c.1093G>A', 'CENTERS': 'SOMATICSNIPER|RADIA|MUTECT|MUSE|VARSCANS', 'FILTER': 'wga'}, {'ParticipantBarcode': 'TCGA-A2-A0YL', 'Tumor_SampleBarcode': 'TCGA-A2-A0YL-01A', 'Tumor_AliquotBarcode': 'TCGA-A2-A0YL-01A-21D-A10G-09', 'Normal_SampleBarcode': 'TCGA-A2-A0YL-10A', 'Normal_AliquotBarcode': 'TCGA-A2-A0YL-10A-01D-A10G-09', 'Normal_SampleTypeLetterCode': 'NB', 'Hugo_Symbol': 'CDH1', 'HGVSp_Short': 'p.T364Hfs*4', 'Variant_Classification': 'Frame_Shift_Del', 'HGVSc': 'c.1090_1100delACAGTCACTGA', 'CENTERS': 'INDELOCATOR*|PINDEL', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-AR-A1AT', 'Tumor_SampleBarcode': 'TCGA-AR-A1AT-01A', 'Tumor_AliquotBarcode': 'TCGA-AR-A1AT-01A-11D-A12Q-09', 'Normal_SampleBarcode': 'TCGA-AR-A1AT-10A', 'Normal_AliquotBarcode': 'TCGA-AR-A1AT-10A-01D-A12Q-09', 'Normal_SampleTypeLetterCode': 'NB', 'Hugo_Symbol': 'CDH1', 'HGVSp_Short': 'p.N315Ifs*41', 'Variant_Classification': 'Frame_Shift_Del', 'HGVSc': 'c.944delA', 'CENTERS': 'INDELOCATOR*|VARSCANI*|PINDEL', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-BS-A0U8', 'Tumor_SampleBarcode': 'TCGA-BS-A0U8-01A', 'Tumor_AliquotBarcode': 'TCGA-BS-A0U8-01A-11D-A10B-09', 'Normal_SampleBarcode': 'TCGA-BS-A0U8-10A', 'Normal_AliquotBarcode': 'TCGA-BS-A0U8-10A-01D-A10B-09', 'Normal_SampleTypeLetterCode': 'NB', 'Hugo_Symbol': 'CDH1', 'HGVSp_Short': 'p.A824V', 'Variant_Classification': 'Missense_Mutation', 'HGVSc': 'c.2471C>T', 'CENTERS': 'MUTECT|RADIA|SOMATICSNIPER|MUSE|VARSCANS', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-D8-A27G', 'Tumor_SampleBarcode': 'TCGA-D8-A27G-01A', 'Tumor_AliquotBarcode': 'TCGA-D8-A27G-01A-11D-A16D-09', 'Normal_SampleBarcode': 'TCGA-D8-A27G-10A', 'Normal_AliquotBarcode': 'TCGA-D8-A27G-10A-01D-A16D-09', 'Normal_SampleTypeLetterCode': 'NB', 'Hugo_Symbol': 'CDH1', 'HGVSp_Short': 'p.G169Rfs*5', 'Variant_Classification': 'Frame_Shift_Ins', 'HGVSc': 'c.504dupA', 'CENTERS': 'INDELOCATOR*|VARSCANI*|PINDEL', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-E6-A1LX', 'Tumor_SampleBarcode': 'TCGA-E6-A1LX-01A', 'Tumor_AliquotBarcode': 'TCGA-E6-A1LX-01A-11D-A14G-09', 'Normal_SampleBarcode': 'TCGA-E6-A1LX-10A', 'Normal_AliquotBarcode': 'TCGA-E6-A1LX-10A-01D-A14G-09', 'Normal_SampleTypeLetterCode': 'NB', 'Hugo_Symbol': 'CDH1', 'HGVSp_Short': 'p.R598Q', 'Variant_Classification': 'Missense_Mutation', 'HGVSc': 'c.1793G>A', 'CENTERS': 'MUTECT|RADIA|SOMATICSNIPER|MUSE|VARSCANS', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-EJ-7782', 'Tumor_SampleBarcode': 'TCGA-EJ-7782-01A', 'Tumor_AliquotBarcode': 'TCGA-EJ-7782-01A-11D-2114-08', 'Normal_SampleBarcode': 'TCGA-EJ-7782-10A', 'Normal_AliquotBarcode': 'TCGA-EJ-7782-10A-01D-2114-08', 'Normal_SampleTypeLetterCode': 'NB', 'Hugo_Symbol': 'CDH1', 'HGVSp_Short': 'p.L249V', 'Variant_Classification': 'Missense_Mutation', 'HGVSc': 'c.745T>G', 'CENTERS': 'MUTECT|RADIA|SOMATICSNIPER|MUSE|VARSCANS', 'FILTER': 'PASS'}], 'var_functions.query_db:22': [{'ParticipantBarcode': 'TCGA-D8-A27G'}, {'ParticipantBarcode': 'TCGA-B9-A8YI'}, {'ParticipantBarcode': 'TCGA-B6-A0X7'}, {'ParticipantBarcode': 'TCGA-A2-A25A'}, {'ParticipantBarcode': 'TCGA-LL-A9Q3'}, {'ParticipantBarcode': 'TCGA-A2-A0CK'}, {'ParticipantBarcode': 'TCGA-AC-A2FO'}, {'ParticipantBarcode': 'TCGA-E2-A1L8'}, {'ParticipantBarcode': 'TCGA-BH-A0HP'}, {'ParticipantBarcode': 'TCGA-A2-A4S2'}, {'ParticipantBarcode': 'TCGA-A7-A425'}, {'ParticipantBarcode': 'TCGA-BS-A0UV'}, {'ParticipantBarcode': 'TCGA-CD-A4MG'}, {'ParticipantBarcode': 'TCGA-A7-A4SC'}, {'ParticipantBarcode': 'TCGA-22-1016'}, {'ParticipantBarcode': 'TCGA-AR-A24X'}, {'ParticipantBarcode': 'TCGA-AX-A2HD'}, {'ParticipantBarcode': 'TCGA-06-5416'}, {'ParticipantBarcode': 'TCGA-LL-A6FP'}, {'ParticipantBarcode': 'TCGA-FW-A3R5'}, {'ParticipantBarcode': 'TCGA-JX-A3Q0'}, {'ParticipantBarcode': 'TCGA-AC-A2FB'}, {'ParticipantBarcode': 'TCGA-DK-AA6Q'}, {'ParticipantBarcode': 'TCGA-P6-A5OH'}, {'ParticipantBarcode': 'TCGA-FP-A8CX'}, {'ParticipantBarcode': 'TCGA-BR-A44T'}, {'ParticipantBarcode': 'TCGA-VQ-A91K'}, {'ParticipantBarcode': 'TCGA-EO-A22X'}, {'ParticipantBarcode': 'TCGA-NC-A5HD'}, {'ParticipantBarcode': 'TCGA-B6-A40B'}, {'ParticipantBarcode': 'TCGA-B5-A11F'}, {'ParticipantBarcode': 'TCGA-PG-A917'}, {'ParticipantBarcode': 'TCGA-B5-A11U'}, {'ParticipantBarcode': 'TCGA-2W-A8YY'}, {'ParticipantBarcode': 'TCGA-E9-A2JT'}, {'ParticipantBarcode': 'TCGA-LD-A66U'}, {'ParticipantBarcode': 'TCGA-BH-A0E9'}, {'ParticipantBarcode': 'TCGA-EE-A2A6'}, {'ParticipantBarcode': 'TCGA-3M-AB47'}, {'ParticipantBarcode': 'TCGA-A2-A1G0'}, {'ParticipantBarcode': 'TCGA-AC-A2B8'}, {'ParticipantBarcode': 'TCGA-BR-6803'}, {'ParticipantBarcode': 'TCGA-DD-AAE3'}, {'ParticipantBarcode': 'TCGA-GC-A3I6'}, {'ParticipantBarcode': 'TCGA-AR-A5QM'}, {'ParticipantBarcode': 'TCGA-A6-5661'}, {'ParticipantBarcode': 'TCGA-A2-A0SY'}, {'ParticipantBarcode': 'TCGA-D7-8574'}, {'ParticipantBarcode': 'TCGA-R5-A804'}, {'ParticipantBarcode': 'TCGA-AH-6544'}, {'ParticipantBarcode': 'TCGA-EO-A22U'}, {'ParticipantBarcode': 'TCGA-50-6590'}, {'ParticipantBarcode': 'TCGA-A2-A0EW'}, {'ParticipantBarcode': 'TCGA-CC-5260'}, {'ParticipantBarcode': 'TCGA-BH-A209'}, {'ParticipantBarcode': 'TCGA-BR-4188'}, {'ParticipantBarcode': 'TCGA-D7-A748'}, {'ParticipantBarcode': 'TCGA-BH-A0C1'}, {'ParticipantBarcode': 'TCGA-95-7567'}, {'ParticipantBarcode': 'TCGA-EW-A1J5'}, {'ParticipantBarcode': 'TCGA-VQ-A924'}, {'ParticipantBarcode': 'TCGA-BH-AB28'}, {'ParticipantBarcode': 'TCGA-AC-A5XS'}, {'ParticipantBarcode': 'TCGA-AC-A8OS'}, {'ParticipantBarcode': 'TCGA-BR-8364'}, {'ParticipantBarcode': 'TCGA-B0-5692'}, {'ParticipantBarcode': 'TCGA-BR-A4J9'}, {'ParticipantBarcode': 'TCGA-G9-6365'}, {'ParticipantBarcode': 'TCGA-WT-AB44'}, {'ParticipantBarcode': 'TCGA-CA-6717'}, {'ParticipantBarcode': 'TCGA-CG-4474'}, {'ParticipantBarcode': 'TCGA-BR-A453'}, {'ParticipantBarcode': 'TCGA-EE-A29E'}, {'ParticipantBarcode': 'TCGA-E1-A7YJ'}, {'ParticipantBarcode': 'TCGA-77-A5G1'}, {'ParticipantBarcode': 'TCGA-A2-A0T4'}, {'ParticipantBarcode': 'TCGA-A5-A1OF'}, {'ParticipantBarcode': 'TCGA-B6-A0RQ'}, {'ParticipantBarcode': 'TCGA-F1-6874'}, {'ParticipantBarcode': 'TCGA-F5-6814'}, {'ParticipantBarcode': 'TCGA-66-2759'}, {'ParticipantBarcode': 'TCGA-BF-A3DL'}, {'ParticipantBarcode': 'TCGA-AC-A2FF'}, {'ParticipantBarcode': 'TCGA-AP-A0LM'}, {'ParticipantBarcode': 'TCGA-D7-6518'}, {'ParticipantBarcode': 'TCGA-E9-A5FK'}, {'ParticipantBarcode': 'TCGA-DD-A4NK'}, {'ParticipantBarcode': 'TCGA-OL-A66K'}, {'ParticipantBarcode': 'TCGA-BS-A0U8'}, {'ParticipantBarcode': 'TCGA-BR-6452'}, {'ParticipantBarcode': 'TCGA-EW-A6SC'}, {'ParticipantBarcode': 'TCGA-IR-A3LH'}, {'ParticipantBarcode': 'TCGA-AC-A4ZE'}, {'ParticipantBarcode': 'TCGA-AC-A6IV'}, {'ParticipantBarcode': 'TCGA-42-2590'}, {'ParticipantBarcode': 'TCGA-E9-A3X8'}, {'ParticipantBarcode': 'TCGA-PE-A5DD'}, {'ParticipantBarcode': 'TCGA-QF-A5YS'}, {'ParticipantBarcode': 'TCGA-IN-7808'}, {'ParticipantBarcode': 'TCGA-AX-A0J0'}, {'ParticipantBarcode': 'TCGA-LD-A7W6'}, {'ParticipantBarcode': 'TCGA-E6-A1LX'}, {'ParticipantBarcode': 'TCGA-B5-A11G'}, {'ParticipantBarcode': 'TCGA-PE-A5DE'}, {'ParticipantBarcode': 'TCGA-4H-AAAK'}, {'ParticipantBarcode': 'TCGA-D8-A1XO'}, {'ParticipantBarcode': 'TCGA-D8-A1Y1'}, {'ParticipantBarcode': 'TCGA-05-5428'}, {'ParticipantBarcode': 'TCGA-OL-A6VQ'}, {'ParticipantBarcode': 'TCGA-AR-A2LN'}, {'ParticipantBarcode': 'TCGA-HT-A617'}, {'ParticipantBarcode': 'TCGA-BR-8686'}, {'ParticipantBarcode': 'TCGA-AC-A2FG'}, {'ParticipantBarcode': 'TCGA-FI-A2D0'}, {'ParticipantBarcode': 'TCGA-B5-A1MW'}, {'ParticipantBarcode': 'TCGA-XF-A9SX'}, {'ParticipantBarcode': 'TCGA-FI-A2D5'}, {'ParticipantBarcode': 'TCGA-BR-A4QM'}, {'ParticipantBarcode': 'TCGA-EW-A423'}, {'ParticipantBarcode': 'TCGA-DD-AADI'}, {'ParticipantBarcode': 'TCGA-S3-A6ZG'}, {'ParticipantBarcode': 'TCGA-BR-8592'}, {'ParticipantBarcode': 'TCGA-GM-A4E0'}, {'ParticipantBarcode': 'TCGA-77-8009'}, {'ParticipantBarcode': 'TCGA-AX-A1CE'}, {'ParticipantBarcode': 'TCGA-E2-A576'}, {'ParticipantBarcode': 'TCGA-KQ-A41S'}, {'ParticipantBarcode': 'TCGA-LL-A50Y'}, {'ParticipantBarcode': 'TCGA-BR-8058'}, {'ParticipantBarcode': 'TCGA-C4-A0F0'}, {'ParticipantBarcode': 'TCGA-EY-A5W2'}, {'ParticipantBarcode': 'TCGA-AR-A1AT'}, {'ParticipantBarcode': 'TCGA-CD-5813'}, {'ParticipantBarcode': 'TCGA-DU-6392'}, {'ParticipantBarcode': 'TCGA-Z7-A8R5'}, {'ParticipantBarcode': 'TCGA-A2-A1FV'}, {'ParticipantBarcode': 'TCGA-GM-A2DD'}, {'ParticipantBarcode': 'TCGA-D1-A103'}, {'ParticipantBarcode': 'TCGA-EB-A5UM'}, {'ParticipantBarcode': 'TCGA-XF-A9T3'}, {'ParticipantBarcode': 'TCGA-BH-A18P'}, {'ParticipantBarcode': 'TCGA-BH-A28Q'}, {'ParticipantBarcode': 'TCGA-GM-A2DO'}, {'ParticipantBarcode': 'TCGA-VQ-A8PX'}, {'ParticipantBarcode': 'TCGA-CV-6937'}, {'ParticipantBarcode': 'TCGA-HQ-A2OF'}, {'ParticipantBarcode': 'TCGA-LD-A74U'}, {'ParticipantBarcode': 'TCGA-A2-A0YL'}, {'ParticipantBarcode': 'TCGA-EJ-7782'}, {'ParticipantBarcode': 'TCGA-G4-6628'}, {'ParticipantBarcode': 'TCGA-EY-A548'}, {'ParticipantBarcode': 'TCGA-A1-A0SE'}, {'ParticipantBarcode': 'TCGA-D7-6522'}, {'ParticipantBarcode': 'TCGA-2Y-A9H5'}, {'ParticipantBarcode': 'TCGA-BB-A5HY'}, {'ParticipantBarcode': 'TCGA-IB-7651'}, {'ParticipantBarcode': 'TCGA-RP-A694'}, {'ParticipantBarcode': 'TCGA-CD-5799'}, {'ParticipantBarcode': 'TCGA-G4-6586'}, {'ParticipantBarcode': 'TCGA-BS-A0TE'}, {'ParticipantBarcode': 'TCGA-DD-AADA'}, {'ParticipantBarcode': 'TCGA-FP-8210'}, {'ParticipantBarcode': 'TCGA-A2-A0YD'}, {'ParticipantBarcode': 'TCGA-AR-A2LE'}, {'ParticipantBarcode': 'TCGA-B6-A0IH'}, {'ParticipantBarcode': 'TCGA-63-A5MM'}, {'ParticipantBarcode': 'TCGA-FS-A1ZK'}, {'ParticipantBarcode': 'TCGA-XX-A89A'}, {'ParticipantBarcode': 'TCGA-W8-A86G'}, {'ParticipantBarcode': 'TCGA-EB-A3XC'}, {'ParticipantBarcode': 'TCGA-AR-A2LK'}, {'ParticipantBarcode': 'TCGA-AA-A01R'}, {'ParticipantBarcode': 'TCGA-D7-A4YU'}, {'ParticipantBarcode': 'TCGA-H4-A2HQ'}, {'ParticipantBarcode': 'TCGA-SJ-A6ZI'}, {'ParticipantBarcode': 'TCGA-A7-A5ZX'}, {'ParticipantBarcode': 'TCGA-E2-A10F'}, {'ParticipantBarcode': 'TCGA-BH-A18F'}, {'ParticipantBarcode': 'TCGA-06-0210'}, {'ParticipantBarcode': 'TCGA-AD-6964'}, {'ParticipantBarcode': 'TCGA-MX-A5UG'}, {'ParticipantBarcode': 'TCGA-AC-A3QQ'}, {'ParticipantBarcode': 'TCGA-AR-A1AL'}, {'ParticipantBarcode': 'TCGA-GI-A2C8'}, {'ParticipantBarcode': 'TCGA-F4-6856'}, {'ParticipantBarcode': 'TCGA-B5-A0JY'}, {'ParticipantBarcode': 'TCGA-A2-A0T6'}, {'ParticipantBarcode': 'TCGA-XX-A899'}, {'ParticipantBarcode': 'TCGA-AX-A2HA'}, {'ParticipantBarcode': 'TCGA-BH-A8FY'}, {'ParticipantBarcode': 'TCGA-AC-A6IX'}, {'ParticipantBarcode': 'TCGA-D8-A27I'}, {'ParticipantBarcode': 'TCGA-OD-A75X'}, {'ParticipantBarcode': 'TCGA-55-A4DF'}, {'ParticipantBarcode': 'TCGA-5L-AAT0'}, {'ParticipantBarcode': 'TCGA-AX-A06L'}, {'ParticipantBarcode': 'TCGA-C8-A274'}, {'ParticipantBarcode': 'TCGA-E2-A1IJ'}, {'ParticipantBarcode': 'TCGA-EO-A22R'}, {'ParticipantBarcode': 'TCGA-AC-A3OD'}, {'ParticipantBarcode': 'TCGA-B6-A40C'}, {'ParticipantBarcode': 'TCGA-DK-A1AG'}, {'ParticipantBarcode': 'TCGA-B5-A11E'}, {'ParticipantBarcode': 'TCGA-GM-A5PV'}, {'ParticipantBarcode': 'TCGA-AA-A00N'}, {'ParticipantBarcode': 'TCGA-BR-6566'}, {'ParticipantBarcode': 'TCGA-B7-A5TI'}, {'ParticipantBarcode': 'TCGA-D5-6928'}, {'ParticipantBarcode': 'TCGA-E9-A6HE'}, {'ParticipantBarcode': 'TCGA-D7-A6EY'}, {'ParticipantBarcode': 'TCGA-D8-A27V'}, {'ParticipantBarcode': 'TCGA-EO-A3AZ'}, {'ParticipantBarcode': 'TCGA-AX-A2HC'}, {'ParticipantBarcode': 'TCGA-E2-A1IH'}, {'ParticipantBarcode': 'TCGA-AC-A3YI'}, {'ParticipantBarcode': 'TCGA-94-7943'}, {'ParticipantBarcode': 'TCGA-55-8614'}, {'ParticipantBarcode': 'TCGA-X6-A8C2'}, {'ParticipantBarcode': 'TCGA-EW-A1IZ'}, {'ParticipantBarcode': 'TCGA-C8-A3M7'}, {'ParticipantBarcode': 'TCGA-CK-6747'}, {'ParticipantBarcode': 'TCGA-BR-4187'}, {'ParticipantBarcode': 'TCGA-D7-8572'}, {'ParticipantBarcode': 'TCGA-D8-A3Z6'}, {'ParticipantBarcode': 'TCGA-G2-A3IE'}, {'ParticipantBarcode': 'TCGA-BR-4279'}, {'ParticipantBarcode': 'TCGA-63-A5MH'}, {'ParticipantBarcode': 'TCGA-CR-7370'}, {'ParticipantBarcode': 'TCGA-OL-A66N'}, {'ParticipantBarcode': 'TCGA-A5-A0VO'}, {'ParticipantBarcode': 'TCGA-BR-8677'}, {'ParticipantBarcode': 'TCGA-BR-A4IV'}, {'ParticipantBarcode': 'TCGA-BR-4292'}, {'ParticipantBarcode': 'TCGA-GM-A5PX'}, {'ParticipantBarcode': 'TCGA-XF-AAN0'}, {'ParticipantBarcode': 'TCGA-A2-A0YK'}, {'ParticipantBarcode': 'TCGA-BR-8370'}, {'ParticipantBarcode': 'TCGA-AO-A128'}, {'ParticipantBarcode': 'TCGA-F4-6570'}, {'ParticipantBarcode': 'TCGA-DF-A2KV'}, {'ParticipantBarcode': 'TCGA-CN-6024'}, {'ParticipantBarcode': 'TCGA-C8-A1HO'}, {'ParticipantBarcode': 'TCGA-B6-A2IU'}, {'ParticipantBarcode': 'TCGA-VQ-A8PO'}, {'ParticipantBarcode': 'TCGA-21-5787'}, {'ParticipantBarcode': 'TCGA-A2-A0CR'}, {'ParticipantBarcode': 'TCGA-DK-A6AW'}], 'var_functions.execute_python:28': {'clinical_patients': 0, 'cdh1_patients': 0, 'overlap': 0}, 'var_functions.query_db:30': 'file_storage/functions.query_db:30.json', 'var_functions.query_db:32': 'file_storage/functions.query_db:32.json', 'var_functions.query_db:36': 'file_storage/functions.query_db:36.json'}
+
+exec(code, env_args)

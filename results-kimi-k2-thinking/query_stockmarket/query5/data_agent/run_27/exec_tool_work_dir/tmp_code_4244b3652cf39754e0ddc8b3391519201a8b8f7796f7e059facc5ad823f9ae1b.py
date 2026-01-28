@@ -1,0 +1,40 @@
+code = """import json
+
+# Load AGMH data and count days with range > 20% of low
+agmh_file = locals()['var_functions.query_db:58']
+with open(agmh_file, 'r') as f:
+    agmh_data = json.load(f)
+
+high_vol_days = 0
+total_days = len(agmh_data)
+
+for day in agmh_data:
+    high = float(day['High'])
+    low = float(day['Low'])
+    
+    # Skip if low is 0 or negative
+    if low <= 0:
+        continue
+    
+    # Calculate intraday range
+    intraday_range = high - low
+    
+    # Calculate 20% of low
+    threshold = low * 0.2
+    
+    if intraday_range > threshold:
+        high_vol_days += 1
+
+print(f"AGMH: {high_vol_days}/{total_days} days ({high_vol_days/total_days*100:.1f}%)")
+print(f"Sample data: {agmh_data[:3]}")
+print('__RESULT__:')
+print(json.dumps({
+    'symbol': 'AGMH',
+    'high_vol_days': high_vol_days,
+    'total_days': total_days,
+    'percentage': round(high_vol_days/total_days*100, 2)
+}))"""
+
+env_args = {'var_functions.query_db:0': 'file_storage/functions.query_db:0.json', 'var_functions.list_db:5': 'file_storage/functions.list_db:5.json', 'var_functions.list_db:7': ['stockinfo'], 'var_functions.list_db:8': 'file_storage/functions.list_db:8.json', 'var_functions.query_db:14': 'file_storage/functions.query_db:14.json', 'var_functions.query_db:16': 'file_storage/functions.query_db:16.json', 'var_functions.query_db:18': 'file_storage/functions.query_db:18.json', 'var_functions.query_db:20': 'file_storage/functions.query_db:20.json', 'var_functions.query_db:22': 'file_storage/functions.query_db:22.json', 'var_functions.list_db:24': 'file_storage/functions.list_db:24.json', 'var_functions.query_db:28': 'file_storage/functions.query_db:28.json', 'var_functions.query_db:30': 'file_storage/functions.query_db:30.json', 'var_functions.query_db:32': 'file_storage/functions.query_db:32.json', 'var_functions.execute_python:36': ['AGMH', 'ALACU', 'AMHC', 'ANDA', 'APEX', 'BCLI', 'BHAT', 'BIOC', 'BKYI', 'BLFS', 'BOSC', 'BOTJ', 'BWEN', 'CBAT', 'CCCL', 'CDMOP', 'CEMI', 'CFBK', 'CFFA', 'CLRB', 'CORV', 'CPAAU', 'CPAH', 'CUBA', 'CVV', 'DZSI', 'ELSE', 'EXPC', 'EYEG', 'FAMI', 'FNCB', 'FSBW', 'FTFT', 'GDYN', 'GLG', 'GRNVU', 'GTEC', 'HCCOU', 'HNNA', 'HQI', 'HRTX', 'IDEX', 'IGIC', 'IOTS', 'ISNS', 'ITI', 'LACQ', 'MBCN', 'MBNKP', 'MCEP'], 'var_functions.execute_python:38': ['WHLR', 'AGMH', 'IOTS', 'CLRB', 'XBIOW', 'ITI', 'GTEC', 'GDYN', 'HQI', 'APEX', 'SSNT', 'MNPR', 'HRTX', 'FTFT', 'SNSS', 'POPE', 'PBFS', 'TGLS', 'FAMI', 'MNCLU', 'PEIX', 'HCCOU', 'PBTS', 'ANDA', 'ALACU', 'OTEL', 'VMD', 'CBAT', 'HNNA', 'ISNS', 'CFFA', 'MBNKP', 'OPOF', 'BCLI', 'CVV', 'VRRM', 'AMHC', 'LACQ', 'PECK', 'CORV', 'NXTD', 'BHAT', 'MLND', 'BOTJ', 'VVPR', 'CPAAU', 'BLFS', 'CEMI', 'CFBK', 'TMSR', 'SES', 'NVEE', 'ELSE', 'DZSI', 'OPTT', 'ORGO', 'MCEP', 'BIOC', 'FSBW', 'WHLM', 'GLG', 'CCCL', 'BOSC', 'MMAC', 'BWEN', 'GRNVU', 'PCSB', 'VERB', 'VTIQW', 'ORSNU', 'QRHC', 'PFIE', 'MBCN', 'FNCB', 'CPAH', 'BKYI', 'EXPC', 'XPEL', 'CUBA', 'PLIN', 'EYEG', 'IGIC', 'CDMOP', 'SHSP', 'IDEX', 'STKS'], 'var_functions.execute_python:40': {'common_symbols_count': 86, 'sample_symbols': ['WHLR', 'AGMH', 'IOTS', 'CLRB', 'XBIOW']}, 'var_functions.query_db:42': [{'Date': '2019-01-02', 'Open': '0.890999972820282', 'High': '0.890999972820282', 'Low': '0.8019999861717224', 'Close': '0.8320000171661377', 'Adj Close': '0.8320000171661377', 'Volume': '78700'}, {'Date': '2019-01-03', 'Open': '0.8870000243186951', 'High': '1.2000000476837158', 'Low': '0.8019999861717224', 'Close': '1.1200000047683716', 'Adj Close': '1.1200000047683716', 'Volume': '472300'}, {'Date': '2019-01-04', 'Open': '1.100000023841858', 'High': '1.1299999952316284', 'Low': '1.00600004196167', 'Close': '1.059999942779541', 'Adj Close': '1.059999942779541', 'Volume': '85000'}, {'Date': '2019-01-07', 'Open': '1.059999942779541', 'High': '1.0700000524520874', 'Low': '1.0399999618530271', 'Close': '1.065000057220459', 'Adj Close': '1.065000057220459', 'Volume': '68300'}, {'Date': '2019-01-08', 'Open': '1.0700000524520874', 'High': '1.2100000381469729', 'Low': '1.0199999809265137', 'Close': '1.1299999952316284', 'Adj Close': '1.1299999952316284', 'Volume': '100300'}, {'Date': '2019-01-09', 'Open': '1.159999966621399', 'High': '1.159999966621399', 'Low': '1.0', 'Close': '1.159999966621399', 'Adj Close': '1.159999966621399', 'Volume': '39000'}, {'Date': '2019-01-10', 'Open': '1.1299999952316284', 'High': '1.1299999952316284', 'Low': '1.10099995136261', 'Close': '1.1200000047683716', 'Adj Close': '1.1200000047683716', 'Volume': '26600'}, {'Date': '2019-01-11', 'Open': '1.159999966621399', 'High': '1.159999966621399', 'Low': '1.0', 'Close': '1.0499999523162842', 'Adj Close': '1.0499999523162842', 'Volume': '140200'}, {'Date': '2019-01-14', 'Open': '1.0800000429153442', 'High': '1.093000054359436', 'Low': '1.0399999618530271', 'Close': '1.0700000524520874', 'Adj Close': '1.0700000524520874', 'Volume': '15200'}, {'Date': '2019-01-15', 'Open': '1.100000023841858', 'High': '1.100000023841858', 'Low': '0.9900000095367432', 'Close': '1.0299999713897705', 'Adj Close': '1.0299999713897705', 'Volume': '172700'}], 'var_functions.execute_python:44': {'count': 86, 'symbols': ['AGMH', 'ALACU', 'AMHC', 'ANDA', 'APEX', 'BCLI', 'BHAT', 'BIOC', 'BKYI', 'BLFS', 'BOSC', 'BOTJ', 'BWEN', 'CBAT', 'CCCL', 'CDMOP', 'CEMI', 'CFBK', 'CFFA', 'CLRB']}, 'var_functions.execute_python:46': {'total_stocks': 20, 'sample': ['AGMH', 'ALACU', 'AMHC', 'ANDA', 'APEX']}, 'var_functions.query_db:48': 'file_storage/functions.query_db:48.json', 'var_functions.execute_python:50': {'total_symbols': 20, 'sample_symbols': ['AGMH', 'ALACU', 'AMHC', 'ANDA', 'APEX'], 'sample_companies': {'AGMH': 'AGM Group Holdings Inc. specializes in providing financial technology solutions and services, focusing on enhancing efficiency and performance for businesses in the financial sector.', 'ALACU': 'Alberton Acquisition Corporation is a special purpose acquisition company focused on merging with or acquiring promising businesses to bring them public and enhance their growth potential.', 'AMHC': 'Amplitude Healthcare Acquisition Corporation is a special purpose acquisition company focused on identifying and merging with promising healthcare businesses to accelerate their growth and innovation.', 'ANDA': 'Andina Acquisition Corp. III is a special purpose acquisition company focused on identifying and partnering with promising businesses in Latin America to facilitate their growth and expansion.', 'APEX': 'Apex Global Brands Inc. specializes in creating and marketing a diverse portfolio of fashion and lifestyle brands, connecting consumers with trendy and innovative products worldwide.'}}, 'var_functions.execute_python:56': {'status': 'ready_to_process', 'total_symbols': 20, 'first_symbols': ['AGMH', 'ALACU', 'AMHC', 'ANDA', 'APEX']}, 'var_functions.query_db:58': 'file_storage/functions.query_db:58.json'}
+
+exec(code, env_args)

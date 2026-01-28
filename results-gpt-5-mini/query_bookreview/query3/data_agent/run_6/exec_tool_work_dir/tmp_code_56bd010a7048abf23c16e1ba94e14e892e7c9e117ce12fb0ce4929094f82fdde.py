@@ -1,0 +1,95 @@
+code = """import json
+import ast
+
+# Load books JSON file
+books_file_path = var_call_TQEJqJJ7UgfazlLOSLDrs1Yl
+with open(books_file_path, 'r', encoding='utf-8') as f:
+    books = json.load(f)
+
+# Load filtered book ids and items (with avg ratings)
+filtered_ids = var_call_G3nmEOmiyVz9bOGImOtG3NGE.get('filtered_book_ids', [])
+items = var_call_G3nmEOmiyVz9bOGImOtG3NGE.get('items', [])
+
+# Build map from book_id to avg_rating and review_count
+rating_map = {}
+for it in items:
+    bid = it.get('book_id')
+    if not bid:
+        continue
+    rating_map[bid] = {
+        'avg_rating': float(it.get('avg_rating', 0.0)),
+        'review_count': int(it.get('review_count', 0) or 0)
+    }
+
+# Helper to parse categories field into list
+def parse_categories_field(s):
+    if s is None:
+        return []
+    if isinstance(s, list):
+        return s
+    s_str = str(s).strip()
+    if s_str in ('', '[]'):
+        return []
+    # try json
+    try:
+        parsed = json.loads(s_str)
+        if isinstance(parsed, list):
+            return parsed
+    except Exception:
+        pass
+    # try ast
+    try:
+        parsed = ast.literal_eval(s_str)
+        if isinstance(parsed, list):
+            return parsed
+    except Exception:
+        pass
+    # fallback: split by comma
+    parts = [p.strip().strip('"\'') for p in s_str.strip('[]').split(',') if p.strip()]
+    return parts
+
+# Helper to detect children category
+def is_children_category(cat_list):
+    if not isinstance(cat_list, list):
+        return False
+    for c in cat_list:
+        try:
+            if 'children' in str(c).lower():
+                return True
+        except Exception:
+            continue
+    return False
+
+# Build a map of book_id -> book info from books list
+books_map = {b.get('book_id'): b for b in books}
+
+results = []
+for bid in filtered_ids:
+    if bid is None:
+        continue
+    b = books_map.get(bid)
+    if not b:
+        continue
+    cats = parse_categories_field(b.get('categories'))
+    if not is_children_category(cats):
+        continue
+    rating_info = rating_map.get(bid, {'avg_rating': None, 'review_count': None})
+    results.append({
+        'book_id': bid,
+        'title': b.get('title'),
+        'avg_rating': rating_info.get('avg_rating'),
+        'review_count': rating_info.get('review_count'),
+        'categories': cats
+    })
+
+# Sort results by avg_rating descending then review_count descending
+results.sort(key=lambda x: ((x['avg_rating'] if x['avg_rating'] is not None else 0), (x['review_count'] if x['review_count'] is not None else 0)), reverse=True)
+
+# Prepare output
+output = {'matches': results, 'count': len(results)}
+print("__RESULT__:")
+print(json.dumps(output))"""
+
+env_args = {'var_call_8sjVu1btoN6NrvyoeUOWqkvO': ['review'], 'var_call_iR312fU5tdUT9Rq8lzzg4jah': ['books_info'], 'var_call_nC5DfcA3KTJeIcgIIBRjeC5T': [{'purchase_id': 'purchaseid_96', 'avg_rating': '5.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_94', 'avg_rating': '5.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_88', 'avg_rating': '5.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_83', 'avg_rating': '5.0', 'review_count': '14'}, {'purchase_id': 'purchaseid_80', 'avg_rating': '5.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_74', 'avg_rating': '5.0', 'review_count': '8'}, {'purchase_id': 'purchaseid_66', 'avg_rating': '5.0', 'review_count': '2'}, {'purchase_id': 'purchaseid_60', 'avg_rating': '5.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_6', 'avg_rating': '5.0', 'review_count': '2'}, {'purchase_id': 'purchaseid_55', 'avg_rating': '5.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_54', 'avg_rating': '5.0', 'review_count': '3'}, {'purchase_id': 'purchaseid_46', 'avg_rating': '5.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_41', 'avg_rating': '5.0', 'review_count': '2'}, {'purchase_id': 'purchaseid_40', 'avg_rating': '5.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_4', 'avg_rating': '5.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_39', 'avg_rating': '5.0', 'review_count': '2'}, {'purchase_id': 'purchaseid_38', 'avg_rating': '5.0', 'review_count': '2'}, {'purchase_id': 'purchaseid_37', 'avg_rating': '5.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_33', 'avg_rating': '5.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_3', 'avg_rating': '5.0', 'review_count': '2'}, {'purchase_id': 'purchaseid_22', 'avg_rating': '5.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_200', 'avg_rating': '5.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_198', 'avg_rating': '5.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_196', 'avg_rating': '5.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_192', 'avg_rating': '5.0', 'review_count': '3'}, {'purchase_id': 'purchaseid_187', 'avg_rating': '5.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_185', 'avg_rating': '5.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_184', 'avg_rating': '5.0', 'review_count': '2'}, {'purchase_id': 'purchaseid_182', 'avg_rating': '5.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_172', 'avg_rating': '5.0', 'review_count': '2'}, {'purchase_id': 'purchaseid_170', 'avg_rating': '5.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_169', 'avg_rating': '5.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_154', 'avg_rating': '5.0', 'review_count': '3'}, {'purchase_id': 'purchaseid_152', 'avg_rating': '5.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_146', 'avg_rating': '5.0', 'review_count': '3'}, {'purchase_id': 'purchaseid_144', 'avg_rating': '5.0', 'review_count': '4'}, {'purchase_id': 'purchaseid_14', 'avg_rating': '5.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_130', 'avg_rating': '5.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_129', 'avg_rating': '5.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_126', 'avg_rating': '5.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_122', 'avg_rating': '5.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_12', 'avg_rating': '5.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_118', 'avg_rating': '5.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_110', 'avg_rating': '5.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_108', 'avg_rating': '5.0', 'review_count': '3'}, {'purchase_id': 'purchaseid_105', 'avg_rating': '5.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_10', 'avg_rating': '5.0', 'review_count': '4'}, {'purchase_id': 'purchaseid_13', 'avg_rating': '4.923076923076923', 'review_count': '13'}, {'purchase_id': 'purchaseid_149', 'avg_rating': '4.9', 'review_count': '10'}, {'purchase_id': 'purchaseid_178', 'avg_rating': '4.795918367346939', 'review_count': '49'}, {'purchase_id': 'purchaseid_76', 'avg_rating': '4.75', 'review_count': '4'}, {'purchase_id': 'purchaseid_48', 'avg_rating': '4.75', 'review_count': '4'}, {'purchase_id': 'purchaseid_115', 'avg_rating': '4.75', 'review_count': '8'}, {'purchase_id': 'purchaseid_8', 'avg_rating': '4.709677419354839', 'review_count': '31'}, {'purchase_id': 'purchaseid_158', 'avg_rating': '4.708333333333333', 'review_count': '24'}, {'purchase_id': 'purchaseid_72', 'avg_rating': '4.5', 'review_count': '2'}, {'purchase_id': 'purchaseid_50', 'avg_rating': '4.5', 'review_count': '2'}, {'purchase_id': 'purchaseid_23', 'avg_rating': '4.5', 'review_count': '2'}, {'purchase_id': 'purchaseid_161', 'avg_rating': '4.5', 'review_count': '2'}, {'purchase_id': 'purchaseid_99', 'avg_rating': '4.4', 'review_count': '5'}, {'purchase_id': 'purchaseid_62', 'avg_rating': '4.0', 'review_count': '6'}, {'purchase_id': 'purchaseid_45', 'avg_rating': '4.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_31', 'avg_rating': '4.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_25', 'avg_rating': '4.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_193', 'avg_rating': '4.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_167', 'avg_rating': '4.0', 'review_count': '12'}, {'purchase_id': 'purchaseid_145', 'avg_rating': '4.0', 'review_count': '5'}, {'purchase_id': 'purchaseid_140', 'avg_rating': '4.0', 'review_count': '4'}, {'purchase_id': 'purchaseid_137', 'avg_rating': '4.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_11', 'avg_rating': '4.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_107', 'avg_rating': '4.0', 'review_count': '3'}, {'purchase_id': 'purchaseid_20', 'avg_rating': '3.875', 'review_count': '16'}, {'purchase_id': 'purchaseid_85', 'avg_rating': '3.8333333333333335', 'review_count': '12'}, {'purchase_id': 'purchaseid_5', 'avg_rating': '3.75', 'review_count': '4'}, {'purchase_id': 'purchaseid_32', 'avg_rating': '3.5714285714285716', 'review_count': '7'}, {'purchase_id': 'purchaseid_93', 'avg_rating': '3.0', 'review_count': '2'}, {'purchase_id': 'purchaseid_67', 'avg_rating': '3.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_189', 'avg_rating': '2.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_155', 'avg_rating': '1.0', 'review_count': '1'}, {'purchase_id': 'purchaseid_109', 'avg_rating': '1.0', 'review_count': '2'}], 'var_call_TQEJqJJ7UgfazlLOSLDrs1Yl': 'file_storage/call_TQEJqJJ7UgfazlLOSLDrs1Yl.json', 'var_call_XQaqicjdfgWYq18k9Cvfc0uu': {'reviews_count': 80, 'books_file_path': 'file_storage/call_TQEJqJJ7UgfazlLOSLDrs1Yl.json'}, 'var_call_G3nmEOmiyVz9bOGImOtG3NGE': {'items': [{'purchase_id': 'purchaseid_96', 'book_id': 'bookid_96', 'avg_rating': 5.0, 'review_count': 1}, {'purchase_id': 'purchaseid_94', 'book_id': 'bookid_94', 'avg_rating': 5.0, 'review_count': 1}, {'purchase_id': 'purchaseid_88', 'book_id': 'bookid_88', 'avg_rating': 5.0, 'review_count': 1}, {'purchase_id': 'purchaseid_83', 'book_id': 'bookid_83', 'avg_rating': 5.0, 'review_count': 14}, {'purchase_id': 'purchaseid_80', 'book_id': 'bookid_80', 'avg_rating': 5.0, 'review_count': 1}, {'purchase_id': 'purchaseid_74', 'book_id': 'bookid_74', 'avg_rating': 5.0, 'review_count': 8}, {'purchase_id': 'purchaseid_66', 'book_id': 'bookid_66', 'avg_rating': 5.0, 'review_count': 2}, {'purchase_id': 'purchaseid_60', 'book_id': 'bookid_60', 'avg_rating': 5.0, 'review_count': 1}, {'purchase_id': 'purchaseid_6', 'book_id': 'bookid_6', 'avg_rating': 5.0, 'review_count': 2}, {'purchase_id': 'purchaseid_55', 'book_id': 'bookid_55', 'avg_rating': 5.0, 'review_count': 1}, {'purchase_id': 'purchaseid_54', 'book_id': 'bookid_54', 'avg_rating': 5.0, 'review_count': 3}, {'purchase_id': 'purchaseid_46', 'book_id': 'bookid_46', 'avg_rating': 5.0, 'review_count': 1}, {'purchase_id': 'purchaseid_41', 'book_id': 'bookid_41', 'avg_rating': 5.0, 'review_count': 2}, {'purchase_id': 'purchaseid_40', 'book_id': 'bookid_40', 'avg_rating': 5.0, 'review_count': 1}, {'purchase_id': 'purchaseid_4', 'book_id': 'bookid_4', 'avg_rating': 5.0, 'review_count': 1}, {'purchase_id': 'purchaseid_39', 'book_id': 'bookid_39', 'avg_rating': 5.0, 'review_count': 2}, {'purchase_id': 'purchaseid_38', 'book_id': 'bookid_38', 'avg_rating': 5.0, 'review_count': 2}, {'purchase_id': 'purchaseid_37', 'book_id': 'bookid_37', 'avg_rating': 5.0, 'review_count': 1}, {'purchase_id': 'purchaseid_33', 'book_id': 'bookid_33', 'avg_rating': 5.0, 'review_count': 1}, {'purchase_id': 'purchaseid_3', 'book_id': 'bookid_3', 'avg_rating': 5.0, 'review_count': 2}, {'purchase_id': 'purchaseid_22', 'book_id': 'bookid_22', 'avg_rating': 5.0, 'review_count': 1}, {'purchase_id': 'purchaseid_200', 'book_id': 'bookid_200', 'avg_rating': 5.0, 'review_count': 1}, {'purchase_id': 'purchaseid_198', 'book_id': 'bookid_198', 'avg_rating': 5.0, 'review_count': 1}, {'purchase_id': 'purchaseid_196', 'book_id': 'bookid_196', 'avg_rating': 5.0, 'review_count': 1}, {'purchase_id': 'purchaseid_192', 'book_id': 'bookid_192', 'avg_rating': 5.0, 'review_count': 3}, {'purchase_id': 'purchaseid_187', 'book_id': 'bookid_187', 'avg_rating': 5.0, 'review_count': 1}, {'purchase_id': 'purchaseid_185', 'book_id': 'bookid_185', 'avg_rating': 5.0, 'review_count': 1}, {'purchase_id': 'purchaseid_184', 'book_id': 'bookid_184', 'avg_rating': 5.0, 'review_count': 2}, {'purchase_id': 'purchaseid_182', 'book_id': 'bookid_182', 'avg_rating': 5.0, 'review_count': 1}, {'purchase_id': 'purchaseid_172', 'book_id': 'bookid_172', 'avg_rating': 5.0, 'review_count': 2}, {'purchase_id': 'purchaseid_170', 'book_id': 'bookid_170', 'avg_rating': 5.0, 'review_count': 1}, {'purchase_id': 'purchaseid_169', 'book_id': 'bookid_169', 'avg_rating': 5.0, 'review_count': 1}, {'purchase_id': 'purchaseid_154', 'book_id': 'bookid_154', 'avg_rating': 5.0, 'review_count': 3}, {'purchase_id': 'purchaseid_152', 'book_id': 'bookid_152', 'avg_rating': 5.0, 'review_count': 1}, {'purchase_id': 'purchaseid_146', 'book_id': 'bookid_146', 'avg_rating': 5.0, 'review_count': 3}, {'purchase_id': 'purchaseid_144', 'book_id': 'bookid_144', 'avg_rating': 5.0, 'review_count': 4}, {'purchase_id': 'purchaseid_14', 'book_id': 'bookid_14', 'avg_rating': 5.0, 'review_count': 1}, {'purchase_id': 'purchaseid_130', 'book_id': 'bookid_130', 'avg_rating': 5.0, 'review_count': 1}, {'purchase_id': 'purchaseid_129', 'book_id': 'bookid_129', 'avg_rating': 5.0, 'review_count': 1}, {'purchase_id': 'purchaseid_126', 'book_id': 'bookid_126', 'avg_rating': 5.0, 'review_count': 1}, {'purchase_id': 'purchaseid_122', 'book_id': 'bookid_122', 'avg_rating': 5.0, 'review_count': 1}, {'purchase_id': 'purchaseid_12', 'book_id': 'bookid_12', 'avg_rating': 5.0, 'review_count': 1}, {'purchase_id': 'purchaseid_118', 'book_id': 'bookid_118', 'avg_rating': 5.0, 'review_count': 1}, {'purchase_id': 'purchaseid_110', 'book_id': 'bookid_110', 'avg_rating': 5.0, 'review_count': 1}, {'purchase_id': 'purchaseid_108', 'book_id': 'bookid_108', 'avg_rating': 5.0, 'review_count': 3}, {'purchase_id': 'purchaseid_105', 'book_id': 'bookid_105', 'avg_rating': 5.0, 'review_count': 1}, {'purchase_id': 'purchaseid_10', 'book_id': 'bookid_10', 'avg_rating': 5.0, 'review_count': 4}, {'purchase_id': 'purchaseid_13', 'book_id': 'bookid_13', 'avg_rating': 4.923076923076923, 'review_count': 13}, {'purchase_id': 'purchaseid_149', 'book_id': 'bookid_149', 'avg_rating': 4.9, 'review_count': 10}, {'purchase_id': 'purchaseid_178', 'book_id': 'bookid_178', 'avg_rating': 4.795918367346939, 'review_count': 49}, {'purchase_id': 'purchaseid_76', 'book_id': 'bookid_76', 'avg_rating': 4.75, 'review_count': 4}, {'purchase_id': 'purchaseid_48', 'book_id': 'bookid_48', 'avg_rating': 4.75, 'review_count': 4}, {'purchase_id': 'purchaseid_115', 'book_id': 'bookid_115', 'avg_rating': 4.75, 'review_count': 8}, {'purchase_id': 'purchaseid_8', 'book_id': 'bookid_8', 'avg_rating': 4.709677419354839, 'review_count': 31}, {'purchase_id': 'purchaseid_158', 'book_id': 'bookid_158', 'avg_rating': 4.708333333333333, 'review_count': 24}, {'purchase_id': 'purchaseid_72', 'book_id': 'bookid_72', 'avg_rating': 4.5, 'review_count': 2}, {'purchase_id': 'purchaseid_50', 'book_id': 'bookid_50', 'avg_rating': 4.5, 'review_count': 2}, {'purchase_id': 'purchaseid_23', 'book_id': 'bookid_23', 'avg_rating': 4.5, 'review_count': 2}, {'purchase_id': 'purchaseid_161', 'book_id': 'bookid_161', 'avg_rating': 4.5, 'review_count': 2}, {'purchase_id': 'purchaseid_99', 'book_id': 'bookid_99', 'avg_rating': 4.4, 'review_count': 5}, {'purchase_id': 'purchaseid_62', 'book_id': 'bookid_62', 'avg_rating': 4.0, 'review_count': 6}, {'purchase_id': 'purchaseid_45', 'book_id': 'bookid_45', 'avg_rating': 4.0, 'review_count': 1}, {'purchase_id': 'purchaseid_31', 'book_id': 'bookid_31', 'avg_rating': 4.0, 'review_count': 1}, {'purchase_id': 'purchaseid_25', 'book_id': 'bookid_25', 'avg_rating': 4.0, 'review_count': 1}, {'purchase_id': 'purchaseid_193', 'book_id': 'bookid_193', 'avg_rating': 4.0, 'review_count': 1}, {'purchase_id': 'purchaseid_167', 'book_id': 'bookid_167', 'avg_rating': 4.0, 'review_count': 12}, {'purchase_id': 'purchaseid_145', 'book_id': 'bookid_145', 'avg_rating': 4.0, 'review_count': 5}, {'purchase_id': 'purchaseid_140', 'book_id': 'bookid_140', 'avg_rating': 4.0, 'review_count': 4}, {'purchase_id': 'purchaseid_137', 'book_id': 'bookid_137', 'avg_rating': 4.0, 'review_count': 1}, {'purchase_id': 'purchaseid_11', 'book_id': 'bookid_11', 'avg_rating': 4.0, 'review_count': 1}, {'purchase_id': 'purchaseid_107', 'book_id': 'bookid_107', 'avg_rating': 4.0, 'review_count': 3}, {'purchase_id': 'purchaseid_20', 'book_id': 'bookid_20', 'avg_rating': 3.875, 'review_count': 16}, {'purchase_id': 'purchaseid_85', 'book_id': 'bookid_85', 'avg_rating': 3.8333333333333335, 'review_count': 12}, {'purchase_id': 'purchaseid_5', 'book_id': 'bookid_5', 'avg_rating': 3.75, 'review_count': 4}, {'purchase_id': 'purchaseid_32', 'book_id': 'bookid_32', 'avg_rating': 3.5714285714285716, 'review_count': 7}, {'purchase_id': 'purchaseid_93', 'book_id': 'bookid_93', 'avg_rating': 3.0, 'review_count': 2}, {'purchase_id': 'purchaseid_67', 'book_id': 'bookid_67', 'avg_rating': 3.0, 'review_count': 1}, {'purchase_id': 'purchaseid_189', 'book_id': 'bookid_189', 'avg_rating': 2.0, 'review_count': 1}, {'purchase_id': 'purchaseid_155', 'book_id': 'bookid_155', 'avg_rating': 1.0, 'review_count': 1}, {'purchase_id': 'purchaseid_109', 'book_id': 'bookid_109', 'avg_rating': 1.0, 'review_count': 2}], 'filtered_book_ids': ['bookid_10', 'bookid_105', 'bookid_108', 'bookid_110', 'bookid_115', 'bookid_118', 'bookid_12', 'bookid_122', 'bookid_126', 'bookid_129', 'bookid_13', 'bookid_130', 'bookid_14', 'bookid_144', 'bookid_146', 'bookid_149', 'bookid_152', 'bookid_154', 'bookid_158', 'bookid_161', 'bookid_169', 'bookid_170', 'bookid_172', 'bookid_178', 'bookid_182', 'bookid_184', 'bookid_185', 'bookid_187', 'bookid_192', 'bookid_196', 'bookid_198', 'bookid_200', 'bookid_22', 'bookid_23', 'bookid_3', 'bookid_33', 'bookid_37', 'bookid_38', 'bookid_39', 'bookid_4', 'bookid_40', 'bookid_41', 'bookid_46', 'bookid_48', 'bookid_50', 'bookid_54', 'bookid_55', 'bookid_6', 'bookid_60', 'bookid_66', 'bookid_72', 'bookid_74', 'bookid_76', 'bookid_8', 'bookid_80', 'bookid_83', 'bookid_88', 'bookid_94', 'bookid_96']}}
+
+exec(code, env_args)

@@ -1,0 +1,68 @@
+code = """import json
+
+# Load patient data
+patients_file = locals()['var_functions.execute_python:20']
+with open(patients_file, 'r') as f:
+    patients_data = json.load(f)
+
+# Load CDH1 mutations
+cdh1_file = locals()['var_functions.query_db:24']
+with open(cdh1_file, 'r') as f:
+    cdh1_mutations = json.load(f)
+
+# Get unique mutated patients
+cdh1_patients = set()
+for mut in cdh1_mutations:
+    cdh1_patients.add(mut['ParticipantBarcode'])
+
+print(f"Total alive BRCA patients: {patients_data['total_patients']}")
+print(f"Unique patients with CDH1 mutations: {len(cdh1_patients)}")
+print(f"CDH1 mutated patients: {sorted(list(cdh1_patients))}")
+
+# Map patients to histological types and count
+histotype_counts = {}
+histotype_mutated = {}
+
+for patient in patients_data['patients']:
+    hist_type = patient['histological_type']
+    barcode = patient['ParticipantBarcode']
+    
+    if hist_type not in histotype_counts:
+        histotype_counts[hist_type] = 0
+        histotype_mutated[hist_type] = 0
+    
+    histotype_counts[hist_type] += 1
+    
+    if barcode in cdh1_patients:
+        histotype_mutated[hist_type] += 1
+
+# Calculate percentages
+results = []
+for hist_type in histotype_counts:
+    total = histotype_counts[hist_type]
+    mutated = histotype_mutated[hist_type]
+    percentage = (mutated / total) * 100 if total > 0 else 0
+    results.append({
+        'histological_type': hist_type,
+        'total_patients': total,
+        'mutated_patients': mutated,
+        'percentage': round(percentage, 2)
+    })
+
+# Sort by percentage descending
+results_sorted = sorted(results, key=lambda x: x['percentage'], reverse=True)
+
+print("\nHistological type analysis:")
+for r in results_sorted:
+    print(f"  {r['histological_type']}: {r['mutated_patients']}/{r['total_patients']} = {r['percentage']}%")
+
+output = {
+    'analysis': results_sorted
+}
+
+print('__RESULT__:')
+print(json.dumps(output))"""
+
+env_args = {'var_functions.list_db:0': ['clinical_info'], 'var_functions.query_db:2': 'file_storage/functions.query_db:2.json', 'var_functions.query_db:6': [], 'var_functions.list_db:8': ['Mutation_Data', 'RNASeq_Expression'], 'var_functions.query_db:10': [{'Patient_description': 'In the Ovarian serous cystadenocarcinoma dataset, patient TCGA-31-1953 (UUID 61feee94-3ac9-42fe-aaa3-dc6a3efe563c) is recorded as a FEMALE with vital status: Alive.', 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': 'Patient TCGA-36-1576 (UUID 3445c524-5a37-40b6-8614-956d76eed939) is a FEMALE diagnosed with Ovarian serous cystadenocarcinoma. Current vital status: Alive.', 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': 'Record fdd4adb8-9295-480a-9352-305b5eb51187 refers to patient TCGA-25-2408, a FEMALE diagnosed with Ovarian serous cystadenocarcinoma. Vital status recorded as Dead.', 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': 'Record 6f25001a-f890-4fd0-a994-e62a9ea5c6f3 refers to patient TCGA-29-2427, a FEMALE diagnosed with Ovarian serous cystadenocarcinoma. Vital status recorded as Alive.', 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': 'Case 9446e349-71e6-455a-aa8f-53ec96597146, linked to barcode TCGA-10-0933, corresponds to a FEMALE patient diagnosed with Ovarian serous cystadenocarcinoma, with vital status Dead.', 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': "Patient TCGA-23-1124, registered under UUID 8a6d2ce3-cc57-451b-9b07-8263782aa23f, belongs to the Ovarian serous cystadenocarcinoma cohort. This FEMALE patient's vital status is Dead.", 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': 'In the Ovarian serous cystadenocarcinoma dataset, patient TCGA-23-2641 (UUID 49e5ee61-a1c9-4038-84ac-92683e573a65) is recorded as a FEMALE with vital status: Alive.', 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': 'Patient TCGA-23-1118 (FEMALE, UUID 700e91bb-d675-41b2-bbbd-935767c7b447) is enrolled in the study of Ovarian serous cystadenocarcinoma. Vital status: Alive.', 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': 'In the Ovarian serous cystadenocarcinoma dataset, patient TCGA-23-1120 (UUID fdf83fdf-dfbb-4306-9a1b-b4487d18b402) is recorded as a FEMALE with vital status: Alive.', 'histological_type': 'Serous Cystadenocarcinoma'}, {'Patient_description': 'The individual with barcode TCGA-23-2081 and UUID 41178cbc-db73-4007-b5d8-febebf7f578d is a FEMALE case of Ovarian serous cystadenocarcinoma, documented with vital status = Dead.', 'histological_type': 'Serous Cystadenocarcinoma'}], 'var_functions.query_db:12': [{'total_patient_count': '10761'}], 'var_functions.query_db:14': [{'Patient_description': "Patient TCGA-DK-A6AW, registered under UUID 01C815BA-7BDA-4F7E-865C-0C5776FEBF2C, belongs to the Bladder urothelial carcinoma cohort. This MALE patient's vital status is Alive.", 'histological_type': 'Muscle invasive urothelial carcinoma (pT2 or above)'}, {'Patient_description': 'In the Bladder urothelial carcinoma dataset, patient TCGA-GD-A3OQ (UUID 2E85C30C-C4C4-4096-9EEF-4EB2C7D991A3) is recorded as a MALE with vital status: Alive.', 'histological_type': 'Muscle invasive urothelial carcinoma (pT2 or above)'}, {'Patient_description': 'The individual with barcode TCGA-CF-A47W and UUID 122FC134-8915-47DB-96C9-AB1853C3CD18 is a MALE case of Bladder urothelial carcinoma, documented with vital status = Alive.', 'histological_type': 'Muscle invasive urothelial carcinoma (pT2 or above)'}, {'Patient_description': 'Patient TCGA-CF-A3MF (MALE, UUID 1E308B12-0590-4DAE-94D0-A539FCF25DF7) is enrolled in the study of Bladder urothelial carcinoma. Vital status: Alive.', 'histological_type': 'Muscle invasive urothelial carcinoma (pT2 or above)'}, {'Patient_description': 'Case DE810AF0-4C18-4E8F-9836-F8ABC425E3EB, linked to barcode TCGA-DK-A2I6, corresponds to a MALE patient diagnosed with Bladder urothelial carcinoma, with vital status Alive.', 'histological_type': 'Muscle invasive urothelial carcinoma (pT2 or above)'}, {'Patient_description': 'Patient TCGA-BT-A20V (FEMALE, UUID 24f21425-b001-4986-aedf-5b4dd851c6ad) is enrolled in the study of Bladder urothelial carcinoma. Vital status: Dead.', 'histological_type': 'Muscle invasive urothelial carcinoma (pT2 or above)'}, {'Patient_description': 'Record 35C7BB8A-7B5C-488D-9D3A-725B24D14478 refers to patient TCGA-4Z-AA81, a MALE diagnosed with Bladder urothelial carcinoma. Vital status recorded as Dead.', 'histological_type': 'Muscle invasive urothelial carcinoma (pT2 or above)'}, {'Patient_description': 'Case A648D9BF-CF37-41FC-9515-E8F5AC85FCD4, linked to barcode TCGA-XF-A9SX, corresponds to a FEMALE patient diagnosed with Bladder urothelial carcinoma, with vital status Dead.', 'histological_type': 'Muscle invasive urothelial carcinoma (pT2 or above)'}, {'Patient_description': 'Patient TCGA-XF-A8HE (MALE, UUID 841B4582-A268-4A55-A9A2-47C7E5C3B69F) is enrolled in the study of Bladder urothelial carcinoma. Vital status: Alive.', 'histological_type': 'Muscle invasive urothelial carcinoma (pT2 or above)'}, {'Patient_description': 'Case 679a6869-2ce9-4472-8db1-8869e2c1a440, linked to barcode TCGA-CU-A0YN, corresponds to a MALE patient diagnosed with Bladder urothelial carcinoma, with vital status Dead.', 'histological_type': 'Muscle invasive urothelial carcinoma (pT2 or above)'}, {'Patient_description': "Patient TCGA-FD-A3SN, registered under UUID 0FB043D3-D86B-4CD8-8C01-9E2B3E965BB0, belongs to the Bladder urothelial carcinoma cohort. This MALE patient's vital status is Alive.", 'histological_type': 'Muscle invasive urothelial carcinoma (pT2 or above)'}, {'Patient_description': 'Patient TCGA-BL-A0C8 (UUID a6003b1c-56a9-430a-a5e2-b70af3f81bdb) is a MALE diagnosed with Bladder urothelial carcinoma. Current vital status: Alive.', 'histological_type': 'None'}, {'Patient_description': 'Clinical entry 3CCCFFEA-BD7D-4548-BB38-FE5EDA630DE6 identifies patient TCGA-FD-A43N, a MALE subject with Bladder urothelial carcinoma. Their current vital status is Alive.', 'histological_type': 'Muscle invasive urothelial carcinoma (pT2 or above)'}, {'Patient_description': 'Record 234086DD-5A74-4FF1-94AB-BAD43EE69D5C refers to patient TCGA-DK-A2I2, a FEMALE diagnosed with Bladder urothelial carcinoma. Vital status recorded as Dead.', 'histological_type': 'Muscle invasive urothelial carcinoma (pT2 or above)'}, {'Patient_description': 'Patient TCGA-E7-A7DV (UUID 3EFFD691-570C-478A-8903-3771A1B43F2E) is a MALE diagnosed with Bladder urothelial carcinoma. Current vital status: Alive.', 'histological_type': 'Muscle invasive urothelial carcinoma (pT2 or above)'}, {'Patient_description': 'The individual with barcode TCGA-DK-A1AE and UUID 493a4ff2-37a5-4b79-928d-83dbfe534556 is a MALE case of Bladder urothelial carcinoma, documented with vital status = Alive.', 'histological_type': 'Muscle invasive urothelial carcinoma (pT2 or above)'}, {'Patient_description': 'Case 72FE54B5-C1C8-468A-954A-09992429512A, linked to barcode TCGA-4Z-AA7R, corresponds to a MALE patient diagnosed with Bladder urothelial carcinoma, with vital status Dead.', 'histological_type': 'Muscle invasive urothelial carcinoma (pT2 or above)'}, {'Patient_description': "Patient TCGA-DK-AA6R, registered under UUID 5DB4B168-A6BA-482C-B067-2274EBA96AAD, belongs to the Bladder urothelial carcinoma cohort. This MALE patient's vital status is Alive.", 'histological_type': 'Muscle invasive urothelial carcinoma (pT2 or above)'}, {'Patient_description': 'In the Bladder urothelial carcinoma dataset, patient TCGA-XF-A8HH (UUID 02964D82-CC94-4286-A66F-03567101950C) is recorded as a FEMALE with vital status: Dead.', 'histological_type': 'Muscle invasive urothelial carcinoma (pT2 or above)'}, {'Patient_description': 'The individual with barcode TCGA-ZF-A9R7 and UUID CE4E4549-BEFC-447F-9B79-ED46E302E6D7 is a FEMALE case of Bladder urothelial carcinoma, documented with vital status = Alive.', 'histological_type': 'Muscle invasive urothelial carcinoma (pT2 or above)'}], 'var_functions.query_db:16': 'file_storage/functions.query_db:16.json', 'var_functions.execute_python:20': 'file_storage/functions.execute_python:20.json', 'var_functions.execute_python:22': {'patient_count': 52, 'sample_barcodes': ['TCGA-GD-A3OQ', 'TCGA-BL-A0C8', 'TCGA-E7-A7DV', 'TCGA-GV-A3QI', 'TCGA-BT-A42F', 'TCGA-DK-A6B1', 'TCGA-XF-A9SI', 'TCGA-YF-AA3L', 'TCGA-K4-A6FZ', 'TCGA-ZF-A9RF']}, 'var_functions.query_db:24': [{'ParticipantBarcode': 'TCGA-KQ-A41S', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Nonsense_Mutation', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-KQ-A41S', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Nonsense_Mutation', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-DK-A6AW', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Nonsense_Mutation', 'FILTER': 'PASS'}, {'ParticipantBarcode': 'TCGA-XF-A9T3', 'Hugo_Symbol': 'CDH1', 'Variant_Classification': 'Missense_Mutation', 'FILTER': 'PASS'}], 'var_functions.execute_python:30': {'patients_loaded': True, 'patient_count': 52}}
+
+exec(code, env_args)

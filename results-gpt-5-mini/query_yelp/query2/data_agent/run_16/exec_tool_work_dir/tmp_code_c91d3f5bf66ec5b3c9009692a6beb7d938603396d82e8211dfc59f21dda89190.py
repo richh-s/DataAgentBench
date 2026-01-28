@@ -1,0 +1,78 @@
+code = """import json
+import pandas as pd
+import re
+
+with open(var_call_jZEL08NkDEmjwOrm2hls2Id8, 'r') as f:
+    businesses = json.load(f)
+with open(var_call_VHSQ4WPpBD7ghRgUueDxfic2, 'r') as f:
+    reviews = json.load(f)
+
+df_b = pd.DataFrame(businesses)
+df_r = pd.DataFrame(reviews)
+
+# Ensure fields
+df_b['description'] = df_b.get('description', pd.Series(['']*len(df_b))).fillna('').astype(str)
+df_b['business_id'] = df_b.get('business_id', pd.Series([None]*len(df_b)))
+df_r['business_ref'] = df_r.get('business_ref', pd.Series([None]*len(df_r)))
+
+# Uppercase for matching
+df_b['desc_up'] = df_b['description'].str.upper()
+
+# regex patterns
+p_list = [re.compile(r'IN\s+[^,]+,\s*([A-Z]{2})\b'),
+          re.compile(r',\s*([A-Z]{2})\b'),
+          re.compile(r'([A-Z]{2})\s+LOCATION\b'),
+          re.compile(r'\b([A-Z]{2})\s*$')]
+
+state_list = set(['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY','DC'])
+
+def extract_state(desc):
+    if not desc:
+        return None
+    for p in p_list:
+        m = p.search(desc)
+        if m:
+            st = m.group(1)
+            if st in state_list:
+                return st
+    return None
+
+df_b['state'] = df_b['desc_up'].apply(extract_state)
+
+# Create business_ref
+if 'business_id' in df_b.columns:
+    df_b['business_ref'] = df_b['business_id'].astype(str).str.replace('businessid_', 'businessref_')
+else:
+    df_b['business_ref'] = None
+
+# Clean ratings
+if 'rating' in df_r.columns:
+    df_r['rating'] = pd.to_numeric(df_r['rating'], errors='coerce')
+else:
+    df_r['rating'] = pd.NA
+
+# Merge
+merged = pd.merge(df_r, df_b[['business_ref','state','business_id']], on='business_ref', how='left')
+
+# Filter only rows with state
+merged = merged[merged['state'].notna()].copy()
+
+# If empty
+if merged.empty:
+    out = {'state': None, 'total_reviews': 0, 'avg_review_rating': None, 'avg_business_average_rating': None, 'num_businesses_with_state': int(df_b['state'].notna().sum())}
+else:
+    counts = merged.groupby('state').size()
+    state_max = counts.idxmax()
+    total_reviews = int(counts.max())
+    avg_review_rating = merged.loc[merged['state']==state_max, 'rating'].mean()
+    # per business averages
+    biz_avg = merged[merged['state']==state_max].groupby('business_ref')['rating'].mean()
+    avg_business_avg = float(biz_avg.mean()) if not biz_avg.empty else None
+    out = {'state': state_max, 'total_reviews': total_reviews, 'avg_review_rating': round(float(avg_review_rating),4) if avg_review_rating is not None else None, 'avg_business_average_rating': round(avg_business_avg,4) if avg_business_avg is not None else None, 'num_businesses_with_state': int(df_b['state'].notna().sum())}
+
+print('__RESULT__:')
+print(json.dumps(out))"""
+
+env_args = {'var_call_jZEL08NkDEmjwOrm2hls2Id8': 'file_storage/call_jZEL08NkDEmjwOrm2hls2Id8.json', 'var_call_VHSQ4WPpBD7ghRgUueDxfic2': 'file_storage/call_VHSQ4WPpBD7ghRgUueDxfic2.json', 'var_call_5RpQqoTcTOoukUzuaAJIcCgW': {'state': None, 'total_reviews': 0, 'avg_review_rating': None, 'avg_business_rating': None}, 'var_call_bjGcfwAG1fa7paNezZrxJr6y': 'file_storage/call_bjGcfwAG1fa7paNezZrxJr6y.json', 'var_call_iQ9P3ePIhlt9yD0XaNEpH98V': {'state': None, 'total_reviews': 0, 'avg_review_rating': None, 'avg_business_average_rating': None}, 'var_call_3azT2V3K44VQcEBsIaGlhA50': [{'business_id': 'businessid_49', 'description': 'Located at 6901 Phelps Rd in Goleta, CA, this facility offers a nurturing environment for young learners, providing a range of services in Education, Elementary Schools, Child Care & Day Care, Local Services, Preschools, and Montessori Schools.'}, {'business_id': 'businessid_47', 'description': 'Located at 9916 Clayton Rd in St. Louis, MO, this establishment offers a wide range of services, including Hair Salons, Beauty & Spas, Hair Stylists, Skin Care, Blow Dry/Out Services, and Makeup Artists.'}, {'business_id': 'businessid_88', 'description': 'Located at 11655 W Executive Dr in Boise, ID, this facility offers enthusiasts a premier destination for Gun/Rifle Ranges, Active Life.'}, {'business_id': 'businessid_41', 'description': 'Located at 1615 Pasadena Ave S, Ste 430 in Saint Petersburg, FL, this facility offers a range of services in Internal Medicine, Doctors, Health & Medical.'}, {'business_id': 'businessid_33', 'description': 'Located at 9655 E US Hwy 36, Unit H in Avon, IN, this establishment offers a range of services including Nail Salons, Hair Removal, Beauty & Spas, and Waxing.'}, {'business_id': 'businessid_74', 'description': 'Located at 735 Dodecanese Blvd in Tarpon Springs, FL, this charming establishment offers a delightful selection of treats, making it a must-visit for anyone seeking Candy Stores, Specialty Food, Food.'}, {'business_id': 'businessid_92', 'description': 'Located at 690 W Dekalb Pike in King of Prussia, PA, this business offers a diverse range of services and products in the fields of Cosmetics & Beauty Supply, Cosmetic Dentists, Tanning, Teeth Whitening, Beauty & Spas, Dentists, Shopping, Blow Dry/Out Services, Health & Medical, Spray Tanning, and Hair Salons.'}, {'business_id': 'businessid_64', 'description': 'Located at 12337 Olive Blvd in Creve Coeur, MO, this establishment offers a range of services in Nail Salons, Beauty & Spas.'}, {'business_id': 'businessid_52', 'description': 'Located at 5000 W 96th St in Indianapolis, IN, this establishment offers a diverse selection of Antiques, Shopping, Home Services, and Lighting Fixtures & Equipment for all your home and decorative needs.'}, {'business_id': 'businessid_29', 'description': 'Located at 41 Haddon Ave in Collingswood, NJ, this versatile establishment offers a range of services including Wedding Planning, Flowers & Gifts, Event Planning & Services, Financial Services, Shopping, and Florists.'}, {'business_id': 'businessid_10', 'description': "Located at 4319 Telegraph Rd in Saint Louis, MO, this establishment offers a delightful array of dishes in the category of 'Restaurants, Chinese'."}, {'business_id': 'businessid_61', 'description': 'Located at 1218 Millennium Pkwy in Brandon, FL, this facility provides essential services in the categories of Medical Centers, Health & Medical.'}, {'business_id': 'businessid_54', 'description': 'Located at 13151 Race Track Rd in Tampa, FL, this establishment offers a variety of services including Service Stations, Coffee & Tea, Gas Stations, Automotive, Gas Stations, Food, and Convenience Stores.'}, {'business_id': 'businessid_8', 'description': 'This Philadelphia, PA location offers a range of services including Hotels & Travel, Taxis, Transportation, Local Services, and Automotive to meet all your travel and transportation needs.'}, {'business_id': 'businessid_59', 'description': 'Located at 4403 Chestnut St in Philadelphia, PA, this vibrant spot offers a delightful mix of Food, Bubble Tea, Restaurants, Sandwiches, Vietnamese, Cafes, perfect for a casual meal or a refreshing drink.'}, {'business_id': 'businessid_91', 'description': 'Located at 1625 Baronne St in New Orleans, LA, this vibrant establishment offers a delightful array of options ranging from Food, Shaved Ice, Cajun/Creole, Breakfast & Brunch, Party & Event Planning, Comfort Food, Cafes, Restaurants, to Event Planning & Services, making it a perfect spot for any occasion.'}, {'business_id': 'businessid_83', 'description': 'Located at 13002 Seminole Blvd, Ste 10-11 in Largo, FL, this business specializes in Optometrists, Health & Medical, Eyewear & Opticians, Ophthalmologists, Doctors, Shopping, offering a range of eye care services and products.'}, {'business_id': 'businessid_93', 'description': 'Located at 914 Edwardsville Rd in Troy, IL, this vibrant spot offers a diverse menu featuring American (New) cuisine, along with a lively atmosphere perfect for nightlife, bars, restaurants, and sports bars.'}, {'business_id': 'businessid_1', 'description': 'Located in Pennsauken, NJ, this business specializes in Home Services, Pool & Hot Tub Service, providing expert care for all your residential maintenance needs.'}, {'business_id': 'businessid_24', 'description': 'Located at 4663 Maryland Ave in Saint Louis, MO, this delightful spot offers a tempting selection of treats in the categories of Food, Ice Cream & Frozen Yogurt.'}, {'business_id': 'businessid_95', 'description': 'Located at 201 Veterans Memorial Blvd in Metairie, LA, this establishment offers a diverse menu featuring Restaurants, Sandwiches, Specialty Food, Food, Fruits & Veggies, and Fast Food options for every palate.'}, {'business_id': 'businessid_50', 'description': 'Located at 7670 E 96th St in Fishers, IN, this vibrant eatery offers a diverse menu featuring Burgers, Fast Food, Sandwiches, Restaurants, perfect for a quick and satisfying meal.'}, {'business_id': 'businessid_26', 'description': 'Located at 7003 Seminole Blvd in Seminole, FL, this establishment specializes in a variety of offerings, including Fast Food, Restaurants, Coffee & Tea, Food, and Burgers, making it a convenient stop for a quick meal or a refreshing beverage.'}, {'business_id': 'businessid_84', 'description': 'Located at 5816 Crawfordsville Rd in Indianapolis, IN, this store offers a diverse selection of products in categories such as Books, Mags, Music & Video, Video Game Stores, Videos & Video Game Rental, Electronics, Shopping, and Hobby Shops.'}, {'business_id': 'businessid_89', 'description': 'Located at 540 Shoemaker Rd in King of Prussia, PA, this establishment offers a range of services including Dry Cleaning & Laundry, Laundromat, Local Services, and Laundry Services.'}, {'business_id': 'businessid_32', 'description': 'Located at 1715 Jefferson Hwy in New Orleans, LA, this lively establishment offers a great atmosphere for enjoying Bars, Dive Bars, Burgers, Nightlife, and Restaurants.'}, {'business_id': 'businessid_70', 'description': 'Located at 4500 Shores Dr, Ste 2 in Metairie, LA, this business specializes in a range of offerings within the Home Services, Plumbing categories.'}, {'business_id': 'businessid_42', 'description': 'Located at 1180 Collinsville Crossing in Collinsville, IL, this establishment offers a range of services including Tires, Automotive, Auto Repair, and Oil Change Stations to meet all your vehicle needs.'}, {'business_id': 'businessid_71', 'description': 'Located at 8853 West Fairview Ave in Boise, ID, this business specializes in Automotive, Auto Repair, Car Dealers, and Auto Parts & Supplies.'}, {'business_id': 'businessid_97', 'description': 'Located at 560 Cottman Ave in Cheltenham, PA, this establishment specializes in Body Shops, Automotive services to meet all your vehicle repair needs.'}], 'var_call_dIrUINckvmjPczyGl1qRTtBn': 'file_storage/call_dIrUINckvmjPczyGl1qRTtBn.json'}
+
+exec(code, env_args)

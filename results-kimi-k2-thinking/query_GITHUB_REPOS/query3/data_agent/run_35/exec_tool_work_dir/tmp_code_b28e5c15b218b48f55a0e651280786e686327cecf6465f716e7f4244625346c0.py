@@ -1,0 +1,29 @@
+code = """import json
+
+# Try to access the variable with colon in name
+# Variables from tool calls are stored with their exact names
+var_name = "var_functions.query_db:24"
+
+# Check if it's in locals() or globals()
+if var_name in locals():
+    result = locals()[var_name]
+elif var_name in globals():
+    result = globals()[var_name]
+else:
+    print('Variable not found in locals or globals')
+    result = None
+
+if result:
+    if isinstance(result, str) and '.json' in result:
+        with open(result, 'r') as f:
+            data = json.load(f)
+        print('Loaded data with', len(data), 'items')
+    else:
+        data = result
+        print('Data already loaded,', len(data), 'items')
+else:
+    data = []"""
+
+env_args = {'var_functions.query_db:0': 'file_storage/functions.query_db:0.json', 'var_functions.query_db:8': [{'count_star()': '0'}], 'var_functions.query_db:10': 'file_storage/functions.query_db:10.json', 'var_functions.query_db:12': [{'commit_count': '0'}], 'var_functions.query_db:14': [], 'var_functions.query_db:16': [{'repo_count': '111756'}], 'var_functions.query_db:24': 'file_storage/functions.query_db:24.json', 'var_functions.query_db:28': [{'repo_name': 'jitsi/jipopro'}, {'repo_name': 'virtualcoinclub/common'}, {'repo_name': 'pydev/jmx_exporter'}, {'repo_name': 'eskatos/qi4j-dev-scripts'}, {'repo_name': 'doximity/docker-redis'}, {'repo_name': 'raghavkarol/dotfiles'}, {'repo_name': 'Microsoft/TypeScript'}, {'repo_name': 'romelperez/conky-command'}, {'repo_name': 'NorthernMan54/homebridge-wssensor'}, {'repo_name': 'arrawatia/cp-docker-images'}], 'var_functions.query_db:30': [{'repo_name': 'jitsi/jipopro'}, {'repo_name': 'virtualcoinclub/common'}, {'repo_name': 'pydev/jmx_exporter'}, {'repo_name': 'eskatos/qi4j-dev-scripts'}, {'repo_name': 'doximity/docker-redis'}], 'var_functions.query_db:32': [{'count': '109440'}], 'var_functions.query_db:34': [{'repo_name': 'jitsi/jipopro'}, {'repo_name': 'NuGet/json-ld.net'}, {'repo_name': 'virtualcoinclub/common'}, {'repo_name': 'pydev/jmx_exporter'}, {'repo_name': 'eskatos/qi4j-dev-scripts'}, {'repo_name': 'doximity/docker-redis'}, {'repo_name': 'raghavkarol/dotfiles'}, {'repo_name': 'Microsoft/TypeScript'}, {'repo_name': 'romelperez/conky-command'}, {'repo_name': 'NorthernMan54/homebridge-wssensor'}, {'repo_name': 'ivschukin/learning-azure'}, {'repo_name': 'arrawatia/cp-docker-images'}, {'repo_name': 'wolfitem/docker'}, {'repo_name': 'sdgdsffdsfff/ModSecurity'}, {'repo_name': 'frapposelli/govmomi'}, {'repo_name': 'Grimmjowjack/google-services'}, {'repo_name': 'chuangWu/butterknife'}, {'repo_name': 'louwrentius/eztables'}, {'repo_name': 'riddlesio/hack-man-engine'}, {'repo_name': 'DavitTevanyan/word2vec'}, {'repo_name': 'Siphon098/git-sync-batch'}, {'repo_name': 'hitwangyu/apache-common-pool2'}, {'repo_name': 'wshearn/openshift-ansible'}, {'repo_name': 'javasoze/clue'}, {'repo_name': 'hschema/schemaorg'}, {'repo_name': 'simba518/AniEditor'}, {'repo_name': 'abhgupta/kubernetes'}, {'repo_name': 'enovance/puppet-tripleo'}, {'repo_name': 'garana/mod_reslog'}, {'repo_name': 'shiumachi/hbck-analyzer'}, {'repo_name': 'wildfly-swarm/wildfly-swarm-core'}, {'repo_name': 'grmartin/android-vcard'}, {'repo_name': 'allancth/camel'}, {'repo_name': 'wkalt/puppetdb'}, {'repo_name': 'bep/killswitch'}, {'repo_name': 'mark-adams/compose'}, {'repo_name': 'navnorth/LR-Data'}, {'repo_name': 'ShengC/remotely'}, {'repo_name': 'triAGENS/guacamole'}, {'repo_name': 'cavanm/apn-defaults'}, {'repo_name': 'ampproject/amphtml'}, {'repo_name': 'zkrejcov/drools-wb'}, {'repo_name': 'bmistry13/kafka'}, {'repo_name': 'googleapis/java-retail'}, {'repo_name': 'kewalaka/chocolatey-packages'}, {'repo_name': 'AzazelN28/din'}, {'repo_name': 'ZacharyKlein/grails-isomorphic'}, {'repo_name': 'automatecloud/docker-ddc-vagrant'}, {'repo_name': 'Lambda3/docker-vsts-agent'}, {'repo_name': 'darilek/dotvvm'}, {'repo_name': 'DagensNyheter/helios'}, {'repo_name': 'WitchKing-Helkar/rtbkit'}, {'repo_name': 'branic/manageiq'}, {'repo_name': 'dwmw2/luci'}, {'repo_name': 'StartupMakers/ssh-resource'}, {'repo_name': 'saturnism/oauth2util'}, {'repo_name': 'diogomonica/docker'}, {'repo_name': 'plutoshe/taskgraph'}, {'repo_name': 'ftrossbach/intro-to-dcos'}, {'repo_name': 'nao20010128nao/android-build'}, {'repo_name': 'adamleff/knife-vcair'}, {'repo_name': 'carezone/mixpanel-iphone'}, {'repo_name': 'luvit/luvi'}, {'repo_name': 'rsprabery/FIN'}, {'repo_name': 'dugwa/puppet-control'}, {'repo_name': 'liuqijie/wind'}, {'repo_name': 'proximcreation/tad-mobile'}, {'repo_name': 'ekumenlabs/terminus'}, {'repo_name': 'Hitcents/iOS4Unity'}, {'repo_name': 'wanelo-chef/chef-bootstrap'}, {'repo_name': 'choopooly/docker-grafana-graphite'}, {'repo_name': 'tealover/nova'}, {'repo_name': 'coolsvap/kolla'}, {'repo_name': 'mikepenz/Android-Iconics'}, {'repo_name': 'walrusCH/HomeMirror'}, {'repo_name': 'ppletscher/BCFWstruct'}, {'repo_name': 'barakmich/cayley'}, {'repo_name': 'olafura/json_diff_ex'}, {'repo_name': 'jinahya/jpa-metamodels-with-maven-example'}, {'repo_name': 'msoftware/ContentLoadingProgressDialog'}, {'repo_name': 'iQubeLabs/sdp_search_members_node'}, {'repo_name': 'unixunion/vertx-dockermod'}, {'repo_name': 'mtsyganov/react'}, {'repo_name': 'fish-cat/piwebapi-samples'}, {'repo_name': 'xuanduc939/iosched'}, {'repo_name': 'chemouna/frame-gradle-plugin'}, {'repo_name': 'laura-dietz/kba-y2-streameval'}, {'repo_name': 'jarcec/cmd-tools'}, {'repo_name': 'mrcflorian/classbook'}, {'repo_name': 'cherrydocker/minos'}, {'repo_name': 'Qihoo360/phptrace'}, {'repo_name': '43350860/spdylearn'}, {'repo_name': 'gmtahackers/deeplearning'}, {'repo_name': 'is00hcw/jgroups-raft'}, {'repo_name': 'olamy/archiva'}, {'repo_name': 'boundary/zoocreeper'}, {'repo_name': 'ThomasMarcel/gae-tomalcala-flask'}, {'repo_name': 'mheon/docker'}, {'repo_name': 'wowsoso/etcd'}, {'repo_name': 'SourceBackups/DexHunter'}], 'var_functions.query_db:38': [{'count': '0'}]}
+
+exec(code, env_args)

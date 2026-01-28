@@ -1,0 +1,11 @@
+code = """import json
+# Read previous result from storage
+with open(var_call_7PQKrgrcyZSmnrahOyTR8B0B, 'r') as f:
+    res = json.load(f)
+# Print in required format
+print("__RESULT__:")
+print(json.dumps(res))"""
+
+env_args = {'var_call_mEnsxvPivxh8gr3EwHRXDN1g': ['review'], 'var_call_BXsPjup4GRltX1vEipJgVIHp': 'file_storage/call_BXsPjup4GRltX1vEipJgVIHp.json', 'var_call_UBarRFgiDsmo2OZXITJ5mfqL': ['books_info'], 'var_call_cOtGz7ANw5PnpO8c9HmFf0iH': 'file_storage/call_cOtGz7ANw5PnpO8c9HmFf0iH.json', 'var_call_7PQKrgrcyZSmnrahOyTR8B0B': [{'book_id': 'bookid_54', 'title': 'Favorite Thorton W. Burgess Stories: 6 Books', 'avg_rating': 5.0, 'review_count': 3}, {'book_id': 'bookid_108', 'title': 'The Library Book', 'avg_rating': 5.0, 'review_count': 3}, {'book_id': 'bookid_146', 'title': 'LunaLu the Llamacorn', 'avg_rating': 5.0, 'review_count': 3}, {'book_id': 'bookid_4', 'title': 'Monstrous Stories #4: The Day the Mice Stood Still', 'avg_rating': 5.0, 'review_count': 1}, {'book_id': 'bookid_14', 'title': 'The Old Man and the Pirate Princess', 'avg_rating': 5.0, 'review_count': 1}, {'book_id': 'bookid_40', 'title': 'Egypt (Enchantment of the World)', 'avg_rating': 5.0, 'review_count': 1}, {'book_id': 'bookid_55', 'title': 'Behind the Wheel (Choose Your Own Adventure #35)(Paperback/Revised)', 'avg_rating': 5.0, 'review_count': 1}, {'book_id': 'bookid_96', 'title': 'Cheer Up, Ben Franklin! (Young Historians)', 'avg_rating': 5.0, 'review_count': 1}, {'book_id': 'bookid_130', 'title': "Benny Goes To The Moon: The great new book from Top Children's entertainer Gerry Ogilvie (1)", 'avg_rating': 5.0, 'review_count': 1}, {'book_id': 'bookid_152', 'title': 'Around the World Mazes', 'avg_rating': 5.0, 'review_count': 1}, {'book_id': 'bookid_170', 'title': 'Pokémon: Sun & Moon, Vol. 8 (8)', 'avg_rating': 5.0, 'review_count': 1}, {'book_id': 'bookid_149', 'title': 'Trouble in the CTC!: The Terra Prime Adventures Book 2', 'avg_rating': 4.9, 'review_count': 10}, {'book_id': 'bookid_48', 'title': 'Clark the Shark: Tooth Trouble, No. 1', 'avg_rating': 4.75, 'review_count': 4}, {'book_id': 'bookid_158', 'title': 'Cleo Porter and the Body Electric', 'avg_rating': 4.708, 'review_count': 24}]}
+
+exec(code, env_args)
