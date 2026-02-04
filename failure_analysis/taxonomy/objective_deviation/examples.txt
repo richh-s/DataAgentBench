@@ -1,0 +1,179 @@
+**Example 1**:
+*Trace*:
+...
+==========[data description begin]==========
+...The fields "book_id" in books_info and "purchase_id" in review_database refer to the same book entities across different tables. While the field names are not exact matches, they can be joined using a fuzzy join approach to solve the query...
+==========[data description end]==========
+==========[user begin]==========
+query: Which decade of publication (e.g., 1980s) has the highest average rating among decades with at least 10 distinct books that have been rated? Return the decade with the highest average rating.
+==========[user end]==========
+...
+==========[agent begin]==========
+--------[tool call begin]--------
+id: "call_clwW1HpxqxlCKDXJvn9Iim9W"
+name: query_db
+arguments: db_name, query
+--[db_name argument begin]--
+review_database
+--[db_name argument end]--
+--[query argument begin]--
+SELECT purchase_id, COUNT(*) AS num_reviews, AVG(rating) AS avg_rating FROM review GROUP BY purchase_id;
+--[query argument end]--
+--------[tool call end]--------
+==========[agent end]==========
+...
+==========[agent begin]==========
+--------[tool call begin]--------
+id: "call_mC9eh9kdqR7TFrzmoKhf7oa0"
+name: query_db
+arguments: db_name, query
+--[db_name argument begin]--
+books_database
+--[db_name argument end]--
+--[query argument begin]--
+SELECT book_id, details, title FROM books_info;
+--[query argument end]--
+--------[tool call end]--------
+==========[agent end]==========
+...
+==========[agent begin]==========
+--------[tool call begin]--------
+id: "call_yOkqrE3bT2B6QYqMkGSXZ3ll"
+name: execute_python
+arguments: code
+--[code argument begin]--
+import json
+import pandas as pd
+with open(var_call_clwW1HpxqxlCKDXJvn9Iim9W, 'r') as f:
+    reviews_data = json.load(f)
+with open(var_call_mC9eh9kdqR7TFrzmoKhf7oa0, 'r') as f:
+    books_data = json.load(f)
+rv = pd.DataFrame(reviews_data)
+bk = pd.DataFrame(books_data)
+rv['avg_rating'] = pd.to_numeric(rv['avg_rating'], errors='coerce')
+rv['book_id'] = rv['purchase_id'].str.replace('purchaseid_','bookid_', regex=False)
+
+import re
+
+def extract_year(text):
+    if not isinstance(text, str):
+        return None
+    m = re.search(r"(1\d{3}|20\d{2})", text)
+    if m:
+        y = int(m.group(1))
+        if 1000 <= y <= 2023:
+            return y
+    return None
+
+bk['year'] = bk['details'].apply(extract_year)
+merged = pd.merge(bk, rv[['book_id','avg_rating']], on='book_id', how='inner')
+merged = merged[merged['year'].notna() & merged['avg_rating'].notna()].copy()
+merged['year'] = merged['year'].astype(int)
+books_unique = merged.drop_duplicates(subset=['book_id'])[['book_id','title','year','avg_rating']].copy()
+books_unique['decade'] = ((books_unique['year']//10)*10).astype(int).astype(str) + 's'
+decade_stats = books_unique.groupby('decade').agg(book_count=('book_id','nunique'), avg_rating_by_book=('avg_rating','mean')).reset_index()
+df = decade_stats
+eligible = df[df['book_count']>=10]
+best = None
+if not eligible.empty:
+    best = eligible.sort_values(['avg_rating_by_book','decade'], ascending=[False, True]).iloc[0]['decade']
+
+print('__RESULT__:')
+print(json.dumps(best))
+--[code argument end]--
+--------[tool call end]--------
+==========[agent end]==========
+...
+*Failure*:
+The agent computes per-book average ratings and then averages these values at the decade level. However, the query asks for the average rating across all ratings in each decade with. The agent introduces a wrong reweighting: each book contributes equally regardless of how many ratings it has, rather than each rating contributing equally as required by the query
+
+**Example 2**:
+*Trace*:
+...
+==========[data description begin]==========
+...review_database
+   - This database is stored in a SQLite database and contains Amazon book review information including ratings...
+...books_database
+   - This database is stored in a PostgreSQL database and contains Amazon book information including descriptions, price, details, title, etc. up to 2023...
+==========[data description end]==========
+==========[user begin]==========
+query: Which English-language books in the 'Literature & Fiction' category have a perfect average rating of 5.0? Return all matching books.
+==========[user end]==========
+...
+==========[agent begin]==========
+--------[tool call begin]--------
+id: "function-call-16108567203145228274"
+name: query_db
+arguments: db_name, query
+--[db_name argument begin]--
+books_database
+--[db_name argument end]--
+--[query argument begin]--
+SELECT book_id, title, categories, details FROM books_info WHERE categories LIKE '%Literature & Fiction%';
+--[query argument end]--
+--------[tool call end]--------
+==========[agent end]==========
+...
+==========[agent begin]==========
+--------[tool call begin]--------
+id: "function-call-5043152685913365399"
+name: execute_python
+arguments: code
+--[code argument begin]--
+import json
+
+with open(locals()['var_function-call-16108567203145228274'], 'r') as f:
+    literature_fiction_books_data = json.load(f)
+
+english_literature_fiction_books = []
+for book in literature_fiction_books_data:
+    categories_str = book['categories']
+    details_str = book['details']
+
+    is_literature_fiction = False
+    try:
+        categories_list = json.loads(categories_str)
+        if any('Literature & Fiction' in category for category in categories_list):
+            is_literature_fiction = True
+    except json.JSONDecodeError:
+        if 'Literature & Fiction' in categories_str:
+            is_literature_fiction = True
+
+    is_english = 'English' in details_str
+
+    if is_literature_fiction and is_english:
+        english_literature_fiction_books.append({'book_id': book['book_id'], 'title': book['title']})
+
+print('__RESULT__:')
+print(json.dumps(english_literature_fiction_books))
+--[code argument end]--
+--------[tool call end]--------
+==========[agent end]==========
+...
+*Failure*:
+The agent never joins review data to verify an average rating of 5.0, ignoring a key constraint of the query.
+
+
+**Example 3**:
+*Trace*:
+...
+==========[user begin]==========
+query: Which English-language books in the 'Literature & Fiction' category have a perfect average rating of 5.0? Return all matching books.
+==========[user end]==========
+...
+==========[agent begin]==========
+--------[tool call begin]--------
+id: "call_uthNfObZvJEW5jCh770KoI1Q"
+name: query_db
+arguments: db_name, query
+--[db_name argument begin]--
+books_database
+--[db_name argument end]--
+--[query argument begin]--
+SELECT book_id, title, categories, details, rating_number FROM books_info WHERE store = 'Amazon';
+--[query argument end]--
+--------[tool call end]--------
+==========[agent end]==========
+...
+*Failure*:
+The agent introduces an extra predicate (store = 'Amazon') that is not specified by the user query.
