@@ -1,0 +1,120 @@
+**Example 1**:
+*Trace*:
+...
+==========[user begin]==========
+query: Which decade of publication (e.g., 1980s) has the highest average rating among decades with at least 10 distinct books that have been rated? Return the decade with the highest average rating.
+==========[user end]==========
+...
+==========[agent begin]==========
+--------[tool call begin]--------
+id: "call_FFx52DXEl52hzpAgM1zlHGmR"
+name: execute_python
+arguments: code
+--[code argument begin]--
+...
+def extract_year(text):
+    if not isinstance(text, str):
+        return None
+    m = re.search(r"(19|20)\d{2}", text)
+    return int(m.group(0)) if m else None
+...
+--[code argument end]--
+--------[tool call end]--------
+==========[agent end]==========
+...
+*Failure*:
+The agent uses an overly permissive regular expression to extract a year, which can incorrectly extract digits from unrelated fields such as ISBNs or other identifiers rather than the publication year.
+
+**Example 2**:
+*Trace*:
+...
+==========[user begin]==========
+query: Which English-language books in the 'Literature & Fiction' category have a perfect average rating of 5.0? Return all matching books.
+==========[user end]==========
+...
+==========[agent begin]==========
+--------[tool call begin]--------
+id: "call_FFx52DXEl52hzpAgM1zlHGmR"
+name: execute_python
+arguments: code
+--[code argument begin]--
+import json
+import re
+from collections import defaultdict
+
+books_file = locals()['var_functions.query_db:24']
+reviews_file = locals()['var_functions.query_db:20']
+
+with open(books_file, 'r') as f:
+    books_data = json.load(f)
+
+print('Loaded', len(books_data), 'books')
+
+def extract_year(text):
+    if not text: return None
+    patterns = [
+        r'first edition[^\d]*?(\d{4})',
+        r'published[^\d]*?(\d{4})',
+        r'released[^\d]*?(\d{4})',
+        r'January 1, (\d{4})',
+        r'\b(19\d{2}|20\d{2})\b'
+    ]
+    for pattern in patterns:
+        matches = re.findall(pattern, text, re.IGNORECASE)
+        if matches:
+            match = matches[0]
+            year_str = match[0] if isinstance(match, tuple) else match
+            if year_str.isdigit() and len(year_str) == 4:
+                year = int(year_str)
+                if 1900 <= year <= 2023:
+                    return year
+    return None
+
+books_with_years = []
+for book in books_data:
+    year = extract_year(book.get('details', ''))
+    if year:
+        books_with_years.append({'book_id': book['book_id'], 'year': year, 'decade': f"{year//10*10}s"})
+
+book_to_decade = {b['book_id']: b['decade'] for b in books_with_years}
+print('Extracted years for', len(books_with_years), 'books')
+
+with open(reviews_file, 'r') as f:
+    reviews_data = json.load(f)
+
+decade_books = defaultdict(set)
+decade_ratings = defaultdict(list)
+
+for review in reviews_data:
+    num_match = re.findall(r'purchaseid_(\d+)', review['purchase_id'])
+    if num_match:
+        num = int(num_match[0])
+        book_id = f"bookid_{num}"
+        if book_id in book_to_decade:
+            decade = book_to_decade[book_id]
+            decade_books[decade].add(book_id)
+            decade_ratings[decade].append(float(review['rating']))
+
+eligible = []
+for decade, books in decade_books.items():
+    if len(books) >= 10:
+        avg = sum(decade_ratings[decade]) / len(decade_ratings[decade])
+        eligible.append({'decade': decade, 'avg_rating': round(avg,2), 'num_books': len(books), 'num_reviews': len(decade_ratings[decade])})
+
+if eligible:
+    best = max(eligible, key=lambda x: x['avg_rating'])
+else:
+    best = {'decade': 'none', 'avg_rating': 0, 'num_books': 0, 'num_reviews': 0}
+
+print('Eligible decades:', len(eligible))
+print('Best:', best)
+
+result = {'best_decade': best, 'eligible_decades': eligible}
+print('__RESULT__:')
+print(json.dumps(result))
+--[code argument end]--
+--------[tool call end]--------
+==========[agent end]==========
+...
+*Failure*:
+The agent computes the average rating by dividing the sum of ratings by the number of books rather than by the number of ratings.
