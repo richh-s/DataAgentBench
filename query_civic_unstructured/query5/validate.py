@@ -54,7 +54,7 @@ if __name__ == "__main__":
         "The total funding for disaster-related projects that started in 2022 is $557,000.",
         "Total: 557000",
         "$557,000",
-        "Found $100,000 in funding",  # wrong amount
+        "Found $1,996,000 in funding",  # wrong amount
     ]
     for test in test_cases:
         result, reason = validate(test)

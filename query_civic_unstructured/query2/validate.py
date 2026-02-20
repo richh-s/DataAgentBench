@@ -57,7 +57,7 @@ if __name__ == "__main__":
     test_cases = [
         "The total funding is $0",
         "No projects match the criteria, so total funding is 0.",
-        "Total funding: $150,000",
+        "Total funding: $1,855,000",
     ]
     for test in test_cases:
         result, reason = validate(test)

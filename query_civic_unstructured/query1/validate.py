@@ -43,7 +43,7 @@ def validate(llm_output: str):
     # If we have the expected count as a string match
     if str(expected_count) in llm_output:
         return True, f"Found correct count {expected_count} in output"
-
+    
     return False, f"Expected count {expected_count}, but found numbers: {numbers}"
 
 
