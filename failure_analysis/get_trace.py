@@ -4,7 +4,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from common_scaffold.validate.validate  import validate
 from pathlib import Path
-import logging
 import json
 
 def get_trace(model, task, query_id, run_id):
@@ -105,8 +104,8 @@ def format_trace(messages):
 
 if __name__ == "__main__":
     is_failed, failed_reason, failed_trace = get_trace(
-        model="gpt5.1",
-        task="civic_unstructured",
+        model="gpt-5-mini",
+        task="bookreview",
         query_id=1,
         run_id=1
     )

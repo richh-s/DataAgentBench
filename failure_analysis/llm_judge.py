@@ -3,11 +3,10 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import json
 from pathlib import Path
-from datetime import datetime
 import time
 import logging
 import logging_config
-from openai import AzureOpenAI, OpenAI
+from openai import AzureOpenAI
 from dotenv import load_dotenv
 from failure_analysis.get_prompt import get_prompt
 from failure_analysis.get_trace import get_trace
@@ -24,7 +23,7 @@ client = AzureOpenAI(
 
 
 model_list = [
-    # "gemini-2.5-flash",
+    "gemini-2.5-flash",
     "gemini-3-pro",
     "gpt-5-mini",
     "gpt-5.2",
@@ -33,20 +32,18 @@ model_list = [
 ]
 
 task_list = [
-    # "bookreview",
-    # "crmarenapro",
-    # "DEPS_DEV_V1",
-    # "GITHUB_REPOS",
-    # "googlelocal",
-    # "PANCANCER_ATLAS",
-    # "PATENTS",
-    # "stockindex",
-    # "stockmarket",
-    # "yelp",
-    # "agnews",
-    # "music_brainz_20k",
-    # "civic_unstructured",
-    "paper_unstructured"
+    "bookreview",
+    "crmarenapro",
+    "DEPS_DEV_V1",
+    "GITHUB_REPOS",
+    "googlelocal",
+    "PANCANCER_ATLAS",
+    "PATENTS",
+    "stockindex",
+    "stockmarket",
+    "yelp",
+    "agnews",
+    "music_brainz_20k",
 ]
 
 for model in model_list:
@@ -61,20 +58,12 @@ for model in model_list:
             except:
                 continue
         for query_id in sorted(query_id_list):
-            if task in ["civic_unstructured"]:
-                answer_file = os.path.join(query_dir, f"query{query_id}", "ground_truth.json")
-                with open(answer_file, 'r', encoding="utf-8") as f:
-                    gt_answer = json.load(f)
-                query_file = os.path.join(query_dir, f"query{query_id}", "query.json")
-                with open(query_file, 'r', encoding="utf-8") as f:
-                    query_json = json.load(f)
-            else:
-                answer_file = os.path.join(query_dir, f"query{query_id}", "ground_truth.csv")
-                with open(answer_file, "r", encoding="utf-8") as f:
-                    gt_answer = f.read().strip()
-                query_file = os.path.join(query_dir, f"query{query_id}", "query.json")
-                with open(query_file, "r", encoding="utf-8") as f:
-                    query_json = json.load(f)
+            answer_file = os.path.join(query_dir, f"query{query_id}", "ground_truth.csv")
+            with open(answer_file, "r", encoding="utf-8") as f:
+                gt_answer = f.read().strip()
+            query_file = os.path.join(query_dir, f"query{query_id}", "query.json")
+            with open(query_file, "r", encoding="utf-8") as f:
+                query_json = json.load(f)
 
             llm_judge_cnt = 0
             judge_result_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "failure_analysis", f"results-{model}", f"query_{task}", f"query{query_id}.jsonl")
