@@ -18,12 +18,12 @@ Unlike prior SQL-only or single-database benchmarks, DAB stresses agents under *
 * [📊 Benchmark Overview](#-benchmark-overview)
 * [🏆 Leaderboard](#-leaderboard)
 * [⚙️ Prerequisites](#️-prerequisites)
-  * [Clone the Repository](#clone-the-repository)
+  <!-- * [Clone the Repository](#clone-the-repository)
   * [Install Dependencies](#install-dependencies)
   * [Setup Docker](#setup-docker)
   * [Setup Databases](#setup-databases)
   * [Set Database Configurations](#set-database-configurations)
-  * [Add API Credentials](#add-api-credentials)
+  * [Add API Credentials](#add-api-credentials) -->
 * [▶️ Run the Benchmark](#️-run-the-benchmark)
   * [Run the Built-in Agent](#run-the-built-in-agent-on-a-single-query)
   * [Execution Logs](#execution-logs)
@@ -74,10 +74,26 @@ Before running DAB, please complete the following setup steps.
 
 ### Clone the Repository
 
+Some datasets in DAB contain large database files exceeding 50MB and are thus stored in Git LFS. To automatically get the full datasets, you need to ensure you have Git LFS enabled:
+```bash
+git lfs install
+```
+Then you can run:
 ```bash
 git clone https://github.com/ucbepic/DataAgentBench.git
 cd DataAgentBench
 ```
+One database file of `PATENTS` dataset, `patent_publication.db`, exceeds Git LFS file-size limits (5GB). It is on [google drive](https://drive.google.com/file/d/1pALQ1UH-OwaEUeGYAx47uCyzClfK94XC/view?usp=sharing).
+
+**Option 1:**
+Manually download the database to `query_PATENTS/query_dataset/patent_publication.db`
+
+**Option 1:**
+Run the following script to automatically download the database:
+```bash
+bash download.sh
+```
+
 
 ### Install Dependencies
 
