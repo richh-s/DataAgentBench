@@ -1,8 +1,0 @@
-code = """import json
-s = 'SELECT \'{sym}\' AS Symbol, COUNT(*) AS days FROM "{sym}" WHERE Date >= \'2019-01-01\' AND Date <= \'2019-12-31\' AND Low > 0 AND High > 1.2*Low'.format(sym='AGMH')
-print('__RESULT__:')
-print(json.dumps({'s': s}))"""
-
-env_args = {'var_call_4aGwTzh70bt8xarEObPHR1xp': 'file_storage/call_4aGwTzh70bt8xarEObPHR1xp.json', 'var_call_ptTAFVhG5hNvbNHxEpsBJBbz': 'file_storage/call_ptTAFVhG5hNvbNHxEpsBJBbz.json', 'var_call_SyGavGLV4s4xf2xrjw3y2Oxj': [{'ok': '1'}], 'var_call_FJJXnZfewVba9mByDiy69JB4': [{'Date': '2018-04-18', 'Open': '5.75', 'High': '7.5', 'Low': '5.010000228881836', 'Close': '6.300000190734863', 'Adj Close': '6.300000190734863', 'Volume': '291800'}], 'var_call_pM5XfJD5vwc9WGvZ3VtqjrlV': [{'Symbol': 'AGMH', 'days': '13'}], 'var_call_bxQ94D76MCpgJLzhH0fEHW9Z': {'ok': True}}
-
-exec(code, env_args)
