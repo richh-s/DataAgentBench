@@ -2,7 +2,8 @@
 
 > 🔥 **DAB is the first benchmark for evaluating data agents on realistic, complex, data-oriented tasks. It is a collaborative effort between UC Berkeley and Hasura PromptQL.**
 
-> 🤝 **We welcome high-quality, realistic datasets. Submit a Pull Request to our GitHub repository to contribute your dataset!**
+> 🤝 **We welcome contributions to the leaderboard!
+Submit a Pull Request following the instruction below  to share your agent results and see them ranked on DAB.**
 
 DAB captures **four core properties** of real-world enterprise data workloads across industries:
 
@@ -13,10 +14,58 @@ DAB captures **four core properties** of real-world enterprise data workloads ac
 
 Unlike prior SQL-only or single-database benchmarks, DAB stresses agents under **realistic enterprise data complexity**.
 
-# 📚 Table of Contents
+
+## 🏆 Leaderboard
+
+| Rank | Model          | Pass@1 | Date    |
+| ---- | -------------- | ------------------- | ------- |
+| 1    | PromptQL (Claude-Opus-4.6) | 0.48                | 2026-03-02 |
+| 2    | Gemini-3-Pro | 0.37           | 2026-03-02 |
+| 3    | GPT-5-mini     |     0.29           | 2026-03-02 |
+| 4    | GPT-5.2     |     0.25           | 2026-03-02 |
+| 5    | Kimi-K2     |     0.23           | 2026-03-02 |
+| 6    | Gemini-2.5-Flash     |     0.09          | 2026-03-02 |
+
+
+### How to Submit to the Leaderboard
+
+To contribute your agent's results to the DAB leaderboard:
+
+1. Collect results from **50 runs** on **all queries** across **all datasets**.
+2. Organize all your run results into a *single* JSON file following this structure:
+
+    ```json
+    [
+      {
+        "dataset": "<dataset_name>",   // e.g., "bookreview"
+        "query": "<query_id>",         // e.g., "1"
+        "run": "<run_number>",         // 0–49 for 50 runs
+        "answer": "<agent_generated_answer>"
+      },
+      ...
+      // Include an entry for every run of every query across all datasets
+    ]
+    ```
+
+3. Submit a **Pull Request** to this repository including:
+
+   * The JSON results file
+   * A brief description of your agent configuration, including:
+
+      - The name of your agent
+
+      - Backbone LLM model(s) name and version
+
+      - Whether dataset hints were used
+
+      - Any additional notes or special settings you want to highlight
+
+⚠️ You must include all 50 runs for each query in your dataset. Missing runs may result in your submission being rejected from the leaderboard.
+
+
+## 📚 Table of Contents
 
 * [📊 Benchmark Overview](#-benchmark-overview)
-* [🏆 Leaderboard](#-leaderboard)
 * [⚙️ Prerequisites](#️-prerequisites)
   <!-- * [Clone the Repository](#clone-the-repository)
   * [Install Dependencies](#install-dependencies)
@@ -28,11 +77,10 @@ Unlike prior SQL-only or single-database benchmarks, DAB stresses agents under *
   * [Run the Built-in Agent](#run-the-built-in-agent-on-a-single-query)
   * [Execution Logs](#execution-logs)
   * [Validate Agent Answer](#validate-agent-answer)
-* [📝 Create Your Own Datasets and Queries](#-create-your-own-datasets-and-queries)
+* [📝 Datasets and Queries](#-datasets-and-queries)
   * [Dataset](#dataset)
   * [Query](#query)
 * [🤖 Create Your Customized Agents](#-create-your-customized-agents)
-  * [How the Built-in Agent Works](#how-the-built-in-agent-works)
 
 
 ## 📊 Benchmark Overview
@@ -56,16 +104,7 @@ This benchmarks contain **12** datasets and **54** queries across **9** domains 
 | yelp             | 2    | DuckDB, MongoDB            | 5    | 7        |
 
 
-## 🏆 Leaderboard
 
-| Rank | Model          | Pass@1 | Date    |
-| ---- | -------------- | ------------------- | ------- |
-| 1    | PromptQL (Claude-Opus-4.6) | 0.48                | 2026-03-02 |
-| 2    | Gemini-3-Pro | 0.37           | 2026-03-02 |
-| 3    | GPT-5-mini     |     0.29           | 2026-03-02 |
-| 4    | GPT-5.2     |     0.25           | 2026-03-02 |
-| 5    | Kimi-K2     |     0.23           | 2026-03-02 |
-| 6    | Gemini-2.5-Flash     |     0.09          | 2026-03-02 |
 
 
 ## ⚙️ Prerequisites
@@ -272,7 +311,7 @@ print(avg_acc("bookreview", "gpt-5-mini"))
 This will aggregate validation results across runs and queries and report the final Pass@1 accuracy for the dataset.
 
 
-### Validate a Single Run
+#### Validate a Single Run
 
 After an agent run completes, you can validate its final answer against the ground truth:
 
@@ -308,11 +347,11 @@ The validation result follows this structure:
 ```
 
 
-## 📝 Create Your Own Datasets and Queries
+## 📝 Datasets and Queries
 
-⚠️ To add a new dataset to DAB, you **must strictly follow the prescribed dataset and query folder structures** described above. This ensures that the benchmark can automatically locate databases, queries, and validation scripts.
+<!-- ⚠️ To add a new dataset to DAB, you **must strictly follow the prescribed dataset and query folder structures** described above. This ensures that the benchmark can automatically locate databases, queries, and validation scripts. -->
 
-After creating your dataset:
+<!-- After creating your dataset:
 
 1. Verify that it runs correctly with the built-in agent.
 2. Ensure all queries include `query.json`, `ground_truth.csv`, and `validate.py`.
@@ -320,7 +359,7 @@ After creating your dataset:
 
 Once ready, please submit a **pull request** to our GitHub repository for review.
 
-We welcome high-quality, realistic datasets that reflect complex enterprise data scenarios.
+We welcome high-quality, realistic datasets that reflect complex enterprise data scenarios. -->
 
 
 ### Dataset
@@ -338,7 +377,7 @@ query_bookreview/
 └─ db_description_with_hint.txt     <- Optional hints for queries
 ```
 
-Make sure you use the supported database formats: **PostgreSQL**， **MongoDB**, **SQLite**, or **DuckDB**. 
+<!-- Make sure you use the supported database formats: **PostgreSQL**， **MongoDB**, **SQLite**, or **DuckDB**.  -->
 
 ### Query
 
@@ -351,7 +390,7 @@ query_1/
 └─ validate.py          <- Python script to validate an agent's output
 ```
 
-`validate.py`  **must** define a `validate` function with the following signature:
+`validate.py` defines a `validate` function with the following signature:
 
 ```python
 def validate(llm_output: str):
@@ -365,22 +404,26 @@ def validate(llm_output: str):
 ```
 
 
-
 ## 🤖 Create Your Customized Agents
 
-DAB allows you to **implement and run your own agents** while leveraging the built-in tools for database loading, management, and validation.
+DAB allows you to **implement and run your own agents** while leveraging built-in tools for database querying and Python execution. These utilities, located under [`tools/`](./common_scaffold/tools/), provide:
 
-All database initialization and checks are encapsulated in utility functions under [`tools/`](./common_scaffold/tools/), which you can freely use.
+* **🔗 Automatic Database Connection**
 
+  * Loads database configurations from `db_config.yaml` for each dataset.
+  * No need to manually connect to PostgreSQL, MySQL, MongoDB, SQLite, or DuckDB — all connections are handled automatically via [`db_utils`](./common_scaffold/tools/db_utils/).
 
-### How the Built-in Agent Works
+* **🛡️ Read-only Database Querying**
 
-* **Automatic Database Handling**
-  - Loads database configurations from `db_config.yaml` for each dataset.
-  - No need to manually connect to PostgreSQL, MySQL, MongoDB, SQLite, or DuckDB — all connections are handled automatically via [`db_utils`](./common_scaffold/tools/db_utils/).
+  * Ensures queries are read-only, preventing accidental writes that could pollute the data.
 
-* **Service Monitoring**
-  - If required local services (PostgreSQL/MongoDB) are not running, the utilities will alert you.
+* **🐳 Safe Python Execution Environment**
 
-* **Reference Implementation**
-  - [`DataAgent.py`](./common_scaffold/DataAgent.py) demonstrates a fully functional agent. You can use it as a template to implement your own agent.
+  * Executes Python code with a 600-second timeout in a Docker environment with Python 3.12, `pandas`, and `pyarrow` pre-installed.
+  * Protects your local machine from unsafe operations by the agent.
+
+* **📄 Agent Reference Implementation**
+
+  * [`DataAgent.py`](./common_scaffold/DataAgent.py) is a fully functional built-in agent.
+  * Use it as a template to implement and test your own agent.
+
