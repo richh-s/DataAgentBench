@@ -32,7 +32,7 @@ def validate(llm_output: str):
 
         # Only check in the 50 characters *after* the name
         start = idx + len(name_lower)
-        window = llm_lower[start: start + 10]
+        window = llm_lower[start: start + 50]
 
         if version.lower() not in window:
             reason = f"Version '{version}' not found after name '{name}'"

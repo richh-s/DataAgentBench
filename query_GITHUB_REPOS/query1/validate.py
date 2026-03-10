@@ -16,7 +16,7 @@ def validate(llm_output: str):
             val = float(m)
             if round(val, 2) == gt_rounded:
                 return True, f"Found matching value: {val} → ~{gt_rounded}"
-        except:
+        except ValueError:
             continue
 
     reason = f"No value in LLM output rounds to {gt_rounded}"

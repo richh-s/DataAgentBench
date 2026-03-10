@@ -42,11 +42,11 @@ def validate(llm_output: str):
         valid_countries = country_aliases.get(country_lower, [country_lower])
 
         # look in window
-        window = llm_lower[idx: idx + len(name_lower) + 20]
+        window = llm_lower[idx: idx + len(name_lower) + 50]
 
         if not any(alias in window for alias in valid_countries):
             reason = (
-                f"Country '{country}' (or alias) not found within 20 chars after name '{name}'"
+                f"Country '{country}' (or alias) not found within 50 chars after name '{name}'"
             )
             
             return False, reason

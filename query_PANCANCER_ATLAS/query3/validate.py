@@ -32,7 +32,7 @@ def validate(llm_output: str):
                f"{round(value, 1):.1f}" == target_1dp or \
                str(int(value)) == target_int:
                 return True, f"Matched value: {raw} -> rounded {rounded}"
-        except:
+        except ValueError:
             continue
 
     reason = f"No value in LLM output matches {target_2dp}, {target_1dp}, or {target_int}"

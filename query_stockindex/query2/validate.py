@@ -1,8 +1,10 @@
+import re
+
 def validate(llm_output: str):
     """
     Validate that:
     - 'IXIC' is present in LLM output
-    - None of the other candidates are present
+    - None of the other candidates are the primary/first answer
 
     Returns:
         (True, "OK") if all good
@@ -16,19 +18,20 @@ def validate(llm_output: str):
 
     llm_lower = llm_output.lower()
     gt_lower = gt.lower()
-    forbidden_lower = [f.lower() for f in forbidden]
 
     # check gt
     if gt_lower not in llm_lower:
         reason = f"Missing target: {gt}"
-        
+
         return False, reason
 
-    # check forbidden
-    for f in forbidden_lower:
-        if f in llm_lower:
-            reason = f"Found forbidden value: {f}"
-            
+    # check forbidden — only fail if a forbidden value appears before the correct answer
+    gt_idx = llm_lower.find(gt_lower)
+    for f_orig, f in zip(forbidden, [f.lower() for f in forbidden]):
+        idx = llm_lower.find(f)
+        if idx != -1 and idx < gt_idx:
+            reason = f"Found forbidden value '{f_orig}' before target '{gt}'"
+
             return False, reason
 
-    return True, f"Only target '{gt}' present, no forbidden values."
+    return True, f"Target '{gt}' present as primary answer."

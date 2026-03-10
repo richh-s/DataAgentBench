@@ -31,7 +31,7 @@ def validate(llm_output: str):
 
         # Look 50 characters after the histology code (not including the code itself)
         start = idx + len(hist_code)
-        window = llm_output[start:start+10]
+        window = llm_output[start:start+50]
 
         matches = re.findall(r"\d+\.\d+", window)
         gt_rounded = round(true_score, 4)

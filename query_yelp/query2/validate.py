@@ -45,7 +45,7 @@ def validate(llm_output: str):
             val = float(m)
             if round(val, 2) == gt_rounded:
                 return True, f"Found: name='{found_name}', value≈{gt_rounded}"
-        except:
+        except ValueError:
             continue
 
     reason = f"Number near '{found_name}' does not match ≈{ground_truth_value}"

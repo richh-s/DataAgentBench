@@ -22,7 +22,7 @@ def validate(llm_output: str):
             val = float(m)
             if round(val, 2) == gt_rounded:
                 return True, f"Found matching number: {val} ≈ {gt_rounded}"
-        except:
+        except ValueError:
             continue
 
     reason = f"No number ≈ {gt_rounded} found in LLM output."

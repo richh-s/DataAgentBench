@@ -116,7 +116,7 @@ def validate(llm_output: str):
                 if round(val, 2) == gt_score_rounded:
                     found = True
                     break
-            except:
+            except ValueError:
                 continue
 
         if not found:
