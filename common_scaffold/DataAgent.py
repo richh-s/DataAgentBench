@@ -339,15 +339,15 @@ class DataAgent:
             assert self.final_result != None
             self.terminate_reason = "max_iterations"
     
-    # def validate(self):
-    #     val_result = validate(
-    #         query_dir=self.query_dir,
-    #         llm_answer=self.final_result,
-    #         reason=self.terminate_reason,
-    #     )
-    #     with open(self.validation_log_path, "a", encoding="utf-8") as f:
-    #         f.write(json.dumps(val_result) + "\n")
-    #     return val_result
+    def validate(self):
+        val_result = validate(
+            query_dir=self.query_dir,
+            llm_answer=self.final_result,
+            reason=self.terminate_reason,
+        )
+        with open(self.validation_log_path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(val_result) + "\n")
+        return val_result
         
     
     def run(self):
@@ -371,11 +371,11 @@ class DataAgent:
             assert self.final_result != None
 
         ## validate final result
-        # self.logger.info("🔍 Validating final result...")
-        # val_result = self.validate()
-        # self.logger.info("✅" if val_result["is_valid"] else "❌")
-        # print(f"\tllm:\t{val_result['llm_answer']}")
-        # print(f"\ttrue:\t{val_result['ground_truth']}")
+        self.logger.info("🔍 Validating final result...")
+        val_result = self.validate()
+        self.logger.info("✅" if val_result["is_valid"] else "❌")
+        self.logger.info(f"\tllm:\t{val_result['llm_answer'][:200]}")
+        self.logger.info(f"\ttrue:\t{val_result['ground_truth'][:200]}")
 
         ## log final result
         final_log_entry = {
