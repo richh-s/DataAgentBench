@@ -67,12 +67,12 @@ To contribute your agent's results to the DAB leaderboard:
 
 * [📊 Benchmark Overview](#-benchmark-overview)
 * [⚙️ Prerequisites](#️-prerequisites)
-  <!-- * [Clone the Repository](#clone-the-repository)
+  * [Clone the Repository](#clone-the-repository)
   * [Install Dependencies](#install-dependencies)
   * [Setup Docker](#setup-docker)
   * [Setup Databases](#setup-databases)
   * [Set Database Configurations](#set-database-configurations)
-  * [Add API Credentials](#add-api-credentials) -->
+  * [Add API Credentials](#add-api-credentials)
 * [▶️ Run the Benchmark](#️-run-the-benchmark)
   * [Run the Built-in Agent](#run-the-built-in-agent-on-a-single-query)
   * [Execution Logs](#execution-logs)
@@ -86,7 +86,7 @@ To contribute your agent's results to the DAB leaderboard:
 ## 📊 Benchmark Overview
 
 
-This benchmarks contain **12** datasets and **54** queries across **9** domains and **4** DBMSes:
+This benchmark contains **12** datasets and **54** queries across **9** domains and **4** DBMSes:
 
 | Dataset          | #DBs | DBMSes                     | #Tbl | #Queries |
 | ---------------- | ---- | -------------------------- | ---- | -------- |
@@ -127,7 +127,7 @@ One database file of `PATENTS` dataset, `patent_publication.db`, exceeds Git LFS
 **Option 1:**
 Manually download the database to `query_PATENTS/query_dataset/patent_publication.db`
 
-**Option 1:**
+**Option 2:**
 Run the following script to automatically download the database:
 ```bash
 bash download.sh
@@ -145,7 +145,7 @@ conda env create -f environment.yaml
 conda activate dabench
 ```
 
-This will install all required dependencies specified in [enviroment.yaml](./environment.yaml).
+This will install all required dependencies specified in [environment.yaml](./environment.yaml).
 
 
 <!-- ## 🐳  -->
@@ -170,7 +170,7 @@ DAB evaluates agents across multiple database systems, so you must install and c
   Install PostgreSQL from the [official website](https://www.postgresql.org/) and start the server.
   - **Minimum required version**: 17.5
   - Version used in our experiments: 17.7 (Ubuntu 17.7-3.pgdg24.04+1)
-- **MongDB**:
+- **MongoDB**:
   Install MongoDB Community Edition from the [official website](https://www.mongodb.com/) and start the server.
   - Version used in our experiments: v8.2.1
 - **SQLite & DuckDB**: 
@@ -195,7 +195,7 @@ Default configuration values (defined in [db_config.py](./common_scaffold/tools/
 | DUCKDB_PATH | "data/mydb.duckdb" |
 
 **Option 1**:
-Create a `.env`file in the project root. E.g., 
+Create a `.env` file in the project root. E.g.,
 
 ```
 # PostgreSQL
@@ -224,7 +224,7 @@ TOGETHER_API_KEY=
 
 Currently, we support 
 - Microsoft Azure API (for GPT models)
-- Goolge Gemini API (for Gemini models)
+- Google Gemini API (for Gemini models)
 - Together.AI API (for Kimi and Qwen models)
 
 If you want to use a model not yet supported by default, you may register it in [DataAgent.py](./common_scaffold/DataAgent.py):
