@@ -19,7 +19,7 @@ Unlike prior SQL-only or single-database benchmarks, DAB stresses agents under *
 
 | Rank | Model          | Pass@1 | Date    |
 | ---- | -------------- | ------------------- | ------- |
-| 1    | Hasura PromptQL (Claude-Opus-4.6) | 0.508                | 2026-03-02 |
+| 1    | Hasura PromptQL (Claude-Opus-4.6) (5 trials/query) | 0.508                | 2026-03-02 |
 | 2    | Claude-Opus-4.6 (5 trials/query) | 0.4376                | 2026-03-18 |
 | 3    | Gemini-3-Pro | 0.38           | 2026-03-02 |
 | 4    | GPT-5-mini     |     0.30           | 2026-03-02 |
