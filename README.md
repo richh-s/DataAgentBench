@@ -1,5 +1,7 @@
 # DAB: Data Agent Benchmark
 
+> 🌐 **Website & Leaderboard: [ucbepic.github.io/DataAgentBench](https://ucbepic.github.io/DataAgentBench/)**
+
 > 🔥 **DAB is the first benchmark for evaluating data agents on realistic, complex, data-oriented tasks. It is a collaborative effort between UC Berkeley and Hasura PromptQL.**
 
 > 🤝 **We welcome contributions to the leaderboard!
