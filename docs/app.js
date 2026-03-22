@@ -518,4 +518,14 @@ async function init() {
 }
 
 document.getElementById("query-search").addEventListener("input", renderQueryList);
+
+document.querySelectorAll(".tab-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    document.querySelectorAll(".tab-panel").forEach((p) => { p.style.display = "none"; });
+    document.getElementById(`tab-${btn.dataset.tab}`).style.display = "block";
+  });
+});
+
 init();
