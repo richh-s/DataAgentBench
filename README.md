@@ -2,6 +2,8 @@
 
 > 🌐 **Website & Leaderboard: [ucbepic.github.io/DataAgentBench](https://ucbepic.github.io/DataAgentBench/)**
 
+> 📄 **Paper: [arxiv.org/abs/2603.20576](https://arxiv.org/abs/2603.20576)**
+
 > 🔥 **DAB is the first benchmark for evaluating data agents on realistic, complex, data-oriented tasks. It is a collaborative effort between UC Berkeley and Hasura PromptQL.**
 
 > 🤝 **We welcome contributions to the leaderboard!
@@ -431,4 +433,17 @@ DAB allows you to **implement and run your own agents** while leveraging built-i
 
   * [`DataAgent.py`](./common_scaffold/DataAgent.py) is a fully functional built-in agent.
   * Use it as a template to implement and test your own agent.
+
+## 📖 Citation
+
+If you use DAB in your research, please cite our paper:
+
+```bibtex
+@article{ma2025dab,
+  title={DAB: Data Agent Benchmark},
+  author={Ma, Ruiying and Shankar, Shreya and Chen, Ruiqi and Lin, Yiming and Zeighami, Sepanta and Ghosh, Rajoshi and Gupta, Abhinav and Gupta, Anushrut and Gopal, Tanmai and Parameswaran, Aditya G.},
+  journal={arXiv preprint arXiv:2603.20576},
+  year={2025}
+}
+```
 
